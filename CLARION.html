@@ -1,0 +1,1644 @@
+<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CLARION · Daily Speaking Practice</title>
+<link href="./CLARION · Daily Speaking Practice_files/css2" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════
+   DESIGN SYSTEM
+══════════════════════════════════════════ */
+:root {
+  --bg:       #F7F5F0;
+  --surface:  #FFFFFF;
+  --card:     #FAFAF8;
+  --border:   #E8E4DC;
+  --border2:  #D4CEC2;
+  --ink:      #1A1714;
+  --ink2:     #3D3830;
+  --muted:    #8C8578;
+  --dim:      #C4BEB4;
+  --gold:     #8B6914;
+  --gold-bg:  #FDF6E3;
+  --gold-lt:  #F5E9C0;
+  --green:    #2D6A4F;
+  --green-bg: #EBF5EF;
+  --red:      #9B2335;
+  --red-bg:   #FBEAEC;
+  --blue:     #1A3C5E;
+  --blue-bg:  #EBF0F7;
+  --serif:    'Cormorant Garamond', Georgia, serif;
+  --sans:     'DM Sans', system-ui, sans-serif;
+  --mono:     'DM Mono', 'Courier New', monospace;
+  --r:        8px;
+  --shadow:   0 2px 12px rgba(26,23,20,0.07);
+  --shadow-lg:0 8px 40px rgba(26,23,20,0.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.6}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+img{max-width:100%}
+button{cursor:pointer;font-family:var(--sans)}
+input,select,textarea{font-family:var(--sans)}
+
+/* ══════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════ */
+#auth-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:var(--ink);position:relative;overflow:hidden;
+}
+#auth-screen::before{
+  content:'CLARION';font-family:var(--serif);font-size:clamp(80px,15vw,180px);
+  font-weight:300;color:rgba(255,255,255,0.03);position:absolute;
+  top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;
+  letter-spacing:0.2em;pointer-events:none;user-select:none;
+}
+.auth-card{
+  width:min(420px,92vw);background:var(--surface);border-radius:12px;
+  padding:clamp(28px,5vw,48px);position:relative;box-shadow:0 40px 100px rgba(0,0,0,0.5);
+}
+.auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),#C4960A);border-radius:12px 12px 0 0}
+.auth-logo{font-family:var(--serif);font-size:2.4rem;font-weight:300;letter-spacing:0.15em;color:var(--ink);margin-bottom:4px;text-transform:uppercase}
+.auth-tagline{font-family:var(--mono);font-size:0.68rem;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:32px}
+.role-tabs{display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:3px;margin-bottom:24px}
+.role-tab{padding:9px;font-size:0.8rem;font-weight:500;color:var(--muted);background:transparent;border:none;border-radius:4px;transition:.2s;letter-spacing:.02em}
+.role-tab.active{background:var(--ink);color:#fff}
+.field{margin-bottom:14px}
+.field label{display:block;font-family:var(--mono);font-size:0.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:5px}
+.field input{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:0.9rem;color:var(--ink);outline:none;transition:border-color .2s}
+.field input:focus{border-color:var(--gold);background:var(--surface)}
+.btn-auth{width:100%;padding:12px;background:var(--ink);color:#fff;border:none;border-radius:var(--r);font-size:0.9rem;font-weight:600;letter-spacing:.04em;transition:.2s;margin-top:6px}
+.btn-auth:hover{background:var(--ink2)}
+.auth-note{font-family:var(--mono);font-size:0.7rem;color:var(--dim);text-align:center;margin-top:18px;line-height:1.6}
+.api-field{margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
+.api-row{display:flex;gap:8px;margin-top:5px}
+.api-row input{flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:0.8rem;font-family:var(--mono);color:var(--ink);outline:none}
+.api-row input:focus{border-color:var(--gold)}
+.btn-save-key{padding:9px 14px;background:var(--gold-bg);border:1px solid var(--gold-lt);color:var(--gold);font-size:0.8rem;font-weight:600;border-radius:var(--r);transition:.2s;white-space:nowrap}
+.btn-save-key:hover{background:var(--gold-lt)}
+.key-note{font-family:var(--mono);font-size:0.65rem;color:var(--dim);margin-top:5px}
+
+/* ══════════════════════════════════════════
+   APP SHELL
+══════════════════════════════════════════ */
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.visible{display:flex}
+
+/* TOPBAR */
+.topbar{
+  height:54px;background:var(--ink);display:flex;align-items:center;
+  justify-content:space-between;padding:0 24px;flex-shrink:0;
+  position:sticky;top:0;z-index:100;
+}
+.tb-logo{font-family:var(--serif);font-size:1.4rem;font-weight:300;letter-spacing:.2em;color:#fff;text-transform:uppercase}
+.tb-logo span{color:var(--gold);font-style:italic}
+.tb-right{display:flex;align-items:center;gap:14px}
+.tb-user{font-family:var(--mono);font-size:0.72rem;color:rgba(255,255,255,0.45);letter-spacing:.05em}
+.tb-badge{font-family:var(--mono);font-size:0.65rem;padding:3px 9px;border-radius:20px;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+.badge-admin{background:rgba(139,105,20,.2);color:#D4A843;border:1px solid rgba(139,105,20,.3)}
+.badge-student{background:rgba(45,106,79,.2);color:#5BAA84;border:1px solid rgba(45,106,79,.3)}
+.btn-signout{background:none;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.4);font-family:var(--mono);font-size:0.68rem;padding:4px 10px;border-radius:var(--r);transition:.2s;letter-spacing:.03em}
+.btn-signout:hover{border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)}
+
+/* MAIN LAYOUT */
+.app-body{flex:1;display:flex;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{
+  width:210px;background:var(--surface);border-right:1px solid var(--border);
+  padding:20px 0;flex-shrink:0;overflow-y:auto;
+}
+.nav-section{font-family:var(--mono);font-size:0.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);padding:0 20px;margin:20px 0 6px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 20px;
+  font-size:0.88rem;font-weight:500;color:var(--muted);
+  border-left:2px solid transparent;transition:.15s;cursor:pointer;user-select:none;
+}
+.nav-item:hover{color:var(--ink);background:rgba(26,23,20,.03)}
+.nav-item.active{color:var(--ink);border-left-color:var(--gold);background:rgba(139,105,20,.05)}
+.nav-ic{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:clamp(20px,4vw,40px) clamp(20px,4vw,44px)}
+.page{display:none}
+.page.active{display:block}
+.page-header{margin-bottom:28px}
+.page-title{font-family:var(--serif);font-size:2rem;font-weight:300;letter-spacing:-.01em;color:var(--ink);margin-bottom:3px}
+.page-sub{font-family:var(--mono);font-size:0.72rem;color:var(--muted);letter-spacing:.03em}
+
+/* ══════════════════════════════════════════
+   COMPONENTS
+══════════════════════════════════════════ */
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:18px;box-shadow:var(--shadow)}
+.card-label{font-family:var(--mono);font-size:0.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow)}
+.stat-label{font-family:var(--mono);font-size:0.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.stat-value{font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--ink);line-height:1;letter-spacing:-.02em}
+.stat-hint{font-family:var(--mono);font-size:0.68rem;color:var(--dim);margin-top:3px}
+
+/* Question display */
+.q-card{
+  background:var(--ink);border-radius:10px;padding:clamp(22px,4vw,34px);
+  margin-bottom:18px;position:relative;overflow:hidden;
+}
+.q-card::before{
+  content:'"';font-family:var(--serif);font-size:140px;color:rgba(255,255,255,.04);
+  position:absolute;top:-20px;left:16px;line-height:1;pointer-events:none;
+}
+.q-type-tag{
+  display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);
+  font-size:0.65rem;letter-spacing:.15em;text-transform:uppercase;
+  padding:4px 10px;border-radius:20px;margin-bottom:14px;
+}
+.tag-pi{background:rgba(139,105,20,.2);color:#D4A843;border:1px solid rgba(139,105,20,.25)}
+.tag-gd{background:rgba(74,144,226,.2);color:#7AB3E8;border:1px solid rgba(74,144,226,.25)}
+.tag-none{background:rgba(255,255,255,.06);color:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.08)}
+.q-number{font-family:var(--mono);font-size:0.65rem;color:rgba(255,255,255,.25);margin-bottom:10px;letter-spacing:.1em}
+.q-text{font-family:var(--serif);font-size:clamp(1.1rem,2.5vw,1.5rem);font-weight:300;line-height:1.5;color:#F5F2EC;position:relative;z-index:1}
+.q-instructions{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1)}
+.q-inst-label{font-family:var(--mono);font-size:0.62rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:8px}
+.q-inst-item{font-family:var(--mono);font-size:0.72rem;color:rgba(255,255,255,.45);padding:2px 0;display:flex;gap:8px}
+.q-inst-item::before{content:'—';color:rgba(255,255,255,.2)}
+.q-meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-family:var(--mono);font-size:0.68rem;color:rgba(255,255,255,.3)}
+
+/* Recorder */
+.recorder{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;text-align:center;box-shadow:var(--shadow);margin-bottom:18px}
+.rec-state{font-family:var(--mono);font-size:0.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;min-height:20px}
+.waveform{display:flex;align-items:center;justify-content:center;gap:3px;height:40px;margin-bottom:16px}
+.wv-bar{width:3px;background:var(--gold);border-radius:2px;animation:wv .6s ease-in-out infinite;transition:background .3s}
+@keyframes wv{0%,100%{height:3px}50%{height:28px}}
+.waveform.idle .wv-bar{animation:none;height:3px;background:var(--border2)}
+.waveform.proc .wv-bar{background:var(--blue);animation:wv .4s ease-in-out infinite}
+.rec-timer{font-family:var(--serif);font-size:3.5rem;font-weight:300;color:var(--ink);line-height:1;margin-bottom:12px;letter-spacing:-.04em;transition:color .3s}
+.rec-timer.warn{color:var(--gold)}
+.rec-timer.danger{color:var(--red)}
+.rec-track{height:2px;background:var(--border);border-radius:2px;margin-bottom:24px;overflow:hidden}
+.rec-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 1s linear,background .3s}
+.rec-fill.danger{background:var(--red)}
+.rec-btn-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:18px}
+.btn-circle{width:58px;height:58px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:1.3rem;transition:.2s;flex-shrink:0}
+.btn-record{background:var(--red);color:#fff;box-shadow:0 4px 20px rgba(155,35,53,.3)}
+.btn-record:hover{transform:scale(1.05);box-shadow:0 6px 28px rgba(155,35,53,.4)}
+.btn-stop{background:var(--ink);color:#fff}
+.btn-stop:hover{background:var(--ink2)}
+.btn-play{background:var(--green-bg);color:var(--green);border:1px solid rgba(45,106,79,.2)}
+.btn-play:hover{background:rgba(45,106,79,.15)}
+.hidden{display:none!important}
+.rec-pulsedot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);margin-right:6px;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+.btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn-secondary{padding:9px 18px;background:var(--bg);border:1px solid var(--border);color:var(--ink);font-size:0.85rem;font-weight:500;border-radius:var(--r);transition:.2s}
+.btn-secondary:hover{border-color:var(--border2);background:var(--surface)}
+.btn-primary{padding:11px 26px;background:var(--green);color:#fff;border:none;font-size:0.88rem;font-weight:600;border-radius:var(--r);transition:.2s;letter-spacing:.02em}
+.btn-primary:hover{background:#235840}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed}
+.btn-gold{padding:10px 20px;background:var(--gold-bg);border:1px solid var(--gold-lt);color:var(--gold);font-size:0.85rem;font-weight:600;border-radius:var(--r);transition:.2s}
+.btn-gold:hover{background:var(--gold-lt)}
+.rec-note{font-family:var(--mono);font-size:0.68rem;color:var(--dim);margin-top:14px;line-height:1.6}
+
+/* Score display */
+.score-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:18px;box-shadow:var(--shadow)}
+.score-head{background:var(--ink);padding:20px 24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.score-number{font-family:var(--serif);font-size:3.5rem;font-weight:300;color:var(--gold);line-height:1;letter-spacing:-.03em}
+.score-denom{font-family:var(--mono);font-size:0.75rem;color:rgba(255,255,255,.35);margin-top:2px}
+.score-flag{display:inline-block;font-family:var(--mono);font-size:0.65rem;padding:4px 10px;border-radius:20px;letter-spacing:.1em;text-transform:uppercase;margin-top:6px}
+.flag-pass{background:rgba(45,106,79,.25);color:#5BAA84;border:1px solid rgba(45,106,79,.3)}
+.flag-needs{background:rgba(155,35,53,.25);color:#D4758A;border:1px solid rgba(155,35,53,.3)}
+.score-body{padding:20px 24px}
+.crit-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.crit-row:last-child{border:none}
+.crit-name{font-size:0.88rem;font-weight:500;color:var(--ink);flex:0 0 180px}
+.crit-bar{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.crit-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .9s cubic-bezier(.4,0,.2,1)}
+.crit-score{font-family:var(--mono);font-size:0.78rem;color:var(--muted);min-width:36px;text-align:right}
+.score-feedback{margin-top:16px;padding:16px;background:var(--bg);border-radius:var(--r);border-left:3px solid var(--gold)}
+.fb-label{font-family:var(--mono);font-size:0.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.fb-text{font-size:0.9rem;color:var(--ink2);line-height:1.65}
+.improve-box{margin-top:12px;padding:14px;background:var(--blue-bg);border-radius:var(--r);border-left:3px solid var(--blue)}
+.improve-label{font-family:var(--mono);font-size:0.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:5px}
+.improve-text{font-size:0.88rem;color:var(--blue);line-height:1.6}
+
+/* Banners */
+.banner{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;border-radius:var(--r);margin-bottom:18px}
+.banner-ok{background:var(--green-bg);border:1px solid rgba(45,106,79,.2)}
+.banner-warn{background:var(--gold-bg);border:1px solid rgba(139,105,20,.2)}
+.banner-info{background:var(--blue-bg);border:1px solid rgba(26,60,94,.15)}
+.banner-err{background:var(--red-bg);border:1px solid rgba(155,35,53,.2)}
+.banner-ic{font-size:1.2rem;flex-shrink:0;margin-top:1px}
+.banner-title{font-size:0.9rem;font-weight:600;margin-bottom:2px}
+.banner-sub{font-family:var(--mono);font-size:0.7rem;color:var(--muted);line-height:1.5}
+
+/* Tables */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:18px;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse}
+th{font-family:var(--mono);font-size:0.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--card)}
+td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:0.88rem;vertical-align:middle}
+tr:last-child td{border:none}
+tr:hover td{background:rgba(26,23,20,.02)}
+.pill{display:inline-block;font-family:var(--mono);font-size:0.68rem;padding:3px 9px;border-radius:20px;font-weight:500}
+.pill-hi{background:var(--green-bg);color:var(--green);border:1px solid rgba(45,106,79,.2)}
+.pill-mid{background:var(--gold-bg);color:var(--gold);border:1px solid rgba(139,105,20,.2)}
+.pill-lo{background:var(--red-bg);color:var(--red);border:1px solid rgba(155,35,53,.2)}
+.pill-na{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.tag{font-family:var(--mono);font-size:0.62rem;padding:2px 8px;border-radius:3px;letter-spacing:.05em;text-transform:uppercase}
+.tag-pi{background:var(--gold-bg);color:var(--gold)}
+.tag-gd{background:var(--blue-bg);color:var(--blue)}
+
+/* Grid layouts */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+/* Form fields */
+.form-field{margin-bottom:14px}
+.form-field label{display:block;font-family:var(--mono);font-size:0.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.form-field input,.form-field select,.form-field textarea{
+  width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r);font-size:0.9rem;color:var(--ink);outline:none;transition:border-color .2s;
+}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--gold);background:var(--surface)}
+.form-field textarea{resize:vertical;min-height:90px;font-size:0.85rem;line-height:1.6}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* Progress chart */
+.chart-bars{display:flex;align-items:flex-end;gap:6px;height:80px;margin-top:10px}
+.bc-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.bc-bar{width:100%;border-radius:3px 3px 0 0;background:var(--gold);opacity:.75;min-height:3px;transition:height .7s ease}
+.bc-bar.gd-bar{background:var(--blue)}
+.bc-bar.empty-bar{background:var(--border2);opacity:1}
+.bc-val{font-family:var(--mono);font-size:0.6rem;color:var(--muted)}
+.bc-lbl{font-family:var(--mono);font-size:0.6rem;color:var(--dim);text-align:center}
+
+/* Streak dots */
+.streak-dots{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.dot{width:20px;height:20px;border-radius:50%;background:var(--border2);position:relative}
+.dot.done{background:var(--gold)}
+.dot.miss{background:rgba(155,35,53,.15)}
+.dot.today{background:var(--green)}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:24px;right:24px;background:var(--ink);border-left:3px solid var(--gold);
+  color:#fff;font-family:var(--mono);font-size:0.78rem;padding:12px 18px;border-radius:var(--r);
+  box-shadow:var(--shadow-lg);transform:translateY(20px);opacity:0;
+  transition:.3s cubic-bezier(.4,0,.2,1);z-index:999;max-width:300px;pointer-events:none;
+}
+.toast.show{transform:translateY(0);opacity:1;pointer-events:auto}
+.toast.ok{border-left-color:var(--green)}
+.toast.err{border-left-color:var(--red)}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(3px)}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:clamp(22px,4vw,32px);width:min(560px,92vw);max-height:85vh;overflow-y:auto;position:relative;box-shadow:var(--shadow-lg)}
+.modal-title{font-family:var(--serif);font-size:1.6rem;font-weight:300;margin-bottom:3px}
+.modal-sub{font-family:var(--mono);font-size:0.7rem;color:var(--muted);margin-bottom:20px}
+.modal-x{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);font-size:1.2rem;padding:4px 8px;border-radius:var(--r);transition:.2s}
+.modal-x:hover{background:var(--bg);color:var(--ink)}
+
+/* Loader */
+.loader{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px}
+.spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-txt{font-family:var(--mono);font-size:0.72rem;color:var(--muted);letter-spacing:.05em}
+
+/* Transcript box */
+.transcript{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px;font-family:var(--mono);font-size:0.78rem;line-height:1.75;color:var(--ink2);max-height:180px;overflow-y:auto;white-space:pre-wrap;margin-bottom:14px}
+
+/* Divider */
+.div{height:1px;background:var(--border);margin:20px 0}
+
+/* No-session */
+.no-session{text-align:center;padding:60px 20px}
+.ns-big{font-family:var(--serif);font-size:1.4rem;font-weight:300;color:var(--muted);margin-bottom:8px}
+.ns-sub{font-family:var(--mono);font-size:0.72rem;color:var(--dim)}
+
+/* Responsive */
+@media(max-width:900px){
+  .sidebar{display:none}
+  .stats-row,.g4{grid-template-columns:1fr 1fr}
+  .g2{grid-template-columns:1fr}
+  .crit-name{flex:0 0 120px;font-size:.8rem}
+  .stats-row{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .stats-row,.g4,.g3{grid-template-columns:1fr 1fr}
+  .form-row{grid-template-columns:1fr}
+  .topbar{padding:0 16px}
+  .content{padding:18px}
+}
+
+/* Admin question list */
+.q-list-item{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)}
+.q-list-item:last-child{border:none}
+.q-num{font-family:var(--mono);font-size:0.7rem;color:var(--dim);min-width:28px;margin-top:2px}
+.q-list-text{flex:1;font-size:0.88rem;line-height:1.5;color:var(--ink2)}
+.q-list-actions{display:flex;gap:6px;flex-shrink:0}
+.btn-tiny{padding:4px 10px;font-size:0.72rem;font-weight:500;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--muted);transition:.2s}
+.btn-tiny:hover{border-color:var(--border2);color:var(--ink)}
+.btn-tiny.danger:hover{border-color:var(--red);color:var(--red)}
+
+/* Submission not-yet state */
+.not-submitted-note{font-family:var(--mono);font-size:0.72rem;color:var(--muted);text-align:center;padding:20px;background:var(--bg);border-radius:var(--r);border:1px dashed var(--border)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     AUTH SCREEN
+═══════════════════════════════════════ -->
+<div id="auth-screen" style="display: none;">
+  <div class="auth-card">
+    <div class="auth-logo">Clarion</div>
+    <div class="auth-tagline">Daily Speaking Practice · MBA Prep</div>
+
+    <div class="role-tabs">
+      <button class="role-tab" onclick="setRole('student',this)">Student</button>
+      <button class="role-tab active" onclick="setRole('admin',this)">Trainer / Admin</button>
+    </div>
+
+    <div class="field">
+      <label>Email</label>
+      <input id="a-email" type="email" placeholder="you@institute.com" value="student@clarion.com">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input id="a-pass" type="password" placeholder="••••••••" value="demo">
+    </div>
+    <button class="btn-auth" onclick="login()">Sign in →</button>
+
+    <div class="api-field">
+      <label class="field" style="margin:0"><span style="font-family:var(--mono);font-size:0.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Gemini API Key <span style="color:var(--dim)">(free — aistudio.google.com)</span></span></label>
+      <div class="api-row">
+        <input id="a-apikey" type="password" placeholder="AIza…" autocomplete="off" value="AIzaSyAobDI9wRCHkZoWBJ-HNisRZE6WqGfaeww">
+        <button class="btn-save-key" onclick="saveKey()">Save</button>
+      </div>
+      <div class="key-note">Free Gemini key. Stays in your browser only. Never shared. Get it at aistudio.google.com</div>
+    </div>
+
+    <div class="auth-note">
+      Demo: <strong style="color:var(--ink)">student@clarion.com</strong> or <strong style="color:var(--ink)">trainer@clarion.com</strong><br>
+      Password: anything · Add your Gemini key above for live scoring
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     APP
+═══════════════════════════════════════ -->
+<div id="app" class="visible">
+  <div class="topbar">
+    <div class="tb-logo">Clar<span>ion</span></div>
+    <div class="tb-right">
+      <span class="tb-user" id="tb-user">Trainer</span>
+      <span class="tb-badge badge-admin" id="tb-badge">Trainer</span>
+      <button class="btn-signout" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+  <div class="app-body">
+    <div class="sidebar" id="sidebar"><div class="nav-section">Trainer Panel</div><div class="nav-item" id="ni-adm-dash" onclick="nav('adm-dash')"><span class="nav-ic">📊</span>Dashboard</div><div class="nav-item" id="ni-adm-students" onclick="nav('adm-students')"><span class="nav-ic">👥</span>Students</div><div class="nav-item" id="ni-adm-review" onclick="nav('adm-review')"><span class="nav-ic">🎧</span>Review Audio</div><div class="nav-item" id="ni-adm-qbank" onclick="nav('adm-qbank')"><span class="nav-ic">📝</span>Question Bank</div><div class="nav-item active" id="ni-adm-setup" onclick="nav('adm-setup')"><span class="nav-ic">⚙️</span>Setup &amp; Access</div></div>
+    <div class="content" id="content"><div class="page-header"><div class="page-title">Setup &amp; Access</div><div class="page-sub">1 active students · 1 total</div></div>
+  <div class="banner banner-ok"><span class="banner-ic">✅</span><div>
+    <div class="banner-title">1 active students ready to log in</div>
+    <div class="banner-sub">Add students below. After adding, click Download Updated App and drag to Netlify. Works on every device.</div>
+  </div></div>
+  <div class="card">
+    <div class="card-label">Add a student</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><div style="font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px">Full name</div>
+        <input id="ns-name" type="text" placeholder="Arjun Mehta" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.9rem;color:var(--ink);outline:none"></div>
+      <div><div style="font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px">Email</div>
+        <input id="ns-email" type="email" placeholder="arjun@gmail.com" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.9rem;color:var(--ink);outline:none"></div>
+      <div><div style="font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px">Password</div>
+        <input id="ns-pw" type="text" placeholder="Welcome@1" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.9rem;color:var(--ink);outline:none"></div>
+      <div><div style="font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px">Batch</div>
+        <input id="ns-batch" type="text" placeholder="Batch A 2026" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.9rem;color:var(--ink);outline:none"></div>
+    </div>
+    <button class="btn-primary" onclick="addStudent()">Add student</button>
+  </div>
+  <div class="card">
+    <div class="card-label">Bulk add — one per line: name, email, password, batch</div>
+    <textarea id="bulk-input" placeholder="Arjun Mehta, arjun@gmail.com, Welcome@1, Batch A" style="width:100%;min-height:100px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:.78rem;color:var(--ink);outline:none;resize:vertical"></textarea>
+    <button class="btn-primary" style="margin-top:10px" onclick="bulkAdd()">Import students</button>
+  </div>
+  <div class="card" style="background:rgba(46,204,122,.05);border-color:rgba(46,204,122,.2)">
+    <div class="card-label" style="color:var(--green)">⬇ Download &amp; Deploy</div>
+    <p style="font-size:.88rem;color:var(--ink2);margin-bottom:14px;line-height:1.6">After adding students, click Download. Drag the file to Netlify. Done in 30 seconds.</p>
+    <button class="btn-primary" style="background:var(--green)" onclick="downloadUpdatedApp()">Download Updated App →</button>
+  </div>
+  <div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Name</th><th>Email</th><th>Password</th><th>Batch</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody><tr><td style="font-weight:600;font-size:.88rem">Suhasini</td><td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">suhasini@gmail.com</td><td style="font-family:var(--mono);font-size:.75rem">Seemu2025</td><td style="font-size:.82rem">T1</td><td style="font-family:var(--mono);font-size:.72rem;color:var(--green)">Active</td><td style="display:flex;gap:5px"><button class="btn-tiny" onclick="toggleStudent('suhasini@gmail.com')">Block</button><button class="btn-tiny" onclick="resetStudentPw('suhasini@gmail.com')">Reset pw</button><button class="btn-tiny" onclick="removeStudent('suhasini@gmail.com')">✕</button></td></tr></tbody>
+  </table></div>
+  <div class="card" style="margin-top:18px">
+    <div class="card-label">Change trainer password</div>
+    <p style="font-size:.85rem;color:var(--ink2);margin-bottom:10px">Default: <strong>Clarion@2026</strong></p>
+    <div style="display:flex;gap:10px">
+      <input id="new-pw" type="password" placeholder="New password (min 6 chars)" style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.9rem;color:var(--ink);outline:none">
+      <button class="btn-primary" onclick="changeTrainerPw()">Update</button>
+    </div>
+    <button class="btn-secondary" style="margin-top:8px;font-size:.8rem" onclick="resetTrainerPw()">Reset to Clarion@2026</button>
+  </div></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal"><button class="modal-x" onclick="closeModal()">✕</button><div id="modal-body"></div></div>
+</div>
+
+<div class="toast" id="toast">Incorrect trainer password.</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// QUESTION BANKS
+// ═══════════════════════════════════════════════════════════
+const PI_QUESTIONS = [
+  {text:"Tell me something about yourself",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Why did you choose your specialization?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Tell me about your SIP (internship)",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What are your strengths?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Tell me about a challenge during your internship",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Why should we hire you?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What did you learn from your SIP?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What skills did you use in your internship?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Tell me about a time you showed initiative",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Tell me about a time you worked under pressure",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What is your weakness?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"How are you improving your weakness?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Tell me about a failure",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What did you learn from that failure?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Tell me about a mistake you made",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Describe a decision you made",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Why did you choose that option?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What alternatives did you consider?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What would you do differently now?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Tell me about a tough choice you had to make",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Describe a team experience",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What role did you play in your team?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"How did you contribute to your team?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Tell me about a team problem",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"How did you solve a team issue?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Describe a conflict situation",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What caused the conflict?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"How did you handle it?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What was the result?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What did you learn from conflict?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Describe a leadership experience",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What actions did you take as a leader?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"How did you influence others?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What challenges did you face as a leader?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What changed because of your leadership?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What are your career goals?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Why do you want this role?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What skills do you bring?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"What have you done to prepare?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+  {text:"Where do you see yourself in 3–5 years?",instructions:["Speak for up to 40 seconds","Tell 2–3 things only","Say what YOU did (not general talk)","Add why you did it","End with what happened / what you learned","No fillers like umm, basically, like"]},
+];
+
+const GD_QUESTIONS = [
+  {text:"Should companies prioritise skills over degrees in hiring?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Is an MBA necessary for career growth?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Are internships more valuable than classroom learning?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Should placements define success of an institute?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Is social media more harmful than useful?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Will AI replace more jobs than it creates?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Is technology reducing human interaction?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Should data privacy be more important than innovation?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Should companies prioritise profits over employee well-being?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Is remote work better than office work?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Should companies invest more in training than hiring?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Is the customer always right?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Is failure necessary for success?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Are leaders born or made?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Should competition be encouraged or controlled?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+  {text:"Is consistency more important than talent?",instructions:["Speak for up to 40 seconds","Start with a clear position (agree or disagree)","Give one strong reason","Add one new point (do not repeat others)","Invite others (what do others think?)","Keep it short and clear"]},
+];
+
+// ═══════════════════════════════════════════════════════════
+// SCHEDULE ENGINE
+// Program start: 12 May 2026 (Monday — first PI on 13 May, GD on 15 May)
+// ═══════════════════════════════════════════════════════════
+const PROGRAM_START = new Date('2026-05-12T00:00:00');
+
+function getTodayInfo(dateOverride) {
+  const today = dateOverride || new Date();
+  const day = today.getDay(); // 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
+  const isPIday = [2,3,4].includes(day);
+  const isGDday = day === 5;
+  if (!isPIday && !isGDday) return { active:false };
+
+  const msPerDay = 86400000;
+  const daysSinceStart = Math.floor((today - PROGRAM_START) / msPerDay);
+  const oneMonthDays = 30;
+  const useRandom = daysSinceStart >= oneMonthDays;
+
+  const type = isPIday ? 'pi' : 'gd';
+  const bank = type === 'pi' ? PI_QUESTIONS : GD_QUESTIONS;
+
+  // Count sessions of this type that have occurred up to today
+  let sessionCount = 0;
+  for (let d = new Date(PROGRAM_START); d < today; d = new Date(d.getTime() + msPerDay)) {
+    const dday = d.getDay();
+    if (type==='pi' && [2,3,4].includes(dday)) sessionCount++;
+    if (type==='gd' && dday===5) sessionCount++;
+  }
+
+  let idx;
+  if (useRandom) {
+    const seed = parseInt(today.toISOString().split('T')[0].replace(/-/g,''));
+    idx = Math.abs(Math.floor(Math.sin(seed)*9999)) % bank.length;
+  } else {
+    idx = sessionCount % bank.length;
+  }
+
+  const nextDay = getNextSessionDay(today);
+  return { active:true, type, question:bank[idx], idx, questionNum:idx+1, bank:bank.length, isRandom:useRandom, nextDay };
+}
+
+function getNextSessionDay(from) {
+  const d = new Date(from.getTime() + 86400000);
+  for (let i=0;i<7;i++) {
+    const day = d.getDay();
+    if ([2,3,4,5].includes(day)) return d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+    d.setDate(d.getDate()+1);
+  }
+  return 'Next week';
+}
+
+// ═══════════════════════════════════════════════════════════
+// DEMO DATA STORE (in-memory — real app uses Supabase)
+// ═══════════════════════════════════════════════════════════
+const TRAINER_EMAIL='trainer@clarion.com',TRAINER_PASSWORD='Clarion@2026',TRAINER_NAME='Trainer';
+let EMBEDDED_STUDENTS={"suhasini@gmail.com":{"name":"Suhasini","password":"Seemu2025","batch":"T1","active":true}},STUDENT_REGISTRY={},ALL_STUDENT_EMAILS=[];
+function getStudents(){try{const s=localStorage.getItem('cs2');if(s)return Object.assign({},EMBEDDED_STUDENTS,JSON.parse(s));}catch(e){}return Object.assign({},EMBEDDED_STUDENTS);}
+function putStudents(d){localStorage.setItem('cs2',JSON.stringify(d));}
+function loadRegistry(){const d=getStudents();STUDENT_REGISTRY={};ALL_STUDENT_EMAILS=[];Object.entries(d).forEach(([e,s])=>{STUDENT_REGISTRY[e]=s;if(s.active)ALL_STUDENT_EMAILS.push(e);});}
+
+// ALL_STUDENT_EMAILS set by loadRegistry
+
+// Seed some demo submissions
+const SUBMISSIONS = {};
+(()=>{
+  const pi_samples = [
+    { c1:4,c2:4,c3:3,c4:4,c5:3, fb:"Good structure and clear delivery. Strong use of the STAR format with specific examples from internship. Business context was well-articulated.", imp:"Add a specific metric or outcome number to make your examples more concrete.", flag:"pass" },
+    { c1:3,c2:4,c3:2,c4:3,c5:4, fb:"Relevant answer with professional tone. However, examples were a bit vague and could benefit from more specificity.", imp:"Instead of saying 'I helped the team', say exactly what you did and what changed as a result.", flag:"needs_improvement" },
+    { c1:5,c2:5,c3:4,c4:4,c5:4, fb:"Excellent response. Highly structured, directly relevant, with concrete examples and strong business awareness throughout.", imp:"Slightly reduce filler pauses between points for a more polished delivery.", flag:"pass" },
+  ];
+  const gd_samples = [
+    { c1:4,c2:3,c3:3,c4:3,c5:4, fb:"Clear entry point with a defined position. Reasoning was logical though could go deeper. Good composure throughout.", imp:"After stating your position, immediately add one supporting data point or example before inviting others.", flag:"pass" },
+    { c1:3,c2:4,c3:2,c4:2,c5:3, fb:"Strong argument quality but entry was hesitant. Listening cues were minimal — the response did not acknowledge the topic context.", imp:"Start with one confident sentence that states your position clearly before building your argument.", flag:"needs_improvement" },
+  ];
+
+  const baseDate = new Date('2026-05-13');
+  ALL_STUDENT_EMAILS.forEach((email, si) => {
+    SUBMISSIONS[email] = [];
+    for (let i=0;i<8;i++) {
+      const d = new Date(baseDate.getTime() + i*86400000);
+      const day = d.getDay();
+      if (![2,3,4,5].includes(day)) continue;
+      const type = day===5?'gd':'pi';
+      const miss = (si===3&&i%3===0)||(si===5&&i%2===1);
+      if (miss) { SUBMISSIONS[email].push({ date:d.toISOString().split('T')[0], type, submitted:false }); continue; }
+      const sample = type==='pi'?pi_samples[i%pi_samples.length]:gd_samples[i%gd_samples.length];
+      const total = sample.c1+sample.c2+sample.c3+sample.c4+sample.c5;
+      const qidx = i % (type==='pi'?PI_QUESTIONS.length:GD_QUESTIONS.length);
+      SUBMISSIONS[email].push({
+        date:d.toISOString().split('T')[0], type, submitted:true,
+        question:(type==='pi'?PI_QUESTIONS:GD_QUESTIONS)[qidx].text,
+        transcript:"The student provided a structured response addressing the question with relevant personal examples from their internship experience. Key points were delivered clearly with appropriate professional tone.",
+        score:total, max:25,
+        criteria: type==='pi'
+          ? [{name:'Structure & Clarity',s:sample.c1},{name:'Relevance',s:sample.c2},{name:'Specificity / Evidence',s:sample.c3},{name:'Business Awareness',s:sample.c4},{name:'Communication',s:sample.c5}]
+          : [{name:'Entry & Clarity',s:sample.c1},{name:'Reasoning & Content',s:sample.c2},{name:'Listening / Building',s:sample.c3},{name:'Leadership / Participation',s:sample.c4},{name:'Composure & Tone',s:sample.c5}],
+        feedback:sample.fb, improvement:sample.imp,
+        flag:sample.flag, duration:28+Math.floor(Math.random()*10),
+        trainerComment:'', trainerFlagged:false
+      });
+    }
+  });
+})();
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let S = {
+  user:null, role:null, page:null, apiKey:'',
+  recording:false, recorded:false, recSecs:0, recLimit:40, recTimer:null,
+  mediaRec:null, audioBlob:null, audioEl:null,
+  transcript:'', scoreResult:null, submittedToday:false,
+};
+let authRole = 'student';
+
+// ═══════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════
+function setRole(r,btn) {
+  authRole=r;
+  document.querySelectorAll('.role-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('a-email').value = r==='admin'?'trainer@clarion.com':'student@clarion.com';
+}
+function saveKey() {
+  const k=document.getElementById('a-apikey').value.trim();
+  if(k){S.apiKey=k;sessionStorage.setItem('clarion_key',k);toast('API key saved','ok');}
+}
+function login(){
+  const email=document.getElementById('a-email').value.trim().toLowerCase();
+  const pass=document.getElementById('a-pass').value.trim();
+  const btn=document.querySelector('.btn-auth');
+  const fail=(m)=>{toast(m,'err');if(btn){btn.textContent='Sign in →';btn.disabled=false;}};
+  if(btn){btn.textContent='Signing in…';btn.disabled=true;}
+  if(email===TRAINER_EMAIL){
+    const pw=localStorage.getItem('clarion_trainer_pw')||TRAINER_PASSWORD;
+    if(pass!==pw){fail('Incorrect trainer password.');return;}
+    S.user={email,name:TRAINER_NAME,role:'admin',id:'T001',batch:''};S.role='admin';finishLogin();return;
+  }
+  loadRegistry();
+  const st=STUDENT_REGISTRY[email];
+  if(!st){fail('Email not found. Contact your trainer.');return;}
+  if(!st.active){fail('Account inactive. Contact your trainer.');return;}
+  if(String(st.password)!==String(pass)){fail('Incorrect password.');return;}
+  S.user={email,name:st.name,role:'student',id:'S'+email,batch:st.batch||'Batch A'};
+  S.role='student';finishLogin();
+}
+function finishLogin() {
+  try {
+    const saved=sessionStorage.getItem('clarion_key');
+    const defaultKey='AIzaSyAobDI9wRCHkZoWBJ-HNisRZE6WqGfaeww';
+    S.apiKey=saved||defaultKey;
+    sessionStorage.setItem('clarion_key',S.apiKey);
+    const authEl=document.getElementById('auth-screen');
+    const appEl=document.getElementById('app');
+    if(authEl) authEl.style.display='none';
+    if(appEl) appEl.classList.add('visible');
+    const userEl=document.getElementById('tb-user');
+    if(userEl) userEl.textContent=S.user.name;
+    const badge=document.getElementById('tb-badge');
+    if(badge){
+      badge.textContent=S.role==='admin'?'Trainer':'Student';
+      badge.className='tb-badge '+(S.role==='admin'?'badge-admin':'badge-student');
+    }
+    buildSidebar();
+    nav(S.role==='admin'?'adm-dash':'stu-today');
+    // Reset button
+    const btn=document.querySelector('.btn-auth');
+    if(btn){btn.textContent='Sign in →';btn.disabled=false;}
+  } catch(e) {
+    console.error('finishLogin error:',e);
+    toast('Login error: '+e.message,'err');
+    const btn=document.querySelector('.btn-auth');
+    if(btn){btn.textContent='Sign in →';btn.disabled=false;}
+  }
+}
+
+function logout() {
+  S.user=null;clearInterval(S.recTimer);
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('auth-screen').style.display='flex';
+}
+
+// ═══════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════
+const STU_NAV=[{id:'stu-today',ic:'🎙',lbl:"Today's Question"},{id:'stu-progress',ic:'📈',lbl:'My Progress'},{id:'stu-history',ic:'📋',lbl:'History'}];
+const ADM_NAV=[{id:'adm-dash',ic:'📊',lbl:'Dashboard'},{id:'adm-students',ic:'👥',lbl:'Students'},{id:'adm-review',ic:'🎧',lbl:'Review Audio'},{id:'adm-qbank',ic:'📝',lbl:'Question Bank'},{id:'adm-setup',ic:'⚙️',lbl:'Setup & Access'}];
+
+function buildSidebar() {
+  const items=S.role==='admin'?ADM_NAV:STU_NAV;
+  document.getElementById('sidebar').innerHTML=
+    `<div class="nav-section">${S.role==='admin'?'Trainer Panel':'My Practice'}</div>`+
+    items.map(i=>`<div class="nav-item" id="ni-${i.id}" onclick="nav('${i.id}')"><span class="nav-ic">${i.ic}</span>${i.lbl}</div>`).join('');
+}
+function nav(id) {
+  S.page=id;
+  document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
+  const el=document.getElementById('ni-'+id);if(el)el.classList.add('active');
+  ({
+    'stu-today':renderToday,'stu-progress':renderProgress,'stu-history':renderHistory,
+    'adm-dash':renderAdminDash,'adm-students':renderAdminStudents,
+    'adm-review':renderAdminReview,'adm-qbank':renderAdminQbank,'adm-setup':renderSetup,
+  }[id]||renderToday)();
+}
+function set(html){document.getElementById('content').innerHTML=html;}
+
+// ═══════════════════════════════════════════════════════════
+// STUDENT: TODAY
+// ═══════════════════════════════════════════════════════════
+function renderToday() {
+  const info = getTodayInfo();
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const dayName = today.toLocaleDateString('en-US',{weekday:'long'});
+  const dateStr = today.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+
+  if (!info.active) {
+    set(`<div class="page-header"><div class="page-title">Today's Question</div><div class="page-sub">${dayName}, ${dateStr}</div></div>
+    <div class="no-session">
+      <div style="font-size:2.5rem;margin-bottom:16px;opacity:.4">📅</div>
+      <div class="ns-big">No session today</div>
+      <div class="ns-sub">PI sessions: Tuesday · Wednesday · Thursday<br>GD sessions: Friday<br><br>Next session: ${info.nextDay||getNextSessionDay(today)}</div>
+    </div>`);
+    return;
+  }
+
+  const subs = SUBMISSIONS[S.user.email]||[];
+  const todaySub = subs.find(s=>s.date===todayStr&&s.submitted);
+  S.submittedToday = !!todaySub;
+
+  const typeLabel = info.type==='pi'?'Personal Interview':'Group Discussion';
+  const limit = info.type==='pi'?40:20;
+
+  set(`<div class="page-header">
+    <div class="page-title">Today's Question</div>
+    <div class="page-sub">${dayName}, ${dateStr} · ${info.isRandom?'Random order':'Sequential order'}</div>
+  </div>
+  <div class="q-card">
+    <div class="q-type-tag tag-${info.type}">${typeLabel} · Q${info.questionNum} of ${info.bank}</div>
+    <div class="q-text">${info.question.text}</div>
+    <div class="q-instructions">
+      <div class="q-inst-label">Instructions</div>
+      ${info.question.instructions.map(i=>`<div class="q-inst-item">${i}</div>`).join('')}
+    </div>
+    <div class="q-meta">
+      <span>⏱ ${limit}s max</span><span>🎙 Audio response</span><span>🔒 One attempt</span><span>🤖 AI scored</span>
+    </div>
+  </div>
+
+  ${todaySub ? renderScoreDisplay(todaySub, true) : renderRecorder(limit, info.type, info.question.text)}
+  <div id="proc-area"></div>`);
+}
+
+function renderRecorder(limit, type, questionText) {
+  S.recorded=false;S.recording=false;S.recSecs=0;S.recLimit=limit;
+  return `<div class="recorder" id="recorder">
+    <div class="rec-state" id="rec-state">Ready — press the microphone to begin</div>
+    <div class="waveform idle" id="wv">${Array.from({length:22},(_,i)=>`<div class="wv-bar" style="animation-delay:${i*.06}s"></div>`).join('')}</div>
+    <div class="rec-timer" id="rec-timer">0:00</div>
+    <div class="rec-track"><div class="rec-fill" id="rec-fill" style="width:0%"></div></div>
+    <div class="rec-btn-row">
+      <button class="btn-circle btn-record" id="btn-go" onclick="startRec(${limit})" title="Record">🎙</button>
+      <button class="btn-circle btn-stop hidden" id="btn-stop" onclick="stopRec()" title="Stop">⏹</button>
+      <button class="btn-circle btn-play hidden" id="btn-play" onclick="playRec()" title="Play back">▶</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary hidden" id="btn-rerec" onclick="reRecord()">↺ Re-record</button>
+      <button class="btn-primary" id="btn-submit" onclick="doSubmit('${type}','${encodeURIComponent(questionText)}')" disabled>Submit & Score →</button>
+    </div>
+    <div class="rec-note">You may listen back before submitting. Once submitted, this is locked — no changes allowed.</div>
+  </div>`;
+}
+
+function renderScoreDisplay(sub, showBanner) {
+  const pct = sub.score/sub.max*100;
+  const flagClass = sub.flag==='pass'?'flag-pass':'flag-needs';
+  const flagLabel = sub.flag==='pass'?'Pass ✓':'Needs Improvement';
+  return `
+  ${showBanner?`<div class="banner banner-ok"><span class="banner-ic">✅</span><div><div class="banner-title" style="color:var(--green)">Submitted & scored</div><div class="banner-sub">${sub.duration}s response · Scored by Gemini · ${sub.date}</div></div></div>`:''}
+  <div class="score-box">
+    <div class="score-head">
+      <div>
+        <div style="font-family:var(--mono);font-size:.65rem;letter-spacing:.12em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:4px">Your Score</div>
+        <div class="score-number">${sub.score}</div>
+        <div class="score-denom">out of ${sub.max}</div>
+        <span class="score-flag ${flagClass}">${flagLabel}</span>
+      </div>
+      <div style="text-align:right;font-family:var(--mono);font-size:.7rem;color:rgba(255,255,255,.3);line-height:1.8">
+        <div>${sub.type?.toUpperCase()}</div>
+        <div>${sub.duration}s</div>
+        <div>${Math.round(pct)}%</div>
+      </div>
+    </div>
+    <div class="score-body">
+      <div class="card-label">Criterion scores</div>
+      ${(sub.criteria||[]).map(c=>`
+        <div class="crit-row">
+          <div class="crit-name">${c.name}</div>
+          <div class="crit-bar"><div class="crit-fill" style="width:${(c.s/5)*100}%"></div></div>
+          <div class="crit-score">${c.s}/5</div>
+        </div>`).join('')}
+      ${sub.feedback?`<div class="score-feedback"><div class="fb-label">Feedback</div><div class="fb-text">${sub.feedback}</div></div>`:''}
+      ${sub.improvement?`<div class="improve-box"><div class="improve-label">One thing to improve</div><div class="improve-text">${sub.improvement}</div></div>`:''}
+      ${sub.trainerComment?`<div style="margin-top:12px;padding:12px;background:var(--gold-bg);border-radius:var(--r);border-left:3px solid var(--gold)"><div class="fb-label">Trainer comment</div><div class="fb-text">${sub.trainerComment}</div></div>`:''}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RECORDING ENGINE
+// ═══════════════════════════════════════════════════════════
+function startRec(limit) {
+  S.recSecs=0;S.recLimit=limit;S.recording=true;
+  document.getElementById('btn-go').classList.add('hidden');
+  document.getElementById('btn-stop').classList.remove('hidden');
+  document.getElementById('wv').classList.remove('idle');
+  tickRec();
+  S.recTimer=setInterval(()=>{S.recSecs++;tickRec();if(S.recSecs>=S.recLimit)stopRec();},1000);
+  if(navigator.mediaDevices?.getUserMedia){
+    navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+      const mime=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
+      S.mediaRec=new MediaRecorder(stream,{mimeType:mime});
+      const chunks=[];
+      S.mediaRec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+      S.mediaRec.onstop=()=>{
+        S.audioBlob=new Blob(chunks,{type:S.mediaRec.mimeType});
+        S.audioEl=new Audio(URL.createObjectURL(S.audioBlob));
+        stream.getTracks().forEach(t=>t.stop());
+      };
+      S.mediaRec.start(100);
+    }).catch(()=>toast('Microphone access denied — demo mode','err'));
+  }
+}
+function tickRec() {
+  const rem=S.recLimit-S.recSecs;
+  const m=Math.floor(S.recSecs/60),s=S.recSecs%60;
+  const bigEl=document.getElementById('rec-timer');
+  const fillEl=document.getElementById('rec-fill');
+  const statEl=document.getElementById('rec-state');
+  if(!bigEl)return;
+  bigEl.textContent=`${m}:${s.toString().padStart(2,'0')}`;
+  bigEl.className='rec-timer'+(rem<=5?' danger':rem<=10?' warn':'');
+  if(fillEl){fillEl.style.width=(S.recSecs/S.recLimit*100)+'%';fillEl.className='rec-fill'+(rem<=5?' danger':'');}
+  if(statEl)statEl.innerHTML=`<span class="rec-pulsedot"></span>Recording — ${rem}s remaining`;
+}
+function stopRec() {
+  clearInterval(S.recTimer);S.recording=false;S.recorded=true;
+  if(S.mediaRec&&S.mediaRec.state!=='inactive')S.mediaRec.stop();
+  document.getElementById('btn-stop').classList.add('hidden');
+  document.getElementById('btn-play').classList.remove('hidden');
+  document.getElementById('btn-rerec').classList.remove('hidden');
+  document.getElementById('btn-submit').disabled=false;
+  const wv=document.getElementById('wv');if(wv)wv.classList.add('idle');
+  const s=document.getElementById('rec-state');if(s)s.textContent=`Recorded — ${S.recSecs}s. Listen back or submit.`;
+}
+function playRec() {
+  if(S.audioEl){S.audioEl.currentTime=0;S.audioEl.play();}
+  else toast(`Demo: ${S.recSecs}s recorded (no mic access)`);
+}
+function reRecord() {
+  clearInterval(S.recTimer);S.recSecs=0;S.recorded=false;S.recording=false;
+  S.audioBlob=null;S.audioEl=null;
+  ['btn-go'].forEach(id=>document.getElementById(id)?.classList.remove('hidden'));
+  ['btn-stop','btn-play','btn-rerec'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+  document.getElementById('btn-submit').disabled=true;
+  const bigEl=document.getElementById('rec-timer');if(bigEl){bigEl.textContent='0:00';bigEl.className='rec-timer';}
+  const fillEl=document.getElementById('rec-fill');if(fillEl){fillEl.style.width='0%';fillEl.className='rec-fill';}
+  const wv=document.getElementById('wv');if(wv)wv.classList.add('idle');
+  const s=document.getElementById('rec-state');if(s)s.textContent='Ready — press the microphone to begin';
+}
+
+// ═══════════════════════════════════════════════════════════
+// SUBMIT + OPENAI PIPELINE
+// ═══════════════════════════════════════════════════════════
+const PI_CRITERIA_NAMES=['Structure & Clarity','Relevance','Specificity / Evidence','Business Awareness','Communication'];
+const GD_CRITERIA_NAMES=['Entry & Clarity','Reasoning & Content','Listening / Building','Leadership / Participation','Composure & Tone'];
+
+const PI_PROMPT=`You are an expert MBA PI evaluator. Score this Personal Interview response.
+Score each criterion 1–5. Return ONLY valid JSON, no markdown.
+
+CRITERIA:
+- structure_clarity: Logical organisation, clear beginning/middle/end, STAR format if applicable
+- relevance: Directly answers what was asked, no drifting  
+- specificity: Uses real examples, numbers, names — not vague statements
+- business_awareness: Shows professional context, industry knowledge, role awareness
+- communication: Appropriate tone, vocabulary, minimal fillers, professional delivery
+
+QUESTION: {Q}
+TRANSCRIPT: {T}
+
+Return exactly this JSON:
+{"structure_clarity":N,"relevance":N,"specificity":N,"business_awareness":N,"communication":N,"feedback":"2-3 sentence feedback in plain English","improvement":"One specific actionable improvement","flag":"pass or needs_improvement"}
+
+Pass threshold: total score 15 or above out of 25. Flag accordingly.`;
+
+const GD_PROMPT=`You are an expert MBA GD evaluator. Score this Group Discussion response.
+Score each criterion 1–5. Return ONLY valid JSON, no markdown.
+
+CRITERIA:
+- entry_clarity: Clear confident opening with defined position
+- reasoning: Logical, substantiated, relevant arguments
+- listening_response: Acknowledges others' views, builds on the discussion
+- leadership: Takes initiative, guides discussion, confident participation
+- composure: Calm, measured, professional delivery throughout
+
+TOPIC: {Q}
+TRANSCRIPT: {T}
+
+Return exactly this JSON:
+{"entry_clarity":N,"reasoning":N,"listening_response":N,"leadership":N,"composure":N,"feedback":"2-3 sentence feedback in plain English","improvement":"One specific actionable improvement","flag":"pass or needs_improvement"}
+
+Pass threshold: total score 15 or above out of 25. Flag accordingly.`;
+
+async function doSubmit(type, qEnc) {
+  if(!S.recorded&&S.recSecs===0){toast('Please record your response first','err');return;}
+  const question=decodeURIComponent(qEnc);
+  document.getElementById('btn-submit').disabled=true;
+  const procArea=document.getElementById('proc-area');
+  if(procArea)procArea.innerHTML=`<div class="loader"><div class="spinner"></div><div class="loader-txt">Transcribing audio…</div></div>`;
+
+  let transcript='';
+  let raw=null;
+
+  if(S.audioBlob && S.apiKey) {
+    try {
+      if(procArea)procArea.innerHTML=`<div class="loader"><div class="spinner"></div><div class="loader-txt">Transcribing with Gemini…</div></div>`;
+      // Convert blob to base64
+      const base64Audio = await blobToBase64(S.audioBlob);
+      const mimeType = S.audioBlob.type || 'audio/webm';
+
+      // Step 1: Transcribe with Gemini
+      const transcribePayload = {
+        contents:[{parts:[
+          {inline_data:{mime_type:mimeType,data:base64Audio}},
+          {text:"Transcribe this audio exactly as spoken. Return only the transcript text, nothing else."}
+        ]}],
+        generationConfig:{temperature:0,maxOutputTokens:1000}
+      };
+      const tRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${S.apiKey}`,
+        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(transcribePayload)}
+      );
+      if(tRes.ok){
+        const tData = await tRes.json();
+        transcript = tData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+      } else {
+        throw new Error('Transcription error '+tRes.status);
+      }
+    } catch(e){
+      toast('Transcription failed — using demo text','err');
+      transcript = demoTranscript();
+    }
+  } else {
+    await sleep(1200);
+    transcript = demoTranscript();
+    if(!S.apiKey) toast('No API key — demo scores shown');
+  }
+  S.transcript = transcript;
+
+  if(procArea)procArea.innerHTML=`<div class="loader"><div class="spinner" style="border-top-color:var(--blue)"></div><div class="loader-txt">Scoring with Gemini AI…</div></div>`;
+
+  const prompt=(type==='pi'?PI_PROMPT:GD_PROMPT).replace('{Q}',question).replace('{T}',transcript);
+
+  if(S.apiKey) {
+    try {
+      const scorePayload = {
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{temperature:0.2,maxOutputTokens:600}
+      };
+      const sRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${S.apiKey}`,
+        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(scorePayload)}
+      );
+      if(sRes.ok){
+        const sData = await sRes.json();
+        let rawText = sData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        rawText = rawText.replace(/```json|```/g,'').trim();
+        raw = JSON.parse(rawText);
+      } else {
+        throw new Error('Scoring error '+sRes.status);
+      }
+    } catch(e){toast('Scoring error — using demo scores','err');raw=demoScore(type);}
+  } else {
+    await sleep(1500);
+    raw = demoScore(type);
+  }
+
+  // Parse result
+  const names = type==='pi'?PI_CRITERIA_NAMES:GD_CRITERIA_NAMES;
+  const keys  = type==='pi'?['structure_clarity','relevance','specificity','business_awareness','communication']:['entry_clarity','reasoning','listening_response','leadership','composure'];
+  const criteria = keys.map((k,i)=>({name:names[i],s:Math.min(5,Math.max(1,parseInt(raw[k])||3))}));
+  const total = criteria.reduce((a,c)=>a+c.s,0);
+
+  const todayStr=new Date().toISOString().split('T')[0];
+  const sub={date:todayStr,type,submitted:true,question,transcript,criteria,score:total,max:25,
+    feedback:raw.feedback||'',improvement:raw.improvement||'',flag:raw.flag||'needs_improvement',
+    duration:S.recSecs||30,trainerComment:'',trainerFlagged:false};
+
+  if(!SUBMISSIONS[S.user.email])SUBMISSIONS[S.user.email]=[];
+  SUBMISSIONS[S.user.email].push(sub);
+  S.submittedToday=true;
+
+  if(procArea)procArea.innerHTML=renderScoreDisplay(sub,true);
+  document.getElementById('recorder').style.display='none';
+  toast('Submitted and scored successfully!','ok');
+}
+
+function demoTranscript(){
+  return "During my internship at a mid-sized FMCG company, I was assigned to the sales analytics team. I noticed that our weekly reports were taking two days to compile manually, which delayed decision-making. I took initiative to build a semi-automated dashboard using Excel macros, which cut the turnaround time to four hours. My manager appreciated the effort and it was adopted by the team going forward. I learned that small process improvements can have disproportionate impact when they solve the right problem.";
+}
+function demoScore(type){
+  return type==='pi'
+    ? {structure_clarity:4,relevance:4,specificity:3,business_awareness:4,communication:3,feedback:"Well-structured response with a clear STAR format. Good professional context and relevant internship example. Specificity could be stronger with exact numbers.",improvement:"Quantify your impact — instead of 'cut time significantly', say 'reduced from 2 days to 4 hours'.",flag:"pass"}
+    : {entry_clarity:3,reasoning:4,listening_response:2,leadership:3,composure:4,feedback:"Clear position stated at the outset with logical reasoning. Composure was strong throughout. The response would benefit from acknowledging the opposing view before refuting it.",improvement:"Add one sentence that acknowledges the other side before making your counter-argument — it shows nuanced thinking.",flag:"pass"};
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function blobToBase64(blob){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onloadend=()=>{
+      const base64=reader.result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// STUDENT: PROGRESS
+// ═══════════════════════════════════════════════════════════
+function renderProgress() {
+  const subs=(SUBMISSIONS[S.user.email]||[]).filter(s=>s.submitted);
+  const total=subs.length;
+  const missed=(SUBMISSIONS[S.user.email]||[]).filter(s=>!s.submitted).length;
+  const avg=total?(subs.reduce((a,s)=>a+s.score,0)/total).toFixed(1):'—';
+  const piSubs=subs.filter(s=>s.type==='pi');
+  const gdSubs=subs.filter(s=>s.type==='gd');
+  const piAvg=piSubs.length?(piSubs.reduce((a,s)=>a+s.score,0)/piSubs.length).toFixed(1):'—';
+  const gdAvg=gdSubs.length?(gdSubs.reduce((a,s)=>a+s.score,0)/gdSubs.length).toFixed(1):'—';
+  const best=total?Math.max(...subs.map(s=>s.score)):'—';
+  const recent=subs.slice(-10);
+
+  set(`<div class="page-header"><div class="page-title">My Progress</div><div class="page-sub">${S.user.name} · ${S.user.batch}</div></div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Overall Avg</div><div class="stat-value">${avg}</div><div class="stat-hint">out of 25</div></div>
+    <div class="stat-card"><div class="stat-label">PI Average</div><div class="stat-value">${piAvg}</div><div class="stat-hint">${piSubs.length} sessions</div></div>
+    <div class="stat-card"><div class="stat-label">GD Average</div><div class="stat-value">${gdAvg}</div><div class="stat-hint">${gdSubs.length} sessions</div></div>
+    <div class="stat-card"><div class="stat-label">Best Score</div><div class="stat-value">${best}</div><div class="stat-hint">${missed} missed</div></div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-label">Score trend — last ${recent.length} sessions</div>
+      <div class="chart-bars">
+        ${recent.length?recent.map(s=>`<div class="bc-wrap"><div class="bc-val">${s.score}</div><div class="bc-bar ${s.type==='gd'?'gd-bar':''}" style="height:${Math.round((s.score/25)*70)}px"></div><div class="bc-lbl">${s.type.toUpperCase()}</div></div>`).join(''):'<div style="color:var(--dim);font-family:var(--mono);font-size:.72rem;margin:auto">No data yet</div>'}
+      </div>
+      <div style="font-family:var(--mono);font-size:.65rem;color:var(--dim);margin-top:10px"><span style="color:var(--gold)">■</span> PI &nbsp;<span style="color:var(--blue)">■</span> GD</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Participation — all sessions</div>
+      <div class="streak-dots">
+        ${(SUBMISSIONS[S.user.email]||[]).map(s=>`<div class="dot ${s.submitted?'done':'miss'}" title="${s.date} ${s.type?.toUpperCase()}"></div>`).join('')}
+      </div>
+      <div style="font-family:var(--mono);font-size:.65rem;color:var(--dim);margin-top:10px">
+        <span style="color:var(--gold)">●</span> Submitted &nbsp;<span style="color:rgba(155,35,53,.3)">●</span> Missed
+      </div>
+    </div>
+  </div>
+
+  ${piSubs.length?`<div class="card"><div class="card-label">PI — criterion averages</div>${renderCritAvg(piSubs)}</div>`:''}
+  ${gdSubs.length?`<div class="card"><div class="card-label">GD — criterion averages</div>${renderCritAvg(gdSubs)}</div>`:''}
+  `);
+}
+
+function renderCritAvg(subs) {
+  if(!subs.length||!subs[0].criteria)return'';
+  const totals={};
+  subs.forEach(s=>(s.criteria||[]).forEach(c=>{totals[c.name]=(totals[c.name]||0)+c.s;}));
+  return Object.entries(totals).map(([name,total])=>{
+    const avg=(total/subs.length).toFixed(1);
+    return `<div class="crit-row"><div class="crit-name">${name}</div><div class="crit-bar"><div class="crit-fill" style="width:${(avg/5)*100}%"></div></div><div class="crit-score">${avg}/5</div></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// STUDENT: HISTORY
+// ═══════════════════════════════════════════════════════════
+function renderHistory() {
+  const subs=(SUBMISSIONS[S.user.email]||[]).slice().reverse();
+  set(`<div class="page-header"><div class="page-title">History</div><div class="page-sub">All sessions · newest first</div></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Type</th><th>Question</th><th>Duration</th><th>Score</th><th>Flag</th><th></th></tr></thead>
+      <tbody>
+        ${subs.length?subs.map(s=>`<tr>
+          <td style="font-family:var(--mono);font-size:.78rem">${s.date}</td>
+          <td><span class="tag tag-${s.type}">${s.type?.toUpperCase()}</span></td>
+          <td style="max-width:220px;color:var(--muted);font-size:.84rem">${(s.question||'').slice(0,50)}…</td>
+          <td style="font-family:var(--mono);font-size:.78rem">${s.submitted?(s.duration+'s'):'—'}</td>
+          <td>${s.submitted?scorePill(s.score,s.max):`<span class="pill pill-na">Missed</span>`}</td>
+          <td>${s.submitted&&s.flag?`<span style="font-family:var(--mono);font-size:.68rem;color:${s.flag==='pass'?'var(--green)':'var(--red)'}">${s.flag==='pass'?'Pass':'Needs work'}</span>`:'—'}</td>
+          <td>${s.submitted?`<button class="btn-tiny" onclick='openStudentModal(${JSON.stringify(s).replace(/'/g,"&#39;")})'>View</button>`:'—'}</td>
+        </tr>`).join(''):`<tr><td colspan="7" style="text-align:center;padding:40px;font-family:var(--mono);font-size:.78rem;color:var(--dim)">No submissions yet</td></tr>`}
+      </tbody>
+    </table>
+  </div>`);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ADMIN: DASHBOARD
+// ═══════════════════════════════════════════════════════════
+function renderAdminDash() {
+  const today=new Date();
+  const todayStr=today.toISOString().split('T')[0];
+  const info=getTodayInfo(today);
+  const dayLabel=today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  const submitted=ALL_STUDENT_EMAILS.filter(e=>(SUBMISSIONS[e]||[]).some(s=>s.date===todayStr&&s.submitted));
+  const pending=ALL_STUDENT_EMAILS.filter(e=>!(SUBMISSIONS[e]||[]).some(s=>s.date===todayStr&&s.submitted));
+  const allSubs=ALL_STUDENT_EMAILS.flatMap(e=>(SUBMISSIONS[e]||[]).filter(s=>s.submitted));
+  const classAvg=allSubs.length?(allSubs.reduce((a,s)=>a+s.score,0)/allSubs.length).toFixed(1):'—';
+  const piAvg=allSubs.filter(s=>s.type==='pi').length?(allSubs.filter(s=>s.type==='pi').reduce((a,s)=>a+s.score,0)/allSubs.filter(s=>s.type==='pi').length).toFixed(1):'—';
+  const gdAvg=allSubs.filter(s=>s.type==='gd').length?(allSubs.filter(s=>s.type==='gd').reduce((a,s)=>a+s.score,0)/allSubs.filter(s=>s.type==='gd').length).toFixed(1):'—';
+
+  // Low performers
+  const studentStats=ALL_STUDENT_EMAILS.map(e=>{
+    const u=DEMO_USERS[e]||{name:e};
+    const subs=(SUBMISSIONS[e]||[]).filter(s=>s.submitted);
+    const avg=subs.length?(subs.reduce((a,s)=>a+s.score,0)/subs.length).toFixed(1):null;
+    return {email:e,name:u.name,subs:subs.length,avg,todayDone:submitted.includes(e)};
+  });
+  const lowPerf=studentStats.filter(s=>s.avg&&parseFloat(s.avg)<15).slice(0,3);
+  const consistent=studentStats.filter(s=>s.subs>=6).slice(0,3);
+
+  set(`<div class="page-header"><div class="page-title">Dashboard</div><div class="page-sub">${dayLabel}</div></div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Submitted today</div><div class="stat-value">${submitted.length}<span style="font-family:var(--mono);font-size:1rem;color:var(--muted)">/${ALL_STUDENT_EMAILS.length}</span></div><div class="stat-hint">${Math.round(submitted.length/ALL_STUDENT_EMAILS.length*100)}% completion</div></div>
+    <div class="stat-card"><div class="stat-label">Pending today</div><div class="stat-value" style="color:${pending.length?'var(--gold)':'var(--green)'}">${pending.length}</div><div class="stat-hint">yet to submit</div></div>
+    <div class="stat-card"><div class="stat-label">PI Average</div><div class="stat-value">${piAvg}</div><div class="stat-hint">out of 25 all-time</div></div>
+    <div class="stat-card"><div class="stat-label">GD Average</div><div class="stat-value">${gdAvg}</div><div class="stat-hint">out of 25 all-time</div></div>
+  </div>
+
+  <div class="g2">
+    <div>
+      ${info.active?`<div class="card"><div class="card-label">Today's question</div>
+        <div style="margin-bottom:10px"><span class="tag tag-${info.type}">${info.type==='pi'?'Personal Interview':'Group Discussion'} · Q${info.questionNum}</span></div>
+        <div style="font-family:var(--serif);font-size:1.1rem;line-height:1.5;color:var(--ink2)">${info.question.text}</div>
+        <div style="font-family:var(--mono);font-size:.68rem;color:var(--dim);margin-top:10px">Limit: ${info.type==='pi'?40:20}s · ${info.isRandom?'Random':'Sequential'} order</div>
+      </div>`:`<div class="banner banner-info"><span class="banner-ic">📅</span><div><div class="banner-title">No session today</div><div class="banner-sub">Next session: ${info.nextDay||getNextSessionDay(new Date())}</div></div></div>`}
+
+      <div class="card"><div class="card-label">Pending submission today</div>
+        ${pending.length?pending.map(e=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:.88rem;font-weight:500">${DEMO_USERS[e]?.name||e}</span><span style="font-family:var(--mono);font-size:.7rem;color:var(--muted)">Not yet</span></div>`).join(''):`<div style="font-family:var(--mono);font-size:.78rem;color:var(--green)">All students submitted ✓</div>`}
+      </div>
+    </div>
+    <div>
+      <div class="card"><div class="card-label">Submitted today with scores</div>
+        ${submitted.length?submitted.map(e=>{const sub=(SUBMISSIONS[e]||[]).find(s=>s.date===todayStr&&s.submitted);return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:.88rem;font-weight:500">${DEMO_USERS[e]?.name||e}</span>${sub?scorePill(sub.score,sub.max):`<span style="font-family:var(--mono);font-size:.7rem;color:var(--dim)">Scoring…</span>`}</div>`;}).join(''):`<div style="font-family:var(--mono);font-size:.78rem;color:var(--muted)">None yet</div>`}
+      </div>
+      ${lowPerf.length?`<div class="card"><div class="card-label" style="color:var(--red)">⚠ Low performers (avg below 15/25)</div>${lowPerf.map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:.88rem">${s.name}</span><span class="pill pill-lo">${s.avg}/25</span></div>`).join('')}</div>`:''}
+      ${consistent.length?`<div class="card"><div class="card-label" style="color:var(--green)">✓ Consistent students</div>${consistent.map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:.88rem">${s.name}</span><span style="font-family:var(--mono);font-size:.72rem;color:var(--green)">${s.subs} sessions</span></div>`).join('')}</div>`:''}
+    </div>
+  </div>`);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ADMIN: STUDENTS
+// ═══════════════════════════════════════════════════════════
+function renderAdminStudents() {
+  const todayStr=new Date().toISOString().split('T')[0];
+  const rows=ALL_STUDENT_EMAILS.map(email=>{
+    const u=DEMO_USERS[email]||{name:email};
+    const subs=(SUBMISSIONS[email]||[]);
+    const done=subs.filter(s=>s.submitted);
+    const missed=subs.filter(s=>!s.submitted).length;
+    const avg=done.length?(done.reduce((a,s)=>a+s.score,0)/done.length).toFixed(1):null;
+    const piA=done.filter(s=>s.type==='pi');const piAvg=piA.length?(piA.reduce((a,s)=>a+s.score,0)/piA.length).toFixed(1):null;
+    const gdA=done.filter(s=>s.type==='gd');const gdAvg=gdA.length?(gdA.reduce((a,s)=>a+s.score,0)/gdA.length).toFixed(1):null;
+    const last=done[done.length-1];
+    const todayDone=subs.some(s=>s.date===todayStr&&s.submitted);
+    return {email,u,done:done.length,missed,avg,piAvg,gdAvg,last,todayDone};
+  });
+
+  set(`<div class="page-header"><div class="page-title">Students</div><div class="page-sub">${ALL_STUDENT_EMAILS.length} enrolled · <button class="btn-tiny" onclick="downloadCSV()">⬇ Export CSV</button></div></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Student</th><th>Submitted</th><th>Missed</th><th>Avg</th><th>PI Avg</th><th>GD Avg</th><th>Last Score</th><th>Today</th><th></th></tr></thead>
+      <tbody>
+        ${rows.map(r=>`<tr>
+          <td><div style="font-weight:600;font-size:.88rem">${r.u.name}</div><div style="font-family:var(--mono);font-size:.68rem;color:var(--muted)">${r.email}</div></td>
+          <td style="font-family:var(--mono);font-size:.82rem">${r.done}</td>
+          <td style="font-family:var(--mono);font-size:.82rem;color:${r.missed>2?'var(--red)':'var(--muted)'}">${r.missed}</td>
+          <td>${r.avg?scorePill(parseFloat(r.avg),25):`<span class="pill pill-na">—</span>`}</td>
+          <td style="font-family:var(--mono);font-size:.78rem">${r.piAvg?r.piAvg+'/25':'—'}</td>
+          <td style="font-family:var(--mono);font-size:.78rem">${r.gdAvg?r.gdAvg+'/25':'—'}</td>
+          <td>${r.last?scorePill(r.last.score,r.last.max):`<span class="pill pill-na">—</span>`}</td>
+          <td style="font-family:var(--mono);font-size:.82rem;color:${r.todayDone?'var(--green)':'var(--red)'}">${r.todayDone?'✓':'✗'}</td>
+          <td><button class="btn-tiny" onclick="openStudentDetail('${r.email}')">View</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ADMIN: REVIEW AUDIO
+// ═══════════════════════════════════════════════════════════
+function renderAdminReview() {
+  const allSubs=ALL_STUDENT_EMAILS.flatMap(email=>{
+    const u=DEMO_USERS[email]||{name:email};
+    return (SUBMISSIONS[email]||[]).filter(s=>s.submitted).map(s=>({...s,studentName:u.name,email}));
+  }).sort((a,b)=>b.date.localeCompare(a.date));
+
+  set(`<div class="page-header"><div class="page-title">Review Audio</div><div class="page-sub">Access any student transcript · Add comments · Override scores</div></div>
+  <div class="banner banner-info"><span class="banner-ic">🎧</span><div><div class="banner-title">Trainer review mode</div><div class="banner-sub">Read transcripts, view AI scores, add your comments, and flag submissions for classroom use.</div></div></div>
+  <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+    <button class="btn-gold" onclick="pickRandom()">🎲 Random Sample</button>
+    <select id="f-student" onchange="filterReview()" style="padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.85rem;color:var(--ink);outline:none">
+      <option value="">All students</option>
+      ${ALL_STUDENT_EMAILS.map(e=>`<option value="${e}">${DEMO_USERS[e]?.name||e}</option>`).join('')}
+    </select>
+    <select id="f-type" onchange="filterReview()" style="padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.85rem;color:var(--ink);outline:none">
+      <option value="">All types</option>
+      <option value="pi">PI only</option>
+      <option value="gd">GD only</option>
+    </select>
+  </div>
+  <div id="review-tbl">${buildReviewTable(allSubs)}</div>`);
+}
+
+function buildReviewTable(items) {
+  if(!items.length)return`<div style="text-align:center;padding:40px;font-family:var(--mono);font-size:.78rem;color:var(--dim)">No submissions match filter</div>`;
+  return`<div class="tbl-wrap"><table>
+    <thead><tr><th>Student</th><th>Date</th><th>Type</th><th>Score</th><th>Flag</th><th>Trainer Note</th><th>Actions</th></tr></thead>
+    <tbody>
+      ${items.map(s=>`<tr>
+        <td style="font-weight:600;font-size:.88rem">${s.studentName}</td>
+        <td style="font-family:var(--mono);font-size:.78rem">${s.date}</td>
+        <td><span class="tag tag-${s.type}">${s.type?.toUpperCase()}</span></td>
+        <td>${scorePill(s.score,s.max)}</td>
+        <td style="font-family:var(--mono);font-size:.7rem;color:${s.flag==='pass'?'var(--green)':'var(--red)'}">${s.flag==='pass'?'Pass':'Needs work'}</td>
+        <td style="font-family:var(--mono);font-size:.72rem;color:var(--muted);max-width:140px">${s.trainerComment?s.trainerComment.slice(0,40)+'…':'—'}</td>
+        <td style="display:flex;gap:5px">
+          <button class="btn-tiny" onclick='openTranscript(${JSON.stringify(s).replace(/'/g,"&#39;")})'>📄 Transcript</button>
+          <button class="btn-tiny" onclick='openReviewModal(${JSON.stringify(s).replace(/'/g,"&#39;")})'>✏ Review</button>
+        </td>
+      </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+function filterReview() {
+  const email=document.getElementById('f-student').value;
+  const type=document.getElementById('f-type').value;
+  let all=ALL_STUDENT_EMAILS.flatMap(e=>{const u=DEMO_USERS[e]||{name:e};return(SUBMISSIONS[e]||[]).filter(s=>s.submitted).map(s=>({...s,studentName:u.name,email:e}));});
+  if(email)all=all.filter(s=>s.email===email);
+  if(type)all=all.filter(s=>s.type===type);
+  all.sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('review-tbl').innerHTML=buildReviewTable(all);
+}
+
+function pickRandom() {
+  const all=ALL_STUDENT_EMAILS.flatMap(e=>{const u=DEMO_USERS[e]||{name:e};return(SUBMISSIONS[e]||[]).filter(s=>s.submitted).map(s=>({...s,studentName:u.name,email:e}));});
+  if(!all.length){toast('No submissions yet','err');return;}
+  openTranscript(all[Math.floor(Math.random()*all.length)]);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ADMIN: QUESTION BANK
+// ═══════════════════════════════════════════════════════════
+function renderAdminQbank() {
+  const info=getTodayInfo(new Date());
+  set(`<div class="page-header"><div class="page-title">Question Bank</div><div class="page-sub">Manage PI and GD questions · ${PI_QUESTIONS.length} PI · ${GD_QUESTIONS.length} GD</div></div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-label">PI questions — Tuesday · Wednesday · Thursday</div>
+      <div style="font-family:var(--mono);font-size:.68rem;color:var(--dim);margin-bottom:14px">Sequential for first 30 days · Random thereafter</div>
+      ${PI_QUESTIONS.map((q,i)=>`<div class="q-list-item">
+        <div class="q-num">PI${i+1}</div>
+        <div class="q-list-text">${q.text}${info.active&&info.type==='pi'&&info.idx===i?` <span class="tag tag-pi" style="margin-left:6px;font-size:.6rem">Today</span>`:''}</div>
+        <div class="q-list-actions"><button class="btn-tiny danger" onclick="removeQ('pi',${i})">✕</button></div>
+      </div>`).join('')}
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-label">GD questions — Friday only</div>
+        <div style="font-family:var(--mono);font-size:.68rem;color:var(--dim);margin-bottom:14px">Sequential for first 30 days · Random thereafter</div>
+        ${GD_QUESTIONS.map((q,i)=>`<div class="q-list-item">
+          <div class="q-num">GD${i+1}</div>
+          <div class="q-list-text">${q.text}${info.active&&info.type==='gd'&&info.idx===i?` <span class="tag tag-gd" style="margin-left:6px;font-size:.6rem">Today</span>`:''}</div>
+          <div class="q-list-actions"><button class="btn-tiny danger" onclick="removeQ('gd',${i})">✕</button></div>
+        </div>`).join('')}
+      </div>
+      <div class="card">
+        <div class="card-label">Add new question</div>
+        <div class="form-field"><label>Type</label>
+          <select id="nq-type"><option value="pi">PI — Personal Interview</option><option value="gd">GD — Group Discussion</option></select>
+        </div>
+        <div class="form-field"><label>Question text</label>
+          <textarea id="nq-text" placeholder="Type the question here…"></textarea>
+        </div>
+        <div class="form-field"><label>Instructions (one per line)</label>
+          <textarea id="nq-inst" placeholder="Speak for up to 40 seconds&#10;Tell 2–3 things only&#10;…" style="min-height:100px"></textarea>
+        </div>
+        <button class="btn-primary" onclick="addQuestion()">Add to bank →</button>
+      </div>
+    </div>
+  </div>`);
+}
+
+function addQuestion() {
+  const type=document.getElementById('nq-type').value;
+  const text=document.getElementById('nq-text').value.trim();
+  const instRaw=document.getElementById('nq-inst').value.trim();
+  if(!text){toast('Enter question text','err');return;}
+  const instructions=instRaw?instRaw.split('\n').map(l=>l.trim()).filter(Boolean):['Speak clearly','Stay on topic'];
+  if(type==='pi')PI_QUESTIONS.push({text,instructions});
+  else GD_QUESTIONS.push({text,instructions});
+  toast('Question added to bank','ok');
+  renderAdminQbank();
+}
+function removeQ(type,idx) {
+  if(!confirm('Remove this question?'))return;
+  if(type==='pi')PI_QUESTIONS.splice(idx,1);else GD_QUESTIONS.splice(idx,1);
+  toast('Question removed','ok');
+  renderAdminQbank();
+}
+
+// ═══════════════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════════════
+function openStudentModal(s) {
+  if(typeof s==='string')s=JSON.parse(s);
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-title">${s.studentName||'Score Detail'}</div>
+    <div class="modal-sub">${s.date} · ${s.type?.toUpperCase()} · ${s.duration}s</div>
+    ${renderScoreDisplay(s,false)}`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function openTranscript(s) {
+  if(typeof s==='string')s=JSON.parse(s);
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-title">Transcript</div>
+    <div class="modal-sub">${s.studentName||''} · ${s.date} · ${s.type?.toUpperCase()} · ${scorePill(s.score,s.max)}</div>
+    <div class="card-label">Question</div>
+    <div style="font-family:var(--serif);font-size:1.05rem;line-height:1.5;margin-bottom:16px;color:var(--ink2)">${s.question||'—'}</div>
+    <div class="card-label">AI Transcript</div>
+    <div class="transcript">${s.transcript||'No transcript available.'}</div>
+    <div class="card-label" style="margin-top:14px">Score breakdown</div>
+    ${(s.criteria||[]).map(c=>`<div class="crit-row"><div class="crit-name">${c.name}</div><div class="crit-bar"><div class="crit-fill" style="width:${(c.s/5)*100}%"></div></div><div class="crit-score">${c.s}/5</div></div>`).join('')}
+    ${s.feedback?`<div class="score-feedback" style="margin-top:14px"><div class="fb-label">AI Feedback</div><div class="fb-text">${s.feedback}</div></div>`:''}`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function openReviewModal(s) {
+  if(typeof s==='string')s=JSON.parse(s);
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-title">Trainer Review</div>
+    <div class="modal-sub">${s.studentName||''} · ${s.date} · AI Score: ${s.score}/${s.max}</div>
+    <div class="card-label">Question</div>
+    <div style="font-family:var(--serif);font-size:1rem;line-height:1.5;margin-bottom:14px;color:var(--ink2)">${s.question||'—'}</div>
+    <div class="card-label">Transcript</div>
+    <div class="transcript">${s.transcript||'No transcript.'}</div>
+    <div class="div"></div>
+    <div class="form-field"><label>Your comment (visible to student)</label>
+      <textarea id="trainer-comment" style="min-height:80px" placeholder="Write your feedback here…">${s.trainerComment||''}</textarea>
+    </div>
+    <div class="form-field"><label>Override AI score (leave blank to keep AI score)</label>
+      <input id="trainer-score" type="number" min="0" max="25" placeholder="e.g. 18" value="${s.trainerOverride||''}">
+    </div>
+    <div style="margin-bottom:16px;display:flex;align-items:center;gap:10px">
+      <input type="checkbox" id="trainer-flag" ${s.trainerFlagged?'checked':''}>
+      <label for="trainer-flag" style="font-size:.88rem;cursor:pointer">Flag this submission for classroom discussion</label>
+    </div>
+    <button class="btn-primary" onclick="saveReview('${s.email}','${s.date}','${s.type}')">Save trainer review →</button>`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function saveReview(email, date, type) {
+  const comment=document.getElementById('trainer-comment').value.trim();
+  const override=document.getElementById('trainer-score').value.trim();
+  const flagged=document.getElementById('trainer-flag').checked;
+  const sub=(SUBMISSIONS[email]||[]).find(s=>s.date===date&&s.type===type&&s.submitted);
+  if(sub){
+    sub.trainerComment=comment;
+    sub.trainerFlagged=flagged;
+    if(override)sub.trainerOverride=parseInt(override);
+  }
+  closeModal();
+  toast('Trainer review saved','ok');
+  renderAdminReview();
+}
+
+function openStudentDetail(email) {
+  const u=DEMO_USERS[email]||{name:email};
+  const subs=(SUBMISSIONS[email]||[]);
+  const done=subs.filter(s=>s.submitted);
+  const avg=done.length?(done.reduce((a,s)=>a+s.score,0)/done.length).toFixed(1):'—';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-title">${u.name}</div>
+    <div class="modal-sub">${email} · ${done.length} submissions · Avg: ${avg}/25</div>
+    <div class="tbl-wrap" style="margin-top:16px"><table>
+      <thead><tr><th>Date</th><th>Type</th><th>Score</th><th>Flag</th></tr></thead>
+      <tbody>
+        ${subs.slice().reverse().map(s=>`<tr>
+          <td style="font-family:var(--mono);font-size:.78rem">${s.date}</td>
+          <td><span class="tag tag-${s.type}">${s.type?.toUpperCase()}</span></td>
+          <td>${s.submitted?scorePill(s.score,s.max):`<span class="pill pill-na">Missed</span>`}</td>
+          <td style="font-family:var(--mono);font-size:.7rem;color:${s.flag==='pass'?'var(--green)':'var(--red)'}">${s.submitted?(s.flag==='pass'?'Pass':'Needs work'):'—'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal(){document.getElementById('overlay').classList.remove('open');}
+
+// ═══════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════
+function scorePill(score,max) {
+  const pct=score/max;
+  const cls=pct>=0.8?'pill-hi':pct>=0.6?'pill-mid':'pill-lo';
+  return`<span class="pill ${cls}">${score}/${max}</span>`;
+}
+
+function downloadCSV() {
+  const rows=[['Student','Email','Date','Type','Score','Max','Flag','Transcript snippet']];
+  ALL_STUDENT_EMAILS.forEach(email=>{
+    const u=DEMO_USERS[email]||{name:email};
+    (SUBMISSIONS[email]||[]).filter(s=>s.submitted).forEach(s=>{
+      rows.push([u.name,email,s.date,s.type,s.score,s.max,s.flag||'',(s.transcript||'').slice(0,80)]);
+    });
+  });
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`clarion_report_${new Date().toISOString().split('T')[0]}.csv`;a.click();
+  toast('CSV downloaded','ok');
+}
+
+// ══════════════════════════════════════════════════════════════
+// STUDENT MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+function renderSetup(){
+  loadRegistry();
+  const all=getStudents();
+  const entries=Object.entries(all);
+  const active=entries.filter(([,s])=>s.active).length;
+  set(`<div class="page-header"><div class="page-title">Setup & Access</div><div class="page-sub">${active} active students · ${entries.length} total</div></div>
+  <div class="banner banner-ok"><span class="banner-ic">✅</span><div>
+    <div class="banner-title">${active} active students ready to log in</div>
+    <div class="banner-sub">Add students below. After adding, click Download Updated App and drag to Netlify. Works on every device.</div>
+  </div></div>
+  <div class="card">
+    <div class="card-label">Add a student</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><div style="font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px">Full name</div>
+        <input id="ns-name" type="text" placeholder="Arjun Mehta" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.9rem;color:var(--ink);outline:none"></div>
+      <div><div style="font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px">Email</div>
+        <input id="ns-email" type="email" placeholder="arjun@gmail.com" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.9rem;color:var(--ink);outline:none"></div>
+      <div><div style="font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px">Password</div>
+        <input id="ns-pw" type="text" placeholder="Welcome@1" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.9rem;color:var(--ink);outline:none"></div>
+      <div><div style="font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px">Batch</div>
+        <input id="ns-batch" type="text" placeholder="Batch A 2026" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.9rem;color:var(--ink);outline:none"></div>
+    </div>
+    <button class="btn-primary" onclick="addStudent()">Add student</button>
+  </div>
+  <div class="card">
+    <div class="card-label">Bulk add — one per line: name, email, password, batch</div>
+    <textarea id="bulk-input" placeholder="Arjun Mehta, arjun@gmail.com, Welcome@1, Batch A" style="width:100%;min-height:100px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:.78rem;color:var(--ink);outline:none;resize:vertical"></textarea>
+    <button class="btn-primary" style="margin-top:10px" onclick="bulkAdd()">Import students</button>
+  </div>
+  <div class="card" style="background:rgba(46,204,122,.05);border-color:rgba(46,204,122,.2)">
+    <div class="card-label" style="color:var(--green)">⬇ Download & Deploy</div>
+    <p style="font-size:.88rem;color:var(--ink2);margin-bottom:14px;line-height:1.6">After adding students, click Download. Drag the file to Netlify. Done in 30 seconds.</p>
+    <button class="btn-primary" style="background:var(--green)" onclick="downloadUpdatedApp()">Download Updated App →</button>
+  </div>
+  ${entries.length?`<div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Name</th><th>Email</th><th>Password</th><th>Batch</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${entries.map(([em,s])=>'<tr><td style="font-weight:600;font-size:.88rem">'+s.name+'</td><td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">'+em+'</td><td style="font-family:var(--mono);font-size:.75rem">'+s.password+'</td><td style="font-size:.82rem">'+(s.batch||'—')+'</td><td style="font-family:var(--mono);font-size:.72rem;color:'+(s.active?'var(--green)':'var(--red)')+'">'+  (s.active?'Active':'Blocked')+'</td><td style="display:flex;gap:5px"><button class="btn-tiny" onclick="toggleStudent(\''+em+'\')">'+  (s.active?'Block':'Unblock')+'</button><button class="btn-tiny" onclick="resetStudentPw(\''+em+'\')">Reset pw</button><button class="btn-tiny" onclick="removeStudent(\''+em+'\')">✕</button></td></tr>').join('')}</tbody>
+  </table></div>`:''}
+  <div class="card" style="margin-top:18px">
+    <div class="card-label">Change trainer password</div>
+    <p style="font-size:.85rem;color:var(--ink2);margin-bottom:10px">Default: <strong>Clarion@2026</strong></p>
+    <div style="display:flex;gap:10px">
+      <input id="new-pw" type="password" placeholder="New password (min 6 chars)" style="flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.9rem;color:var(--ink);outline:none">
+      <button class="btn-primary" onclick="changeTrainerPw()">Update</button>
+    </div>
+    <button class="btn-secondary" style="margin-top:8px;font-size:.8rem" onclick="resetTrainerPw()">Reset to Clarion@2026</button>
+  </div>`);
+}
+
+function addStudent(){
+  const name=document.getElementById('ns-name').value.trim();
+  const email=document.getElementById('ns-email').value.trim().toLowerCase();
+  const pw=document.getElementById('ns-pw').value.trim();
+  const batch=document.getElementById('ns-batch').value.trim()||'Batch A 2026';
+  if(!name||!email||!pw){toast('Fill in name, email and password','err');return;}
+  const cur=getStudents();
+  if(cur[email]){toast('Email already exists','err');return;}
+  cur[email]={name,password:pw,batch,active:true};
+  putStudents(cur);
+  document.getElementById('ns-name').value='';
+  document.getElementById('ns-email').value='';
+  document.getElementById('ns-pw').value='';
+  document.getElementById('ns-batch').value='';
+  toast(name+' added ✓ — click Download Updated App','ok');
+  renderSetup();
+}
+
+function bulkAdd(){
+  const raw=document.getElementById('bulk-input').value.trim();
+  if(!raw){toast('Paste data first','err');return;}
+  const lines=raw.split(/\n/).map(l=>l.trim()).filter(Boolean);
+  const cur=getStudents();let added=0,skipped=0;
+  lines.forEach(line=>{
+    const p=line.split(',').map(x=>x.trim());
+    if(p.length<3){skipped++;return;}
+    const name=p[0],email=(p[1]||'').toLowerCase(),pw=p[2],batch=p[3]||'Batch A 2026';
+    if(!name||!email||!pw||cur[email]){skipped++;return;}
+    cur[email]={name,password:pw,batch,active:true};added++;
+  });
+  if(added>0){putStudents(cur);toast(added+' added ✓ — click Download Updated App','ok');renderSetup();}
+  else toast('None added — format: name, email, password, batch','err');
+}
+
+function toggleStudent(email){
+  const cur=getStudents();if(!cur[email])return;
+  cur[email].active=!cur[email].active;putStudents(cur);
+  toast((cur[email].active?'Unblocked':'Blocked')+' ✓ — download to deploy','ok');
+  renderSetup();
+}
+
+function resetStudentPw(email){
+  const pw=prompt('New password for '+(getStudents()[email]?.name||email)+':');
+  if(!pw)return;const cur=getStudents();
+  if(!cur[email])return;cur[email].password=pw.trim();putStudents(cur);
+  toast('Password updated ✓ — download to deploy','ok');renderSetup();
+}
+
+function removeStudent(email){
+  const cur=getStudents();
+  if(!confirm('Remove '+(cur[email]?.name||email)+'?'))return;
+  delete cur[email];putStudents(cur);
+  toast('Removed ✓ — download to deploy','ok');renderSetup();
+}
+
+function downloadUpdatedApp(){
+  const all=getStudents();
+  const count=Object.keys(all).length;
+  if(count===0){toast('Add students first','err');return;}
+  const json=JSON.stringify(all);
+  try {
+    let src='<!DOCTYPE html>'+document.documentElement.outerHTML;
+    // Replace the empty EMBEDDED_STUDENTS declaration with student data
+    // Use a simple string replacement on the known empty form
+    const marker='let EMBEDDED_STUDENTS={"suhasini@gmail.com":{"name":"Suhasini","password":"Seemu2025","batch":"T1","active":true}}';
+    const marker2='let EMBEDDED_STUDENTS = {}';
+    if(src.includes(marker)){
+      src=src.replace(marker,'let EMBEDDED_STUDENTS='+json);
+    } else if(src.includes(marker2)){
+      src=src.replace(marker2,'let EMBEDDED_STUDENTS='+json);
+    } else {
+      // Fallback: find and replace using split
+      const parts=src.split('let EMBEDDED_STUDENTS=');
+      if(parts.length>1){
+        // Find the closing }; after the opening {
+        const rest=parts[1];
+        const endIdx=rest.indexOf(';')+1;
+        src=parts[0]+'let EMBEDDED_STUDENTS='+json+';'+rest.slice(endIdx);
+      }
+    }
+    const blob=new Blob([src],{type:'text/html'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='CLARION.html';
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(a.href);},200);
+    toast(count+' students baked in ✓ — drag CLARION.html to Netlify','ok');
+  } catch(e){
+    toast('Download error: '+e.message,'err');
+    console.error(e);
+  }
+}
+
+function changeTrainerPw(){
+  const pw=document.getElementById('new-pw').value.trim();
+  if(pw.length<6){toast('Min 6 characters','err');return;}
+  localStorage.setItem('clarion_trainer_pw',pw);
+  toast('Trainer password updated ✓','ok');
+}
+
+function resetTrainerPw(){
+  localStorage.removeItem('clarion_trainer_pw');
+  toast('Reset to default: Clarion@2026','ok');
+}
+
+function saveSheetsUrl(){toast('Students managed in app — no Sheets URL needed','');}
+
+let toastTmr=null;
+function toast(msg,type='') {
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast show'+(type?' '+type:'');
+  clearTimeout(toastTmr);toastTmr=setTimeout(()=>el.className='toast',3500);
+}
+
+// Load saved key on page load
+window.onload=()=>{
+  const k=sessionStorage.getItem('clarion_key');
+  const defaultKey='AIzaSyAobDI9wRCHkZoWBJ-HNisRZE6WqGfaeww';
+  const activeKey=k||defaultKey;
+  S.apiKey=activeKey;
+  sessionStorage.setItem('clarion_key',activeKey);
+  document.getElementById('a-apikey').value=activeKey;
+};
+</script>
+
+
+</body></html>
