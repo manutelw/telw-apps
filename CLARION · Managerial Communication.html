@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<!-- saved from url=(0046)file:///C:/Users/Manu/Downloads/CLARION_1.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CLARION · Managerial Communication</title>
+<link href="./CLARION · Managerial Communication_files/css2" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F5F0;--surface:#FFFFFF;--card:#FAFAF8;--border:#E8E4DC;--border2:#D4CEC2;
+  --ink:#1A1714;--ink2:#3D3830;--muted:#8C8578;--dim:#C4BEB4;
+  --gold:#8B6914;--gold-bg:#FDF6E3;--gold-lt:#F5E9C0;
+  --green:#2D6A4F;--green-bg:#EBF5EF;
+  --red:#9B2335;--red-bg:#FBEAEC;
+  --blue:#1A3C5E;--blue-bg:#EBF0F7;
+  --serif:"Cormorant Garamond",Georgia,serif;
+  --sans:"DM Sans",system-ui,sans-serif;
+  --mono:"DM Mono","Courier New",monospace;
+  --r:8px;--shadow:0 2px 12px rgba(26,23,20,.07);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.6}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* AUTH */
+#auth{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--ink);position:relative;overflow:hidden}
+#auth::before{content:"CLARION";font-family:var(--serif);font-size:clamp(80px,15vw,160px);font-weight:300;color:rgba(255,255,255,.03);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;letter-spacing:.2em;pointer-events:none}
+.auth-box{width:min(400px,92vw);background:var(--surface);border-radius:12px;padding:clamp(28px,5vw,44px);position:relative;box-shadow:0 40px 100px rgba(0,0,0,.5)}
+.auth-box::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),#C4960A);border-radius:12px 12px 0 0}
+.auth-logo{font-family:var(--serif);font-size:2.2rem;font-weight:300;letter-spacing:.15em;color:var(--ink);margin-bottom:2px;text-transform:uppercase}
+.auth-tag{font-family:var(--mono);font-size:.65rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:28px}
+.f-label{font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);display:block;margin-bottom:5px;margin-top:12px}
+.f-input{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.9rem;color:var(--ink);outline:none;transition:border-color .2s;font-family:var(--sans)}
+.f-input:focus{border-color:var(--gold)}
+.btn-auth{width:100%;padding:12px;background:var(--ink);color:#fff;border:none;border-radius:var(--r);font-size:.9rem;font-weight:600;letter-spacing:.04em;cursor:pointer;transition:.2s;margin-top:14px;font-family:var(--sans)}
+.btn-auth:hover{background:#2A2520}
+.auth-note{font-family:var(--mono);font-size:.68rem;color:var(--dim);text-align:center;margin-top:16px;line-height:1.6}
+.role-sw{display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:3px;margin-bottom:20px}
+.role-btn{padding:8px;font-size:.78rem;font-weight:500;color:var(--muted);background:transparent;border:none;border-radius:4px;cursor:pointer;transition:.2s;font-family:var(--sans)}
+.role-btn.on{background:var(--ink);color:#fff}
+
+/* APP SHELL */
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.on{display:flex}
+.topbar{height:52px;background:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:100;flex-shrink:0}
+.tb-logo{font-family:var(--serif);font-size:1.3rem;font-weight:300;letter-spacing:.18em;color:#fff;text-transform:uppercase}
+.tb-logo em{color:var(--gold);font-style:normal}
+.tb-r{display:flex;align-items:center;gap:12px}
+.tb-user{font-family:var(--mono);font-size:.7rem;color:rgba(255,255,255,.4)}
+.tb-badge{font-family:var(--mono);font-size:.62rem;padding:2px 8px;border-radius:20px;letter-spacing:.1em;text-transform:uppercase}
+.badge-admin{background:rgba(139,105,20,.2);color:#D4A843;border:1px solid rgba(139,105,20,.3)}
+.badge-student{background:rgba(45,106,79,.2);color:#5BAA84;border:1px solid rgba(45,106,79,.3)}
+.btn-out{background:none;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.4);font-family:var(--mono);font-size:.65rem;padding:3px 9px;border-radius:var(--r);cursor:pointer}
+.btn-out:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+.shell{flex:1;display:flex;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:196px;background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;overflow-y:auto}
+.nav-grp{font-family:var(--mono);font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);padding:0 16px;margin:18px 0 5px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 16px;font-size:.85rem;font-weight:500;color:var(--muted);border-left:2px solid transparent;transition:.15s;cursor:pointer;user-select:none}
+.nav-item:hover{color:var(--ink);background:rgba(26,23,20,.03)}
+.nav-item.on{color:var(--ink);border-left-color:var(--gold);background:rgba(139,105,20,.05)}
+.nav-ic{width:18px;text-align:center;font-size:.95rem;flex-shrink:0}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:clamp(18px,3vw,36px) clamp(16px,3vw,40px)}
+.ph{margin-bottom:24px}
+.ph-title{font-family:var(--serif);font-size:1.8rem;font-weight:300;letter-spacing:-.01em;margin-bottom:2px}
+.ph-sub{font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.card-lbl{font-family:var(--mono);font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+
+/* QUESTION DISPLAY */
+.q-hero{background:var(--ink);border-radius:10px;padding:clamp(20px,3vw,30px);margin-bottom:16px;position:relative;overflow:hidden}
+.q-hero::before{content:'"';font-family:var(--serif);font-size:120px;color:rgba(255,255,255,.04);position:absolute;top:-15px;left:12px;line-height:1;pointer-events:none}
+.q-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;border-radius:3px;margin-bottom:12px}
+.q-pi{background:rgba(139,105,20,.15);color:#D4A843;border:1px solid rgba(139,105,20,.2)}
+.q-gd{background:rgba(74,144,226,.15);color:#7AB3E8;border:1px solid rgba(74,144,226,.2)}
+.q-text{font-family:var(--serif);font-size:clamp(1.1rem,2.2vw,1.45rem);font-weight:300;line-height:1.5;color:#F5F2EC;position:relative;z-index:1;margin-bottom:14px}
+.q-inst{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
+.q-inst-lbl{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:7px}
+.q-inst-item{font-family:var(--mono);font-size:.7rem;color:rgba(255,255,255,.4);padding:2px 0;display:flex;gap:7px}
+.q-inst-item::before{content:"—";color:rgba(255,255,255,.2)}
+.q-meta{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-family:var(--mono);font-size:.67rem;color:rgba(255,255,255,.3)}
+
+/* RECORDER */
+.recorder{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;text-align:center;box-shadow:var(--shadow);margin-bottom:16px}
+.rec-state{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;min-height:18px}
+.wv{display:flex;align-items:center;justify-content:center;gap:3px;height:36px;margin-bottom:14px}
+.wv-b{width:3px;background:var(--gold);border-radius:2px;animation:wv .6s ease-in-out infinite}
+@keyframes wv{0%,100%{height:3px}50%{height:26px}}
+.wv.idle .wv-b{animation:none;height:3px;background:var(--border2)}
+.rec-timer{font-family:var(--serif);font-size:3.2rem;font-weight:300;color:var(--ink);line-height:1;margin-bottom:10px;letter-spacing:-.04em;transition:color .3s}
+.rec-timer.warn{color:var(--gold)}.rec-timer.danger{color:var(--red)}
+.rec-track{height:2px;background:var(--border);border-radius:2px;margin-bottom:20px;overflow:hidden}
+.rec-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 1s linear,background .3s}
+.rec-fill.danger{background:var(--red)}
+.rec-btns{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
+.btn-circle{width:54px;height:54px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:1.2rem;cursor:pointer;transition:.2s;flex-shrink:0}
+.btn-rec{background:var(--red);color:#fff;box-shadow:0 4px 18px rgba(155,35,53,.3)}
+.btn-rec:hover{transform:scale(1.05)}
+.btn-stop{background:var(--ink);color:#fff}
+.btn-play{background:var(--green-bg);color:var(--green);border:1px solid rgba(45,106,79,.2)}
+.hidden{display:none!important}
+.rdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);margin-right:5px;animation:rdot 1s infinite}
+@keyframes rdot{0%,100%{opacity:1}50%{opacity:.2}}
+.btn-row{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}
+.btn-secondary{padding:9px 16px;background:var(--bg);border:1px solid var(--border);color:var(--ink);font-size:.82rem;font-weight:500;border-radius:var(--r);cursor:pointer;transition:.2s;font-family:var(--sans)}
+.btn-secondary:hover{border-color:var(--border2)}
+.btn-primary{padding:10px 24px;background:var(--green);color:#fff;border:none;font-size:.85rem;font-weight:600;border-radius:var(--r);cursor:pointer;transition:.2s;font-family:var(--sans)}
+.btn-primary:hover{background:#235840}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed}
+.btn-gold{padding:9px 18px;background:var(--gold-bg);border:1px solid var(--gold-lt);color:var(--gold);font-size:.82rem;font-weight:600;border-radius:var(--r);cursor:pointer;font-family:var(--sans)}
+.rec-note{font-family:var(--mono);font-size:.67rem;color:var(--dim);margin-top:12px;line-height:1.6}
+
+/* SCORE */
+.score-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow)}
+.sc-head{background:var(--ink);padding:18px 22px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.sc-num{font-family:var(--serif);font-size:3.2rem;font-weight:300;color:var(--gold);line-height:1;letter-spacing:-.03em}
+.sc-denom{font-family:var(--mono);font-size:.7rem;color:rgba(255,255,255,.3)}
+.sc-flag{display:inline-block;font-family:var(--mono);font-size:.62rem;padding:3px 9px;border-radius:20px;letter-spacing:.08em;text-transform:uppercase;margin-top:5px}
+.flag-pass{background:rgba(45,106,79,.25);color:#5BAA84;border:1px solid rgba(45,106,79,.3)}
+.flag-needs{background:rgba(155,35,53,.25);color:#D4758A;border:1px solid rgba(155,35,53,.3)}
+.sc-body{padding:18px 22px}
+.crit-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.crit-row:last-child{border:none}
+.crit-name{font-size:.82rem;font-weight:500;color:var(--ink);flex:0 0 160px}
+.crit-bar{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.crit-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .9s cubic-bezier(.4,0,.2,1)}
+.crit-pts{font-family:var(--mono);font-size:.75rem;color:var(--muted);min-width:28px;text-align:right}
+.fb-box{margin-top:14px;padding:14px;background:var(--bg);border-radius:var(--r);border-left:3px solid var(--gold)}
+.fb-lbl{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.fb-txt{font-size:.88rem;color:var(--ink2);line-height:1.65}
+.imp-box{margin-top:10px;padding:12px;background:var(--blue-bg);border-radius:var(--r);border-left:3px solid var(--blue)}
+.cando-box{margin-top:10px;padding:12px;background:var(--green-bg);border-radius:var(--r);border-left:3px solid var(--green)}
+
+/* BANNERS */
+.banner{display:flex;align-items:flex-start;gap:11px;padding:12px 16px;border-radius:var(--r);margin-bottom:16px}
+.banner-ok{background:var(--green-bg);border:1px solid rgba(45,106,79,.2)}
+.banner-info{background:var(--blue-bg);border:1px solid rgba(26,60,94,.15)}
+.banner-warn{background:var(--gold-bg);border:1px solid rgba(139,105,20,.2)}
+.banner-ic{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+.banner-title{font-size:.88rem;font-weight:600;margin-bottom:2px}
+.banner-sub{font-family:var(--mono);font-size:.68rem;color:var(--muted);line-height:1.5}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+.stat-lbl{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.stat-val{font-family:var(--serif);font-size:2.2rem;font-weight:300;color:var(--ink);line-height:1;letter-spacing:-.02em}
+.stat-hint{font-family:var(--mono);font-size:.65rem;color:var(--dim);margin-top:2px}
+
+/* TABLE */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse}
+th{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:9px 12px;text-align:left;border-bottom:1px solid var(--border);background:var(--card);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:.85rem;vertical-align:middle}
+tr:last-child td{border:none}
+tr:hover td{background:rgba(26,23,20,.015)}
+.pill{display:inline-block;font-family:var(--mono);font-size:.67rem;padding:2px 8px;border-radius:20px;font-weight:500}
+.pill-hi{background:var(--green-bg);color:var(--green);border:1px solid rgba(45,106,79,.2)}
+.pill-mid{background:var(--gold-bg);color:var(--gold);border:1px solid rgba(139,105,20,.2)}
+.pill-lo{background:var(--red-bg);color:var(--red);border:1px solid rgba(155,35,53,.2)}
+.pill-na{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.tag{font-family:var(--mono);font-size:.6rem;padding:2px 7px;border-radius:3px;text-transform:uppercase}
+.tag-pi{background:var(--gold-bg);color:var(--gold)}
+.tag-gd{background:var(--blue-bg);color:var(--blue)}
+
+/* PRACTICE BANK */
+.pb-filters{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.pb-filter{padding:5px 12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-family:var(--mono);font-size:.68rem;border-radius:20px;cursor:pointer;transition:.15s;font-weight:500}
+.pb-filter.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pb-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:10px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;box-shadow:var(--shadow);transition:border-color .15s}
+.pb-item:hover{border-color:var(--border2)}
+.pb-q{font-size:.92rem;line-height:1.5;color:var(--ink);flex:1}
+.pb-meta{font-family:var(--mono);font-size:.65rem;color:var(--dim);margin-top:5px}
+
+/* LOADER */
+.loader{display:flex;flex-direction:column;align-items:center;gap:12px;padding:36px}
+.spinner{width:26px;height:26px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-txt{font-family:var(--mono);font-size:.7rem;color:var(--muted);letter-spacing:.05em}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(3px)}
+.overlay.on{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:clamp(20px,3vw,28px);width:min(540px,92vw);max-height:85vh;overflow-y:auto;position:relative;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.modal-title{font-family:var(--serif);font-size:1.5rem;font-weight:300;margin-bottom:3px}
+.modal-sub{font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-bottom:18px}
+.modal-x{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px 8px;border-radius:4px}
+.modal-x:hover{background:var(--bg);color:var(--ink)}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--ink);border-left:3px solid var(--gold);color:#fff;font-family:var(--mono);font-size:.75rem;padding:11px 16px;border-radius:var(--r);box-shadow:0 8px 32px rgba(0,0,0,.4);transform:translateY(20px);opacity:0;transition:.3s cubic-bezier(.4,0,.2,1);z-index:999;max-width:280px;pointer-events:none}
+.toast.on{transform:translateY(0);opacity:1;pointer-events:auto}
+.toast.ok{border-left-color:var(--green)}
+.toast.err{border-left-color:var(--red)}
+
+/* READINESS BARS */
+.readiness{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.ready-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+.ready-lbl{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.ready-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:5px}
+.ready-fill{height:100%;border-radius:3px;transition:width 1s ease}
+.ready-pct{font-family:var(--serif);font-size:1.6rem;font-weight:300;color:var(--ink)}
+
+@media(max-width:900px){.sidebar{display:none}.stats{grid-template-columns:1fr 1fr}.readiness{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.stats{grid-template-columns:1fr 1fr}.crit-name{flex:0 0 110px;font-size:.75rem}}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth" style="display: flex;">
+  <div class="auth-box">
+    <div class="auth-logo">Clarion</div>
+    <div class="auth-tag">Managerial Communication Performance</div>
+    <div class="role-sw">
+      <button class="role-btn on" onclick="setRole(&#39;student&#39;,this)">Student</button>
+      <button class="role-btn" onclick="setRole(&#39;trainer&#39;,this)">Trainer</button>
+    </div>
+    <label class="f-label">Email</label>
+    <input class="f-input" id="a-email" type="email" value="student@clarion.com">
+    <label class="f-label">Password</label>
+    <input class="f-input" id="a-pass" type="password" value="demo">
+    <button class="btn-auth" onclick="login()">Sign in →</button>
+    <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+      <label class="f-label">Gemini API Key <span style="color:var(--dim)">(for live scoring)</span></label>
+      <input class="f-input" id="a-key" type="password" placeholder="AIza…" style="font-size:.8rem;font-family:var(--mono)">
+    </div>
+    <div class="auth-note">Trainer: trainer@clarion.com · any password</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="">
+  <div class="topbar">
+    <div class="tb-logo">Clar<em>ion</em></div>
+    <div class="tb-r">
+      <span class="tb-user" id="tb-user">Suhasini</span>
+      <span class="tb-badge badge-student" id="tb-badge">Student</span>
+      <button class="btn-out" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+  <div class="shell">
+    <div class="sidebar" id="sidebar"><div class="nav-grp">Practice</div><div class="nav-item on" id="ni-stu-home" data-id="stu-home" onclick="nav(this.dataset.id)"><span class="nav-ic">🎙</span>Today's Question</div><div class="nav-item" id="ni-stu-bank" data-id="stu-bank" onclick="nav(this.dataset.id)"><span class="nav-ic">📚</span>Practice Bank</div><div class="nav-item" id="ni-stu-dash" data-id="stu-dash" onclick="nav(this.dataset.id)"><span class="nav-ic">📊</span>My Dashboard</div></div>
+    <div class="content" id="content"><div class="ph"><div class="ph-title">Today's Question</div><div class="ph-sub">Saturday, May 9 · GD · Q151 of 100</div></div><div class="q-hero"><span class="q-badge q-gd">GD · TELW 2.0</span><div class="q-text">Should companies hire for skill or attitude?</div><div class="q-inst"><div class="q-inst-lbl">Instructions</div><div class="q-inst-item">Speak for 35–45 seconds</div><div class="q-inst-item">Keep your answer clear, structured, and specific</div></div><div class="q-meta"><span>⏱ 35–45s ideal · 60s max</span><span>🔒 One attempt</span><span>🤖 AI scored</span></div></div><div class="recorder" id="recorder" style="display: none;"><div class="rec-state" id="rec-state">Recorded — 39s. Review or submit.</div><div class="wv idle" id="wv"><div class="wv-b" style="animation-delay:0s"></div><div class="wv-b" style="animation-delay:0.06s"></div><div class="wv-b" style="animation-delay:0.12s"></div><div class="wv-b" style="animation-delay:0.18s"></div><div class="wv-b" style="animation-delay:0.24s"></div><div class="wv-b" style="animation-delay:0.3s"></div><div class="wv-b" style="animation-delay:0.36s"></div><div class="wv-b" style="animation-delay:0.42s"></div><div class="wv-b" style="animation-delay:0.48s"></div><div class="wv-b" style="animation-delay:0.54s"></div><div class="wv-b" style="animation-delay:0.6s"></div><div class="wv-b" style="animation-delay:0.6599999999999999s"></div><div class="wv-b" style="animation-delay:0.72s"></div><div class="wv-b" style="animation-delay:0.78s"></div><div class="wv-b" style="animation-delay:0.84s"></div><div class="wv-b" style="animation-delay:0.8999999999999999s"></div><div class="wv-b" style="animation-delay:0.96s"></div><div class="wv-b" style="animation-delay:1.02s"></div><div class="wv-b" style="animation-delay:1.08s"></div><div class="wv-b" style="animation-delay:1.14s"></div></div><div class="rec-timer" id="rec-timer">0:39</div><div class="rec-track"><div class="rec-fill" id="rec-fill" style="width: 65%;"></div></div><div class="rec-btns"><button class="btn-circle btn-rec hidden" id="btn-go" onclick="startRec(60)">🎙</button><button class="btn-circle btn-stop hidden" id="btn-stop" onclick="stopRec()">⏹</button><button class="btn-circle btn-play" id="btn-play" onclick="playRec()">▶</button></div><div class="btn-row"><button class="btn-secondary" id="btn-rerec" onclick="reRecord()">↺ Re-record</button><button class="btn-primary" id="btn-submit" onclick="doSubmit()" disabled="">Submit Response →</button></div><div class="rec-note">Record 35–45 seconds. Hard stop at 60s. Once submitted this is locked.</div></div><div id="proc-area"><div class="banner banner-ok"><span class="banner-ic">✅</span><div><div class="banner-title" style="color:var(--green)">Submitted &amp; scored</div><div class="banner-sub">39s · Scored by AI · 2026-05-09</div></div></div><div class="score-box"><div class="sc-head"><div><div style="font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:3px">Score</div><div class="sc-num">7.2</div><div class="sc-denom">out of 10</div><span class="sc-flag flag-pass">Ready</span></div><div style="text-align:right;font-family:var(--mono);font-size:.68rem;color:rgba(255,255,255,.3)">GD<br>39s</div></div><div class="sc-body"><div class="crit-row"><div class="crit-name">Structure &amp; Clarity</div><div class="crit-bar"><div class="crit-fill" style="width:80%"></div></div><div class="crit-pts">4/5</div></div><div class="crit-row"><div class="crit-name">Content Depth &amp; Evidence</div><div class="crit-bar"><div class="crit-fill" style="width:60%"></div></div><div class="crit-pts">3/5</div></div><div class="crit-row"><div class="crit-name">Business Thinking</div><div class="crit-bar"><div class="crit-fill" style="width:60%"></div></div><div class="crit-pts">3/5</div></div><div class="crit-row"><div class="crit-name">Language Control</div><div class="crit-bar"><div class="crit-fill" style="width:80%"></div></div><div class="crit-pts">4/5</div></div><div class="crit-row"><div class="crit-name">Professional Communication</div><div class="crit-bar"><div class="crit-fill" style="width:80%"></div></div><div class="crit-pts">4/5</div></div><div class="crit-row"><div class="crit-name">Composure Under Pressure</div><div class="crit-bar"><div class="crit-fill" style="width:60%"></div></div><div class="crit-pts">3/5</div></div><div class="fb-box" style="margin-top:14px"><div class="fb-lbl">Strength</div><div class="fb-txt">Clear structure with a well-defined situation and outcome. Professional tone maintained throughout.</div></div><div class="imp-box"><div class="fb-lbl" style="color:var(--blue)">Improve</div><div class="fb-txt" style="color:var(--blue)">Strengthen the business impact — quantify the outcome or mention what changed as a result of your action.</div></div><div class="cando-box"><div class="fb-lbl" style="color:var(--green)">Your Progress</div><div class="fb-txt" style="color:var(--green)">You are developing the ability to explain professional situations clearly and communicate your role with growing confidence.</div></div></div></div><div style="margin-top:14px"><button class="btn-secondary" data-nav="stu-bank" onclick="nav(this.dataset.nav)">← Back to Practice Bank</button></div></div></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal"><button class="modal-x" onclick="closeModal()">✕</button><div id="modal-body"></div></div>
+</div>
+<div class="toast" id="toast">Submitted and scored</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════════
+// QUESTION BANK — 250 questions
+// ════════════════════════════════════════════════
+const QUESTION_BANK = [
+  {no:1,q:'Tell me about a task you have been handling recently.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:2,q:'Explain a recent achievement you are proud of.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:3,q:'Tell me about a task you have been handling recently.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:4,q:'Tell me about a task you have been handling recently.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:5,q:'Tell me about a task you have been handling recently.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:6,q:'Describe a recent challenge you faced during a project.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:7,q:'Talk about a responsibility you handled during internship.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:8,q:'Explain a recent achievement you are proud of.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:9,q:'Talk about a responsibility you handled during internship.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:10,q:'Tell me about a task you have been handling recently.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:11,q:'Talk about a responsibility you handled during internship.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:12,q:'Describe a recent challenge you faced during a project.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:13,q:'Explain a recent achievement you are proud of.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:14,q:'Tell me about a task you have been handling recently.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:15,q:'Talk about a responsibility you handled during internship.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:16,q:'Explain a recent achievement you are proud of.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:17,q:'Describe a recent challenge you faced during a project.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:18,q:'Tell me about a task you have been handling recently.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:19,q:'Explain a recent achievement you are proud of.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:20,q:'Talk about a responsibility you handled during internship.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:21,q:'Describe a recent challenge you faced during a project.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:22,q:'Talk about a responsibility you handled during internship.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:23,q:'Describe a recent challenge you faced during a project.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:24,q:'Describe a recent challenge you faced during a project.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:25,q:'Talk about a responsibility you handled during internship.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:26,q:'Tell me about a task you have been handling recently.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:27,q:'Explain a recent achievement you are proud of.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:28,q:'Describe a recent challenge you faced during a project.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:29,q:'Describe a team activity you participated in recently.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:30,q:'Tell me about a task you have been handling recently.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:31,q:'Talk about a responsibility you handled during internship.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:32,q:'Tell me about a task you have been handling recently.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:33,q:'Describe a recent challenge you faced during a project.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:34,q:'Talk about a responsibility you handled during internship.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:35,q:'Describe a recent challenge you faced during a project.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:36,q:'Tell me about a task you have been handling recently.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:37,q:'Tell me about a task you have been handling recently.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:38,q:'Talk about a responsibility you handled during internship.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:39,q:'Tell me about a task you have been handling recently.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:40,q:'Describe a recent challenge you faced during a project.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:41,q:'Explain a recent achievement you are proud of.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:42,q:'Explain a recent achievement you are proud of.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:43,q:'Describe a recent challenge you faced during a project.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:44,q:'Describe a recent challenge you faced during a project.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:45,q:'Talk about a responsibility you handled during internship.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:46,q:'Describe a recent challenge you faced during a project.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:47,q:'Talk about a responsibility you handled during internship.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:48,q:'Talk about a responsibility you handled during internship.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:49,q:'Explain a recent achievement you are proud of.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:50,q:'Describe a recent challenge you faced during a project.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Present Perfect, ownership, structured narration.',cando:'Can describe recent experiences clearly and professionally.',telw:'1.0',type:'PI',tag:'Experience & Status',sec:1},
+  {no:51,q:'Explain how a process works in your college or internship.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:52,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:53,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:54,q:'Describe how your team communicates updates during projects.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:55,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:56,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:57,q:'Explain how decisions are usually communicated in teams.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:58,q:'Explain how a process works in your college or internship.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:59,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:60,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:61,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:62,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:63,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:64,q:'Explain how decisions are usually communicated in teams.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:65,q:'Explain how a process works in your college or internship.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:66,q:'Describe how your team communicates updates during projects.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:67,q:'Describe how your team communicates updates during projects.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:68,q:'Explain how a process works in your college or internship.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:69,q:'Describe how your team communicates updates during projects.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:70,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:71,q:'Explain how decisions are usually communicated in teams.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:72,q:'Describe how your internship team tracked progress.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:73,q:'Describe how your team communicates updates during projects.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:74,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:75,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:76,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:77,q:'Explain how decisions are usually communicated in teams.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:78,q:'Describe how your internship team tracked progress.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:79,q:'Explain how decisions are usually communicated in teams.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:80,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:81,q:'Explain how decisions are usually communicated in teams.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:82,q:'Explain how decisions are usually communicated in teams.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:83,q:'Describe how your team communicates updates during projects.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:84,q:'Describe how your team communicates updates during projects.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:85,q:'Explain how decisions are usually communicated in teams.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:86,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:87,q:'Explain how a process works in your college or internship.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:88,q:'Describe how your internship team tracked progress.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:89,q:'Explain how decisions are usually communicated in teams.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:90,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:91,q:'Explain how decisions are usually communicated in teams.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:92,q:'Explain how a process works in your college or internship.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:93,q:'Describe how your team communicates updates during projects.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:94,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:95,q:'Imagine your manager missed a meeting. Explain the important updates.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:96,q:'Describe how your team communicates updates during projects.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:97,q:'Describe how your internship team tracked progress.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:98,q:'Explain how a process works in your college or internship.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:99,q:'Describe how your team communicates updates during projects.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:100,q:'Explain how a process works in your college or internship.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Passives, sequencing, summarisation, reporting.',cando:'Can explain systems and report updates professionally.',telw:'1.0',type:'PI',tag:'Process & Reporting',sec:2},
+  {no:101,q:'Imagine you missed a deadline. What would you do next?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:102,q:'Imagine you missed a deadline. What would you do next?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:103,q:'Explain how you would handle negative feedback.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:104,q:'Talk about a situation where communication broke down.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:105,q:'Talk about a mistake you learned from.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:106,q:'Talk about a mistake you learned from.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:107,q:'Talk about a mistake you learned from.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:108,q:'Talk about a mistake you learned from.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:109,q:'Imagine you missed a deadline. What would you do next?',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:110,q:'Explain how you would handle negative feedback.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:111,q:'Describe how you would recover from a project delay.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:112,q:'Talk about a situation where communication broke down.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:113,q:'Imagine you missed a deadline. What would you do next?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:114,q:'Imagine you missed a deadline. What would you do next?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:115,q:'Talk about a situation where communication broke down.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:116,q:'Describe how you would recover from a project delay.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:117,q:'Talk about a mistake you learned from.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:118,q:'Explain how you would handle negative feedback.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:119,q:'Describe how you would recover from a project delay.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:120,q:'Talk about a mistake you learned from.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:121,q:'Talk about a situation where communication broke down.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:122,q:'Imagine you missed a deadline. What would you do next?',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:123,q:'Talk about a mistake you learned from.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:124,q:'Talk about a mistake you learned from.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:125,q:'Talk about a mistake you learned from.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:126,q:'Explain how you would handle negative feedback.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:127,q:'Talk about a mistake you learned from.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:128,q:'Talk about a situation where communication broke down.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:129,q:'Talk about a mistake you learned from.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:130,q:'Imagine you missed a deadline. What would you do next?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:131,q:'Imagine you missed a deadline. What would you do next?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:132,q:'Describe how you would recover from a project delay.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:133,q:'Explain how you would handle negative feedback.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:134,q:'Describe how you would recover from a project delay.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:135,q:'Talk about a situation where communication broke down.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:136,q:'Explain how you would handle negative feedback.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:137,q:'Explain how you would handle negative feedback.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:138,q:'Describe how you would recover from a project delay.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:139,q:'Explain how you would handle negative feedback.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:140,q:'Talk about a situation where communication broke down.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:141,q:'Talk about a situation where communication broke down.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:142,q:'Imagine you missed a deadline. What would you do next?',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:143,q:'Describe how you would recover from a project delay.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:144,q:'Describe how you would recover from a project delay.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:145,q:'Imagine you missed a deadline. What would you do next?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:146,q:'Describe how you would recover from a project delay.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:147,q:'Describe how you would recover from a project delay.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:148,q:'Imagine you missed a deadline. What would you do next?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:149,q:'Explain how you would handle negative feedback.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:150,q:'Describe how you would recover from a project delay.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Accountability language, recovery logic, professional tone.',cando:'Can communicate responsibility and recovery professionally.',telw:'1.0',type:'PI',tag:'Accountability & Recovery',sec:3},
+  {no:151,q:'Should companies hire for skill or attitude?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:152,q:'Which matters more in leadership: experience or innovation?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:153,q:'Which is better for career growth: startup or large company?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:154,q:'Which is better for career growth: startup or large company?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:155,q:'Should companies prioritise speed or quality during difficult situations?',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:156,q:'Should companies hire for skill or attitude?',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:157,q:'Which is better for career growth: startup or large company?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:158,q:'Which matters more in leadership: experience or innovation?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:159,q:'Is working from home better than working from office?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:160,q:'Should companies hire for skill or attitude?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:161,q:'Which is better for career growth: startup or large company?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:162,q:'Should companies hire for skill or attitude?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:163,q:'Is working from home better than working from office?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:164,q:'Is working from home better than working from office?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:165,q:'Should companies hire for skill or attitude?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:166,q:'Should companies prioritise speed or quality during difficult situations?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:167,q:'Should companies prioritise speed or quality during difficult situations?',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:168,q:'Should companies hire for skill or attitude?',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:169,q:'Should companies prioritise speed or quality during difficult situations?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:170,q:'Is working from home better than working from office?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:171,q:'Should companies hire for skill or attitude?',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:172,q:'Should companies prioritise speed or quality during difficult situations?',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:173,q:'Should companies prioritise speed or quality during difficult situations?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:174,q:'Which is better for career growth: startup or large company?',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:175,q:'Which matters more in leadership: experience or innovation?',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:176,q:'Which matters more in leadership: experience or innovation?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:177,q:'Should companies hire for skill or attitude?',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:178,q:'Is working from home better than working from office?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:179,q:'Which is better for career growth: startup or large company?',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:180,q:'Which matters more in leadership: experience or innovation?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:181,q:'Should companies prioritise speed or quality during difficult situations?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:182,q:'Should companies prioritise speed or quality during difficult situations?',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:183,q:'Should companies hire for skill or attitude?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:184,q:'Should companies prioritise speed or quality during difficult situations?',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:185,q:'Which is better for career growth: startup or large company?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:186,q:'Should companies hire for skill or attitude?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:187,q:'Should companies prioritise speed or quality during difficult situations?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:188,q:'Should companies prioritise speed or quality during difficult situations?',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:189,q:'Is working from home better than working from office?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:190,q:'Is working from home better than working from office?',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:191,q:'Should companies hire for skill or attitude?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:192,q:'Is working from home better than working from office?',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:193,q:'Is working from home better than working from office?',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:194,q:'Should companies prioritise speed or quality during difficult situations?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:195,q:'Should companies prioritise speed or quality during difficult situations?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:196,q:'Should companies hire for skill or attitude?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:197,q:'Should companies prioritise speed or quality during difficult situations?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:198,q:'Should companies hire for skill or attitude?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:199,q:'Should companies hire for skill or attitude?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:200,q:'Should companies hire for skill or attitude?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Comparatives, trade-offs, prioritisation, strategic reasoning.',cando:'Can compare options and justify decisions logically.',telw:'2.0',type:'GD',tag:'Comparison & Decision',sec:4},
+  {no:201,q:'What is one professional habit students should develop early?',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:202,q:'How should teams handle disagreement during pressure situations?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:203,q:'What is one professional habit students should develop early?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:204,q:'What is one professional habit students should develop early?',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:205,q:'Describe a difficult decision and explain your reasoning.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:206,q:'What is one professional habit students should develop early?',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:207,q:'Describe a difficult decision and explain your reasoning.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:208,q:'Describe a decision you later realised could have been improved.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:209,q:'Describe a decision you later realised could have been improved.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:210,q:'Describe a difficult decision and explain your reasoning.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:211,q:'Talk about a situation you would handle differently today.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:212,q:'Describe a decision you later realised could have been improved.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:213,q:'Describe a decision you later realised could have been improved.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:214,q:'Talk about a situation you would handle differently today.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:215,q:'Describe a decision you later realised could have been improved.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:216,q:'What is one professional habit students should develop early?',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:217,q:'Talk about a situation you would handle differently today.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:218,q:'How should teams handle disagreement during pressure situations?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:219,q:'What is one professional habit students should develop early?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:220,q:'Describe a decision you later realised could have been improved.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:221,q:'Talk about a situation you would handle differently today.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:222,q:'Describe a decision you later realised could have been improved.',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:223,q:'Describe a difficult decision and explain your reasoning.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:224,q:'How should teams handle disagreement during pressure situations?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:225,q:'How should teams handle disagreement during pressure situations?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:226,q:'How should teams handle disagreement during pressure situations?',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:227,q:'Describe a decision you later realised could have been improved.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:228,q:'Describe a difficult decision and explain your reasoning.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:229,q:'Describe a decision you later realised could have been improved.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:230,q:'Describe a decision you later realised could have been improved.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:231,q:'What is one professional habit students should develop early?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:232,q:'What is one professional habit students should develop early?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:233,q:'Describe a decision you later realised could have been improved.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:234,q:'Talk about a situation you would handle differently today.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:235,q:'Describe a difficult decision and explain your reasoning.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:236,q:'Talk about a situation you would handle differently today.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:237,q:'Describe a difficult decision and explain your reasoning.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:238,q:'Describe a decision you later realised could have been improved.',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:239,q:'How should teams handle disagreement during pressure situations?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:240,q:'Describe a decision you later realised could have been improved.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:241,q:'Describe a difficult decision and explain your reasoning.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:242,q:'Talk about a situation you would handle differently today.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:243,q:'Describe a difficult decision and explain your reasoning.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:244,q:'Talk about a situation you would handle differently today.',inst:'Speak for 35–45 seconds. Give clear reasons and one example if possible.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:245,q:'Describe a decision you later realised could have been improved.',inst:'Speak for 35–45 seconds. Explain your thinking clearly and logically.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:246,q:'Talk about a situation you would handle differently today.',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:247,q:'How should teams handle disagreement during pressure situations?',inst:'Speak for 35–45 seconds. Keep your answer clear, structured, and specific.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:248,q:'What is one professional habit students should develop early?',inst:'Speak for up to 45 seconds. Explain the situation, your action, and the outcome.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:249,q:'What is one professional habit students should develop early?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+  {no:250,q:'How should teams handle disagreement during pressure situations?',inst:'Speak for up to 45 seconds. Avoid fillers and keep your response professionally spoken.',coach:'Counterfactual thinking, reflection, executive reasoning.',cando:'Can reflect strategically and explain implications clearly.',telw:'2.0',type:'GD',tag:'Strategic Thinking & Reflection',sec:5},
+];
+
+// ════════════════════════════════════════════════
+// SCHEDULE
+// Mon–Thu → PI/TELW 1.0 (sections 1–3, q 1–150)
+// Fri–Sun → GD/TELW 2.0 (sections 4–5, q 151–250)
+// ════════════════════════════════════════════════
+const PROGRAM_START = new Date('2026-05-12T00:00:00');
+
+function getTodayQuestion() {
+  const today = new Date();
+  const day   = today.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  const isPIday = [1,2,3,4].includes(day); // Mon–Thu
+  const isGDday = [5,6,0].includes(day);   // Fri–Sun
+
+  const piBank = QUESTION_BANK.filter(q => q.telw === '1.0');
+  const gdBank = QUESTION_BANK.filter(q => q.telw === '2.0');
+  const bank   = isPIday ? piBank : gdBank;
+
+  // Days since program start
+  const msDay = 86400000;
+  const daysSince = Math.max(0, Math.floor((today - PROGRAM_START) / msDay));
+  const idx = daysSince % bank.length;
+  return { q: bank[idx], type: isPIday ? 'PI' : 'GD', idx, bankLen: bank.length };
+}
+
+function getNextDayLabel() {
+  // Always returns a message since every day has a question now
+  return '';
+}
+
+// ════════════════════════════════════════════════
+// AUTH & STUDENT REGISTRY
+// ════════════════════════════════════════════════
+const TRAINER_EMAIL    = 'trainer@clarion.com';
+const TRAINER_PASSWORD = 'Clarion@2026';
+const TRAINER_NAME     = 'Trainer';
+let EMBEDDED_STUDENTS  = {};
+let STUDENT_REGISTRY   = {};
+let ALL_STUDENT_EMAILS = [];
+
+function getStudents(){try{const s=localStorage.getItem('cs2');if(s)return Object.assign({},EMBEDDED_STUDENTS,JSON.parse(s));}catch(e){}return Object.assign({},EMBEDDED_STUDENTS);}
+function putStudents(d){localStorage.setItem('cs2',JSON.stringify(d));}
+function loadRegistry(){const d=getStudents();STUDENT_REGISTRY={};ALL_STUDENT_EMAILS=[];Object.entries(d).forEach(([e,s])=>{STUDENT_REGISTRY[e]=s;if(s.active)ALL_STUDENT_EMAILS.push(e);});}
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let S={user:null,role:null,page:null,apiKey:'',recording:false,recorded:false,recSecs:0,recLimit:60,recTimer:null,mediaRec:null,audioBlob:null,audioEl:null,transcript:'',currentQ:null};
+let authRole='student';
+
+// ════════════════════════════════════════════════
+// SUBMISSIONS STORE
+// ════════════════════════════════════════════════
+function getSubs(email){try{const s=localStorage.getItem('subs_'+email);return s?JSON.parse(s):{};}catch(e){return {};}}
+function putSub(email,key,data){const all=getSubs(email);all[key]=data;localStorage.setItem('subs_'+email,JSON.stringify(all));}
+function getAllSubs(){
+  const result={};
+  ALL_STUDENT_EMAILS.forEach(e=>{result[e]=getSubs(e);});
+  return result;
+}
+
+// ════════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════════
+function setRole(r,btn){authRole=r;document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.getElementById('a-email').value=r==='trainer'?'trainer@clarion.com':'student@clarion.com';}
+function login(){
+  const email=document.getElementById('a-email').value.trim().toLowerCase();
+  const pass =document.getElementById('a-pass').value.trim();
+  const key  =document.getElementById('a-key').value.trim();
+  const btn  =document.querySelector('.btn-auth');
+  const fail =(m)=>{toast(m,'err');if(btn){btn.textContent='Sign in →';btn.disabled=false;}};
+  if(btn){btn.textContent='Signing in…';btn.disabled=true;}
+  if(key){S.apiKey=key;sessionStorage.setItem('clarion_key',key);}
+  else{const k=sessionStorage.getItem('clarion_key');if(k)S.apiKey=k;}
+
+  if(email===TRAINER_EMAIL){
+    const pw=localStorage.getItem('clarion_trainer_pw')||TRAINER_PASSWORD;
+    if(pass!==pw){fail('Incorrect trainer password.');return;}
+    S.user={email,name:TRAINER_NAME,role:'admin',id:'T001',batch:''};S.role='admin';finishLogin();return;
+  }
+  loadRegistry();
+  const st=STUDENT_REGISTRY[email];
+  if(!st){fail('Email not found. Contact your trainer.');return;}
+  if(!st.active){fail('Account inactive. Contact your trainer.');return;}
+  if(String(st.password)!==String(pass)){fail('Incorrect password.');return;}
+  S.user={email,name:st.name,role:'student',id:'S'+email,batch:st.batch||'Batch A'};S.role='student';finishLogin();
+}
+function finishLogin(){
+  try{
+    document.getElementById('auth').style.display='none';
+    document.getElementById('app').classList.add('on');
+    document.getElementById('tb-user').textContent=S.user.name;
+    const b=document.getElementById('tb-badge');
+    b.textContent=S.role==='admin'?'Trainer':'Student';
+    b.className='tb-badge '+(S.role==='admin'?'badge-admin':'badge-student');
+    buildSidebar();
+    nav(S.role==='admin'?'adm-dash':'stu-home');
+    const btn=document.querySelector('.btn-auth');
+    if(btn){btn.textContent='Sign in →';btn.disabled=false;}
+  }catch(e){console.error(e);toast('Login error: '+e.message,'err');const btn=document.querySelector('.btn-auth');if(btn){btn.textContent='Sign in →';btn.disabled=false;}}
+}
+function logout(){S.user=null;clearInterval(S.recTimer);document.getElementById('app').classList.remove('on');document.getElementById('auth').style.display='flex';}
+
+// ════════════════════════════════════════════════
+// NAV
+// ════════════════════════════════════════════════
+const STU_NAV=[
+  {id:'stu-home',ic:'🎙',lbl:"Today&#39;s Question"},
+  {id:'stu-bank',ic:'📚',lbl:'Practice Bank'},
+  {id:'stu-dash',ic:'📊',lbl:'My Dashboard'},
+];
+const ADM_NAV=[
+  {id:'adm-dash',ic:'📊',lbl:'Dashboard'},
+  {id:'adm-students',ic:'👥',lbl:'Students'},
+  {id:'adm-review',ic:'🎧',lbl:'Review'},
+  {id:'adm-qbank',ic:'📝',lbl:'Questions'},
+  {id:'adm-setup',ic:'⚙️',lbl:'Setup'},
+];
+function buildSidebar(){
+  const items=S.role==='admin'?ADM_NAV:STU_NAV;
+  document.getElementById('sidebar').innerHTML=
+    '<div class="nav-grp">'+(S.role==='admin'?'Trainer':'Practice')+'</div>'+
+    items.map(i=>'<div class="nav-item" id="ni-'+i.id+'" data-id="'+i.id+'" onclick="nav(this.dataset.id)"><span class="nav-ic">'+i.ic+'</span>'+i.lbl+'</div>').join('');
+}
+function nav(id){
+  S.page=id;
+  document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('on'));
+  const el=document.getElementById('ni-'+id);if(el)el.classList.add('on');
+  ({
+    'stu-home':renderHome,'stu-bank':renderBank,'stu-dash':renderStudentDash,
+    'adm-dash':renderAdminDash,'adm-students':renderAdminStudents,
+    'adm-review':renderAdminReview,'adm-qbank':renderAdminQbank,'adm-setup':renderSetup,
+  }[id]||renderHome)();
+}
+function set(h){document.getElementById('content').innerHTML=h;}
+
+// ════════════════════════════════════════════════
+// STUDENT: HOME — TODAY'S QUESTION
+// ════════════════════════════════════════════════
+function renderHome(){
+  const info = getTodayQuestion();
+  const q    = info.q;
+  const today = new Date().toISOString().split('T')[0];
+  const subKey = 'daily_'+today;
+  const existing = getSubs(S.user.email)[subKey];
+
+  S.currentQ = q;
+  S.recorded=false;S.recording=false;S.recSecs=0;S.recLimit=60;S.audioBlob=null;S.audioEl=null;
+
+  const dayName = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+  set(
+    '<div class="ph"><div class="ph-title">Today&#39;s Question</div><div class="ph-sub">'+dayName+' · '+info.type+' · Q'+q.no+' of '+info.bankLen+'</div></div>'+
+    '<div class="q-hero">'+
+      '<span class="q-badge '+(info.type==='PI'?'q-pi':'q-gd')+'">'+info.type+' · TELW '+q.telw+'</span>'+
+      '<div class="q-text">'+q.q+'</div>'+
+      '<div class="q-inst">'+
+        '<div class="q-inst-lbl">Instructions</div>'+
+        q.inst.split('.').filter(s=>s.trim()).map(s=>'<div class="q-inst-item">'+s.trim()+'</div>').join('')+
+      '</div>'+
+      '<div class="q-meta"><span>⏱ 35–45s ideal · 60s max</span><span>🔒 One attempt</span><span>🤖 AI scored</span></div>'+
+    '</div>'+
+    (existing ? renderScoreHTML(existing, true) : renderRecorderHTML())+
+    '<div id="proc-area"></div>'
+  );
+}
+
+function renderRecorderHTML(){
+  return '<div class="recorder" id="recorder">'+
+    '<div class="rec-state" id="rec-state">Ready — press to begin</div>'+
+    '<div class="wv idle" id="wv">'+Array.from({length:20},(_,i)=>'<div class="wv-b" style="animation-delay:'+i*.06+'s"></div>').join('')+'</div>'+
+    '<div class="rec-timer" id="rec-timer">0:00</div>'+
+    '<div class="rec-track"><div class="rec-fill" id="rec-fill" style="width:0%"></div></div>'+
+    '<div class="rec-btns">'+
+      '<button class="btn-circle btn-rec" id="btn-go" onclick="startRec(60)">🎙</button>'+
+      '<button class="btn-circle btn-stop hidden" id="btn-stop" onclick="stopRec()">⏹</button>'+
+      '<button class="btn-circle btn-play hidden" id="btn-play" onclick="playRec()">▶</button>'+
+    '</div>'+
+    '<div class="btn-row">'+
+      '<button class="btn-secondary hidden" id="btn-rerec" onclick="reRecord()">↺ Re-record</button>'+
+      '<button class="btn-primary" id="btn-submit" onclick="doSubmit()" disabled>Submit Response →</button>'+
+    '</div>'+
+    '<div class="rec-note">Record 35–45 seconds. Hard stop at 60s. Once submitted this is locked.</div>'+
+  '</div>';
+}
+
+function renderScoreHTML(sub, showBanner){
+  const criteria = [
+    {k:'structure_clarity',n:'Structure & Clarity'},
+    {k:'content_depth',n:'Content Depth & Evidence'},
+    {k:'business_thinking',n:'Business Thinking'},
+    {k:'language_control',n:'Language Control'},
+    {k:'professional_comm',n:'Professional Communication'},
+    {k:'composure',n:'Composure Under Pressure'},
+  ];
+  const c = sub.criteria||{};
+  return (showBanner?'<div class="banner banner-ok"><span class="banner-ic">✅</span><div><div class="banner-title" style="color:var(--green)">Submitted & scored</div><div class="banner-sub">'+sub.duration+'s · Scored by AI · '+sub.date+'</div></div></div>':'')+
+  '<div class="score-box">'+
+    '<div class="sc-head">'+
+      '<div>'+
+        '<div style="font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:3px">Score</div>'+
+        '<div class="sc-num">'+sub.score+'</div>'+
+        '<div class="sc-denom">out of 10</div>'+
+        '<span class="sc-flag '+(parseFloat(sub.score)>=6?'flag-pass':'flag-needs')+'">'+(parseFloat(sub.score)>=6?'Ready':'Developing')+'</span>'+
+      '</div>'+
+      '<div style="text-align:right;font-family:var(--mono);font-size:.68rem;color:rgba(255,255,255,.3)">'+sub.type+'<br>'+sub.duration+'s</div>'+
+    '</div>'+
+    '<div class="sc-body">'+
+      criteria.map(cr=>'<div class="crit-row"><div class="crit-name">'+cr.n+'</div><div class="crit-bar"><div class="crit-fill" style="width:'+((c[cr.k]||0)/5*100)+'%"></div></div><div class="crit-pts">'+(c[cr.k]||0)+'/5</div></div>').join('')+
+      (sub.strength?'<div class="fb-box" style="margin-top:14px"><div class="fb-lbl">Strength</div><div class="fb-txt">'+sub.strength+'</div></div>':'')+
+      (sub.improvement?'<div class="imp-box"><div class="fb-lbl" style="color:var(--blue)">Improve</div><div class="fb-txt" style="color:var(--blue)">'+sub.improvement+'</div></div>':'')+
+      (sub.cando?'<div class="cando-box"><div class="fb-lbl" style="color:var(--green)">Your Progress</div><div class="fb-txt" style="color:var(--green)">'+sub.cando+'</div></div>':'')+
+    '</div>'+
+  '</div>';
+}
+
+// ════════════════════════════════════════════════
+// RECORDING
+// ════════════════════════════════════════════════
+function startRec(limit){
+  S.recSecs=0;S.recLimit=limit;S.recording=true;
+  document.getElementById('btn-go').classList.add('hidden');
+  document.getElementById('btn-stop').classList.remove('hidden');
+  const wv=document.getElementById('wv');if(wv)wv.classList.remove('idle');
+  tickRec();
+  S.recTimer=setInterval(()=>{S.recSecs++;tickRec();if(S.recSecs>=S.recLimit)stopRec();},1000);
+  if(navigator.mediaDevices?.getUserMedia){
+    navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+      const mime=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
+      S.mediaRec=new MediaRecorder(stream,{mimeType:mime});
+      const chunks=[];
+      S.mediaRec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+      S.mediaRec.onstop=()=>{S.audioBlob=new Blob(chunks,{type:S.mediaRec.mimeType});S.audioEl=new Audio(URL.createObjectURL(S.audioBlob));stream.getTracks().forEach(t=>t.stop());};
+      S.mediaRec.start(100);
+    }).catch(()=>toast('Mic access denied — demo mode','err'));
+  }
+}
+function tickRec(){
+  const rem=S.recLimit-S.recSecs;
+  const m=Math.floor(S.recSecs/60),s=S.recSecs%60;
+  const bigEl=document.getElementById('rec-timer');
+  const fillEl=document.getElementById('rec-fill');
+  const stEl=document.getElementById('rec-state');
+  if(!bigEl)return;
+  bigEl.textContent=m+':'+(s<10?'0':'')+s;
+  bigEl.className='rec-timer'+(rem<=5?' danger':rem<=12?' warn':'');
+  if(fillEl){fillEl.style.width=(S.recSecs/S.recLimit*100)+'%';fillEl.className='rec-fill'+(rem<=5?' danger':'');}
+  if(stEl)stEl.innerHTML='<span class="rdot"></span>Recording — '+rem+'s remaining';
+}
+function stopRec(){
+  clearInterval(S.recTimer);S.recording=false;S.recorded=true;
+  if(S.mediaRec&&S.mediaRec.state!=='inactive')S.mediaRec.stop();
+  const wv=document.getElementById('wv');if(wv)wv.classList.add('idle');
+  document.getElementById('btn-stop').classList.add('hidden');
+  document.getElementById('btn-play').classList.remove('hidden');
+  document.getElementById('btn-rerec').classList.remove('hidden');
+  document.getElementById('btn-submit').disabled=false;
+  const st=document.getElementById('rec-state');if(st)st.textContent='Recorded — '+S.recSecs+'s. Review or submit.';
+}
+function playRec(){if(S.audioEl){S.audioEl.currentTime=0;S.audioEl.play();}else toast('Demo: '+S.recSecs+'s recorded');}
+function reRecord(){
+  clearInterval(S.recTimer);S.recSecs=0;S.recorded=false;S.recording=false;S.audioBlob=null;S.audioEl=null;
+  ['btn-go'].forEach(id=>document.getElementById(id)?.classList.remove('hidden'));
+  ['btn-stop','btn-play','btn-rerec'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
+  document.getElementById('btn-submit').disabled=true;
+  const big=document.getElementById('rec-timer');if(big){big.textContent='0:00';big.className='rec-timer';}
+  const fill=document.getElementById('rec-fill');if(fill){fill.style.width='0%';fill.className='rec-fill';}
+  const wv=document.getElementById('wv');if(wv)wv.classList.add('idle');
+  const st=document.getElementById('rec-state');if(st)st.textContent='Ready — press to begin';
+}
+
+// ════════════════════════════════════════════════
+// SUBMIT & SCORE
+// ════════════════════════════════════════════════
+const RUBRIC_PROMPT = `You are a senior managerial communication coach evaluating an MBA student response.
+
+This is a MANAGERIAL COMMUNICATION PERFORMANCE SYSTEM — not a spoken English app.
+Evaluate executive readiness, professional communication, and managerial thinking.
+
+Hidden coaching context (do NOT reveal to student): {COACH}
+Can-do benchmark: {CANDO}
+
+Evaluate on 6 criteria, each 1–5:
+1. Structure & Clarity — Logical flow, professional opening and close
+2. Content Depth & Evidence — Specific examples, data, concrete details
+3. Business Thinking — Professional context, commercial awareness, managerial perspective
+4. Language Control — Grammar accuracy, appropriate vocabulary, tense usage
+5. Professional Communication — Tone, delivery, confidence, absence of fillers
+6. Composure Under Pressure — Handling complexity, staying on point, executive poise
+
+QUESTION: {Q}
+TRANSCRIPT: {T}
+
+Convert 6 criteria (each 1–5, max 30) to a score out of 10. Round to 1 decimal.
+Identify strongest and weakest criterion.
+Write feedback that feels like a respected coach speaking, not a grammar checker.
+Use the can-do statement dynamically — either confirm they have achieved it or frame it as developing.
+
+Return ONLY valid JSON:
+{"score":N.N,"criteria":{"structure_clarity":N,"content_depth":N,"business_thinking":N,"language_control":N,"professional_comm":N,"composure":N},"strength":"One sentence describing what they did well","improvement":"One specific actionable suggestion","cando_feedback":"Dynamic can-do statement based on their actual performance","flag":"pass or needs_improvement"}
+
+Pass threshold: 6.0 out of 10.`;
+
+async function doSubmit(){
+  if(!S.recorded&&S.recSecs===0){toast('Record your response first','err');return;}
+  const q=S.currentQ;if(!q)return;
+  const btn=document.getElementById('btn-submit');if(btn)btn.disabled=true;
+  const proc=document.getElementById('proc-area');
+  if(proc)proc.innerHTML='<div class="loader"><div class="spinner"></div><div class="loader-txt">Transcribing…</div></div>';
+
+  let transcript='';
+  if(S.audioBlob&&S.apiKey){
+    try{
+      const base64=await blobToBase64(S.audioBlob);
+      const mime=S.audioBlob.type||'audio/webm';
+      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+S.apiKey,
+        {method:'POST',headers:{'Content-Type':'application/json'},
+         body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:mime,data:base64}},{text:'Transcribe this audio exactly as spoken. Return only the spoken text, nothing else.'}]}],generationConfig:{temperature:0,maxOutputTokens:600}})});
+      if(r.ok){const d=await r.json();transcript=d.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||'';}
+      else throw new Error('Transcription failed');
+    }catch(e){transcript=demoTranscript();toast('Demo transcript used','');}
+  }else{await sleep(1000);transcript=demoTranscript();if(!S.apiKey)toast('No API key — demo score');}
+
+  if(proc)proc.innerHTML='<div class="loader"><div class="spinner" style="border-top-color:var(--blue)"></div><div class="loader-txt">Scoring response…</div></div>';
+
+  const prompt=RUBRIC_PROMPT.replace('{COACH}',q.coach).replace('{CANDO}',q.cando).replace('{Q}',q.q).replace('{T}',transcript);
+  let result=null;
+  if(S.apiKey){
+    try{
+      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+S.apiKey,
+        {method:'POST',headers:{'Content-Type':'application/json'},
+         body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.2,maxOutputTokens:600}})});
+      if(r.ok){const d=await r.json();let raw=d.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||'{}';raw=raw.replace(/```json|```/g,'').trim();result=JSON.parse(raw);}
+    }catch(e){result=demoScore();}
+  }else{await sleep(1200);result=demoScore();}
+
+  const today=new Date().toISOString().split('T')[0];
+  const sub={date:today,type:q.type,qno:q.no,qtext:q.q,score:result.score||0,criteria:result.criteria||{},strength:result.strength||'',improvement:result.improvement||'',cando:result.cando_feedback||'',flag:result.flag||'needs_improvement',transcript,duration:S.recSecs||30};
+  putSub(S.user.email,'daily_'+today,sub);
+  if(proc)proc.innerHTML=renderScoreHTML(sub,true);
+  const rec=document.getElementById('recorder');if(rec)rec.style.display='none';
+  toast('Submitted and scored','ok');
+}
+
+function blobToBase64(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onloadend=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(blob);});}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function demoTranscript(){return 'Based on my recent internship experience, I was responsible for managing the weekly sales reporting process. My role involved coordinating data from three different departments and compiling it into a summary for the management team. One challenge I faced was when two departments provided conflicting data, so I took initiative to cross-verify directly with both teams and escalated only after attempting resolution at my level. This taught me the importance of structured communication and proactive follow-up in a professional environment.';}
+function demoScore(){return {score:7.2,criteria:{structure_clarity:4,content_depth:3,business_thinking:3,language_control:4,professional_comm:4,composure:3},strength:'Clear structure with a well-defined situation and outcome. Professional tone maintained throughout.',improvement:'Strengthen the business impact — quantify the outcome or mention what changed as a result of your action.',cando_feedback:'You are developing the ability to explain professional situations clearly and communicate your role with growing confidence.',flag:'pass'};}
+
+// ════════════════════════════════════════════════
+// PRACTICE BANK
+// ════════════════════════════════════════════════
+let pbFilter = 'all';
+function renderBank(){
+  const filters = [{k:'all',lbl:'All'},{k:'1.0',lbl:'TELW 1.0'},{k:'2.0',lbl:'TELW 2.0'},{k:'PI',lbl:'PI'},{k:'GD',lbl:'GD'},{k:'Experience & Status',lbl:'Experience'},{k:'Process & Reporting',lbl:'Process'},{k:'Accountability & Recovery',lbl:'Accountability'},{k:'Comparison & Decision',lbl:'Decision'},{k:'Strategic Thinking & Reflection',lbl:'Strategic'}];
+  const filtered = pbFilter==='all' ? QUESTION_BANK : QUESTION_BANK.filter(q=>q.telw===pbFilter||q.type===pbFilter||q.tag===pbFilter);
+  const subs = getSubs(S.user.email);
+
+  set('<div class="ph"><div class="ph-title">Practice Bank</div><div class="ph-sub">'+QUESTION_BANK.length+' questions · Attempt any question anytime</div></div>'+
+    '<div class="pb-filters">'+filters.map(f=>'<button class="pb-filter'+(pbFilter===f.k?' on':'')+'" data-k="'+f.k+'" onclick="setPBFilter(this.dataset.k)">'+f.lbl+'</button>').join('')+'</div>'+
+    '<div>'+filtered.map(q=>{
+      const subKey='practice_q'+q.no;
+      const done=!!subs[subKey];
+      return '<div class="pb-item">'+
+        '<div style="flex:1">'+
+          '<div style="display:flex;gap:7px;align-items:center;margin-bottom:7px">'+
+            '<span class="tag '+(q.type==='PI'?'tag-pi':'tag-gd')+'">'+q.type+'</span>'+
+            '<span style="font-family:var(--mono);font-size:.62rem;color:var(--dim)">TELW '+q.telw+'</span>'+
+            (done?'<span style="font-family:var(--mono);font-size:.65rem;color:var(--green)">✓ '+subs[subKey].score+'/10</span>':'')+
+          '</div>'+
+          '<div class="pb-q">'+q.q+'</div>'+
+        '</div>'+
+        '<button class="btn-'+(done?'secondary':'primary')+'" style="font-size:.78rem;padding:7px 14px;flex-shrink:0" data-qno="'+q.no+'" onclick="startPractice(this.dataset.qno)">'+(done?'Redo':'Attempt')+'</button>'+
+      '</div>';
+    }).join('')+'</div>');
+}
+function setPBFilter(f){pbFilter=f;renderBank();}
+
+function startPractice(qno){
+  const q=QUESTION_BANK.find(x=>x.no===parseInt(qno));
+  if(!q)return;
+  S.currentQ=q;S.recorded=false;S.recording=false;S.recSecs=0;S.recLimit=60;S.audioBlob=null;S.audioEl=null;
+  set('<div class="ph">'+
+    '<button class="btn-secondary" style="margin-bottom:12px;font-size:.78rem" data-nav="stu-bank" onclick="nav(this.dataset.nav)">← Back to Practice Bank</button>'+
+    '<div class="ph-title">Practice</div><div class="ph-sub">Q'+q.no+' · '+q.type+' · TELW '+q.telw+'</div></div>'+
+    '<div class="q-hero">'+
+      '<span class="q-badge '+(q.type==='PI'?'q-pi':'q-gd')+'">'+q.type+' · '+q.tag+'</span>'+
+      '<div class="q-text">'+q.q+'</div>'+
+      '<div class="q-inst"><div class="q-inst-lbl">Instructions</div>'+
+        q.inst.split('.').filter(s=>s.trim()).map(s=>'<div class="q-inst-item">'+s.trim()+'</div>').join('')+
+      '</div>'+
+      '<div class="q-meta"><span>⏱ 35–45s ideal · 60s max</span><span>🤖 AI scored</span></div>'+
+    '</div>'+
+    renderRecorderHTML().replace('doSubmit()','doSubmit(\'practice_q\'+q.no+\'\')' )+
+    '<div id="proc-area"></div>');
+}
+
+async function doSubmit(subKey){
+  const daily = !subKey;
+  if(!subKey) subKey = 'daily_'+new Date().toISOString().split('T')[0];
+  if(!S.recorded&&S.recSecs===0){toast('Record first','err');return;}
+  const q=S.currentQ;if(!q)return;
+  const btn=document.getElementById('btn-submit');if(btn)btn.disabled=true;
+  const proc=document.getElementById('proc-area');
+  if(proc)proc.innerHTML='<div class="loader"><div class="spinner"></div><div class="loader-txt">Transcribing…</div></div>';
+
+  let transcript='';
+  if(S.audioBlob&&S.apiKey){
+    try{
+      const base64=await blobToBase64(S.audioBlob);
+      const mime=S.audioBlob.type||'audio/webm';
+      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+S.apiKey,
+        {method:'POST',headers:{'Content-Type':'application/json'},
+         body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:mime,data:base64}},{text:'Transcribe this audio exactly as spoken. Return only the spoken text.'}]}],generationConfig:{temperature:0,maxOutputTokens:600}})});
+      if(r.ok){const d=await r.json();transcript=d.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||'';}
+      else throw new Error('Transcription failed');
+    }catch(e){transcript=demoTranscript();}
+  }else{await sleep(1000);transcript=demoTranscript();}
+
+  if(proc)proc.innerHTML='<div class="loader"><div class="spinner" style="border-top-color:var(--blue)"></div><div class="loader-txt">Evaluating…</div></div>';
+  const prompt=RUBRIC_PROMPT.replace('{COACH}',q.coach).replace('{CANDO}',q.cando).replace('{Q}',q.q).replace('{T}',transcript);
+  let result=null;
+  if(S.apiKey){
+    try{
+      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+S.apiKey,
+        {method:'POST',headers:{'Content-Type':'application/json'},
+         body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.2,maxOutputTokens:600}})});
+      if(r.ok){const d=await r.json();let raw=d.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||'{}';raw=raw.replace(/```json|```/g,'').trim();result=JSON.parse(raw);}
+    }catch(e){result=demoScore();}
+  }else{await sleep(1200);result=demoScore();}
+
+  const sub={date:new Date().toISOString().split('T')[0],type:q.type,qno:q.no,qtext:q.q,score:result.score||0,criteria:result.criteria||{},strength:result.strength||'',improvement:result.improvement||'',cando:result.cando_feedback||'',flag:result.flag||'needs_improvement',transcript,duration:S.recSecs||30};
+  putSub(S.user.email,subKey,sub);
+  if(proc)proc.innerHTML=renderScoreHTML(sub,true)+'<div style="margin-top:14px"><button class="btn-secondary" data-nav="stu-bank" onclick="nav(this.dataset.nav)">← Back to Practice Bank</button></div>';
+  const rec=document.getElementById('recorder');if(rec)rec.style.display='none';
+  toast('Submitted and scored','ok');
+}
+
+// ════════════════════════════════════════════════
+// STUDENT DASHBOARD
+// ════════════════════════════════════════════════
+function renderStudentDash(){
+  const allSubs = getSubs(S.user.email);
+  const subs = Object.values(allSubs).filter(s=>s&&s.score!==undefined);
+  const total = subs.length;
+  const piSubs = subs.filter(s=>s.type==='PI');
+  const gdSubs = subs.filter(s=>s.type==='GD');
+  const avg = total ? (subs.reduce((a,s)=>a+parseFloat(s.score||0),0)/total).toFixed(1) : '—';
+  const piAvg = piSubs.length ? (piSubs.reduce((a,s)=>a+parseFloat(s.score||0),0)/piSubs.length).toFixed(1) : '—';
+  const gdAvg = gdSubs.length ? (gdSubs.reduce((a,s)=>a+parseFloat(s.score||0),0)/gdSubs.length).toFixed(1) : '—';
+
+  // Criteria averages
+  const critKeys = ['structure_clarity','content_depth','business_thinking','language_control','professional_comm','composure'];
+  const critNames = ['Structure & Clarity','Content Depth','Business Thinking','Language Control','Professional Comm','Composure'];
+  const critAvgs = critKeys.map(k=>{
+    const vals = subs.filter(s=>s.criteria&&s.criteria[k]!==undefined).map(s=>s.criteria[k]);
+    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  });
+  const strongest = critAvgs.reduce((best,v,i)=>v!==null&&(best===null||v>critAvgs[best])?i:best, null);
+  const weakest   = critAvgs.reduce((best,v,i)=>v!==null&&(best===null||v<critAvgs[best])?i:best, null);
+
+  const piReady = piAvg !== '—' ? Math.min(100,Math.round(parseFloat(piAvg)/10*100)) : 0;
+  const gdReady = gdAvg !== '—' ? Math.min(100,Math.round(parseFloat(gdAvg)/10*100)) : 0;
+
+  // Recent submissions
+  const recent = subs.slice(-8).reverse();
+
+  set('<div class="ph"><div class="ph-title">My Dashboard</div><div class="ph-sub">'+S.user.name+' · '+S.user.batch+'</div></div>'+
+    '<div class="stats">'+
+      '<div class="stat"><div class="stat-lbl">Overall Avg</div><div class="stat-val">'+avg+'</div><div class="stat-hint">out of 10</div></div>'+
+      '<div class="stat"><div class="stat-lbl">PI Average</div><div class="stat-val">'+piAvg+'</div><div class="stat-hint">'+piSubs.length+' sessions</div></div>'+
+      '<div class="stat"><div class="stat-lbl">GD Average</div><div class="stat-val">'+gdAvg+'</div><div class="stat-hint">'+gdSubs.length+' sessions</div></div>'+
+      '<div class="stat"><div class="stat-lbl">Attempts</div><div class="stat-val">'+total+'</div><div class="stat-hint">total responses</div></div>'+
+    '</div>'+
+    '<div class="readiness">'+
+      '<div class="ready-card">'+
+        '<div class="ready-lbl">PI Readiness</div>'+
+        '<div class="ready-pct">'+piReady+'%</div>'+
+        '<div class="ready-bar"><div class="ready-fill" style="width:'+piReady+'%;background:'+(piReady>=70?'var(--green)':piReady>=50?'var(--gold)':'var(--red)')+'"></div></div>'+
+      '</div>'+
+      '<div class="ready-card">'+
+        '<div class="ready-lbl">GD Readiness</div>'+
+        '<div class="ready-pct">'+gdReady+'%</div>'+
+        '<div class="ready-bar"><div class="ready-fill" style="width:'+gdReady+'%;background:'+(gdReady>=70?'var(--green)':gdReady>=50?'var(--gold)':'var(--red)')+'"></div></div>'+
+      '</div>'+
+    '</div>'+
+    (strongest!==null&&weakest!==null?
+    '<div class="card" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+      '<div><div class="card-lbl" style="color:var(--green)">Strongest capability</div><div style="font-size:.92rem;font-weight:600">'+critNames[strongest]+'</div><div style="font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-top:3px">'+critAvgs[strongest].toFixed(1)+'/5</div></div>'+
+      '<div><div class="card-lbl" style="color:var(--red)">Focus area</div><div style="font-size:.92rem;font-weight:600">'+critNames[weakest]+'</div><div style="font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-top:3px">'+critAvgs[weakest].toFixed(1)+'/5</div></div>'+
+    '</div>':'<div class="banner banner-info"><span class="banner-ic">💡</span><div><div class="banner-title">Build your profile</div><div class="banner-sub">Complete more sessions to see your capability analysis and readiness scores.</div></div></div>')+
+    (recent.length?'<div class="card" style="padding:0;overflow:hidden"><div style="padding:14px 18px;border-bottom:1px solid var(--border)"><div class="card-lbl" style="margin:0">Recent submissions</div></div><table class="tbl"><thead><tr><th>Date</th><th>Type</th><th>Question</th><th>Score</th></tr></thead><tbody>'+
+      recent.map(s=>'<tr><td style="font-family:var(--mono);font-size:.75rem">'+s.date+'</td><td><span class="tag '+(s.type==='PI'?'tag-pi':'tag-gd')+'">'+s.type+'</span></td><td style="max-width:200px;color:var(--muted);font-size:.82rem">'+s.qtext.substring(0,45)+'…</td><td>'+scorePill(parseFloat(s.score),10)+'</td></tr>').join('')+
+    '</tbody></table></div>':''));
+}
+
+// ════════════════════════════════════════════════
+// ADMIN: DASHBOARD
+// ════════════════════════════════════════════════
+function renderAdminDash(){
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const info = getTodayQuestion();
+  const dayLabel = today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  loadRegistry();
+  const submitted = ALL_STUDENT_EMAILS.filter(e=>{const s=getSubs(e);return s['daily_'+todayStr];});
+  const pending   = ALL_STUDENT_EMAILS.filter(e=>{const s=getSubs(e);return !s['daily_'+todayStr];});
+  const allSubs   = ALL_STUDENT_EMAILS.flatMap(e=>Object.values(getSubs(e)).filter(s=>s&&s.score!==undefined));
+  const classAvg  = allSubs.length?(allSubs.reduce((a,s)=>a+parseFloat(s.score||0),0)/allSubs.length).toFixed(1):'—';
+  const piSubs    = allSubs.filter(s=>s.type==='PI');
+  const gdSubs    = allSubs.filter(s=>s.type==='GD');
+  const piAvg     = piSubs.length?(piSubs.reduce((a,s)=>a+parseFloat(s.score||0),0)/piSubs.length).toFixed(1):'—';
+  const gdAvg     = gdSubs.length?(gdSubs.reduce((a,s)=>a+parseFloat(s.score||0),0)/gdSubs.length).toFixed(1):'—';
+
+  // Low performers
+  const studentAvgs = ALL_STUDENT_EMAILS.map(e=>{
+    const s=getStudents()[e];
+    const subs=Object.values(getSubs(e)).filter(x=>x&&x.score!==undefined);
+    const avg=subs.length?(subs.reduce((a,x)=>a+parseFloat(x.score||0),0)/subs.length):null;
+    return {email:e,name:s?.name||e,subs:subs.length,avg};
+  });
+  const lowPerf = studentAvgs.filter(s=>s.avg!==null&&s.avg<6).slice(0,5);
+  const consistent = studentAvgs.filter(s=>s.subs>=5).sort((a,b)=>b.subs-a.subs).slice(0,5);
+
+  set('<div class="ph"><div class="ph-title">Dashboard</div><div class="ph-sub">'+dayLabel+'</div></div>'+
+    '<div class="stats">'+
+      '<div class="stat"><div class="stat-lbl">Submitted today</div><div class="stat-val">'+submitted.length+'<span style="font-family:var(--mono);font-size:1rem;color:var(--muted)">/'+ALL_STUDENT_EMAILS.length+'</span></div><div class="stat-hint">'+(ALL_STUDENT_EMAILS.length?Math.round(submitted.length/ALL_STUDENT_EMAILS.length*100):0)+'% rate</div></div>'+
+      '<div class="stat"><div class="stat-lbl">Class Avg</div><div class="stat-val">'+classAvg+'</div><div class="stat-hint">out of 10</div></div>'+
+      '<div class="stat"><div class="stat-lbl">PI Avg</div><div class="stat-val">'+piAvg+'</div><div class="stat-hint">'+piSubs.length+' responses</div></div>'+
+      '<div class="stat"><div class="stat-lbl">GD Avg</div><div class="stat-val">'+gdAvg+'</div><div class="stat-hint">'+gdSubs.length+' responses</div></div>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+
+      '<div>'+
+        '<div class="card"><div class="card-lbl">Today&#39;s question</div>'+
+          '<div style="margin-bottom:8px"><span class="tag '+(info.type==='PI'?'tag-pi':'tag-gd')+'">'+info.type+' · TELW '+info.q.telw+'</span></div>'+
+          '<div style="font-family:var(--serif);font-size:1rem;line-height:1.5;color:var(--ink2)">'+info.q.q+'</div>'+
+        '</div>'+
+        '<div class="card"><div class="card-lbl" style="color:var(--red)">Not submitted today ('+pending.length+')</div>'+
+          (pending.length?pending.map(e=>'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:.85rem"><span>'+getStudents()[e]?.name+'</span><span style="font-family:var(--mono);font-size:.7rem;color:var(--muted)">pending</span></div>').join(''):'<div style="font-family:var(--mono);font-size:.75rem;color:var(--green)">All submitted ✓</div>')+
+        '</div>'+
+      '</div>'+
+      '<div>'+
+        '<div class="card"><div class="card-lbl" style="color:var(--green)">Submitted today</div>'+
+          (submitted.length?submitted.map(e=>{const s=getSubs(e)['daily_'+todayStr];return'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-size:.85rem">'+getStudents()[e]?.name+'</span>'+scorePill(parseFloat(s?.score||0),10)+'</div>';}).join(''):'<div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">None yet</div>')+
+        '</div>'+
+        (lowPerf.length?'<div class="card"><div class="card-lbl" style="color:var(--red)">⚠ Needs attention (avg below 6)</div>'+lowPerf.map(s=>'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-size:.85rem">'+s.name+'</span><span class="pill pill-lo">'+s.avg.toFixed(1)+'</span></div>').join('')+'</div>':'')+
+      '</div>'+
+    '</div>');
+}
+
+// ════════════════════════════════════════════════
+// ADMIN: STUDENTS
+// ════════════════════════════════════════════════
+function renderAdminStudents(){
+  loadRegistry();
+  const todayStr=new Date().toISOString().split('T')[0];
+  const rows=ALL_STUDENT_EMAILS.map(email=>{
+    const u=getStudents()[email]||{name:email};
+    const subs=Object.values(getSubs(email)).filter(s=>s&&s.score!==undefined);
+    const piS=subs.filter(s=>s.type==='PI'),gdS=subs.filter(s=>s.type==='GD');
+    const avg=subs.length?(subs.reduce((a,s)=>a+parseFloat(s.score||0),0)/subs.length).toFixed(1):null;
+    const piAvg=piS.length?(piS.reduce((a,s)=>a+parseFloat(s.score||0),0)/piS.length).toFixed(1):null;
+    const gdAvg=gdS.length?(gdS.reduce((a,s)=>a+parseFloat(s.score||0),0)/gdS.length).toFixed(1):null;
+    const todayDone=!!getSubs(email)['daily_'+todayStr];
+    const piReady=piAvg?Math.min(100,Math.round(parseFloat(piAvg)/10*100)):0;
+    const gdReady=gdAvg?Math.min(100,Math.round(parseFloat(gdAvg)/10*100)):0;
+    return {email,u,subs:subs.length,avg,piAvg,gdAvg,todayDone,piReady,gdReady};
+  });
+
+  set('<div class="ph"><div class="ph-title">Students</div><div class="ph-sub">'+ALL_STUDENT_EMAILS.length+' enrolled</div></div>'+
+    '<div class="tbl-wrap"><table><thead><tr><th>Student</th><th>Sessions</th><th>Avg</th><th>PI Avg</th><th>GD Avg</th><th>PI Ready</th><th>GD Ready</th><th>Today</th><th></th></tr></thead><tbody>'+
+    rows.map(r=>'<tr>'+
+      '<td><div style="font-weight:600;font-size:.88rem">'+r.u.name+'</div><div style="font-family:var(--mono);font-size:.67rem;color:var(--muted)">'+r.email+'</div></td>'+
+      '<td style="font-family:var(--mono);font-size:.8rem">'+r.subs+'</td>'+
+      '<td>'+(r.avg?scorePill(parseFloat(r.avg),10):'<span class="pill pill-na">—</span>')+'</td>'+
+      '<td style="font-family:var(--mono);font-size:.78rem">'+(r.piAvg||'—')+'</td>'+
+      '<td style="font-family:var(--mono);font-size:.78rem">'+(r.gdAvg||'—')+'</td>'+
+      '<td><div style="font-family:var(--mono);font-size:.75rem">'+r.piReady+'%</div><div style="width:60px;height:3px;background:var(--border);border-radius:2px;margin-top:3px;overflow:hidden"><div style="height:100%;width:'+r.piReady+'%;background:'+(r.piReady>=70?'var(--green)':r.piReady>=50?'var(--gold)':'var(--red)')+';border-radius:2px"></div></div></td>'+
+      '<td><div style="font-family:var(--mono);font-size:.75rem">'+r.gdReady+'%</div><div style="width:60px;height:3px;background:var(--border);border-radius:2px;margin-top:3px;overflow:hidden"><div style="height:100%;width:'+r.gdReady+'%;background:'+(r.gdReady>=70?'var(--green)':r.gdReady>=50?'var(--gold)':'var(--red)')+';border-radius:2px"></div></div></td>'+
+      '<td style="font-family:var(--mono);font-size:.8rem;color:'+(r.todayDone?'var(--green)':'var(--red)')+'">'+( r.todayDone?'✓':'✗')+'</td>'+
+      '<td><button class="btn-secondary" style="font-size:.75rem;padding:5px 10px" data-email="'+r.email+'" onclick="viewStudent(this.dataset.email)">View</button></td>'+
+    '</tr>').join('')+'</tbody></table></div>');
+}
+
+function viewStudent(email){
+  const u=getStudents()[email]||{name:email};
+  const subs=Object.entries(getSubs(email)).map(([k,v])=>v).filter(s=>s&&s.score!==undefined).reverse();
+  document.getElementById('modal-body').innerHTML='<div class="modal-title">'+u.name+'</div><div class="modal-sub">'+email+' · '+subs.length+' sessions</div>'+
+    '<div class="tbl-wrap" style="margin-top:12px"><table><thead><tr><th>Date</th><th>Type</th><th>Score</th><th>Flag</th></tr></thead><tbody>'+
+    subs.map(s=>'<tr><td style="font-family:var(--mono);font-size:.75rem">'+s.date+'</td><td><span class="tag '+(s.type==='PI'?'tag-pi':'tag-gd')+'">'+s.type+'</span></td><td>'+scorePill(parseFloat(s.score),10)+'</td><td style="font-family:var(--mono);font-size:.7rem;color:'+(s.flag==='pass'?'var(--green)':'var(--red)')+'">'+s.flag+'</td></tr>').join('')+
+    '</tbody></table></div>';
+  document.getElementById('overlay').classList.add('on');
+}
+
+// ════════════════════════════════════════════════
+// ADMIN: REVIEW
+// ════════════════════════════════════════════════
+function renderAdminReview(){
+  loadRegistry();
+  const all=ALL_STUDENT_EMAILS.flatMap(email=>{
+    const u=getStudents()[email]||{name:email};
+    return Object.values(getSubs(email)).filter(s=>s&&s.score!==undefined).map(s=>({...s,studentName:u.name,email}));
+  }).sort((a,b)=>b.date.localeCompare(a.date));
+
+  set('<div class="ph"><div class="ph-title">Review</div><div class="ph-sub">Access transcripts and submissions</div></div>'+
+    '<div style="display:flex;gap:10px;margin-bottom:16px">'+
+      '<button class="btn-gold" onclick="pickRandom()">🎲 Random Sample</button>'+
+    '</div>'+
+    '<div class="tbl-wrap"><table><thead><tr><th>Student</th><th>Date</th><th>Type</th><th>Score</th><th>Duration</th><th></th></tr></thead><tbody>'+
+    all.map(s=>'<tr>'+
+      '<td style="font-weight:600;font-size:.85rem">'+s.studentName+'</td>'+
+      '<td style="font-family:var(--mono);font-size:.75rem">'+s.date+'</td>'+
+      '<td><span class="tag '+(s.type==='PI'?'tag-pi':'tag-gd')+'">'+s.type+'</span></td>'+
+      '<td>'+scorePill(parseFloat(s.score),10)+'</td>'+
+      '<td style="font-family:var(--mono);font-size:.75rem">'+s.duration+'s</td>'+
+      '<td><button class="btn-secondary" style="font-size:.75rem;padding:5px 10px" data-sub="'+encodeURIComponent(JSON.stringify(s))+'" onclick="openReview(this.dataset.sub)">View</button></td>'+
+    '</tr>').join('')+'</tbody></table></div>');
+}
+
+function pickRandom(){
+  loadRegistry();
+  const all=ALL_STUDENT_EMAILS.flatMap(email=>{const u=getStudents()[email]||{name:email};return Object.values(getSubs(email)).filter(s=>s&&s.score!==undefined).map(s=>({...s,studentName:u.name,email}));});
+  if(!all.length){toast('No submissions yet','err');return;}
+  openReview(JSON.stringify(all[Math.floor(Math.random()*all.length)]));
+}
+
+function openReview(subStr){
+  const s=JSON.parse(decodeURIComponent(subStr));
+  document.getElementById('modal-body').innerHTML='<div class="modal-title">'+(s.studentName||'Review')+'</div><div class="modal-sub">'+s.date+' · '+s.type+' · '+s.duration+'s · Score: '+s.score+'/10</div>'+
+    '<div style="margin-bottom:12px"><div class="card-lbl">Question</div><div style="font-family:var(--serif);font-size:1rem;line-height:1.5">'+s.qtext+'</div></div>'+
+    '<div style="margin-bottom:12px"><div class="card-lbl">Transcript</div><div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px;font-family:var(--mono);font-size:.75rem;line-height:1.7;max-height:160px;overflow-y:auto">'+s.transcript+'</div></div>'+
+    renderScoreHTML(s,false)+
+    '<div style="margin-top:14px"><div class="card-lbl">Trainer note</div><textarea style="width:100%;padding:9px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:.75rem;min-height:60px;outline:none;resize:vertical" placeholder="Add your evaluation note…"></textarea></div>';
+  document.getElementById('overlay').classList.add('on');
+}
+
+// ════════════════════════════════════════════════
+// ADMIN: QUESTION BANK MANAGEMENT
+// ════════════════════════════════════════════════
+function renderAdminQbank(){
+  const piQs=QUESTION_BANK.filter(q=>q.telw==='1.0');
+  const gdQs=QUESTION_BANK.filter(q=>q.telw==='2.0');
+  const info=getTodayQuestion();
+  set('<div class="ph"><div class="ph-title">Question Bank</div><div class="ph-sub">'+QUESTION_BANK.length+' questions · Mon–Thu: PI/TELW 1.0 · Fri–Sun: GD/TELW 2.0</div></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+
+      '<div class="card"><div class="card-lbl">PI / TELW 1.0 ('+piQs.length+' questions · Mon–Thu)</div>'+
+        piQs.map(q=>'<div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start">'+
+          '<span style="font-family:var(--mono);font-size:.65rem;color:var(--dim);min-width:24px;margin-top:2px">'+q.no+'</span>'+
+          '<div style="flex:1">'+
+            '<div style="font-size:.85rem;line-height:1.4;color:var(--ink2)">'+q.q+'</div>'+
+            '<div style="font-family:var(--mono);font-size:.62rem;color:var(--dim);margin-top:3px">'+q.tag+'</div>'+
+          '</div>'+
+          (info.q.no===q.no?'<span class="tag tag-pi" style="flex-shrink:0;font-size:.58rem">Today</span>':'')+
+        '</div>').join('')+
+      '</div>'+
+      '<div class="card"><div class="card-lbl">GD / TELW 2.0 ('+gdQs.length+' questions · Fri–Sun)</div>'+
+        gdQs.map(q=>'<div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start">'+
+          '<span style="font-family:var(--mono);font-size:.65rem;color:var(--dim);min-width:24px;margin-top:2px">'+q.no+'</span>'+
+          '<div style="flex:1">'+
+            '<div style="font-size:.85rem;line-height:1.4;color:var(--ink2)">'+q.q+'</div>'+
+            '<div style="font-family:var(--mono);font-size:.62rem;color:var(--dim);margin-top:3px">'+q.tag+'</div>'+
+          '</div>'+
+          (info.q.no===q.no?'<span class="tag tag-gd" style="flex-shrink:0;font-size:.58rem">Today</span>':'')+
+        '</div>').join('')+
+      '</div>'+
+    '</div>');
+}
+
+// ════════════════════════════════════════════════
+// ADMIN: SETUP
+// ════════════════════════════════════════════════
+function renderSetup(){
+  const students=Object.entries(getStudents());
+  const active=students.filter(([,s])=>s.active).length;
+  set('<div class="ph"><div class="ph-title">Setup & Access</div><div class="ph-sub">'+active+' active students · '+students.length+' total</div></div>'+
+    '<div class="card"><div class="card-lbl">Add a student</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'+
+        '<div><div class="f-label">Full name</div><input id="ns-name" class="f-input" type="text" placeholder="Arjun Mehta"></div>'+
+        '<div><div class="f-label">Email</div><input id="ns-email" class="f-input" type="email" placeholder="arjun@gmail.com"></div>'+
+        '<div><div class="f-label">Password</div><input id="ns-pw" class="f-input" type="text" placeholder="Welcome@1"></div>'+
+        '<div><div class="f-label">Batch</div><input id="ns-batch" class="f-input" type="text" placeholder="Batch A 2026"></div>'+
+      '</div>'+
+      '<button class="btn-primary" onclick="addStudent()">Add student</button>'+
+    '</div>'+
+    '<div class="card"><div class="card-lbl">Bulk add — one per line: name, email, password, batch</div>'+
+      '<textarea id="bulk-input" class="f-input" style="min-height:90px;font-family:var(--mono);font-size:.75rem;line-height:1.8;resize:vertical" placeholder="Arjun Mehta, arjun@gmail.com, Welcome@1, Batch A"></textarea>'+
+      '<button class="btn-primary" style="margin-top:10px" onclick="bulkAdd()">Import students</button>'+
+    '</div>'+
+    '<div class="card" style="background:rgba(45,106,79,.04);border-color:rgba(45,106,79,.2)"><div class="card-lbl" style="color:var(--green)">⬇ Download & Deploy</div>'+
+      '<p style="font-size:.85rem;color:var(--ink2);margin-bottom:12px;line-height:1.6">After adding students, download and drag to Netlify. Students can log in from any device.</p>'+
+      '<button class="btn-primary" style="background:var(--green)" onclick="downloadUpdatedApp()">Download Updated App →</button>'+
+    '</div>'+
+    (students.length?'<div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Password</th><th>Batch</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+      students.map(([email,s])=>'<tr>'+
+        '<td style="font-weight:600;font-size:.85rem">'+s.name+'</td>'+
+        '<td style="font-family:var(--mono);font-size:.72rem;color:var(--muted)">'+email+'</td>'+
+        '<td style="font-family:var(--mono);font-size:.72rem">'+s.password+'</td>'+
+        '<td style="font-size:.8rem">'+(s.batch||'—')+'</td>'+
+        '<td style="font-family:var(--mono);font-size:.7rem;color:'+(s.active?'var(--green)':'var(--red)')+'">'+( s.active?'Active':'Blocked')+'</td>'+
+        '<td style="display:flex;gap:5px">'+
+          '<button class="btn-secondary" style="font-size:.72rem;padding:4px 9px" data-email="'+email+'" onclick="toggleStudent(this.dataset.email)">'+(s.active?'Block':'Unblock')+'</button>'+
+          '<button class="btn-secondary" style="font-size:.72rem;padding:4px 9px" data-email="'+email+'" onclick="removeStudent(this.dataset.email)">✕</button>'+
+        '</td>'+
+      '</tr>').join('')+'</tbody></table>'+
+      '<div style="padding:12px 14px;border-top:1px solid var(--border);font-family:var(--mono);font-size:.7rem;color:var(--muted)">After any changes — Download Updated App and drag to Netlify.</div>'+
+    '</div>':'')+
+    '<div class="card"><div class="card-lbl">Change trainer password</div>'+
+      '<p style="font-size:.82rem;color:var(--muted);margin-bottom:10px">Default: <strong style="color:var(--ink)">Clarion@2026</strong></p>'+
+      '<div style="display:flex;gap:9px"><input id="new-pw" class="f-input" type="password" placeholder="New password" style="flex:1"><button class="btn-primary" onclick="changeTrainerPw()">Update</button></div>'+
+      '<button class="btn-secondary" style="margin-top:8px;font-size:.78rem" onclick="resetTrainerPw()">Reset to default</button>'+
+    '</div>');
+}
+
+// ════════════════════════════════════════════════
+// STUDENT MANAGEMENT
+// ════════════════════════════════════════════════
+function addStudent(){
+  const name=document.getElementById('ns-name').value.trim();
+  const email=document.getElementById('ns-email').value.trim().toLowerCase();
+  const pw=document.getElementById('ns-pw').value.trim();
+  const batch=document.getElementById('ns-batch').value.trim()||'Batch A 2026';
+  if(!name||!email||!pw){toast('Fill in name, email and password','err');return;}
+  const cur=getStudents();if(cur[email]){toast('Email already exists','err');return;}
+  cur[email]={name,password:pw,batch,active:true};putStudents(cur);
+  document.getElementById('ns-name').value='';document.getElementById('ns-email').value='';
+  document.getElementById('ns-pw').value='';document.getElementById('ns-batch').value='';
+  toast(name+' added ✓ — click Download Updated App','ok');renderSetup();
+}
+function bulkAdd(){
+  const raw=document.getElementById('bulk-input').value.trim();
+  if(!raw){toast('Paste data first','err');return;}
+  const lines=raw.split(/\n/).map(l=>l.trim()).filter(Boolean);
+  const cur=getStudents();let added=0,skipped=0;
+  lines.forEach(line=>{
+    const p=line.split(',').map(x=>x.trim());
+    if(p.length<3){skipped++;return;}
+    const [name,email,pw,batch='Batch A 2026']=p;
+    const em=email.toLowerCase();
+    if(!name||!em||!pw||cur[em]){skipped++;return;}
+    cur[em]={name,password:pw,batch,active:true};added++;
+  });
+  if(added>0){putStudents(cur);toast(added+' added ✓ — click Download Updated App','ok');renderSetup();}
+  else toast('None added — format: name, email, password, batch','err');
+}
+function toggleStudent(email){
+  const cur=getStudents();if(!cur[email])return;
+  cur[email].active=!cur[email].active;putStudents(cur);
+  toast((cur[email].active?'Unblocked':'Blocked')+' ✓','ok');renderSetup();
+}
+function removeStudent(email){
+  const cur=getStudents();if(!confirm('Remove '+(cur[email]?.name||email)+'?'))return;
+  delete cur[email];putStudents(cur);toast('Removed','ok');renderSetup();
+}
+function downloadUpdatedApp(){
+  const all=getStudents();const count=Object.keys(all).length;
+  if(count===0){toast('Add students first','err');return;}
+  const json=JSON.stringify(all);
+  try{
+    let src='<!DOCTYPE html>'+document.documentElement.outerHTML;
+    const m='let EMBEDDED_STUDENTS={}';const m2='let EMBEDDED_STUDENTS = {}';
+    if(src.includes(m))src=src.replace(m,'let EMBEDDED_STUDENTS='+json);
+    else if(src.includes(m2))src=src.replace(m2,'let EMBEDDED_STUDENTS='+json);
+    else{const parts=src.split('let EMBEDDED_STUDENTS=');if(parts.length>1){const rest=parts[1];const end=rest.indexOf(';')+1;src=parts[0]+'let EMBEDDED_STUDENTS='+json+';'+rest.slice(end);}}
+    const blob=new Blob([src],{type:'text/html'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='CLARION.html';
+    document.body.appendChild(a);a.click();setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(a.href);},200);
+    toast(count+' students baked in ✓ — drag to Netlify','ok');
+  }catch(e){toast('Download error: '+e.message,'err');}
+}
+function changeTrainerPw(){const pw=document.getElementById('new-pw').value.trim();if(pw.length<6){toast('Min 6 chars','err');return;}localStorage.setItem('clarion_trainer_pw',pw);toast('Password updated ✓','ok');}
+function resetTrainerPw(){localStorage.removeItem('clarion_trainer_pw');toast('Reset to Clarion@2026','ok');}
+
+// ════════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════════
+function scorePill(score,max){
+  const pct=score/max;
+  const cls=pct>=0.7?'pill-hi':pct>=0.5?'pill-mid':'pill-lo';
+  return '<span class="pill '+cls+'">'+score.toFixed(1)+'</span>';
+}
+function closeModal(){document.getElementById('overlay').classList.remove('on');}
+
+let toastTmr=null;
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast on'+(type?' '+type:'');
+  clearTimeout(toastTmr);toastTmr=setTimeout(()=>el.className='toast',3500);
+}
+
+window.onload=()=>{
+  const k=sessionStorage.getItem('clarion_key');
+  if(k){S.apiKey=k;document.getElementById('a-key').value=k;}
+  const savedPw=localStorage.getItem('clarion_trainer_pw');
+  if(savedPw)window.__trainerPw=savedPw;
+};
+</script>
+
+</body></html>
