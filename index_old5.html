@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0046)file:///C:/Users/Manu/Downloads/CLARION_8.html -->
+<!-- saved from url=(0046)file:///C:/Users/Manu/Downloads/CLARION_6.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -250,7 +250,8 @@ tr:hover td{background:rgba(26,23,20,.015)}
   </div>
   <div class="shell">
     <div class="sidebar" id="sidebar"><div class="nav-grp">Trainer Panel</div><div class="nav-item" id="ni-adm-dash" data-id="adm-dash" onclick="nav(this.dataset.id)"><span class="nav-ic">📊</span>Dashboard</div><div class="nav-item" id="ni-adm-banks" data-id="adm-banks" onclick="nav(this.dataset.id)"><span class="nav-ic">🏦</span>Question Banks</div><div class="nav-item" id="ni-adm-students" data-id="adm-students" onclick="nav(this.dataset.id)"><span class="nav-ic">👥</span>Students</div><div class="nav-item" id="ni-adm-review" data-id="adm-review" onclick="nav(this.dataset.id)"><span class="nav-ic">🎧</span>Review</div><div class="nav-item on" id="ni-adm-setup" data-id="adm-setup" onclick="nav(this.dataset.id)"><span class="nav-ic">⚙️</span>Setup</div></div>
-    <div class="content" id="content"><div class="ph"><div class="ph-title">Setup &amp; Access</div><div class="ph-sub">1 students · 1 active</div></div><div class="card"><div class="card-lbl">Add a student</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px"><div><div class="f-label">Student ID <span style="color:var(--dim);font-weight:400">(auto if blank)</span></div><input id="ns-sid" class="f-input" type="text" placeholder="Optional — any format"></div><div><div class="f-label">Full name</div><input id="ns-name" class="f-input" type="text" placeholder="Arjun Mehta"></div><div><div class="f-label">Email</div><input id="ns-email" class="f-input" type="email" placeholder="arjun@gmail.com"></div><div><div class="f-label">Password</div><input id="ns-pw" class="f-input" type="text" placeholder="Welcome@1"></div><div><div class="f-label">Batch</div><input id="ns-batch" class="f-input" type="text" placeholder="Batch A"></div><div><div class="f-label">Access Type</div><select id="ns-access" class="f-input" style="padding:9px 10px"><option value="full">Full Access</option><option value="diagnostic">Diagnostic Only</option><option value="readonly">Read Only</option></select></div></div><button class="btn-primary" onclick="addStudent()">Add student</button></div><div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div class="card-lbl" style="margin:0">Bulk Import</div><button class="btn-secondary" style="font-size:.75rem;padding:5px 12px" onclick="downloadCSVTemplate()">⬇ CSV Template</button></div><div style="font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-bottom:12px;line-height:1.7">Upload a CSV file or paste data below.<br>Format: <code style="background:var(--bg);padding:1px 6px;border-radius:3px">studentId, name, email, password, batch, accessType</code><br><span style="color:var(--dim)">accessType values: full · diagnostic · readonly</span></div><div style="margin-bottom:12px"><div class="f-label">Upload CSV file</div><input type="file" id="csv-file-input" accept=".csv,.txt" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.82rem;color:var(--muted);cursor:pointer" onchange="handleCSVFile(this)"></div><div class="f-label">Or paste student data</div><textarea id="bulk-input" class="f-input" style="min-height:90px;font-family:var(--mono);font-size:.75rem;line-height:1.8;resize:vertical" placeholder="STU001, Arjun Mehta, arjun@gmail.com, Welcome@1, Batch A, full"></textarea><div id="bulk-preview" style="margin-top:8px"></div><div style="display:flex;gap:10px;margin-top:10px"><button class="btn-primary" onclick="bulkAdd()">Import students</button><button class="btn-secondary" onclick="previewBulk()">Preview</button></div></div><div class="card" style="background:rgba(45,106,79,.04);border-color:rgba(45,106,79,.2)"><div class="card-lbl" style="color:var(--green)">⬇ Download &amp; Deploy</div><p style="font-size:.85rem;color:var(--ink2);margin-bottom:12px;line-height:1.6">After adding or editing students, download and drag to Netlify. All devices update immediately.</p><button class="btn-primary" style="background:var(--green)" onclick="downloadUpdatedApp()">Download Updated App →</button></div><div class="card" style="padding:0;overflow:hidden"><div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="card-lbl" style="margin:0;flex-shrink:0">1 Students</div><input id="setup-search" class="f-input" type="text" placeholder="Search ID, name or email…" style="flex:1;min-width:150px;padding:6px 10px;font-size:.82rem" value="" oninput="filterSetup()"><select id="setup-batch" class="f-input" style="padding:6px 10px;font-size:.82rem;width:auto" onchange="filterSetup()"><option value="">All batches</option><option value="T1">T1</option></select><span style="font-family:var(--mono);font-size:.72rem;color:var(--muted);flex-shrink:0">1 shown</span><button class="btn-secondary" style="font-size:.72rem;padding:4px 10px;flex-shrink:0" onclick="exportStudentsCSV()">⬇ Export</button></div><div style="overflow-x:auto"><table class="tbl" style="min-width:800px"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Password</th><th>Batch</th><th>Access</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td style="font-family:var(--mono);font-size:.7rem;color:var(--muted)">—</td><td style="font-weight:600;font-size:.85rem">Suhasini</td><td style="font-family:var(--mono);font-size:.7rem;color:var(--muted)">suhasini@gmail.com</td><td style="font-family:var(--mono);font-size:.7rem">Seemu2025</td><td style="font-size:.8rem">T1</td><td><select class="f-input" style="padding:3px 6px;font-size:.7rem;width:auto;font-family:var(--mono)" data-email="suhasini@gmail.com" onchange="setAccess(this.dataset.email,this.value)"><option value="full" selected="">Full</option><option value="diagnostic">Diagnostic</option><option value="readonly">Read Only</option></select></td><td><span style="font-family:var(--mono);font-size:.7rem;color:var(--green)">Active</span></td><td style="display:flex;gap:4px;flex-wrap:nowrap"><button class="btn-secondary" style="font-size:.68rem;padding:3px 7px;white-space:nowrap" data-email="suhasini@gmail.com" onclick="toggleStudent(this.dataset.email)">Block</button><button class="btn-secondary" style="font-size:.68rem;padding:3px 7px" data-email="suhasini@gmail.com" onclick="removeStudent(this.dataset.email)">✕</button></td></tr></tbody></table></div><div style="padding:10px 14px;border-top:1px solid var(--border);font-family:var(--mono);font-size:.7rem;color:var(--muted)">After changes — Download Updated App and drag to Netlify.</div></div><div class="card"><div class="card-lbl">Change trainer password</div><p style="font-size:.82rem;color:var(--muted);margin-bottom:10px">Default: <strong style="color:var(--ink)">Clarion@2026</strong></p><div style="display:flex;gap:9px"><input id="new-pw" class="f-input" type="password" placeholder="New password" style="flex:1"><button class="btn-primary" onclick="changeTrainerPw()">Update</button></div><button class="btn-secondary" style="margin-top:8px;font-size:.78rem" onclick="resetTrainerPw()">Reset to default</button></div></div>
+    <div class="content" id="content"><div class="ph"><div class="ph-title">Setup &amp; Access</div><div class="ph-sub">1 students total · 1 active</div></div><div class="card"><div class="card-lbl">Add a student</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px"><div><div class="f-label">Student ID</div><input id="ns-sid" class="f-input" type="text" placeholder="FIIB001"></div><div><div class="f-label">Full name</div><input id="ns-name" class="f-input" type="text" placeholder="Arjun Mehta"></div><div><div class="f-label">Email</div><input id="ns-email" class="f-input" type="email" placeholder="arjun@gmail.com"></div><div><div class="f-label">Password</div><input id="ns-pw" class="f-input" type="text" placeholder="Welcome@1"></div><div><div class="f-label">Batch</div><input id="ns-batch" class="f-input" type="text" placeholder="B1"></div></div><button class="btn-primary" onclick="addStudent()">Add student</button></div><div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div class="card-lbl" style="margin:0">Bulk Import</div><button class="btn-secondary" style="font-size:.75rem;padding:5px 12px" onclick="downloadCSVTemplate()">⬇ CSV Template</button></div><div style="font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-bottom:10px">Upload a CSV file or paste data below.<br>Format: <strong>studentId, name, email, password, batch</strong> — one student per line.</div><div style="margin-bottom:12px"><div class="f-label">Upload CSV file</div><input type="file" id="csv-file-input" accept=".csv,.txt" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.82rem;color:var(--muted);cursor:pointer" onchange="handleCSVFile(this)"></div><div class="f-label">Or paste student data</div><textarea id="bulk-input" class="f-input" style="min-height:100px;font-family:var(--mono);font-size:.75rem;line-height:1.8;resize:vertical" placeholder="FIIB001, Arjun Mehta, arjun@gmail.com, Welcome@1, B1
+FIIB002, Priya Sharma, priya@gmail.com, Welcome@2, B1"></textarea><div id="bulk-preview" style="margin-top:8px"></div><div style="display:flex;gap:10px;margin-top:10px"><button class="btn-primary" onclick="bulkAdd()">Import students</button><button class="btn-secondary" onclick="previewBulk()">Preview</button></div></div><div class="card" style="background:rgba(45,106,79,.04);border-color:rgba(45,106,79,.2)"><div class="card-lbl" style="color:var(--green)">⬇ Download &amp; Deploy</div><p style="font-size:.85rem;color:var(--ink2);margin-bottom:12px;line-height:1.6">After adding or editing students, download and drag to Netlify. All devices update immediately.</p><button class="btn-primary" style="background:var(--green)" onclick="downloadUpdatedApp()">Download Updated App →</button></div><div class="card" style="padding:0;overflow:hidden"><div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="card-lbl" style="margin:0;flex-shrink:0">1 Students</div><input id="setup-search" class="f-input" type="text" placeholder="Search name or email…" style="flex:1;min-width:160px;padding:6px 10px;font-size:.82rem" value="" oninput="filterSetup()"><select id="setup-batch" class="f-input" style="padding:6px 10px;font-size:.82rem;width:auto" onchange="filterSetup()"><option value="">All batches</option><option value="T1">T1</option></select><span style="font-family:var(--mono);font-size:.72rem;color:var(--muted);flex-shrink:0">1 shown</span></div><table class="tbl"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Password</th><th>Batch</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td style="font-family:var(--mono);font-size:.72rem;color:var(--muted)">—</td><td style="font-weight:600;font-size:.85rem">Suhasini</td><td style="font-family:var(--mono);font-size:.72rem;color:var(--muted)">suhasini@gmail.com</td><td style="font-family:var(--mono);font-size:.72rem">Seemu2025</td><td style="font-size:.8rem">T1</td><td style="font-family:var(--mono);font-size:.72rem;color:var(--green)">Active</td><td style="display:flex;gap:5px"><button class="btn-secondary" style="font-size:.7rem;padding:3px 8px" data-email="suhasini@gmail.com" onclick="toggleStudent(this.dataset.email)">Block</button><button class="btn-secondary" style="font-size:.7rem;padding:3px 8px" data-email="suhasini@gmail.com" onclick="removeStudent(this.dataset.email)">✕</button></td></tr></tbody></table><div style="padding:10px 14px;border-top:1px solid var(--border);font-family:var(--mono);font-size:.7rem;color:var(--muted)">After changes — Download Updated App and drag to Netlify.</div></div><div class="card"><div class="card-lbl">Change trainer password</div><p style="font-size:.82rem;color:var(--muted);margin-bottom:10px">Default: <strong style="color:var(--ink)">Clarion@2026</strong></p><div style="display:flex;gap:9px"><input id="new-pw" class="f-input" type="password" placeholder="New password" style="flex:1"><button class="btn-primary" onclick="changeTrainerPw()">Update</button></div><button class="btn-secondary" style="margin-top:8px;font-size:.78rem" onclick="resetTrainerPw()">Reset to default</button></div></div>
   </div>
 </div>
 
@@ -258,7 +259,7 @@ tr:hover td{background:rgba(26,23,20,.015)}
 <div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
   <div class="modal"><button class="modal-x" onclick="closeModal()">✕</button><div id="modal-body"></div></div>
 </div>
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast">Incorrect trainer password.</div>
 
 <script>
 'use strict';
@@ -690,7 +691,7 @@ function getNextDayLabel() {
 const TRAINER_EMAIL    = 'trainer@clarion.com';
 const TRAINER_PASSWORD = 'Clarion@2026';
 const TRAINER_NAME     = 'Trainer';
-let EMBEDDED_STUDENTS  = {"suhasini@gmail.com":{"studentId":"STU001","name":"Suhasini","password":"Seemu2025","batch":"Batch A 2026","active":true,"accessType":"full"}};
+let EMBEDDED_STUDENTS  = {"suhasini@gmail.com":{"name":"Suhasini","password":"Seemu2025","batch":"Batch A 2026","active":true}};
 let STUDENT_REGISTRY   = {};
 let ALL_STUDENT_EMAILS = [];
 
@@ -745,9 +746,7 @@ function login(){
   if(!st){fail('Email not found. Contact your trainer.');return;}
   if(!st.active){fail('Account inactive. Contact your trainer.');return;}
   if(String(st.password)!==String(pass)){fail('Incorrect password.');return;}
-  const accessType=st.accessType||'full';
-  S.user={email,name:st.name,role:'student',id:'S'+email,batch:st.batch||'Batch A',accessType};
-  S.role='student';finishLogin();
+  S.user={email,name:st.name,role:'student',id:'S'+email,batch:st.batch||'Batch A'};S.role='student';finishLogin();
 }
 function finishLogin(){
   try{
@@ -801,12 +800,7 @@ function buildSidebar(){
     const diagDone=diagCount(S.user.email);
     const diagTotal=DIAGNOSTIC_BANK.length;
     const diagFinished=diagDone>=diagTotal&&diagTotal>0;
-    // Filter nav items based on accessType
-    const access=S.user?.accessType||'full';
-    const visibleItems=access==='diagnostic'
-      ? items.filter(function(i){return ['stu-diag','stu-dash'].includes(i.id);})
-      : items;
-    visibleItems.forEach(i=>{
+    items.forEach(i=>{
       if(i.grp!==lastGrp){
         html+='<div class="nav-grp">'+i.grp+'</div>';
         lastGrp=i.grp;
@@ -848,22 +842,6 @@ function renderHome(){
   const existing = getSubs(S.user.email)[subKey];
 
   S.currentQ = q;
-  // Readonly access check
-  if((S.user.accessType||'full')==='readonly'){
-    set('<div class="ph"><div class="ph-title">Today&#39;s Question</div><div class="ph-sub">'+dayName+'</div></div>'+
-      '<div class="q-hero">'+
-        '<span class="q-badge '+(info.type==='PI'?'q-pi':'q-gd')+'">'+info.type+' · TELW '+q.telw+'</span>'+
-        '<div class="q-text">'+q.q+'</div>'+
-        '<div class="q-inst"><div class="q-inst-lbl">Instructions</div>'+
-          q.inst.split('.').filter(function(s){return s.trim();}).map(function(s){return '<div class="q-inst-item">'+s.trim()+'</div>';}).join('')+
-        '</div>'+
-      '</div>'+
-      '<div class="banner banner-info"><span class="banner-ic">👁</span><div>'+
-        '<div class="banner-title">View only</div>'+
-        '<div class="banner-sub">Your account is set to read-only access. Contact your trainer to enable submissions.</div>'+
-      '</div></div>');
-    return;
-  }
   S.recorded=false;S.recording=false;S.recSecs=0;S.recLimit=60;S.audioBlob=null;S.audioEl=null;
 
   const dayName = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
@@ -1428,73 +1406,61 @@ function renderAdminQbank(){
 // ADMIN: SETUP
 // ════════════════════════════════════════════════
 function renderSetup(){
-  const allStudents=getStudents();
-  const entries=Object.entries(allStudents);
-  const active=entries.filter(([,s])=>s.active).length;
-  const batches=[...new Set(entries.map(([,s])=>s.batch||'').filter(Boolean))].sort();
+  const allStudents = getStudents();
+  const entries     = Object.entries(allStudents);
+  const active      = entries.filter(([,s])=>s.active).length;
 
-  const searchVal=window._setupSearch||'';
-  const batchVal=window._setupBatch||'';
-  let filtered=entries;
-  if(searchVal) filtered=filtered.filter(([e,s])=>
+  // Get unique batches for filter
+  const batches = [...new Set(entries.map(([,s])=>s.batch||'').filter(Boolean))].sort();
+
+  // Read current filter state
+  const searchVal = window._setupSearch||'';
+  const batchVal  = window._setupBatch||'';
+
+  // Filter entries
+  let filtered = entries;
+  if(searchVal) filtered = filtered.filter(([e,s])=>
     s.name.toLowerCase().includes(searchVal.toLowerCase())||
-    e.toLowerCase().includes(searchVal.toLowerCase())||
-    (s.studentId||'').toLowerCase().includes(searchVal.toLowerCase()));
-  if(batchVal) filtered=filtered.filter(([,s])=>s.batch===batchVal);
-
-  const ACCESS_LABELS={'full':'Full Access','diagnostic':'Diagnostic Only','readonly':'Read Only'};
+    e.toLowerCase().includes(searchVal.toLowerCase()));
+  if(batchVal) filtered = filtered.filter(([,s])=>s.batch===batchVal);
 
   set(
     '<div class="ph"><div class="ph-title">Setup & Access</div>'+
-    '<div class="ph-sub">'+entries.length+' students · '+active+' active</div></div>'+
+    '<div class="ph-sub">'+entries.length+' students total · '+active+' active</div></div>'+
 
-    // ── ADD SINGLE STUDENT ──────────────────────────────────────────────
+    // ── Add single student ──
     '<div class="card"><div class="card-lbl">Add a student</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'+
-        '<div>'+
-          '<div class="f-label">Student ID <span style="color:var(--dim);font-weight:400">(auto if blank)</span></div>'+
-          '<input id="ns-sid" class="f-input" type="text" placeholder="Optional — any format">'+
-        '</div>'+
-        '<div><div class="f-label">Full name</div>'+
-          '<input id="ns-name" class="f-input" type="text" placeholder="Arjun Mehta"></div>'+
-        '<div><div class="f-label">Email</div>'+
-          '<input id="ns-email" class="f-input" type="email" placeholder="arjun@gmail.com"></div>'+
-        '<div><div class="f-label">Password</div>'+
-          '<input id="ns-pw" class="f-input" type="text" placeholder="Welcome@1"></div>'+
-        '<div><div class="f-label">Batch</div>'+
-          '<input id="ns-batch" class="f-input" type="text" placeholder="Batch A"></div>'+
-        '<div><div class="f-label">Access Type</div>'+
-          '<select id="ns-access" class="f-input" style="padding:9px 10px">'+
-            '<option value="full">Full Access</option>'+
-            '<option value="diagnostic">Diagnostic Only</option>'+
-            '<option value="readonly">Read Only</option>'+
-          '</select>'+
-        '</div>'+
+        '<div><div class="f-label">Student ID</div><input id="ns-sid" class="f-input" type="text" placeholder="FIIB001"></div>'+
+        '<div><div class="f-label">Full name</div><input id="ns-name" class="f-input" type="text" placeholder="Arjun Mehta"></div>'+
+        '<div><div class="f-label">Email</div><input id="ns-email" class="f-input" type="email" placeholder="arjun@gmail.com"></div>'+
+        '<div><div class="f-label">Password</div><input id="ns-pw" class="f-input" type="text" placeholder="Welcome@1"></div>'+
+        '<div><div class="f-label">Batch</div><input id="ns-batch" class="f-input" type="text" placeholder="B1"></div>'+
       '</div>'+
       '<button class="btn-primary" onclick="addStudent()">Add student</button>'+
     '</div>'+
 
-    // ── BULK IMPORT ─────────────────────────────────────────────────────
+    // ── Bulk Import ──
     '<div class="card">'+
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
         '<div class="card-lbl" style="margin:0">Bulk Import</div>'+
         '<button class="btn-secondary" style="font-size:.75rem;padding:5px 12px" onclick="downloadCSVTemplate()">⬇ CSV Template</button>'+
       '</div>'+
-      '<div style="font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-bottom:12px;line-height:1.7">'+
+      '<div style="font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-bottom:10px">'+
         'Upload a CSV file or paste data below.<br>'+
-        'Format: <code style="background:var(--bg);padding:1px 6px;border-radius:3px">studentId, name, email, password, batch, accessType</code><br>'+
-        '<span style="color:var(--dim)">accessType values: full · diagnostic · readonly</span>'+
+        'Format: <strong>studentId, name, email, password, batch</strong> — one student per line.'+
       '</div>'+
+
+      // CSV file upload
       '<div style="margin-bottom:12px">'+
         '<div class="f-label">Upload CSV file</div>'+
-        '<input type="file" id="csv-file-input" accept=".csv,.txt" '+
-          'style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.82rem;color:var(--muted);cursor:pointer" '+
-          'onchange="handleCSVFile(this)">'+
+        '<input type="file" id="csv-file-input" accept=".csv,.txt" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.82rem;color:var(--muted);cursor:pointer" onchange="handleCSVFile(this)">'+
       '</div>'+
+
+      // Paste area
       '<div class="f-label">Or paste student data</div>'+
-      '<textarea id="bulk-input" class="f-input" '+
-        'style="min-height:90px;font-family:var(--mono);font-size:.75rem;line-height:1.8;resize:vertical" '+
-        'placeholder="STU001, Arjun Mehta, arjun@gmail.com, Welcome@1, Batch A, full"></textarea>'+
+      '<textarea id="bulk-input" class="f-input" style="min-height:100px;font-family:var(--mono);font-size:.75rem;line-height:1.8;resize:vertical" '+
+        'placeholder="FIIB001, Arjun Mehta, arjun@gmail.com, Welcome@1, B1&#10;FIIB002, Priya Sharma, priya@gmail.com, Welcome@2, B1"></textarea>'+
       '<div id="bulk-preview" style="margin-top:8px"></div>'+
       '<div style="display:flex;gap:10px;margin-top:10px">'+
         '<button class="btn-primary" onclick="bulkAdd()">Import students</button>'+
@@ -1502,7 +1468,7 @@ function renderSetup(){
       '</div>'+
     '</div>'+
 
-    // ── DOWNLOAD & DEPLOY ────────────────────────────────────────────────
+    // ── Download & Deploy ──
     '<div class="card" style="background:rgba(45,106,79,.04);border-color:rgba(45,106,79,.2)">'+
       '<div class="card-lbl" style="color:var(--green)">⬇ Download & Deploy</div>'+
       '<p style="font-size:.85rem;color:var(--ink2);margin-bottom:12px;line-height:1.6">'+
@@ -1511,85 +1477,57 @@ function renderSetup(){
       '<button class="btn-primary" style="background:var(--green)" onclick="downloadUpdatedApp()">Download Updated App →</button>'+
     '</div>'+
 
-    // ── STUDENT LIST ─────────────────────────────────────────────────────
+    // ── Student list with search + filter ──
     '<div class="card" style="padding:0;overflow:hidden">'+
       '<div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
         '<div class="card-lbl" style="margin:0;flex-shrink:0">'+entries.length+' Students</div>'+
-        '<input id="setup-search" class="f-input" type="text" placeholder="Search ID, name or email…" '+
-          'style="flex:1;min-width:150px;padding:6px 10px;font-size:.82rem" '+
+        '<input id="setup-search" class="f-input" type="text" placeholder="Search name or email…" '+
+          'style="flex:1;min-width:160px;padding:6px 10px;font-size:.82rem" '+
           'value="'+searchVal+'" oninput="filterSetup()">'+
-        '<select id="setup-batch" class="f-input" '+
-          'style="padding:6px 10px;font-size:.82rem;width:auto" onchange="filterSetup()">'+
+        '<select id="setup-batch" class="f-input" style="padding:6px 10px;font-size:.82rem;width:auto" onchange="filterSetup()">'+
           '<option value="">All batches</option>'+
           batches.map(function(b){return '<option value="'+b+'"'+(batchVal===b?' selected':'')+'>'+b+'</option>';}).join('')+
         '</select>'+
         '<span style="font-family:var(--mono);font-size:.72rem;color:var(--muted);flex-shrink:0">'+filtered.length+' shown</span>'+
-        '<button class="btn-secondary" style="font-size:.72rem;padding:4px 10px;flex-shrink:0" onclick="exportStudentsCSV()">⬇ Export</button>'+
       '</div>'+
-      (filtered.length?
-        '<div style="overflow-x:auto"><table class="tbl" style="min-width:800px"><thead><tr>'+
-          '<th>ID</th>'+
-          '<th>Name</th>'+
-          '<th>Email</th>'+
-          '<th>Password</th>'+
-          '<th>Batch</th>'+
-          '<th>Access</th>'+
-          '<th>Status</th>'+
-          '<th>Actions</th>'+
+      (filtered.length ?
+        '<table class="tbl"><thead><tr>'+
+          '<th>ID</th><th>Name</th><th>Email</th><th>Password</th><th>Batch</th><th>Status</th><th>Actions</th>'+
         '</tr></thead><tbody>'+
         filtered.map(function([email,s]){
-          const access=s.accessType||'full';
-          const accessColor=access==='full'?'var(--green)':access==='diagnostic'?'var(--gold)':'var(--muted)';
           return '<tr>'+
-            '<td style="font-family:var(--mono);font-size:.7rem;color:var(--muted)">'+(s.studentId||'—')+'</td>'+
+            '<td style="font-family:var(--mono);font-size:.72rem;color:var(--muted)">'+(s.studentId||'—')+'</td>'+
             '<td style="font-weight:600;font-size:.85rem">'+s.name+'</td>'+
-            '<td style="font-family:var(--mono);font-size:.7rem;color:var(--muted)">'+email+'</td>'+
-            '<td style="font-family:var(--mono);font-size:.7rem">'+s.password+'</td>'+
+            '<td style="font-family:var(--mono);font-size:.72rem;color:var(--muted)">'+email+'</td>'+
+            '<td style="font-family:var(--mono);font-size:.72rem">'+s.password+'</td>'+
             '<td style="font-size:.8rem">'+(s.batch||'—')+'</td>'+
-            '<td>'+
-              '<select class="f-input" style="padding:3px 6px;font-size:.7rem;width:auto;font-family:var(--mono)" '+
-                'data-email="'+email+'" onchange="setAccess(this.dataset.email,this.value)">'+
-                ['full','diagnostic','readonly'].map(function(a){
-                  return '<option value="'+a+'"'+(access===a?' selected':'')+'>'+
-                    (a==='full'?'Full':a==='diagnostic'?'Diagnostic':'Read Only')+'</option>';
-                }).join('')+
-              '</select>'+
+            '<td style="font-family:var(--mono);font-size:.72rem;color:'+(s.active?'var(--green)':'var(--red)')+'">'+
+              (s.active?'Active':'Blocked')+
             '</td>'+
-            '<td>'+
-              '<span style="font-family:var(--mono);font-size:.7rem;color:'+(s.active?'var(--green)':'var(--red)')+'">'+
-                (s.active?'Active':'Blocked')+
-              '</span>'+
-            '</td>'+
-            '<td style="display:flex;gap:4px;flex-wrap:nowrap">'+
-              '<button class="btn-secondary" style="font-size:.68rem;padding:3px 7px;white-space:nowrap" '+
+            '<td style="display:flex;gap:5px">'+
+              '<button class="btn-secondary" style="font-size:.7rem;padding:3px 8px" '+
                 'data-email="'+email+'" onclick="toggleStudent(this.dataset.email)">'+
                 (s.active?'Block':'Unblock')+
               '</button>'+
-              '<button class="btn-secondary" style="font-size:.68rem;padding:3px 7px" '+
+              '<button class="btn-secondary" style="font-size:.7rem;padding:3px 8px" '+
                 'data-email="'+email+'" onclick="removeStudent(this.dataset.email)">✕</button>'+
             '</td>'+
           '</tr>';
         }).join('')+
-        '</tbody></table></div>'+
+        '</tbody></table>'+
         '<div style="padding:10px 14px;border-top:1px solid var(--border);font-family:var(--mono);font-size:.7rem;color:var(--muted)">'+
           'After changes — Download Updated App and drag to Netlify.'+
         '</div>'
-        :
-        '<div style="padding:28px;text-align:center;font-family:var(--mono);font-size:.78rem;color:var(--muted)">'+
-          (entries.length===0?'No students yet — add above or import a CSV.':'No students match your search.')+
-        '</div>'
-      )+
+        : '<div style="padding:30px;text-align:center;font-family:var(--mono);font-size:.78rem;color:var(--muted)">'+
+          (entries.length===0?'No students yet — add above.':'No students match your search.')+
+        '</div>')+
     '</div>'+
 
-    // ── TRAINER PASSWORD ─────────────────────────────────────────────────
+    // ── Trainer password ──
     '<div class="card"><div class="card-lbl">Change trainer password</div>'+
-      '<p style="font-size:.82rem;color:var(--muted);margin-bottom:10px">'+
-        'Default: <strong style="color:var(--ink)">Clarion@2026</strong>'+
-      '</p>'+
-      '<div style="display:flex;gap:9px">'+
-        '<input id="new-pw" class="f-input" type="password" placeholder="New password" style="flex:1">'+
-        '<button class="btn-primary" onclick="changeTrainerPw()">Update</button>'+
-      '</div>'+
+      '<p style="font-size:.82rem;color:var(--muted);margin-bottom:10px">Default: <strong style="color:var(--ink)">Clarion@2026</strong></p>'+
+      '<div style="display:flex;gap:9px"><input id="new-pw" class="f-input" type="password" placeholder="New password" style="flex:1">'+
+      '<button class="btn-primary" onclick="changeTrainerPw()">Update</button></div>'+
       '<button class="btn-secondary" style="margin-top:8px;font-size:.78rem" onclick="resetTrainerPw()">Reset to default</button>'+
     '</div>'
   );
@@ -1597,18 +1535,9 @@ function renderSetup(){
 
 // ── Search / filter state ─────────────────────────────────────────────────────
 function filterSetup(){
-  window._setupSearch=document.getElementById('setup-search')?.value||'';
-  window._setupBatch=document.getElementById('setup-batch')?.value||'';
+  window._setupSearch = document.getElementById('setup-search')?.value||'';
+  window._setupBatch  = document.getElementById('setup-batch')?.value||'';
   renderSetup();
-}
-
-function setAccess(email, accessType){
-  const cur=getStudents();
-  if(!cur[email]) return;
-  cur[email].accessType=accessType;
-  putStudents(cur);
-  toast('Access updated for '+cur[email].name+' — download to deploy','ok');
-  // Don't re-render to avoid losing dropdown focus — toast is enough
 }
 
 // ── Add single student ────────────────────────────────────────────────────────
@@ -1618,23 +1547,17 @@ function addStudent(){
   const email = document.getElementById('ns-email').value.trim().toLowerCase();
   const pw    = document.getElementById('ns-pw').value.trim();
   const batch = document.getElementById('ns-batch').value.trim()||'Batch A';
-  const access= document.getElementById('ns-access')?.value||'full';
   if(!name)  { toast('Enter student name','err'); return; }
   if(!email) { toast('Enter student email','err'); return; }
   if(!pw)    { toast('Enter a password','err'); return; }
-  const cur=getStudents();
+  const cur = getStudents();
   if(cur[email]){ toast('Email already exists','err'); return; }
-  // Validate studentId uniqueness if provided — no format restriction
-  if(sid && Object.values(cur).some(function(s){return s.studentId===sid;})){
-    toast('Student ID '+sid+' already exists — use a different ID','err'); return;
-  }
-  cur[email]={studentId:sid||'',name,password:pw,batch,active:true,accessType:access};
+  cur[email] = { studentId:sid||email.split('@')[0].toUpperCase(), name, password:pw, batch, active:true };
   putStudents(cur);
   ['ns-sid','ns-name','ns-email','ns-pw','ns-batch'].forEach(function(id){
-    const el=document.getElementById(id);if(el)el.value='';
+    const el=document.getElementById(id); if(el) el.value='';
   });
-  const acc=document.getElementById('ns-access');if(acc)acc.value='full';
-  toast(name+' added ('+sid+') ✓ — click Download Updated App','ok');
+  toast(name+' added ✓ — click Download Updated App','ok');
   renderSetup();
 }
 
@@ -1716,16 +1639,10 @@ function parseBulkInput(raw){
       results.push({_error:'Line '+(i+1)+': invalid email: '+email});
       return;
     }
-    // 6-col: id,name,email,pw,batch,access  OR  5-col: id,name,email,pw,batch
-    let accessType='full';
-    if(parts.length>=6) accessType=(parts[5]||'full').trim().toLowerCase();
-    const validAccess=['full','diagnostic','readonly'];
-    if(!validAccess.includes(accessType)) accessType='full';
     results.push({
-      studentId: studentId||'',
-      name, email, password:password.trim(),
-      batch:(batch||'Batch A').trim(),
-      accessType
+      studentId: studentId || name.replace(/\s+/g,'').substring(0,8).toUpperCase(),
+      name, email, password: password.trim(),
+      batch: (batch||'Batch A').trim()
     });
   });
   return results;
@@ -1741,7 +1658,7 @@ function bulkAdd(){
   parsed.forEach(function(p){
     if(p._error){ errors++; return; }
     if(cur[p.email]){ skipped++; return; }
-    cur[p.email] = { studentId:p.studentId, name:p.name, password:p.password, batch:p.batch, active:true, accessType:p.accessType||'full' };
+    cur[p.email] = { studentId:p.studentId, name:p.name, password:p.password, batch:p.batch, active:true };
     added++;
   });
   if(added > 0){
@@ -1757,20 +1674,15 @@ function bulkAdd(){
 
 // ── Download CSV template ─────────────────────────────────────────────────────
 function downloadCSVTemplate(){
-  const rows=[
-    'studentId,name,email,password,batch,accessType',
-    'A001,Arjun Mehta,arjun@gmail.com,Welcome@1,Batch A,full',
-    'A002,Priya Sharma,priya@gmail.com,Welcome@2,Batch A,full',
-    'A003,Rohan Gupta,rohan@gmail.com,Welcome@3,Batch B,diagnostic'
-  ];
+  const rows=['studentId,name,email,password,batch','FIIB001,Arjun Mehta,arjun@gmail.com,Welcome@1,B1','FIIB002,Priya Sharma,priya@gmail.com,Welcome@2,B1','FIIB003,Rohan Gupta,rohan@gmail.com,Welcome@3,B2'];
   const csv=rows.join('\n')+'\n';
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='CLARION_student_template.csv';
-  document.body.appendChild(a);a.click();
-  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(a.href);},200);
-  toast('Template downloaded — STU001 format, includes accessType','ok');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'CLARION_student_template.csv';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 200);
+  toast('Template downloaded','ok');
 }
 
 // ── Toggle / Remove ───────────────────────────────────────────────────────────
