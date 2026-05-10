@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0044)file:///C:/Users/Manu/Downloads/index_3.html -->
+<!-- saved from url=(0042)file:///C:/Users/Manu/Downloads/index.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -268,8 +268,8 @@ tr:hover td{background:rgba(26,23,20,.015)}
     </div>
   </div>
   <div class="shell">
-    <div class="sidebar" id="sidebar"><div class="nav-grp">Trainer Panel</div><div class="nav-item" id="ni-adm-dash" data-id="adm-dash" onclick="nav(this.dataset.id)"><span class="nav-ic">📊</span>Dashboard</div><div class="nav-item" id="ni-adm-banks" data-id="adm-banks" onclick="nav(this.dataset.id)"><span class="nav-ic">🏦</span>Question Banks</div><div class="nav-item on" id="ni-adm-students" data-id="adm-students" onclick="nav(this.dataset.id)"><span class="nav-ic">👥</span>Students</div><div class="nav-item" id="ni-adm-review" data-id="adm-review" onclick="nav(this.dataset.id)"><span class="nav-ic">🎧</span>Review</div><div class="nav-item" id="ni-adm-setup" data-id="adm-setup" onclick="nav(this.dataset.id)"><span class="nav-ic">⚙️</span>Setup</div></div>
-    <div class="content" id="content"><div class="ph"><div class="ph-title">Students</div><div class="ph-sub">1 enrolled · 1 shown</div></div><div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap"><input id="stu-search" class="f-input" type="text" placeholder="Search name or email…" style="flex:1;min-width:160px;padding:7px 10px;font-size:.82rem" value="" oninput="filterStudents()"><select id="stu-batch" class="f-input" style="padding:7px 10px;font-size:.82rem;width:auto" onchange="filterStudents()"><option value="">All batches</option><option value="T1">T1</option></select><select id="stu-access" class="f-input" style="padding:7px 10px;font-size:.82rem;width:auto" onchange="filterStudents()"><option value="">All access types</option><option value="lum">LUM</option><option value="placement">Placement</option><option value="diagnostic">Diagnostic</option><option value="demo">Demo</option></select><button class="btn-secondary" style="font-size:.78rem;padding:7px 12px" onclick="exportStudentsCSV()">⬇ Export CSV</button></div><div class="tbl-wrap"><table><thead><tr><th>Student</th><th>Access</th><th>Adv PI</th><th>Sessions</th><th>Avg</th><th>PI Avg</th><th>GD Avg</th><th>PI Ready</th><th>GD Ready</th><th>Today</th><th></th></tr></thead><tbody><tr><td><div style="font-weight:600;font-size:.88rem">Suhasini</div><div style="font-family:var(--mono);font-size:.67rem;color:var(--muted)">suhasini@gmail.com</div></td><td><select class="f-input" style="padding: 3px 6px; font-size: 0.7rem; width: auto; font-family: var(--mono); color: var(--ink);" data-email="suhasini@gmail.com" onchange="setAccess(this.dataset.email,this.value);this.style.color=&#39;var(--ink)&#39;"><option value="lum">LUM</option><option value="placement" selected="">Placement</option><option value="diagnostic">Diagnostic</option><option value="demo">Demo</option></select></td><td><div id="advcell-suhasini_gmail_com" style="display:flex;flex-direction:column;gap:4px"><button onclick="toggleAdvPI(&#39;suhasini@gmail.com&#39;,&#39;advcell-suhasini_gmail_com&#39;)" title="Enable Advanced PI access" style="display:inline-flex;align-items:center;gap:5px;border-radius:20px;border:1px solid var(--border2);background:var(--bg);padding:3px 8px 3px 4px;cursor:pointer;transition:background .2s,border-color .2s;font-family:var(--mono)"><span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#fff;flex-shrink:0"></span><span style="font-size:.65rem;font-weight:700;color:var(--muted)">OFF</span></button><span style="font-family:var(--mono);font-size:.6rem;color:var(--dim)">16 PI needed</span></div></td><td style="font-family:var(--mono);font-size:.8rem">1</td><td><span class="pill pill-hi">7.2</span></td><td style="font-family:var(--mono);font-size:.78rem">—</td><td style="font-family:var(--mono);font-size:.78rem">7.2</td><td><div style="font-family:var(--mono);font-size:.75rem">0%</div><div style="width:60px;height:3px;background:var(--border);border-radius:2px;margin-top:3px;overflow:hidden"><div style="height:100%;width:0%;background:var(--red);border-radius:2px"></div></div></td><td><div style="font-family:var(--mono);font-size:.75rem">72%</div><div style="width:60px;height:3px;background:var(--border);border-radius:2px;margin-top:3px;overflow:hidden"><div style="height:100%;width:72%;background:var(--green);border-radius:2px"></div></div></td><td style="font-family:var(--mono);font-size:.8rem;color:var(--red)">✗</td><td><button class="btn-secondary" style="font-size:.75rem;padding:5px 10px" data-email="suhasini@gmail.com" onclick="viewStudent(this.dataset.email)">View</button></td></tr></tbody></table></div></div>
+    <div class="sidebar" id="sidebar"><div class="nav-grp">Trainer Panel</div><div class="nav-item" id="ni-adm-dash" data-id="adm-dash" onclick="nav(this.dataset.id)"><span class="nav-ic">📊</span>Dashboard</div><div class="nav-item on" id="ni-adm-banks" data-id="adm-banks" onclick="nav(this.dataset.id)"><span class="nav-ic">🏦</span>Question Banks</div><div class="nav-item" id="ni-adm-students" data-id="adm-students" onclick="nav(this.dataset.id)"><span class="nav-ic">👥</span>Students</div><div class="nav-item" id="ni-adm-review" data-id="adm-review" onclick="nav(this.dataset.id)"><span class="nav-ic">🎧</span>Review</div><div class="nav-item" id="ni-adm-setup" data-id="adm-setup" onclick="nav(this.dataset.id)"><span class="nav-ic">⚙️</span>Setup</div></div>
+    <div class="content" id="content"><div class="ph"><div class="ph-title">Question Banks</div><div class="ph-sub">Overview of all 5 banks · Click any bank to manage</div></div><div class="card" style="border-left:4px solid var(--gold);margin-bottom:14px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px"><div><div class="card-lbl">Bank 1 — Diagnostic</div><div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Baseline Assessment</div><div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">10 questions · 100 points total · One attempt per question</div><div style="display:flex;gap:16px;margin-top:10px;font-family:var(--mono);font-size:.72rem"><span style="color:var(--green)">✓ Complete: 0</span><span style="color:var(--gold)">◑ In progress: 0</span><span style="color:var(--red)">○ Not started: 1</span></div></div><div style="text-align:right"><div style="font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--gold)">10</div><div style="font-family:var(--mono);font-size:.65rem;color:var(--dim)">questions</div><button class="btn-gold" style="margin-top:8px;font-size:.78rem" data-nav="adm-diag" onclick="nav(this.dataset.nav)">View →</button></div></div></div><div class="card" style="border-left:4px solid var(--blue);margin-bottom:14px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px"><div><div class="card-lbl">Bank 2 — Daily Practice</div><div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Managerial Communication · TELW 1.0 &amp; 2.0</div><div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">250 questions · Mon–Thu PI · Fri–Sun GD · Scheduled daily</div><div style="display:flex;gap:12px;margin-top:10px;font-family:var(--mono);font-size:.72rem;color:var(--muted)"><span>TELW 1.0: 150 questions</span><span>TELW 2.0: 100 questions</span></div></div><div style="text-align:right"><div style="font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--blue)">250</div><div style="font-family:var(--mono);font-size:.65rem;color:var(--dim)">questions</div><button class="btn-secondary" style="margin-top:8px;font-size:.78rem" data-nav="adm-qbank" onclick="nav(this.dataset.nav)">View →</button></div></div></div><div class="card" style="border-left:4px solid var(--gold);margin-bottom:14px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px"><div><div class="card-lbl">Bank 3 — Placement PI</div><div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Personal Interview Preparation</div><div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">40 questions · Unlimited attempts · Available anytime</div></div><div style="text-align:right"><div style="font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--gold)">40</div><div style="font-family:var(--mono);font-size:.65rem;color:var(--dim)">questions</div><button class="btn-gold" style="margin-top:8px;font-size:.78rem" data-nav="adm-ppi" onclick="nav(this.dataset.nav)">View →</button></div></div></div><div class="card" style="border-left:4px solid var(--blue);margin-bottom:14px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px"><div><div class="card-lbl">Bank 4 — Placement GD</div><div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Group Discussion Preparation</div><div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">16 prompts · Unlimited attempts · Available anytime</div></div><div style="text-align:right"><div style="font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--blue)">16</div><div style="font-family:var(--mono);font-size:.65rem;color:var(--dim)">prompts</div><button class="btn-secondary" style="margin-top:8px;font-size:.78rem" data-nav="adm-pgd" onclick="nav(this.dataset.nav)">View →</button></div></div></div><div class="card" style="border-left:4px solid var(--green);margin-bottom:14px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px"><div><div class="card-lbl">Bank 5 — Demo</div><div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Client Pitch Mode</div><div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">3 questions · No data stored · Login: demo@clarion.com / Demo@2026</div><div style="font-family:var(--mono);font-size:.72rem;color:var(--green);margin-top:8px">✓ Ready — share demo@clarion.com with clients</div></div><div style="text-align:right"><div style="font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--green)">3</div><div style="font-family:var(--mono);font-size:.65rem;color:var(--dim)">questions</div></div></div></div><div class="card" style="padding:0;overflow:hidden"><div style="padding:14px 18px;border-bottom:1px solid var(--border)"><div class="card-lbl" style="margin:0">Diagnostic completion — all students</div></div><table class="tbl"><thead><tr><th>Student</th><th>Completed</th><th>Questions</th><th>Score</th><th>Status</th></tr></thead><tbody><tr><td style="font-weight:600;font-size:.85rem">Suhasini</td><td style="font-family:var(--mono);font-size:.8rem">0</td><td style="font-family:var(--mono);font-size:.8rem">10</td><td style="font-family:var(--mono);font-size:.8rem">—</td><td><span style="font-family:var(--mono);font-size:.7rem;color:var(--red)">Not started</span></td></tr></tbody></table></div></div>
   </div>
 </div>
 
@@ -277,7 +277,7 @@ tr:hover td{background:rgba(26,23,20,.015)}
 <div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
   <div class="modal"><button class="modal-x" onclick="closeModal()">✕</button><div id="modal-body"></div></div>
 </div>
-<div class="toast" id="toast">Advanced PI disabled for suhasini@gmail.com</div>
+<div class="toast" id="toast">Incorrect trainer password.</div>
 
 <script>
 'use strict';
@@ -638,59 +638,6 @@ const DEMO_BANK = [
 
 // Demo credentials (no data stored for demo sessions)
 const DEMO_EMAIL    = 'demo@clarion.com';
-
-// ════════════════════════════════════════════════
-// ADVANCED PI CONDITIONING BANK — 25 questions
-// Access: accessType='placement' AND advancedPIAccess=ON
-// Default: OFF for all students. Trainer toggles manually.
-// Evaluation: existing TELW PI Rubric (RUBRIC_PROMPT)
-// ════════════════════════════════════════════════
-const ADVANCED_PI_BANK = [
-  // CATEGORY 1 — Background / Identity
-  {id:'API01',num:1,cat:'Background / Identity',text:'Tell me about yourself beyond what is already written in your resume.',instructions:['Speak for up to 60 seconds','Go beyond your resume — reveal your thinking and character','Be specific about one defining experience or decision','End with where you are headed professionally'],limit:75},
-  {id:'API02',num:2,cat:'Background / Identity',text:'What kind of work environment helps you perform best?',instructions:['Speak for up to 60 seconds','Be honest and specific — name actual conditions','Connect it to a real experience','Show self-awareness, not just a generic answer'],limit:75},
-  {id:'API03',num:3,cat:'Background / Identity',text:'What is one decision that has shaped your career direction so far?',instructions:['Speak for up to 60 seconds','Name the decision clearly','Explain the context and why you chose it','State how it changed your direction'],limit:75},
-  {id:'API04',num:4,cat:'Background / Identity',text:'What would your classmates or teammates say is your strongest contribution?',instructions:['Speak for up to 60 seconds','Attribute it to what others would observe — not just your self-assessment','Give a concrete example from a team setting','Keep it credible and specific'],limit:75},
-  {id:'API05',num:5,cat:'Background / Identity',text:'What kind of professional do you want to become in the next five years?',instructions:['Speak for up to 60 seconds','Be specific about a role or function','Connect it to your current strengths','Show ambition grounded in logic, not just aspiration'],limit:75},
-  // CATEGORY 2 — Experience / Ownership
-  {id:'API06',num:6,cat:'Experience / Ownership',text:'Tell me about a situation where you took responsibility for a difficult task.',instructions:['Speak for up to 60 seconds','Own the situation — do not share credit vaguely','Describe what you specifically did','State the outcome and what you learned'],limit:75},
-  {id:'API07',num:7,cat:'Experience / Ownership',text:'Describe a project where your contribution made a visible difference.',instructions:['Speak for up to 60 seconds','Define your specific contribution — not the team\'s','Name the difference it made (quantify if possible)','Be direct about your personal role'],limit:75},
-  {id:'API08',num:8,cat:'Experience / Ownership',text:'What is one mistake you made during an internship or project, and what happened afterwards?',instructions:['Speak for up to 60 seconds','Name the mistake directly — do not soften it excessively','Explain what led to it','State exactly what you did to recover and what changed'],limit:75},
-  {id:'API09',num:9,cat:'Experience / Ownership',text:'Tell me about a situation where your idea was accepted by a team or manager.',instructions:['Speak for up to 60 seconds','Describe how you pitched the idea','Explain why it was accepted','State what the outcome was'],limit:75},
-  {id:'API10',num:10,cat:'Experience / Ownership',text:'Explain one challenge where you had to work with limited information or resources.',instructions:['Speak for up to 60 seconds','Be specific about the constraint','Describe how you navigated it','State the result — did it work or not?'],limit:75},
-  // CATEGORY 3 — Strengths / Weaknesses / Self-Awareness
-  {id:'API11',num:11,cat:'Strengths / Weaknesses / Self-Awareness',text:'What is one professional weakness you are actively trying to improve?',instructions:['Speak for up to 60 seconds','Name the weakness directly — not a disguised strength','Describe a specific incident where it showed up','State what you are currently doing to address it'],limit:75},
-  {id:'API12',num:12,cat:'Strengths / Weaknesses / Self-Awareness',text:'Tell me about a situation where you realised you were wrong.',instructions:['Speak for up to 60 seconds','Be honest — name what you were wrong about','Describe how you discovered it','State what you did after'],limit:75},
-  {id:'API13',num:13,cat:'Strengths / Weaknesses / Self-Awareness',text:'What kind of feedback do you usually receive from others?',instructions:['Speak for up to 60 seconds','State the most consistent feedback you receive','Give a real example of when you received it','Explain how you have responded to it'],limit:75},
-  {id:'API14',num:14,cat:'Strengths / Weaknesses / Self-Awareness',text:'What is one professional habit you would like to change about yourself?',instructions:['Speak for up to 60 seconds','Name a real habit — not a superficial one','Explain the impact it has had','State what you are doing to change it'],limit:75},
-  {id:'API15',num:15,cat:'Strengths / Weaknesses / Self-Awareness',text:'What is one situation where you felt professionally uncomfortable, and why?',instructions:['Speak for up to 60 seconds','Be specific — name the situation and why it was uncomfortable','Avoid being vague or overly diplomatic','State how you handled the discomfort'],limit:75},
-  // CATEGORY 4 — Situational / Decision-Making
-  {id:'API16',num:16,cat:'Situational / Decision-Making',text:'Suppose your team misses an important deadline. How would you handle the situation?',instructions:['Speak for up to 60 seconds','Describe your immediate action — not general principles','Consider stakeholder impact','End with how you would prevent recurrence'],limit:75},
-  {id:'API17',num:17,cat:'Situational / Decision-Making',text:'If two team members strongly disagree with each other, what would you do?',instructions:['Speak for up to 60 seconds','Walk through your specific steps','Do not give a generic "listen to both sides" answer','State what you would actually say or do'],limit:75},
-  {id:'API18',num:18,cat:'Situational / Decision-Making',text:'You are given two tasks with the same deadline. How would you prioritise?',instructions:['Speak for up to 60 seconds','Name a prioritisation framework or logic','Apply it to the scenario concretely','State what trade-offs you would accept'],limit:75},
-  {id:'API19',num:19,cat:'Situational / Decision-Making',text:'Suppose your manager rejects your idea without explanation. How would you respond?',instructions:['Speak for up to 60 seconds','Be honest about your response — not just the ideal version','Describe the conversation you would have','Show professional maturity without being passive'],limit:75},
-  {id:'API20',num:20,cat:'Situational / Decision-Making',text:'If sales are falling for a product, what would you analyse first and why?',instructions:['Speak for up to 60 seconds','Name your first diagnostic step and justify it','Show structured business thinking','Do not list every possible factor — prioritise one and explain'],limit:75},
-  // CATEGORY 5 — Curveballs / Pressure / Ambiguity
-  {id:'API21',num:21,cat:'Curveballs / Pressure / Ambiguity',text:'Why should we NOT hire you?',instructions:['Speak for up to 60 seconds','Do not dodge the question with false modesty','Name a real limitation relevant to the role','Follow it with what you are doing about it'],limit:75},
-  {id:'API22',num:22,cat:'Curveballs / Pressure / Ambiguity',text:'Which part of your resume is weakest?',instructions:['Speak for up to 60 seconds','Identify it honestly — the interviewer already sees it','Explain the context','State what you have done since then'],limit:75},
-  {id:'API23',num:23,cat:'Curveballs / Pressure / Ambiguity',text:'This answer sounds rehearsed. Why should I believe you?',instructions:['Speak for up to 60 seconds','Stay composed — do not become defensive','Add a specific, unrehearsed detail','Explain what is genuinely true in your answer'],limit:75},
-  {id:'API24',num:24,cat:'Curveballs / Pressure / Ambiguity',text:'What is one professional situation where you may fail?',instructions:['Speak for up to 60 seconds','Be honest about a real vulnerability — not a strength in disguise','Describe the scenario and why it is risky for you','Show that you are aware and taking it seriously'],limit:75},
-  {id:'API25',num:25,cat:'Curveballs / Pressure / Ambiguity',text:'Suppose I strongly disagree with your opinion right now. How would you handle that conversation?',instructions:['Speak for up to 60 seconds','Do not simply capitulate — show a spine','Describe how you would engage with the disagreement','End with how you would close the conversation professionally'],limit:75},
-];
-const ADV_PI_CATEGORIES=['Background / Identity','Experience / Ownership','Strengths / Weaknesses / Self-Awareness','Situational / Decision-Making','Curveballs / Pressure / Ambiguity'];
-const ADV_PI_CAT_COLORS={'Background / Identity':'var(--blue)','Experience / Ownership':'var(--gold)','Strengths / Weaknesses / Self-Awareness':'var(--green)','Situational / Decision-Making':'var(--blue)','Curveballs / Pressure / Ambiguity':'var(--red)'};
-
-// Advanced PI access helpers — stored per-student, default OFF
-function getAdvPIAccess(email){try{return localStorage.getItem('clarion_advpi_access_'+email)==='true';}catch(e){return false;}}
-function setAdvPIAccessFlag(email,val){localStorage.setItem('clarion_advpi_access_'+email,val?'true':'false');}
-// Advanced PI submissions
-function getAdvPISubs(email){try{const s=localStorage.getItem('clarion_advpi_'+email);return s?JSON.parse(s):{};} catch(e){return {};}}
-function putAdvPISub(email,id,data){const all=getAdvPISubs(email);all[id]=data;localStorage.setItem('clarion_advpi_'+email,JSON.stringify(all));}
-// Eligibility: student has attempted all 16 foundational PI questions (PI01–PI16)
-function hasFoundationalPIDone(email){
-  const subs=getPPISubs(email);
-  return ['PI01','PI02','PI03','PI04','PI05','PI06','PI07','PI08','PI09','PI10','PI11','PI12','PI13','PI14','PI15','PI16'].every(function(id){return !!subs[id];});
-}
 const DEMO_PASSWORD = 'Demo@2026';
 
 // ════════════════════════════════════════════════
@@ -857,7 +804,6 @@ const STU_NAV=[
   {id:'stu-bank',    ic:'📚', lbl:'Practice Bank',   grp:'Daily Practice'},
   {id:'stu-ppi',     ic:'🎯', lbl:'Placement PI',    grp:'Placement Prep'},
   {id:'stu-pgd',     ic:'💬', lbl:'Placement GD',    grp:'Placement Prep'},
-  {id:'stu-advpi',   ic:'🔥', lbl:'Advanced PI',     grp:'Placement Prep'},
   {id:'stu-dash',    ic:'📊', lbl:'My Dashboard',    grp:'My Progress'},
 ];
 const ADM_NAV=[
@@ -889,9 +835,8 @@ function buildSidebar(){
     if(access==='diagnostic'){
       allowedIds=['stu-diag','stu-dash'];
     } else if(access==='placement'){
-      // Only today's scheduled task nav item + Advanced PI if unlocked
+      // Only today's scheduled task nav item
       allowedIds=['stu-home','stu-dash'];
-      if(getAdvPIAccess(S.user.email)) allowedIds.splice(1,0,'stu-advpi');
     } else {
       // lum (and any unrecognised fallback) — daily practice + dashboard
       allowedIds=['stu-home','stu-bank','stu-dash'];
@@ -918,10 +863,10 @@ function nav(id){
   const el=document.getElementById('ni-'+id);if(el)el.classList.add('on');
   ({
     'stu-diag':renderDiagnostic,'stu-home':renderHome,'stu-bank':renderBank,
-    'stu-ppi':renderPlacementPI,'stu-pgd':renderPlacementGD,'stu-advpi':renderAdvancedPI,
+    'stu-ppi':renderPlacementPI,'stu-pgd':renderPlacementGD,
     'stu-dash':renderStudentDash,'stu-demo':renderDemo,
     'adm-dash':renderAdminDash,'adm-banks':renderAdminBanks,
-    'adm-diag':renderAdminDiag,'adm-ppi':renderAdminPPI,'adm-pgd':renderAdminPGD,'adm-advpi':renderAdminAdvPI,
+    'adm-diag':renderAdminDiag,'adm-ppi':renderAdminPPI,'adm-pgd':renderAdminPGD,
     'adm-students':renderAdminStudents,
     'adm-review':renderAdminReview,'adm-setup':renderSetup,
   }[id]||renderHome)();
@@ -1729,22 +1674,10 @@ function renderAdminStudents(){
       '</select>'+
       '<button class="btn-secondary" style="font-size:.78rem;padding:7px 12px" onclick="exportStudentsCSV()">⬇ Export CSV</button>'+
     '</div>'+
-    '<div class="tbl-wrap"><table><thead><tr><th>Student</th><th>Access</th><th>Adv PI</th><th>Sessions</th><th>Avg</th><th>PI Avg</th><th>GD Avg</th><th>PI Ready</th><th>GD Ready</th><th>Today</th><th></th></tr></thead><tbody>'+
+    '<div class="tbl-wrap"><table><thead><tr><th>Student</th><th>Access</th><th>Sessions</th><th>Avg</th><th>PI Avg</th><th>GD Avg</th><th>PI Ready</th><th>GD Ready</th><th>Today</th><th></th></tr></thead><tbody>'+
     dispRows.map(r=>{
       const access=r.u.accessType||'lum';
       const aColor=access==='placement'?'var(--blue)':access==='diagnostic'?'var(--gold)':access==='demo'?'var(--green)':'var(--muted)';
-      const advOn=getAdvPIAccess(r.email);
-      const foundDone=hasFoundationalPIDone(r.email);
-      const advDone=Object.keys(getAdvPISubs(r.email)).length;
-      const cellId='advcell-'+r.email.replace(/[^a-z0-9]/gi,'_');
-      const safeEmail=r.email.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      const advCell=access==='placement'
-        ?'<div id="'+cellId+'" style="display:flex;flex-direction:column;gap:4px">'+
-            buildAdvToggle(r.email,advOn,cellId)+
-            (foundDone?'<span style="font-family:var(--mono);font-size:.6rem;color:var(--green)">✓ Eligible</span>':'<span style="font-family:var(--mono);font-size:.6rem;color:var(--dim)">16 PI needed</span>')+
-            (advDone>0?'<span style="font-family:var(--mono);font-size:.6rem;color:var(--muted)">'+advDone+'/25 done</span>':'')
-          +'</div>'
-        :'<div id="'+cellId+'" style="display:flex"><span style="font-family:var(--mono);font-size:.7rem;color:var(--dim)">N/A</span></div>';
       return '<tr>'+
         '<td><div style="font-weight:600;font-size:.88rem">'+r.u.name+'</div><div style="font-family:var(--mono);font-size:.67rem;color:var(--muted)">'+r.email+'</div></td>'+
         '<td>'+
@@ -1756,7 +1689,6 @@ function renderAdminStudents(){
             }).join('')+
           '</select>'+
         '</td>'+
-        '<td>'+advCell+'</td>'+
         '<td style="font-family:var(--mono);font-size:.8rem">'+r.subs+'</td>'+
         '<td>'+(r.avg?scorePill(parseFloat(r.avg),10):'<span class="pill pill-na">—</span>')+'</td>'+
         '<td style="font-family:var(--mono);font-size:.78rem">'+(r.piAvg||'—')+'</td>'+
@@ -2039,51 +1971,8 @@ function setAccess(email, accessType){
   if(!cur[email]) return;
   cur[email].accessType=accessType;
   putStudents(cur);
-  toast('Access updated for '+cur[email].name,'ok');
-  // Update the ADV PI cell inline so the toggle appears immediately
-  const cellId='advcell-'+email.replace(/[^a-z0-9]/gi,'_');
-  const cell=document.getElementById(cellId);
-  if(cell){
-    if(accessType==='placement'){
-      // Replace N/A with toggle + indicators
-      const advOn=getAdvPIAccess(email);
-      const foundDone=hasFoundationalPIDone(email);
-      const advDone=Object.keys(getAdvPISubs(email)).length;
-      cell.innerHTML=
-        buildAdvToggle(email,advOn,cellId)+
-        (foundDone?'<span style="font-family:var(--mono);font-size:.6rem;color:var(--green)">✓ Eligible</span>':'<span style="font-family:var(--mono);font-size:.6rem;color:var(--dim)">16 PI needed</span>')+
-        (advDone>0?'<span style="font-family:var(--mono);font-size:.6rem;color:var(--muted)">'+advDone+'/25 done</span>':'');
-    } else {
-      cell.innerHTML='<span style="font-family:var(--mono);font-size:.7rem;color:var(--dim)">N/A</span>';
-    }
-  }
-}
-
-// Build the OFF/ON pill toggle markup for a single student cell
-function buildAdvToggle(email,isOn,cellId){
-  const safeEmail=email.replace(/'/g,"\'");
-  const safeCellId=(cellId||('advcell-'+email.replace(/[^a-z0-9]/gi,'_')));
-  return '<button onclick="toggleAdvPI(\'' + safeEmail + '\',\'' + safeCellId + '\')" '+
-    'title="'+(isOn?'Disable':'Enable')+' Advanced PI access" '+
-    'style="display:inline-flex;align-items:center;gap:5px;border-radius:20px;'+
-      'border:1px solid '+(isOn?'var(--red)':'var(--border2)')+';'+
-      'background:'+(isOn?'var(--red)':'var(--bg)')+';'+
-      'padding:3px 8px 3px 4px;cursor:pointer;transition:background .2s,border-color .2s;font-family:var(--mono)">'+
-    '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#fff;flex-shrink:0"></span>'+
-    '<span style="font-size:.65rem;font-weight:700;color:'+(isOn?'#fff':'var(--muted)')+'">'+(isOn?'ON':'OFF')+'</span>'+
-  '</button>';
-}
-
-// Toggle Advanced PI access in-place — no full table re-render
-function toggleAdvPI(email, cellId){
-  const nowOn=!getAdvPIAccess(email);
-  setAdvPIAccessFlag(email, nowOn);
-  const cell=document.getElementById(cellId);
-  if(cell){
-    const btn=cell.querySelector('button[title]');
-    if(btn) btn.outerHTML=buildAdvToggle(email,nowOn,cellId);
-  }
-  toast('Advanced PI '+(nowOn?'enabled':'disabled')+' for '+email,'ok');
+  toast('Access updated for '+cur[email].name+' — download to deploy','ok');
+  // Don't re-render to avoid losing dropdown focus — toast is enough
 }
 
 // ── Add single student ────────────────────────────────────────────────────────
@@ -2582,114 +2471,6 @@ function renderPlacementGD(){
     '<div>'+cards+'</div>');
 }
 
-// ════════════════════════════════════════════════
-// ADVANCED PI — STUDENT VIEW
-// Visible only when: accessType=placement AND advancedPIAccess=ON
-// ════════════════════════════════════════════════
-function renderAdvancedPI(){
-  const access=S.user?.accessType||'lum';
-  const advOn=getAdvPIAccess(S.user.email);
-  if(access!=='placement'||!advOn){
-    set('<div class="ph"><div class="ph-title">Advanced PI Challenge Rounds</div></div>'+
-      '<div class="banner banner-info"><span class="banner-ic">🔒</span><div><div class="banner-title">Not yet unlocked</div>'+
-      '<div class="banner-sub">Advanced PI access is controlled by your trainer. Check with your trainer when you are ready for this round.</div></div></div>');
-    return;
-  }
-  const subs=getAdvPISubs(S.user.email);
-  const totalDone=Object.keys(subs).length;
-  const bycat={};
-  ADV_PI_CATEGORIES.forEach(function(c){bycat[c]=[];});
-  ADVANCED_PI_BANK.forEach(function(q){if(bycat[q.cat])bycat[q.cat].push(q);});
-
-  let html='<div class="ph"><div class="ph-title">Advanced PI Challenge Rounds</div>'+
-    '<div class="ph-sub">'+ADVANCED_PI_BANK.length+' questions across 5 categories · '+totalDone+' attempted · Recruiter-style pressure rounds</div></div>';
-
-  ADV_PI_CATEGORIES.forEach(function(cat){
-    const qs=bycat[cat]||[];
-    if(!qs.length)return;
-    const col=ADV_PI_CAT_COLORS[cat]||'var(--muted)';
-    html+='<div class="card" style="border-left:3px solid '+col+';margin-bottom:12px">'+
-      '<div class="card-lbl" style="color:'+col+';margin-bottom:10px">'+cat+'</div>';
-    qs.forEach(function(q){
-      const sub=subs[q.id];
-      html+='<div class="pb-item">'+
-        '<div style="flex:1">'+
-          '<div style="display:flex;gap:8px;align-items:center;margin-bottom:5px">'+
-            (sub?'<span style="font-family:var(--mono);font-size:.68rem;color:var(--green)">Last: '+sub.score+'/10</span>':
-              '<span style="font-family:var(--mono);font-size:.68rem;color:var(--dim)">Not attempted</span>')+
-          '</div>'+
-          '<div class="pb-q">'+q.text+'</div>'+
-        '</div>'+
-        '<button class="btn-primary" style="font-size:.78rem;padding:7px 14px;flex-shrink:0" data-qid="'+q.id+'" onclick="startAdvancedPI(this.dataset.qid)">Practice →</button>'+
-      '</div>';
-    });
-    html+='</div>';
-  });
-  set(html);
-}
-
-function startAdvancedPI(qid){
-  const q=ADVANCED_PI_BANK.find(function(x){return x.id===qid;});
-  if(!q)return;
-  S.currentQ=q; S.currentBank='advpi';
-  S.recorded=false;S.recording=false;S.recSecs=0;S.recLimit=q.limit;S.audioBlob=null;S.audioEl=null;
-  set('<div class="ph">'+
-    '<button class="btn-secondary" style="margin-bottom:12px;font-size:.78rem" onclick="nav(\'stu-advpi\')">← Back to Advanced PI</button>'+
-    '<div class="ph-title">Advanced PI Challenge Rounds</div>'+
-    '<div class="ph-sub">'+q.cat+' · Unlimited attempts · TELW PI Rubric</div></div>'+
-    '<div class="q-hero">'+
-      '<span class="q-badge q-pi">Advanced PI · '+q.cat+'</span>'+
-      '<div class="q-text">'+q.text+'</div>'+
-      '<div class="q-inst"><div class="q-inst-lbl">Instructions</div>'+
-        (q.instructions||[]).map(function(i){return '<div class="q-inst-item">'+i+'</div>';}).join('')+
-      '</div>'+
-      '<div class="q-meta"><span>⏱ '+q.limit+'s max</span><span>🔄 Unlimited attempts</span><span>🤖 AI scored · TELW PI Rubric</span></div>'+
-    '</div>'+
-    renderRecorderHTML().replace("'doSubmit()'","'submitAdvancedPI()'").replace('"doSubmit()"','"submitAdvancedPI()"')+
-    '<div id="proc-area"></div>');
-}
-
-async function submitAdvancedPI(){
-  if(!S.recorded&&S.recSecs===0){toast('Record your response first','err');return;}
-  const q=S.currentQ;if(!q)return;
-  const btn=document.getElementById('btn-submit');if(btn)btn.disabled=true;
-  const proc=document.getElementById('proc-area');
-  if(proc)proc.innerHTML='<div class="loader"><div class="spinner"></div><div class="loader-txt">Transcribing…</div></div>';
-
-  let transcript='';
-  if(S.audioBlob&&S.apiKey){
-    try{
-      const base64=await blobToBase64(S.audioBlob);
-      const mime=S.audioBlob.type||'audio/webm';
-      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+S.apiKey,
-        {method:'POST',headers:{'Content-Type':'application/json'},
-         body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:mime,data:base64}},{text:'Transcribe this audio exactly as spoken. Return only the spoken text.'}]}],generationConfig:{temperature:0,maxOutputTokens:600}})});
-      if(r.ok){const d=await r.json();transcript=d.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||'';}
-    }catch(e){transcript=demoTranscript();}
-  }else{await sleep(800);transcript=demoTranscript();}
-
-  if(proc)proc.innerHTML='<div class="loader"><div class="spinner" style="border-top-color:var(--red)"></div><div class="loader-txt">Scoring with TELW PI Rubric…</div></div>';
-
-  // Use the existing RUBRIC_PROMPT — same 5 criteria, same scoring
-  const prompt=RUBRIC_PROMPT.replace('{COACH}','').replace('{CANDO}','').replace('{Q}',q.text).replace('{T}',transcript);
-  let result=null;
-  if(S.apiKey){
-    try{
-      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+S.apiKey,
-        {method:'POST',headers:{'Content-Type':'application/json'},
-         body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.2,maxOutputTokens:900}})});
-      if(r.ok){const d=await r.json();let raw=d.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||'{}';raw=raw.replace(/```json|```/g,'').trim();result=JSON.parse(raw);}
-    }catch(e){result=demoScore();}
-  }else{await sleep(800);result=demoScore();}
-
-  const sub={qid:q.id,qnum:q.num,qtext:q.text,cat:q.cat,type:'PI',score:result.score||0,criteria:result.criteria||{},feedback:result.feedback||{},cando:result.cando||'',flag:result.flag||'needs_improvement',transcript,duration:S.recSecs,date:new Date().toISOString().split('T')[0]};
-  putAdvPISub(S.user.email,q.id,sub);
-
-  if(proc)proc.innerHTML=renderScoreHTML(sub,true)+'<div style="margin-top:14px"><button class="btn-secondary" onclick="nav(\'stu-advpi\')">← Back to Advanced PI</button></div>';
-  const rec=document.getElementById('recorder');if(rec)rec.style.display='none';
-  toast('Submitted and scored','ok');
-}
-
 function startPlacement(qid,bank){
   const q=(bank==='ppi'?PLACEMENT_PI_BANK:PLACEMENT_GD_BANK).find(x=>x.id===qid);
   if(!q)return;
@@ -2828,7 +2609,7 @@ function renderAdminBanks(){
   const diagNotStarted=diagStats.filter(function(s){return s.done===0;}).length;
   const diagInProgress=diagStats.filter(function(s){return s.done>0&&(DIAGNOSTIC_BANK.length===0||s.done<DIAGNOSTIC_BANK.length);}).length;
 
-  set('<div class="ph"><div class="ph-title">Question Banks</div><div class="ph-sub">Overview of all 6 banks · Click any bank to manage</div></div>'+
+  set('<div class="ph"><div class="ph-title">Question Banks</div><div class="ph-sub">Overview of all 5 banks · Click any bank to manage</div></div>'+
 
     // ── BANK 1: DIAGNOSTIC ──
     '<div class="card" style="border-left:4px solid var(--gold);margin-bottom:14px">'+
@@ -2905,24 +2686,7 @@ function renderAdminBanks(){
       '</div>'+
     '</div>'+
 
-    // ── BANK 5: ADVANCED PI CONDITIONING ──
-    '<div class="card" style="border-left:4px solid var(--red);margin-bottom:14px">'+
-      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
-        '<div>'+
-          '<div class="card-lbl">Bank 5 — Advanced PI Conditioning</div>'+
-          '<div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Recruiter-Style Pressure Rounds</div>'+
-          '<div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">'+ADVANCED_PI_BANK.length+' questions · 5 categories · Trainer-controlled access · TELW PI Rubric</div>'+
-          '<div style="font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-top:6px">Default OFF — enable per student from Students page</div>'+
-        '</div>'+
-        '<div style="text-align:right">'+
-          '<div style="font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--red)">'+ADVANCED_PI_BANK.length+'</div>'+
-          '<div style="font-family:var(--mono);font-size:.65rem;color:var(--dim)">questions</div>'+
-          '<button class="btn-secondary" style="margin-top:8px;font-size:.78rem" data-nav="adm-advpi" onclick="nav(this.dataset.nav)">View →</button>'+
-        '</div>'+
-      '</div>'+
-    '</div>'+
-
-    // ── BANK 6: DEMO ──
+    // ── BANK 5: DEMO ──
     '<div class="card" style="border-left:4px solid var(--green);margin-bottom:14px">'+
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
         '<div>'+
@@ -3001,53 +2765,6 @@ function renderAdminPGD(){
     (PLACEMENT_GD_BANK.length===0?
       '<div class="banner banner-warn"><span class="banner-ic">⚠️</span><div><div class="banner-title">16 GD prompts not yet added</div><div class="banner-sub">Prompts will be added in the next build step.</div></div></div>':
       '<div>'+PLACEMENT_GD_BANK.map(function(q){return '<div class="pb-item"><div><span style="font-family:var(--mono);font-size:.68rem;color:var(--dim)">GD '+q.num+'</span><div class="pb-q" style="margin-top:5px">'+q.text+'</div></div></div>';}).join('')+'</div>'));
-}
-
-function renderAdminAdvPI(){
-  loadRegistry();
-  const emails=ALL_STUDENT_EMAILS;
-  // Build category groups
-  const bycat={};
-  ADV_PI_CATEGORIES.forEach(function(c){bycat[c]=[];});
-  ADVANCED_PI_BANK.forEach(function(q){if(bycat[q.cat])bycat[q.cat].push(q);});
-
-  // Access summary
-  const placementStudents=emails.filter(function(e){return (getStudents()[e]?.accessType||'lum')==='placement';});
-  const enabledCount=placementStudents.filter(function(e){return getAdvPIAccess(e);}).length;
-  const eligibleCount=placementStudents.filter(function(e){return hasFoundationalPIDone(e);}).length;
-
-  let html='<div class="ph"><div class="ph-title">Advanced PI Bank</div>'+
-    '<div class="ph-sub">'+ADVANCED_PI_BANK.length+' questions · 5 categories · TELW PI Rubric · Trainer-controlled access</div></div>'+
-    '<div class="card" style="background:var(--gold-bg);border-color:var(--gold);margin-bottom:16px">'+
-      '<div class="card-lbl">Access Summary</div>'+
-      '<div style="display:flex;gap:20px;flex-wrap:wrap;font-family:var(--mono);font-size:.78rem;margin-bottom:8px">'+
-        '<span>Placement students: <strong>'+placementStudents.length+'</strong></span>'+
-        '<span style="color:var(--green)">Access ON: <strong>'+enabledCount+'</strong></span>'+
-        '<span style="color:var(--blue)">Eligible (16 PI done): <strong>'+eligibleCount+'</strong></span>'+
-      '</div>'+
-      '<div style="font-size:.82rem;color:var(--ink2)">Advanced PI is <strong>OFF by default</strong>. Toggle per student from the <button class="btn-secondary" style="font-size:.75rem;padding:3px 10px;margin:0 4px" onclick="nav(\'adm-students\')">Students</button> page.</div>'+
-    '</div>';
-
-  ADV_PI_CATEGORIES.forEach(function(cat){
-    const qs=bycat[cat]||[];
-    if(!qs.length)return;
-    const col=ADV_PI_CAT_COLORS[cat]||'var(--muted)';
-    html+='<div class="card" style="border-left:3px solid '+col+';margin-bottom:12px">'+
-      '<div class="card-lbl" style="color:'+col+'">'+cat+'</div>'+
-      qs.map(function(q){
-        // completion count across all placement students
-        const doneCount=placementStudents.filter(function(e){return !!getAdvPISubs(e)[q.id];}).length;
-        return '<div class="pb-item">'+
-          '<div style="flex:1">'+
-            '<span style="font-family:var(--mono);font-size:.68rem;color:var(--dim)">API '+q.num+'</span>'+
-            (placementStudents.length>0?'<span style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-left:8px">'+doneCount+'/'+placementStudents.length+' attempted</span>':'')+
-            '<div class="pb-q" style="margin-top:5px">'+q.text+'</div>'+
-          '</div>'+
-        '</div>';
-      }).join('')+
-    '</div>';
-  });
-  set(html);
 }
 
 let toastTmr=null;
