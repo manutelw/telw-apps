@@ -1,90 +1,121 @@
-// CLARION Service Worker — PWA offline support
-// Cache version: bump this string to force cache refresh on update
-const CACHE_NAME = 'clarion-v1';
-const CACHE_URLS = [
+// CLARION Service Worker v2
+// Bump CACHE_NAME whenever you deploy a new build to force cache refresh.
+const CACHE_NAME = 'clarion-v2';
+
+// Shell assets to pre-cache on install.
+// All paths are absolute from root so they work regardless of how the SW is triggered.
+const PRECACHE = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icon-192.png',
-  '/icon-512.png',
-  // Google Fonts (best-effort)
-  'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap'
+  '/icon-512.png'
 ];
 
-// ── Install: pre-cache shell ────────────────────────────────────────────────
+// ── INSTALL ──────────────────────────────────────────────────────────────────
+// Pre-cache the app shell. Each URL is attempted independently so a single
+// failure (e.g. a font CDN being offline) does not block installation.
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      // Cache what we can; ignore failures for third-party resources
-      return Promise.allSettled(
-        CACHE_URLS.map(url =>
-          cache.add(url).catch(() => { /* ignore */ })
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.all(
+        PRECACHE.map(url =>
+          fetch(url, { cache: 'reload' })
+            .then(res => {
+              if (res.ok) return cache.put(url, res);
+            })
+            .catch(() => { /* ignore individual failures */ })
         )
-      );
-    }).then(() => self.skipWaiting())
+      )
+    ).then(() => self.skipWaiting())   // activate immediately
   );
 });
 
-// ── Activate: clean old caches ──────────────────────────────────────────────
+// ── ACTIVATE ─────────────────────────────────────────────────────────────────
+// Delete every cache that isn't the current version, then take control of all
+// open tabs without requiring a page reload.
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      )
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
   );
 });
 
-// ── Fetch: network-first for navigation, cache-first for assets ─────────────
+// ── FETCH ─────────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', event => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const req = event.request;
+  const url = new URL(req.url);
 
-  // Skip non-GET and non-http(s) requests
-  if (request.method !== 'GET') return;
+  // Only handle GET over http/https
+  if (req.method !== 'GET') return;
   if (!url.protocol.startsWith('http')) return;
 
-  // Skip Gemini / Anthropic API calls — always network only
+  // Never intercept AI API calls — they must always go to the network
   if (
     url.hostname.includes('generativelanguage.googleapis.com') ||
     url.hostname.includes('anthropic.com')
   ) return;
 
-  // Navigation requests: network-first, fall back to cached index
-  if (request.mode === 'navigate') {
+  // Google Fonts — network-first, no cache (they have their own cache headers)
+  if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
+    event.respondWith(fetch(req).catch(() => new Response('', { status: 408 })));
+    return;
+  }
+
+  // ── Navigation requests (page loads) ──────────────────────────────────────
+  // Strategy: network-first. On failure, serve the cached index.html so the
+  // app always opens even if the user is offline. Never return undefined.
+  if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then(response => {
-          // Clone and cache fresh copy
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
-          return response;
+      fetch(req)
+        .then(res => {
+          if (res.ok) {
+            // Update the cache with the freshest copy
+            caches.open(CACHE_NAME).then(c => c.put('/', res.clone()));
+          }
+          return res;
         })
-        .catch(() => caches.match('/index.html').then(r => r || caches.match('/')))
+        .catch(() =>
+          // Offline fallback — return cached root
+          caches.match('/index.html')
+            .then(cached => cached || caches.match('/'))
+            .then(cached => cached || new Response(
+              '<h1>CLARION is offline</h1><p>Please reconnect and reload.</p>',
+              { headers: { 'Content-Type': 'text/html' } }
+            ))
+        )
     );
     return;
   }
 
-  // Static assets: cache-first, then network
+  // ── Static assets (icons, manifest, etc.) ─────────────────────────────────
+  // Strategy: cache-first, then network. If both fail, return a safe empty
+  // response so we never pass undefined to respondWith().
   event.respondWith(
-    caches.match(request).then(cached => {
+    caches.match(req).then(cached => {
       if (cached) return cached;
-      return fetch(request).then(response => {
-        if (!response || response.status !== 200 || response.type === 'opaque') {
-          return response;
-        }
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
-        return response;
-      }).catch(() => cached);
+
+      return fetch(req)
+        .then(res => {
+          // Only cache valid same-origin responses
+          if (res && res.ok && res.type === 'basic') {
+            caches.open(CACHE_NAME).then(c => c.put(req, res.clone()));
+          }
+          return res;
+        })
+        .catch(() =>
+          // Safe fallback — never undefined
+          new Response('', { status: 503, statusText: 'Service Unavailable' })
+        );
     })
   );
 });
 
-// ── Message: skip waiting on demand ────────────────────────────────────────
+// ── MESSAGE ───────────────────────────────────────────────────────────────────
+// Allow the page to trigger a cache bust + reload via postMessage.
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
