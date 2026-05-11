@@ -1,35 +1,13 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8">
+<!-- saved from url=(0044)file:///C:/Users/Manu/Downloads/index_1.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CLARION · Managerial Communication</title>
 
-<!-- PWA: Manifest -->
-<link rel="manifest" href="/manifest.json">
 
-<!-- PWA: Theme and status bar -->
-<meta name="theme-color" content="#1A1714">
-<meta name="background-color" content="#F7F5F0">
 
-<!-- PWA: iOS / Safari standalone support -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="CLARION">
-<!-- iOS home screen icon: one tag without sizes= is most reliable -->
-<link rel="apple-touch-icon" href="/icon-192.png">
-
-<!-- PWA: Android / Chrome install -->
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="application-name" content="CLARION">
-
-<!-- Favicon + install icon -->
-<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
-
-<!-- PWA: Description -->
-<meta name="description" content="CLARION by TELW — Managerial Communication Performance Platform">
-
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="./CLARION · Managerial Communication_files/css2" rel="stylesheet">
 <style>
 :root{
   --bg:#F7F5F0;--surface:#FFFFFF;--card:#FAFAF8;--border:#E8E4DC;--border2:#D4CEC2;
@@ -3927,15 +3905,6 @@ window.onload=()=>{
   if(savedPw)window.__trainerPw=savedPw;
   // Enforce 7-day diagnostic retention policy on startup
   try{loadRegistry();purgeAllStaleDiag();}catch(e){}
-  // Register PWA service worker
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(()=>{});
-  }
-  // PWA install prompt capture
-  window.addEventListener('beforeinstallprompt',e=>{
-    e.preventDefault();
-    window._pwaPrompt=e;
-  });
 };
 </script>
 
