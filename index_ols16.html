@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0044)file:///C:/Users/Manu/Downloads/index_1.html -->
+<!-- saved from url=(0027)https://clarion.telw.co.in/ -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -232,59 +232,6 @@ tr:hover td{background:rgba(26,23,20,.015)}
 @media(max-width:900px){.sidebar{display:none}.stats{grid-template-columns:1fr 1fr}.readiness{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.stats{grid-template-columns:1fr 1fr}.crit-name{flex:0 0 110px;font-size:.75rem}}
 
-/* ── Mobile hamburger button ─────────────────────────────── */
-.hamburger{
-  display:none;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  gap:5px;
-  width:36px;height:36px;
-  background:none;border:none;cursor:pointer;
-  padding:0;margin-right:8px;flex-shrink:0;
-  -webkit-tap-highlight-color:transparent;
-}
-.hamburger span{
-  display:block;width:20px;height:2px;
-  background:rgba(255,255,255,.75);
-  border-radius:2px;
-  transition:transform .22s ease, opacity .18s ease;
-}
-/* × state */
-.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
-.hamburger.open span:nth-child(2){opacity:0;}
-.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-
-/* ── Mobile drawer ───────────────────────────────────────── */
-.drawer-backdrop{
-  display:none;
-  position:fixed;inset:0;
-  background:rgba(26,23,20,.45);
-  z-index:299;
-  -webkit-tap-highlight-color:transparent;
-}
-.drawer-backdrop.open{display:block;}
-
-@media(max-width:900px){
-  .hamburger{display:flex;}
-  /* Sidebar becomes a slide-in drawer on mobile */
-  .sidebar{
-    display:block !important;   /* override the hide rule above */
-    position:fixed;
-    top:0;left:0;
-    width:220px;height:100%;
-    z-index:300;
-    transform:translateX(-100%);
-    transition:transform .26s cubic-bezier(.4,0,.2,1);
-    box-shadow:4px 0 24px rgba(0,0,0,.18);
-    padding-top:56px;           /* clear the topbar */
-    overflow-y:auto;
-  }
-  .sidebar.drawer-open{
-    transform:translateX(0);
-  }
-}
-
 /* ── TELW BRANDING ─────────────────────────────────────────── */
 
 /* Auth box: widen slightly to give the brand row room */
@@ -451,8 +398,8 @@ tr:hover td{background:rgba(26,23,20,.015)}
       <button class="role-btn" onclick="setRole(&#39;student&#39;,this)">Student</button>
       <button class="role-btn on" onclick="setRole(&#39;trainer&#39;,this)">Trainer</button>
     </div>
-    <label class="f-label" id="a-login-label">Email</label>
-    <input class="f-input" id="a-email" type="email" value="trainer@clarion.com" placeholder="Trainer email">
+    <label class="f-label" id="a-login-label">Student ID</label>
+    <input class="f-input" id="a-email" type="text" value="student@clarion.com" placeholder="Student ID or trainer email">
     <label class="f-label">Password</label>
     <input class="f-input" id="a-pass" type="password" value="demo">
     <button class="btn-auth" onclick="login()">Sign in →</button>
@@ -471,9 +418,6 @@ tr:hover td{background:rgba(26,23,20,.015)}
 <!-- APP -->
 <div id="app" class="">
   <div class="topbar">
-    <button class="hamburger" id="hamburger" aria-label="Open navigation menu" onclick="toggleDrawer()">
-      <span></span><span></span><span></span>
-    </button>
     <div class="tb-logo">Clar<em>ion</em></div>
     <div class="tb-r">
       <span class="tb-user" id="tb-user">Trainer</span>
@@ -481,8 +425,6 @@ tr:hover td{background:rgba(26,23,20,.015)}
       <button class="btn-out" onclick="logout()">Sign out</button>
     </div>
   </div>
-  <!-- Mobile drawer backdrop -->
-  <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
   <div class="shell">
     <div class="sidebar" id="sidebar"><div class="nav-grp">Trainer Panel</div><div class="nav-item" id="ni-adm-dash" data-id="adm-dash" onclick="nav(this.dataset.id)"><span class="nav-ic">📊</span>Dashboard</div><div class="nav-item on" id="ni-adm-banks" data-id="adm-banks" onclick="nav(this.dataset.id)"><span class="nav-ic">🏦</span>Question Banks</div><div class="nav-item" id="ni-adm-students" data-id="adm-students" onclick="nav(this.dataset.id)"><span class="nav-ic">👥</span>Students</div><div class="nav-item" id="ni-adm-review" data-id="adm-review" onclick="nav(this.dataset.id)"><span class="nav-ic">🎧</span>Review</div><div class="nav-item" id="ni-adm-setup" data-id="adm-setup" onclick="nav(this.dataset.id)"><span class="nav-ic">⚙️</span>Setup</div></div>
     <div class="content" id="content"><div class="ph"><div class="ph-title">Question Banks</div><div class="ph-sub">Overview of all 6 banks · Click any bank to manage</div></div><div class="card" style="border-left:4px solid var(--gold);margin-bottom:14px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px"><div><div class="card-lbl">Bank 1 — Diagnostic</div><div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Baseline Assessment</div><div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">10 questions · 100 points total · One attempt per question</div><div style="display:flex;gap:16px;margin-top:10px;font-family:var(--mono);font-size:.72rem"><span style="color:var(--green)">✓ Complete: 0</span><span style="color:var(--gold)">◑ In progress: 0</span><span style="color:var(--red)">○ Not started: 1</span></div></div><div style="text-align:right"><div style="font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--gold)">10</div><div style="font-family:var(--mono);font-size:.65rem;color:var(--dim)">questions</div><button class="btn-gold" style="margin-top:8px;font-size:.78rem" data-nav="adm-diag" onclick="nav(this.dataset.nav)">View →</button></div></div></div><div class="card" style="border-left:4px solid var(--blue);margin-bottom:14px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px"><div><div class="card-lbl">Bank 2 — Daily Practice</div><div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Managerial Communication · TELW 1.0 &amp; 2.0</div><div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">250 questions · Mon–Thu PI · Fri–Sun GD · Scheduled daily</div><div style="display:flex;gap:12px;margin-top:10px;font-family:var(--mono);font-size:.72rem;color:var(--muted)"><span>TELW 1.0: 150 questions</span><span>TELW 2.0: 100 questions</span></div></div><div style="text-align:right"><div style="font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--blue)">250</div><div style="font-family:var(--mono);font-size:.65rem;color:var(--dim)">questions</div><button class="btn-secondary" style="margin-top:8px;font-size:.78rem" data-nav="adm-qbank" onclick="nav(this.dataset.nav)">View →</button></div></div></div><div class="card" style="border-left:4px solid var(--gold);margin-bottom:14px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px"><div><div class="card-lbl">Bank 3 — Placement PI</div><div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Personal Interview Preparation</div><div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">40 questions · Unlimited attempts · Available anytime</div></div><div style="text-align:right"><div style="font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--gold)">40</div><div style="font-family:var(--mono);font-size:.65rem;color:var(--dim)">questions</div><button class="btn-gold" style="margin-top:8px;font-size:.78rem" data-nav="adm-ppi" onclick="nav(this.dataset.nav)">View →</button></div></div></div><div class="card" style="border-left:4px solid var(--blue);margin-bottom:14px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px"><div><div class="card-lbl">Bank 4 — Placement GD</div><div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Group Discussion Preparation</div><div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">16 prompts · Unlimited attempts · Available anytime</div></div><div style="text-align:right"><div style="font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--blue)">16</div><div style="font-family:var(--mono);font-size:.65rem;color:var(--dim)">prompts</div><button class="btn-secondary" style="margin-top:8px;font-size:.78rem" data-nav="adm-pgd" onclick="nav(this.dataset.nav)">View →</button></div></div></div><div class="card" style="border-left:4px solid var(--red);margin-bottom:14px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px"><div><div class="card-lbl">Bank 5 — Advanced PI Conditioning</div><div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Recruiter-Style Pressure Rounds</div><div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">25 questions · 5 categories · Trainer-controlled access · TELW PI Rubric</div><div style="font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-top:6px">Default OFF — enable per student from Students page</div></div><div style="text-align:right"><div style="font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--red)">25</div><div style="font-family:var(--mono);font-size:.65rem;color:var(--dim)">questions</div><button class="btn-secondary" style="margin-top:8px;font-size:.78rem" data-nav="adm-advpi" onclick="nav(this.dataset.nav)">View →</button></div></div></div><div class="card" style="border-left:4px solid var(--green);margin-bottom:14px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px"><div><div class="card-lbl">Bank 5 — Demo</div><div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Client Pitch Mode</div><div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">3 questions · No data stored · Login: demo@clarion.com / Demo@2026</div><div style="font-family:var(--mono);font-size:.72rem;color:var(--green);margin-top:8px">✓ Ready — share demo@clarion.com with clients</div></div><div style="text-align:right"><div style="font-family:var(--serif);font-size:2.4rem;font-weight:300;color:var(--green)">3</div><div style="font-family:var(--mono);font-size:.65rem;color:var(--dim)">questions</div></div></div></div><div class="card" style="padding:0;overflow:hidden"><div style="padding:14px 18px;border-bottom:1px solid var(--border)"><div class="card-lbl" style="margin:0">Diagnostic completion — all students</div></div><table class="tbl"><thead><tr><th>Student</th><th>Completed</th><th>Questions</th><th>Score</th><th>Status</th></tr></thead><tbody><tr><td style="font-weight:600;font-size:.85rem">Suhasini</td><td style="font-family:var(--mono);font-size:.8rem">0</td><td style="font-family:var(--mono);font-size:.8rem">10</td><td style="font-family:var(--mono);font-size:.8rem">—</td><td><span style="font-family:var(--mono);font-size:.7rem;color:var(--red)">Not started</span></td></tr></tbody></table></div></div>
@@ -1022,25 +964,18 @@ function getAllSubs(){
 // ════════════════════════════════════════════════
 // AUTH
 // ════════════════════════════════════════════════
-function setRole(r,btn){
-  authRole=r;
-  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
+function setRole(r,btn){authRole=r;document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
   const emailInput=document.getElementById('a-email');
   const loginLabel=document.getElementById('a-login-label');
-  const passInput=document.getElementById('a-pass');
   if(r==='trainer'){
     emailInput.value='trainer@clarion.com';
     emailInput.type='email';
-    emailInput.placeholder='Trainer email';
     if(loginLabel) loginLabel.textContent='Email';
   } else {
     emailInput.value='';
     emailInput.type='text';
-    emailInput.placeholder='Your Student ID';
     if(loginLabel) loginLabel.textContent='Student ID';
   }
-  if(passInput) passInput.value='';
 }
 function login(){
   const loginVal=document.getElementById('a-email').value.trim();
@@ -1089,7 +1024,7 @@ function finishLogin(){
   try{
     document.getElementById('auth').style.display='none';
     document.getElementById('app').classList.add('on');
-    document.getElementById('tb-user').textContent=S.role==='admin'?'':S.user.name;
+    document.getElementById('tb-user').textContent=S.user.name;
     const b=document.getElementById('tb-badge');
     b.textContent=S.role==='admin'?'Trainer':S.role==='demo'?'Demo':'Student';
     b.className='tb-badge '+(S.role==='admin'?'badge-admin':S.role==='demo'?'badge-admin':'badge-student');
@@ -1110,24 +1045,7 @@ function finishLogin(){
     if(btn){btn.textContent='Sign in →';btn.disabled=false;}
   }catch(e){console.error(e);toast('Login error: '+e.message,'err');const btn=document.querySelector('.btn-auth');if(btn){btn.textContent='Sign in →';btn.disabled=false;}}
 }
-function logout(){
-  S.user=null;S.role=null;
-  clearInterval(S.recTimer);
-  document.getElementById('app').classList.remove('on');
-  // Reset auth form to trainer-mode default
-  const emailInput=document.getElementById('a-email');
-  const loginLabel=document.getElementById('a-login-label');
-  const passInput=document.getElementById('a-pass');
-  if(emailInput){emailInput.value='trainer@clarion.com';emailInput.type='email';}
-  if(loginLabel){loginLabel.textContent='Email';}
-  if(passInput){passInput.value='';}
-  // Reset role buttons: Trainer = on, Student = off
-  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('on'));
-  const trainerBtn=document.querySelector('.role-btn:last-child');
-  if(trainerBtn)trainerBtn.classList.add('on');
-  authRole='trainer';
-  document.getElementById('auth').style.display='flex';
-}
+function logout(){S.user=null;clearInterval(S.recTimer);document.getElementById('app').classList.remove('on');document.getElementById('auth').style.display='flex';}
 
 // ════════════════════════════════════════════════
 // NAV
@@ -1206,32 +1124,7 @@ function nav(id){
     'adm-students':renderAdminStudents,
     'adm-review':renderAdminReview,'adm-setup':renderSetup,
   }[id]||renderHome)();
-  // Auto-close drawer on mobile after navigation
-  closeDrawer();
 }
-
-// ── Mobile drawer helpers ─────────────────────────────────────────────────────
-function toggleDrawer(){
-  const sidebar=document.getElementById('sidebar');
-  const backdrop=document.getElementById('drawer-backdrop');
-  const btn=document.getElementById('hamburger');
-  const isOpen=sidebar.classList.toggle('drawer-open');
-  backdrop.classList.toggle('open',isOpen);
-  btn.classList.toggle('open',isOpen);
-  btn.setAttribute('aria-label',isOpen?'Close navigation menu':'Open navigation menu');
-}
-function closeDrawer(){
-  const sidebar=document.getElementById('sidebar');
-  if(!sidebar) return;
-  sidebar.classList.remove('drawer-open');
-  const backdrop=document.getElementById('drawer-backdrop');
-  if(backdrop) backdrop.classList.remove('open');
-  const btn=document.getElementById('hamburger');
-  if(btn){btn.classList.remove('open');btn.setAttribute('aria-label','Open navigation menu');}
-}
-// Also close drawer on Escape key
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
-// ─────────────────────────────────────────────────────────────────────────────
 function set(h){document.getElementById('content').innerHTML=h;}
 
 // ════════════════════════════════════════════════
