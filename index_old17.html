@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0042)file:///C:/Users/Manu/Downloads/index.html -->
+<!-- saved from url=(0044)file:///C:/Users/Manu/Downloads/index_1.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -1303,7 +1303,7 @@ function renderHome(){
           '</div>'+
           '<div class="q-meta"><span>⏱ '+q.limit+'s max</span><span>🔄 Unlimited attempts</span><span>🤖 AI scored</span></div>'+
         '</div>'+
-        (existing ? renderScoreHTML(existing,true) : renderRecorderHTML().replace("doSubmitDaily()","submitPlacementDaily()"))+
+        (existing ? renderScoreHTML(existing,true) : renderRecorderHTML().replace("'doSubmit()'","'submitPlacementDaily()'").replace('"doSubmit()"','"submitPlacementDaily()"'))+
         '<div id="proc-area"></div>'
       );
       return;
@@ -1316,8 +1316,6 @@ function renderHome(){
   const today = new Date().toISOString().split('T')[0];
   const subKey = 'daily_'+today;
   const existing = getSubs(S.user.email)[subKey];
-  const dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const dayName = dayNames[new Date().getDay()];
 
   S.currentQ = q;
   S.recorded=false;S.recording=false;S.recSecs=0;S.recLimit=60;S.audioBlob=null;S.audioEl=null;
@@ -1396,12 +1394,9 @@ function renderRecorderHTML(){
     '</div>'+
     '<div class="btn-row">'+
       '<button class="btn-secondary hidden" id="btn-rerec" onclick="reRecord()">↺ Re-record</button>'+
-      '<button class="btn-primary" id="btn-submit" onclick="doSubmitDaily()" disabled>Submit Response →</button>'+
+      '<button class="btn-primary" id="btn-submit" onclick="doSubmit()" disabled>Submit Response →</button>'+
     '</div>'+
-    '<div class="rec-note" style="margin-bottom:10px">Record 35–45 seconds. Hard stop at 60s. Once submitted this is locked.</div>'+
-    '<details style="margin-top:6px"><summary style="font-family:var(--mono);font-size:.68rem;color:var(--muted);cursor:pointer;user-select:none">📝 Can\'t record? Type your response instead</summary>'+
-    '<div style="margin-top:10px"><textarea id="stu-text-response" placeholder="Type your spoken response here (at least 2–3 sentences)…" style="width:100%;min-height:90px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:.88rem;font-family:var(--sans);color:var(--ink);outline:none;resize:vertical" oninput="document.getElementById(\'btn-submit\').disabled=this.value.trim().length<10"></textarea></div>'+
-    '</details>'+
+    '<div class="rec-note">Record 35–45 seconds. Hard stop at 60s. Once submitted this is locked.</div>'+
   '</div>';
 }
 
@@ -1649,22 +1644,14 @@ Return ONLY valid JSON — no markdown, no backticks, no extra text:
   "flag": "pass or needs_improvement"
 }`;
 
-async function doSubmitDaily(){
-  if(!S.recorded&&S.recSecs===0){
-    // Allow text-only submission if no audio recorded
-    const textEl=document.getElementById('stu-text-response');
-    const textVal=textEl?textEl.value.trim():'';
-    if(!textVal){toast('Record a response or type your answer first','err');return;}
-  }
+async function doSubmit(){
+  if(!S.recorded&&S.recSecs===0){toast('Record your response first','err');return;}
   const q=S.currentQ;if(!q)return;
   const btn=document.getElementById('btn-submit');if(btn)btn.disabled=true;
   const proc=document.getElementById('proc-area');
   if(proc)proc.innerHTML='<div class="loader"><div class="spinner"></div><div class="loader-txt">Transcribing…</div></div>';
 
   let transcript='';
-  const textEl=document.getElementById('stu-text-response');
-  const textVal=textEl?textEl.value.trim():'';
-
   if(S.audioBlob&&S.apiKey){
     try{
       const base64=await blobToBase64(S.audioBlob);
@@ -1674,9 +1661,7 @@ async function doSubmitDaily(){
          body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:mime,data:base64}},{text:'Transcribe this audio exactly as spoken. Return only the spoken text, nothing else.'}]}],generationConfig:{temperature:0,maxOutputTokens:600}})});
       if(r.ok){const d=await r.json();transcript=d.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||'';}
       else throw new Error('Transcription failed');
-    }catch(e){transcript=textVal||demoTranscript();toast('Demo transcript used','');}
-  }else if(textVal){
-    transcript=textVal;
+    }catch(e){transcript=demoTranscript();toast('Demo transcript used','');}
   }else{await sleep(1000);transcript=demoTranscript();if(!S.apiKey)toast('No API key — demo score');}
 
   if(proc)proc.innerHTML='<div class="loader"><div class="spinner" style="border-top-color:var(--blue)"></div><div class="loader-txt">Scoring response…</div></div>';
@@ -1765,16 +1750,14 @@ function startPractice(qno){
       '</div>'+
       '<div class="q-meta"><span>⏱ 35–45s ideal · 60s max</span><span>🤖 AI scored</span></div>'+
     '</div>'+
-    renderRecorderHTML().replace('doSubmitDaily()','doSubmit(\'practice_q\'+q.no+\'\')' )+
+    renderRecorderHTML().replace('doSubmit()','doSubmit(\'practice_q\'+q.no+\'\')' )+
     '<div id="proc-area"></div>');
 }
 
 async function doSubmit(subKey){
   const daily = !subKey;
   if(!subKey) subKey = 'daily_'+new Date().toISOString().split('T')[0];
-  const textEl=document.getElementById('stu-text-response');
-  const textVal=textEl?textEl.value.trim():'';
-  if(!S.recorded&&S.recSecs===0&&!textVal){toast('Record a response or type your answer first','err');return;}
+  if(!S.recorded&&S.recSecs===0){toast('Record first','err');return;}
   const q=S.currentQ;if(!q)return;
   const btn=document.getElementById('btn-submit');if(btn)btn.disabled=true;
   const proc=document.getElementById('proc-area');
@@ -1790,9 +1773,7 @@ async function doSubmit(subKey){
          body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:mime,data:base64}},{text:'Transcribe this audio exactly as spoken. Return only the spoken text.'}]}],generationConfig:{temperature:0,maxOutputTokens:600}})});
       if(r.ok){const d=await r.json();transcript=d.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||'';}
       else throw new Error('Transcription failed');
-    }catch(e){transcript=textVal||demoTranscript();}
-  }else if(textVal){
-    transcript=textVal;
+    }catch(e){transcript=demoTranscript();}
   }else{await sleep(1000);transcript=demoTranscript();}
 
   if(proc)proc.innerHTML='<div class="loader"><div class="spinner" style="border-top-color:var(--blue)"></div><div class="loader-txt">Evaluating…</div></div>';
@@ -2196,7 +2177,7 @@ function startClientDemo(qid){
       '</div>'+
       '<div class="q-meta"><span>⏱ '+q.limit+'s max</span><span>🎬 Demo mode</span><span>🤖 AI scored</span></div>'+
     '</div>'+
-    renderRecorderHTML().replace("doSubmitDaily()","submitDemo()")+
+    renderRecorderHTML().replace("'doSubmit()'","'submitDemo()'").replace('"doSubmit()"','"submitDemo()"')+
     '<div id="proc-area"></div>'+
     '<div class="banner banner-info" style="margin-top:12px"><span class="banner-ic">💡</span><div>'+
       '<div class="banner-sub">Response will be scored by AI but not saved. Perfect for a live client demonstration.</div>'+
@@ -3025,7 +3006,7 @@ function startDiag(qid){
       '</div>'+
       '<div class="q-meta"><span>⏱ '+q.limit+'s max</span><span>🔒 One attempt</span><span>🤖 AI scored</span></div>'+
     '</div>'+
-    renderRecorderHTML().replace("doSubmitDaily()","submitDiag()")+
+    renderRecorderHTML().replace("'doSubmit()'","'submitDiag()'").replace('"doSubmit()"','"submitDiag()"')+
     '<div id="proc-area"></div>');
 }
 
@@ -3517,7 +3498,7 @@ function startAdvancedPI(qid){
       '</div>'+
       '<div class="q-meta"><span>⏱ '+q.limit+'s max</span><span>🔄 Unlimited attempts</span><span>🤖 AI scored · TELW PI Rubric</span></div>'+
     '</div>'+
-    renderRecorderHTML().replace("doSubmitDaily()","submitAdvancedPI()")+
+    renderRecorderHTML().replace("'doSubmit()'","'submitAdvancedPI()'").replace('"doSubmit()"','"submitAdvancedPI()"')+
     '<div id="proc-area"></div>');
 }
 
@@ -3581,7 +3562,7 @@ function startPlacement(qid,bank){
       '</div>'+
       '<div class="q-meta"><span>⏱ '+q.limit+'s max</span><span>🔄 Unlimited attempts</span><span>🤖 AI scored</span></div>'+
     '</div>'+
-    renderRecorderHTML().replace("doSubmitDaily()","submitPlacement()")+
+    renderRecorderHTML().replace("'doSubmit()'","'submitPlacement()'").replace('"doSubmit()"','"submitPlacement()"')+
     '<div id="proc-area"></div>');
 }
 
@@ -3668,7 +3649,7 @@ function startDemo(qid){
       '</div>'+
       '<div class="q-meta"><span>⏱ '+q.limit+'s max</span><span>🎬 Demo mode</span><span>🤖 AI scored</span></div>'+
     '</div>'+
-    renderRecorderHTML().replace("doSubmitDaily()","submitDemo()")+
+    renderRecorderHTML().replace("'doSubmit()'","'submitDemo()'").replace('"doSubmit()"','"submitDemo()"')+
     '<div id="proc-area"></div>'+
     '<div class="banner banner-info" style="margin-top:12px"><span class="banner-ic">💡</span><div><div class="banner-sub">This response will be scored by AI but not saved. Perfect for a live client demonstration.</div></div></div>');
 }
