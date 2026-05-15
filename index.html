@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0044)file:///C:/Users/Manu/Downloads/index_1.html -->
+<!-- saved from url=(0042)file:///C:/Users/Manu/Downloads/index.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -2596,8 +2596,7 @@ function renderSetup(){
     '<div class="card" style="border-left:4px solid var(--gold);margin-bottom:16px">'+
       '<div class="card-lbl" style="margin-bottom:6px">Student Login Credentials — Live View</div>'+
       '<p style="font-size:.78rem;color:var(--muted);margin-bottom:10px">'+
-        'Exact credentials students must type. '+
-        '⚠ If a stored record has overridden a default password, use ↩ Restore to fix it.'+
+        'Exact credentials students must type. Use the Student List below to edit or generate passwords.'+
       '</p>'+
       '<div style="overflow-x:auto"><table class="tbl"><thead><tr>'+
         '<th>Name</th><th>Student ID</th><th>Password (active)</th><th>Batch</th><th>Status</th><th>Actions</th>'+
@@ -2615,18 +2614,12 @@ function renderSetup(){
           '<td style="display:flex;gap:4px;flex-wrap:nowrap">'+
             '<button class="btn-secondary" style="font-size:.68rem;padding:3px 7px;white-space:nowrap" '+
               'data-key="'+key+'" onclick="copyStudentCredentials(this.dataset.key)" title="Copy credentials">📋 Copy</button>'+
-            (isDefault?
-              '<button class="btn-secondary" style="font-size:.68rem;padding:3px 7px;white-space:nowrap;border-color:var(--gold);color:var(--gold)" '+
-                'data-key="'+key+'" onclick="restoreEmbeddedStudent(this.dataset.key)" title="Restore original default password">↩ Restore</button>'
-            :'')+
           '</td>'+
         '</tr>';
       }).join('')+
       '</tbody></table></div>'+
       '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">'+
-        '<button class="btn-secondary" style="font-size:.78rem" onclick="resetAllEmbeddedStudents()">🔄 Restore all default credentials</button>'+
         '<button class="btn-secondary" style="font-size:.78rem" onclick="copyAllStudentCredentials()">📋 Copy all credentials</button>'+
-        '<span style="font-family:var(--mono);font-size:.65rem;color:var(--muted)">● = default/embedded student</span>'+
       '</div>'+
     '</div>'+
 
@@ -2773,6 +2766,8 @@ function renderSetup(){
                   'onkeydown="if(event.key===\'Enter\'){saveStudentPassword(\''+email+'\',this.value);}">'+
                 '<button class="btn-secondary" style="font-size:.64rem;padding:3px 6px;white-space:nowrap" '+
                   'data-key="'+email+'" onclick="saveStudentPassword(this.dataset.key,document.getElementById(\'pw-field-'+email+'\').value)">Save</button>'+
+                '<button class="btn-secondary" style="font-size:.64rem;padding:3px 6px;white-space:nowrap" '+
+                  'data-key="'+email+'" onclick="genAndSaveStudentPassword(this.dataset.key)" title="Generate and save a new password">⚡ Gen PW</button>'+
               '</div>'+
             '</td>'+
             '<td style="font-size:.8rem">'+(s.batch||'—')+'</td>'+
@@ -2802,15 +2797,9 @@ function renderSetup(){
                 (s.active?'Block':'Unblock')+
               '</button>'+
               '<button class="btn-secondary" style="font-size:.68rem;padding:3px 7px;white-space:nowrap" '+
-                'data-email="'+email+'" onclick="resetStudentPassword(this.dataset.email)">🔑 Reset</button>'+
-              '<button class="btn-secondary" style="font-size:.68rem;padding:3px 7px;white-space:nowrap" '+
                 'data-email="'+email+'" onclick="copyWhatsAppMessage(this.dataset.email)">📱 WA</button>'+
               '<button class="btn-secondary" style="font-size:.68rem;padding:3px 7px;white-space:nowrap" '+
                 'data-email="'+email+'" onclick="copyStudentCredentials(this.dataset.email)" title="Copy login credentials">📋 Copy</button>'+
-              (EMBEDDED_STUDENTS[email] ?
-                '<button class="btn-secondary" style="font-size:.68rem;padding:3px 7px;white-space:nowrap;color:var(--gold)" '+
-                  'data-email="'+email+'" onclick="restoreEmbeddedStudent(this.dataset.email)" title="Restore default password">↩ Restore</button>'
-                : '') +
               '<button class="btn-secondary" style="font-size:.68rem;padding:3px 7px" '+
                 'data-email="'+email+'" onclick="removeStudent(this.dataset.email)">✕</button>'+
             '</td>'+
@@ -3209,40 +3198,17 @@ function copyAllStudentCredentials(){
   } else {_fallbackCopyText(text);}
 }
 
-// ── Restore a single embedded/default student's credentials from hardcoded data ──
-function restoreEmbeddedStudent(key){
-  if(!EMBEDDED_STUDENTS[key]){toast('Not a default student','err');return;}
-  const embedded=EMBEDDED_STUDENTS[key];
-  if(!confirm('Restore default password for '+embedded.name+'?\n\nStudent ID: '+(embedded.studentId||key)+'\nPassword: '+embedded.password+'\n\nThis resets the password to the original default.')) return;
-  const cur=getStudents();
-  if(!cur[key]) cur[key]={...embedded};
-  cur[key].studentId = embedded.studentId;
-  cur[key].name      = embedded.name;
-  cur[key].password  = embedded.password;
-  putStudents(cur);
-  toast('Default password restored for '+embedded.name+' — password is now: '+embedded.password,'ok');
-  renderSetup();
-}
 
-// ── Restore ALL embedded/default student credentials ─────────────────────────
-function resetAllEmbeddedStudents(){
-  if(!Object.keys(EMBEDDED_STUDENTS).length){toast('No default students configured','err');return;}
-  const names=Object.values(EMBEDDED_STUDENTS).map(function(s){return s.name+' ('+s.studentId+')';}).join(', ');
-  if(!confirm('Restore default passwords for all default students?\n\n'+names+'\n\nOther students are unaffected.')) return;
-  const cur=getStudents();
-  for(const key of Object.keys(EMBEDDED_STUDENTS)){
-    const embedded=EMBEDDED_STUDENTS[key];
-    if(!cur[key]) cur[key]={...embedded};
-    cur[key].studentId = embedded.studentId;
-    cur[key].name      = embedded.name;
-    cur[key].password  = embedded.password;
-  }
-  putStudents(cur);
-  const credLines=Object.values(EMBEDDED_STUDENTS).map(function(s){return s.name+': '+s.studentId+' / '+s.password;}).join('\n');
-  toast('Default passwords restored.\n'+credLines,'ok');
-  renderSetup();
-}
 
+// ── Generate and immediately save a new password for an existing student ────
+function genAndSaveStudentPassword(key){
+  const newPw = generatePassword();
+  // Update the inline input field so the trainer sees the new value
+  const field = document.getElementById('pw-field-'+key);
+  if(field) field.value = newPw;
+  // Save immediately — same path as manual Save
+  saveStudentPassword(key, newPw);
+}
 
 // ── Save manually-edited student password ────────────────────────────────────
 function saveStudentPassword(key, newPw){
@@ -3257,15 +3223,6 @@ function saveStudentPassword(key, newPw){
 }
 
 // ── Reset student password ────────────────────────────────────────────────────
-function resetStudentPassword(key){
-  const cur=getStudents();
-  if(!cur[key]) return;
-  const newPw=generatePassword();
-  cur[key].password=newPw;
-  putStudents(cur);
-  toast('Password reset for '+cur[key].name+': '+newPw,'ok');
-  renderSetup();
-}
 
 // ── WhatsApp message helpers ──────────────────────────────────────────────────
 function buildWhatsAppMessage(s){
