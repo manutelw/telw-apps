@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0044)file:///C:/Users/Manu/Downloads/index_2.html -->
+<!-- saved from url=(0042)file:///C:/Users/Manu/Downloads/index.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -459,16 +459,9 @@ tr:hover td{background:rgba(26,23,20,.015)}
       <button class="role-btn on" onclick="setRole(&#39;trainer&#39;,this)">Trainer</button>
     </div>
     <label class="f-label" id="a-login-label">Email</label>
-    <input class="f-input" id="a-email" type="email" value="trainer@clarion.com" placeholder="Trainer email" autocomplete="username" autocorrect="off" autocapitalize="none" spellcheck="false" onkeydown="if(event.key===&#39;Enter&#39;){event.preventDefault();document.getElementById(&#39;a-pass&#39;).focus();}">
+    <input class="f-input" id="a-email" type="email" value="trainer@clarion.com" placeholder="Trainer email">
     <label class="f-label">Password</label>
-    <div style="position:relative;display:flex;align-items:center;">
-      <input class="f-input" id="a-pass" type="password" value="demo" style="padding-right:38px;" autocomplete="current-password" autocorrect="off" autocapitalize="none" spellcheck="false" onkeydown="if(event.key===&#39;Enter&#39;){event.preventDefault();login();}">
-      <button type="button" id="toggle-pw" aria-label="Show password" onclick="(function(){var i=document.getElementById(&#39;a-pass&#39;),b=document.getElementById(&#39;toggle-pw&#39;);if(i.type===&#39;password&#39;){i.type=&#39;text&#39;;b.textContent=&#39;🙈&#39;;}else{i.type=&#39;password&#39;;b.textContent=&#39;👁&#39;;}})();" style="position:absolute;right:8px;background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 4px;color:var(--muted);line-height:1;user-select:none;">👁</button>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
-      <input type="checkbox" id="a-remember" autocomplete="off" style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
-      <label for="a-remember" style="font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);cursor:pointer;user-select:none;">Remember me</label>
-    </div>
+    <input class="f-input" id="a-pass" type="password" value="demo">
     <button class="btn-auth" onclick="login()">Sign in →</button>
     <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
       <label class="f-label">Gemini API Key <span style="color:var(--dim)">(for live scoring)</span></label>
@@ -1096,22 +1089,11 @@ function setRole(r,btn){
 }
 function login(){
   const loginVal=document.getElementById('a-email').value.trim();
-  // Do NOT trim the password: mobile autocorrect/autocapitalize issues are prevented
-  // by the autocorrect=off and autocapitalize=none attributes on the input, not by
-  // trimming here. Trimming the password would break passwords that legitimately
-  // contain leading/trailing spaces and masks real errors.
-  const pass =document.getElementById('a-pass').value;
+  const pass =document.getElementById('a-pass').value.trim();
   const key  =document.getElementById('a-key').value.trim();
   const btn  =document.querySelector('.btn-auth');
-  const rememberMe = !!(document.getElementById('a-remember') && document.getElementById('a-remember').checked);
   const fail =(m)=>{toast(m,'err');if(btn){btn.textContent='Sign in →';btn.disabled=false;}};
   if(btn){btn.textContent='Signing in…';btn.disabled=true;}
-  // Handle Remember me: persist only the non-sensitive login ID for pre-fill (not password)
-  if(rememberMe){
-    try{localStorage.setItem('clarion_remembered_login',loginVal);}catch(e){}
-  } else {
-    try{localStorage.removeItem('clarion_remembered_login');}catch(e){}
-  }
   if(key){S.apiKey=key;sessionStorage.setItem('clarion_key',key);}
   else{const k=sessionStorage.getItem('clarion_key');if(k)S.apiKey=k;}
 
@@ -1193,10 +1175,7 @@ function logout(){
   const passInput=document.getElementById('a-pass');
   if(emailInput){emailInput.value='trainer@clarion.com';emailInput.type='email';}
   if(loginLabel){loginLabel.textContent='Email';}
-  if(passInput){passInput.value='';passInput.type='password';}
-  // Reset password visibility toggle icon
-  const toggleBtn=document.getElementById('toggle-pw');
-  if(toggleBtn){toggleBtn.textContent='👁';}
+  if(passInput){passInput.value='';}
   // Reset role buttons: Trainer = on, Student = off
   document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('on'));
   const trainerBtn=document.querySelector('.role-btn:last-child');
@@ -4139,16 +4118,6 @@ window.onload=()=>{
   if(k){S.apiKey=k;document.getElementById('a-key').value=k;}
   const savedPw=localStorage.getItem('clarion_trainer_pw');
   if(savedPw)window.__trainerPw=savedPw;
-  // Pre-fill remembered login ID (username only — no password stored)
-  try{
-    const rememberedLogin=localStorage.getItem('clarion_remembered_login');
-    if(rememberedLogin){
-      const emailEl=document.getElementById('a-email');
-      const remEl=document.getElementById('a-remember');
-      if(emailEl){emailEl.value=rememberedLogin;}
-      if(remEl){remEl.checked=true;}
-    }
-  }catch(e){}
   // Enforce 7-day diagnostic retention policy on startup
   try{loadRegistry();purgeAllStaleDiag();}catch(e){}
 };
