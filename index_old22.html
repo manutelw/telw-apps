@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0042)file:///C:/Users/Manu/Downloads/index.html -->
+<!-- saved from url=(0044)file:///C:/Users/Manu/Downloads/index_2.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -1058,7 +1058,7 @@ function loadRegistry(){const d=getStudents();STUDENT_REGISTRY={};ALL_STUDENT_EM
 // STATE
 // ════════════════════════════════════════════════
 let S={user:null,role:null,page:null,apiKey:'',recording:false,recorded:false,recSecs:0,recLimit:60,recTimer:null,mediaRec:null,audioBlob:null,audioEl:null,transcript:'',currentQ:null};
-let authRole='trainer';
+let authRole='student';
 
 // ════════════════════════════════════════════════
 // SUBMISSIONS STORE
@@ -1095,121 +1095,56 @@ function setRole(r,btn){
   if(passInput) passInput.value='';
 }
 function login(){
-  // ── Read inputs ───────────────────────────────────────────────────────────
-  // Sanitise the login ID: trim whitespace and strip any Unicode zero-width /
-  // smart-punctuation characters that mobile keyboards can silently insert.
-  function sanitiseId(v){
-    return v
-      .trim()
-      // Strip zero-width spaces, non-breaking spaces, BOM, soft-hyphens, etc.
-      .replace(/[\u00AD\u200B-\u200D\uFEFF\u2060]/g,'')
-      // Normalise fancy apostrophes / quotes to plain ASCII (just in case)
-      .replace(/[\u2018\u2019\u201A\u201B]/g,"'")
-      .replace(/[\u201C\u201D\u201E\u201F]/g,'"');
-  }
-  // For the password we strip only the invisible Unicode junk that mobile can
-  // add silently, but we do NOT trim whitespace — a legitimate password could
-  // start or end with a space, and trimming was the root cause of the mobile bug.
-  function sanitisePass(v){
-    return v.replace(/[\u00AD\u200B-\u200D\uFEFF\u2060]/g,'');
-  }
-
-  const rawLogin = document.getElementById('a-email').value;
-  const rawPass  = document.getElementById('a-pass').value;
-  const loginVal = sanitiseId(rawLogin);
-  const pass     = sanitisePass(rawPass);
-  const key      = document.getElementById('a-key').value.trim();
-  const btn      = document.querySelector('.btn-auth');
+  const loginVal=document.getElementById('a-email').value.trim();
+  // Do NOT trim the password: mobile autocorrect/autocapitalize issues are prevented
+  // by the autocorrect=off and autocapitalize=none attributes on the input, not by
+  // trimming here. Trimming the password would break passwords that legitimately
+  // contain leading/trailing spaces and masks real errors.
+  const pass =document.getElementById('a-pass').value;
+  const key  =document.getElementById('a-key').value.trim();
+  const btn  =document.querySelector('.btn-auth');
   const rememberMe = !!(document.getElementById('a-remember') && document.getElementById('a-remember').checked);
   const fail =(m)=>{toast(m,'err');if(btn){btn.textContent='Sign in →';btn.disabled=false;}};
   if(btn){btn.textContent='Signing in…';btn.disabled=true;}
-
-  // ── Debug logging (no password values printed) ────────────────────────────
-  console.group('[CLARION LOGIN DEBUG]');
-  console.log('Selected role (authRole):', authRole);
-  console.log('Login ID length:', loginVal.length, '| chars:', JSON.stringify(loginVal));
-  console.log('Password length:', pass.length);
-  console.log('Raw login length:', rawLogin.length, '| Raw pass length:', rawPass.length);
-  if(rawLogin.length !== loginVal.length) console.warn('Login ID had hidden chars stripped');
-  if(rawPass.length !== pass.length)      console.warn('Password had hidden chars stripped');
-
-  // ── Remember me ───────────────────────────────────────────────────────────
+  // Handle Remember me: persist only the non-sensitive login ID for pre-fill (not password)
   if(rememberMe){
     try{localStorage.setItem('clarion_remembered_login',loginVal);}catch(e){}
   } else {
     try{localStorage.removeItem('clarion_remembered_login');}catch(e){}
   }
-
   if(key){S.apiKey=key;sessionStorage.setItem('clarion_key',key);}
   else{const k=sessionStorage.getItem('clarion_key');if(k)S.apiKey=k;}
 
-  // ── Route by selected role tab — prevents cross-contamination ─────────────
-  // authRole is set by the Student / Trainer toggle and is the authoritative
-  // signal of which credential set to check. We no longer rely on the login
-  // value format alone to pick the branch.
-
-  if(authRole === 'trainer'){
-    console.log('Branch: TRAINER / DEMO');
-
-    // Demo login (trainer tab — demo is a trainer-side credential)
-    if(loginVal===DEMO_EMAIL){
-      console.log('Sub-branch: DEMO');
-      if(pass!==DEMO_PASSWORD){console.log('Demo password match: false');console.groupEnd();fail('Incorrect demo password.');return;}
-      console.log('Demo password match: true');console.groupEnd();
-      S.user={email:loginVal,name:'Demo Mode',role:'demo',id:'DEMO',batch:'Client Demo'};S.role='demo';finishLogin();return;
-    }
-
-    // Trainer login
-    const trainerPw = sanitisePass(localStorage.getItem('clarion_trainer_pw')||TRAINER_PASSWORD);
-    const loginMatchesTrainer = loginVal.toLowerCase()===TRAINER_EMAIL;
-    console.log('Trainer ID match:', loginMatchesTrainer);
-    console.log('Stored trainer pw length:', trainerPw.length);
-    console.log('Trainer password match:', pass===trainerPw);
-    if(!loginMatchesTrainer){
-      console.groupEnd();
-      fail('Trainer email not recognised.');return;
-    }
-    if(pass!==trainerPw){console.groupEnd();fail('Incorrect trainer password.');return;}
-    console.groupEnd();
+  // Demo login
+  if(loginVal===DEMO_EMAIL){
+    if(pass!==DEMO_PASSWORD){fail('Incorrect demo password.');return;}
+    S.user={email:loginVal,name:'Demo Mode',role:'demo',id:'DEMO',batch:'Client Demo'};S.role='demo';finishLogin();return;
+  }
+  // Trainer login (by email)
+  if(loginVal.toLowerCase()===TRAINER_EMAIL){
+    const pw=localStorage.getItem('clarion_trainer_pw')||TRAINER_PASSWORD;
+    if(pass!==pw){fail('Incorrect trainer password.');return;}
     S.user={email:TRAINER_EMAIL,name:TRAINER_NAME,role:'admin',id:'T001',batch:''};S.role='admin';finishLogin();return;
   }
-
-  // ── Student branch ────────────────────────────────────────────────────────
-  console.log('Branch: STUDENT');
+  // Student login: look up by studentId first, then fall back to email (legacy)
   loadRegistry();
-  const allStudents = getStudents();
-  let st=null, foundKey=null;
-
-  // 1. Match by studentId (case-insensitive)
+  let st=null;
+  let foundKey=null;
+  const allStudents=getStudents();
+  // Try by studentId
   for(const [key,s] of Object.entries(allStudents)){
     if((s.studentId||'').toLowerCase()===loginVal.toLowerCase()){st=s;foundKey=key;break;}
   }
-  console.log('Matched by studentId:', !!st);
-
-  // 2. Legacy fallback: match by email key
+  // Legacy fallback: try by email
   if(!st && loginVal.includes('@')){
     const emailLower=loginVal.toLowerCase();
     if(allStudents[emailLower]){st=allStudents[emailLower];foundKey=emailLower;}
-    console.log('Matched by legacy email key:', !!st);
   }
-
-  if(!st){
-    console.log('Student not found in registry. Keys available:', Object.keys(allStudents));
-    console.groupEnd();
-    fail('Student ID not found. Contact your trainer.');return;
-  }
-  if(!st.active){console.groupEnd();fail('Account inactive. Contact your trainer.');return;}
-
-  // Compare passwords after sanitising the stored value the same way
-  const storedPw = sanitisePass(String(st.password||''));
-  const pwMatch  = storedPw===pass;
-  console.log('Stored password length:', storedPw.length);
-  console.log('Entered password length:', pass.length);
-  console.log('Password match:', pwMatch);
-  if(!pwMatch){console.groupEnd();fail('Incorrect password.');return;}
-
-  console.groupEnd();
+  if(!st){fail('Student ID not found. Contact your trainer.');return;}
+  if(!st.active){fail('Account inactive. Contact your trainer.');return;}
+  if(String(st.password)!==String(pass)){fail('Incorrect password.');return;}
   const accessType=st.accessType||'lum';
+  // Use studentId as canonical key; email used for storage key is foundKey
   S.user={email:foundKey,name:st.name,role:'student',id:st.studentId||foundKey,batch:st.batch||'Batch A',accessType};
   S.role='student';finishLogin();
 }
