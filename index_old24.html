@@ -466,7 +466,7 @@ tr:hover td{background:rgba(26,23,20,.015)}
       <button type="button" id="toggle-pw" aria-label="Show password" onclick="(function(){var i=document.getElementById(&#39;a-pass&#39;),b=document.getElementById(&#39;toggle-pw&#39;);if(i.type===&#39;password&#39;){i.type=&#39;text&#39;;b.textContent=&#39;🙈&#39;;}else{i.type=&#39;password&#39;;b.textContent=&#39;👁&#39;;}})();" style="position:absolute;right:8px;background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 4px;color:var(--muted);line-height:1;user-select:none;">👁</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
-      <input type="checkbox" id="a-remember" style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
+      <input type="checkbox" id="a-remember" autocomplete="off" style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
       <label for="a-remember" style="font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);cursor:pointer;user-select:none;">Remember me</label>
     </div>
     <button class="btn-auth" onclick="login()">Sign in →</button>
@@ -1115,22 +1115,6 @@ function getAllSubs(){
 // ════════════════════════════════════════════════
 // AUTH
 // ════════════════════════════════════════════════
-// ── Remember me helpers ─────────────────────────────────────────────────────
-function saveRememberMe(role, loginId){
-  try{
-    localStorage.setItem('clarion_rem', JSON.stringify({role:role, id:loginId}));
-  }catch(e){}
-}
-function clearRememberMe(){
-  try{ localStorage.removeItem('clarion_rem'); }catch(e){}
-}
-function getRememberMe(){
-  try{
-    const raw = localStorage.getItem('clarion_rem');
-    return raw ? JSON.parse(raw) : null;
-  }catch(e){ return null; }
-}
-
 function setRole(r,btn){
   authRole=r;
   document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('on'));
@@ -1190,6 +1174,13 @@ function login(){
   if(rawLogin.length !== loginVal.length) console.warn('Login ID had hidden chars stripped');
   if(rawPass.length !== pass.length)      console.warn('Password had hidden chars stripped');
 
+  // ── Remember me ───────────────────────────────────────────────────────────
+  if(rememberMe){
+    try{localStorage.setItem('clarion_remembered_login',loginVal);}catch(e){}
+  } else {
+    try{localStorage.removeItem('clarion_remembered_login');}catch(e){}
+  }
+
   if(key){S.apiKey=key;sessionStorage.setItem('clarion_key',key);}
   else{const k=sessionStorage.getItem('clarion_key');if(k)S.apiKey=k;}
 
@@ -1206,7 +1197,6 @@ function login(){
       console.log('Sub-branch: DEMO');
       if(pass!==DEMO_PASSWORD){console.log('Demo password match: false');console.groupEnd();fail('Incorrect demo password.');return;}
       console.log('Demo password match: true');console.groupEnd();
-      if(rememberMe) saveRememberMe('trainer', loginVal); else clearRememberMe();
       S.user={email:loginVal,name:'Demo Mode',role:'demo',id:'DEMO',batch:'Client Demo'};S.role='demo';finishLogin();return;
     }
 
@@ -1222,7 +1212,6 @@ function login(){
     }
     if(pass!==trainerPw){console.groupEnd();fail('Incorrect trainer password.');return;}
     console.groupEnd();
-    if(rememberMe) saveRememberMe('trainer', TRAINER_EMAIL); else clearRememberMe();
     S.user={email:TRAINER_EMAIL,name:TRAINER_NAME,role:'admin',id:'T001',batch:''};S.role='admin';finishLogin();return;
   }
 
@@ -1261,7 +1250,6 @@ function login(){
   if(!pwMatch){console.groupEnd();fail('Incorrect password.');return;}
 
   console.groupEnd();
-  if(rememberMe) saveRememberMe('student', st.studentId||foundKey); else clearRememberMe();
   const accessType=st.accessType||'lum';
   S.user={email:foundKey,name:st.name,role:'student',id:st.studentId||foundKey,batch:st.batch||'Batch A',accessType};
   S.role='student';finishLogin();
@@ -1315,42 +1303,11 @@ function logout(){
   // Reset password visibility toggle icon
   const toggleBtn=document.getElementById('toggle-pw');
   if(toggleBtn){toggleBtn.textContent='👁';}
-  // Restore remembered role and login ID (if any), else default to Trainer
-  const rem = getRememberMe();
-  if(rem && rem.id){
-    // Restore role tab
-    const targetRole = rem.role || 'trainer';
-    authRole = targetRole;
-    document.querySelectorAll('.role-btn').forEach(function(b){
-      b.classList.toggle('on', b.textContent.trim().toLowerCase() === targetRole);
-    });
-    // Restore login ID and field state
-    const emailEl = document.getElementById('a-email');
-    const labelEl = document.getElementById('a-login-label');
-    if(emailEl){
-      if(targetRole === 'student'){
-        emailEl.type = 'text';
-        emailEl.placeholder = 'Your Student ID';
-        if(labelEl) labelEl.textContent = 'Student ID';
-      } else {
-        emailEl.type = 'email';
-        emailEl.placeholder = 'Trainer email';
-        if(labelEl) labelEl.textContent = 'Email';
-      }
-      emailEl.value = rem.id;
-    }
-    // Keep Remember me checked and focus password
-    const remEl = document.getElementById('a-remember');
-    if(remEl) remEl.checked = true;
-    const passEl = document.getElementById('a-pass');
-    if(passEl) setTimeout(function(){ passEl.focus(); }, 80);
-  } else {
-    // No remembered login — default to Trainer tab
-    document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('on'));
-    const trainerBtn=document.querySelector('.role-btn:last-child');
-    if(trainerBtn)trainerBtn.classList.add('on');
-    authRole='trainer';
-  }
+  // Reset role buttons: Trainer = on, Student = off
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('on'));
+  const trainerBtn=document.querySelector('.role-btn:last-child');
+  if(trainerBtn)trainerBtn.classList.add('on');
+  authRole='trainer';
   document.getElementById('auth').style.display='flex';
 }
 
@@ -4472,48 +4429,14 @@ window.onload=()=>{
   if(k){S.apiKey=k;document.getElementById('a-key').value=k;}
   const savedPw=localStorage.getItem('clarion_trainer_pw');
   if(savedPw)window.__trainerPw=savedPw;
-  // ── Restore remembered login (role + ID, no password) ───────────────────
+  // Pre-fill remembered login ID (username only — no password stored)
   try{
-    // Migrate old single-key format if present
-    const oldKey = localStorage.getItem('clarion_remembered_login');
-    if(oldKey && !localStorage.getItem('clarion_rem')){
-      // Best-guess role: if it contains '@' it's likely trainer
-      const guessedRole = oldKey.includes('@') ? 'trainer' : 'student';
-      saveRememberMe(guessedRole, oldKey);
-      localStorage.removeItem('clarion_remembered_login');
-    }
-
-    const rem = getRememberMe();
-    if(rem && rem.id){
-      const targetRole = rem.role || 'trainer';
-      authRole = targetRole;
-
-      // Activate the correct tab button
-      document.querySelectorAll('.role-btn').forEach(function(b){
-        b.classList.toggle('on', b.textContent.trim().toLowerCase() === targetRole);
-      });
-
-      // Set field type, label, and value
-      const emailEl = document.getElementById('a-email');
-      const labelEl = document.getElementById('a-login-label');
-      if(emailEl){
-        if(targetRole === 'student'){
-          emailEl.type = 'text';
-          emailEl.placeholder = 'Your Student ID';
-          if(labelEl) labelEl.textContent = 'Student ID';
-        } else {
-          emailEl.type = 'email';
-          emailEl.placeholder = 'Trainer email';
-          if(labelEl) labelEl.textContent = 'Email';
-        }
-        emailEl.value = rem.id;
-      }
-
-      // Check the checkbox and focus the password field
-      const remEl = document.getElementById('a-remember');
-      if(remEl) remEl.checked = true;
-      const passEl = document.getElementById('a-pass');
-      if(passEl) setTimeout(function(){ passEl.focus(); }, 80);
+    const rememberedLogin=localStorage.getItem('clarion_remembered_login');
+    if(rememberedLogin){
+      const emailEl=document.getElementById('a-email');
+      const remEl=document.getElementById('a-remember');
+      if(emailEl){emailEl.value=rememberedLogin;}
+      if(remEl){remEl.checked=true;}
     }
   }catch(e){}
   // Enforce 7-day diagnostic retention policy on startup
