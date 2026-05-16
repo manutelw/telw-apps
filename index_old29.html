@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0042)file:///C:/Users/Manu/Downloads/index.html -->
+<!-- saved from url=(0044)file:///C:/Users/Manu/Downloads/index_1.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -1113,6 +1113,7 @@ function getAllSubs(){
 // ════════════════════════════════════════════════
 
 // ── Apply remembered login to the form (without wiping the pre-filled ID) ───
+// ── Remember me debug panel ─────────────────────────────────────────────────
 // ── Remember me — single source of truth ─────────────────────────────────────
 // clarion_rem    : JSON {role, id}  — username/ID for trainer OR student
 // clarion_rem_pw : trainer password string — only written when trainer logs in
@@ -1275,6 +1276,15 @@ function login(){
   const fail =(m)=>{toast(m,'err');if(btn){btn.textContent='Sign in →';btn.disabled=false;}};
   if(btn){btn.textContent='Signing in…';btn.disabled=true;}
 
+  // ── Debug logging (no password values printed) ────────────────────────────
+  console.log('[CLARION LOGIN DEBUG]');
+  console.log('Selected role (authRole):', authRole);
+  console.log('Login ID length:', loginVal.length, '| chars:', JSON.stringify(loginVal));
+  console.log('Password length:', pass.length);
+  console.log('Raw login length:', rawLogin.length, '| Raw pass length:', rawPass.length);
+  if(rawLogin.length !== loginVal.length) console.warn('Login ID had hidden chars stripped');
+  if(rawPass.length !== pass.length)      console.warn('Password had hidden chars stripped');
+
   if(key){S.apiKey=key;sessionStorage.setItem('clarion_key',key);}
   else{const k=sessionStorage.getItem('clarion_key');if(k)S.apiKey=k;}
 
@@ -1284,9 +1294,13 @@ function login(){
   // value format alone to pick the branch.
 
   if(authRole === 'trainer'){
+    console.log('Branch: TRAINER / DEMO');
+
     // Demo login (trainer tab — demo is a trainer-side credential)
     if(loginVal===DEMO_EMAIL){
-      if(pass!==DEMO_PASSWORD){fail('Incorrect demo password.');return;}
+      console.log('Sub-branch: DEMO');
+      if(pass!==DEMO_PASSWORD){console.log('Demo password match: false');fail('Incorrect demo password.');return;}
+      console.log('Demo password match: true');
       // Demo logins are never remembered — ephemeral session only
       S.user={email:loginVal,name:'Demo Mode',role:'demo',id:'DEMO',batch:'Client Demo'};S.role='demo';finishLogin();return;
     }
@@ -1294,7 +1308,13 @@ function login(){
     // Trainer login
     const trainerPw = sanitisePass(localStorage.getItem('clarion_trainer_pw')||TRAINER_PASSWORD);
     const loginMatchesTrainer = loginVal.toLowerCase()===TRAINER_EMAIL;
-    if(!loginMatchesTrainer){ fail('Trainer email not recognised.');return; }
+    console.log('Trainer ID match:', loginMatchesTrainer);
+    console.log('Stored trainer pw length:', trainerPw.length);
+    console.log('Trainer password match:', pass===trainerPw);
+    if(!loginMatchesTrainer){
+      
+      fail('Trainer email not recognised.');return;
+    }
     if(pass!==trainerPw){fail('Incorrect trainer password.');return;}
     
     // Trainer credentials are NEVER saved to storage — password must be typed each time
@@ -1307,6 +1327,7 @@ function login(){
   }
 
   // ── Student branch ────────────────────────────────────────────────────────
+  console.log('Branch: STUDENT');
   loadRegistry();
   const allStudents = getStudents();
   let st=null, foundKey=null;
@@ -1315,18 +1336,29 @@ function login(){
   for(const [key,s] of Object.entries(allStudents)){
     if((s.studentId||'').toLowerCase()===loginVal.toLowerCase()){st=s;foundKey=key;break;}
   }
+  console.log('Matched by studentId:', !!st);
+
   // 2. Legacy fallback: match by email key
   if(!st && loginVal.includes('@')){
     const emailLower=loginVal.toLowerCase();
     if(allStudents[emailLower]){st=allStudents[emailLower];foundKey=emailLower;}
+    console.log('Matched by legacy email key:', !!st);
   }
 
-  if(!st){ fail('Student ID not found. Contact your trainer.');return; }
+  if(!st){
+    console.log('Student not found in registry. Keys available:', Object.keys(allStudents));
+    
+    fail('Student ID not found. Contact your trainer.');return;
+  }
   if(!st.active){fail('Account inactive. Contact your trainer.');return;}
 
   // Compare passwords — single source of truth: getStudents() returned st.password
   const storedPw = sanitisePass(String(st.password||''));
-  if(storedPw !== pass){fail('Incorrect password.');return;}
+  const pwMatch  = storedPw === pass;
+  console.log('Stored password length:', storedPw.length);
+  console.log('Entered password length:', pass.length);
+  console.log('Password match:', pwMatch);
+  if(!pwMatch){fail('Incorrect password.');return;}
 
   
   if(rememberMe){
@@ -4667,6 +4699,7 @@ window.onload=()=>{
       }
       localStorage.setItem(STUDENT_STORE_KEY, JSON.stringify(migrated));
       localStorage.removeItem('cs2');
+      console.log('[CLARION] Migrated student data from cs2 → clarion_students');
     }
   }catch(e){ console.warn('Migration error:', e); }
 
@@ -4696,6 +4729,7 @@ window.onload=()=>{
         if(_isStale){
           localStorage.removeItem('clarion_rem');
           localStorage.removeItem('clarion_rem_pw');
+          console.log('[CLARION] Wiped stale/trainer remember-me data');
         }
       }catch(e){ localStorage.removeItem('clarion_rem'); localStorage.removeItem('clarion_rem_pw'); }
     }
