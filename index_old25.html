@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0044)file:///C:/Users/Manu/Downloads/index_4.html -->
+<!-- saved from url=(0042)file:///C:/Users/Manu/Downloads/index.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -45,7 +45,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 .f-input:focus{border-color:var(--gold)}
 .btn-auth{width:100%;padding:12px;background:var(--ink);color:#fff;border:none;border-radius:var(--r);font-size:.9rem;font-weight:600;letter-spacing:.04em;cursor:pointer;transition:.2s;margin-top:14px;font-family:var(--sans)}
 .btn-auth:hover{background:#2A2520}
-
+.auth-note{font-family:var(--mono);font-size:.68rem;color:var(--dim);text-align:center;margin-top:16px;line-height:1.6}
 .role-sw{display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:3px;margin-bottom:20px}
 .role-btn{padding:8px;font-size:.78rem;font-weight:500;color:var(--muted);background:transparent;border:none;border-radius:4px;cursor:pointer;transition:.2s;font-family:var(--sans)}
 .role-btn.on{background:var(--ink);color:#fff}
@@ -458,22 +458,27 @@ tr:hover td{background:rgba(26,23,20,.015)}
       <button class="role-btn" onclick="setRole(&#39;student&#39;,this)">Student</button>
       <button class="role-btn on" onclick="setRole(&#39;trainer&#39;,this)">Trainer</button>
     </div>
-    <label class="f-label" id="a-login-label">Username</label>
-    <input class="f-input" id="a-email" type="text" value="" placeholder="Trainer username" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" onkeydown="if(event.key===&#39;Enter&#39;){event.preventDefault();document.getElementById(&#39;a-pass&#39;).focus();}">
+    <label class="f-label" id="a-login-label">Email</label>
+    <input class="f-input" id="a-email" type="email" value="trainer@clarion.com" placeholder="Trainer email" autocomplete="username" autocorrect="off" autocapitalize="none" spellcheck="false" onkeydown="if(event.key===&#39;Enter&#39;){event.preventDefault();document.getElementById(&#39;a-pass&#39;).focus();}">
     <label class="f-label">Password</label>
     <div style="position:relative;display:flex;align-items:center;">
-      <input class="f-input" id="a-pass" type="password" value="" style="padding-right:38px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" onkeydown="if(event.key===&#39;Enter&#39;){event.preventDefault();login();}">
+      <input class="f-input" id="a-pass" type="password" value="demo" style="padding-right:38px;" autocomplete="current-password" autocorrect="off" autocapitalize="none" spellcheck="false" onkeydown="if(event.key===&#39;Enter&#39;){event.preventDefault();login();}">
       <button type="button" id="toggle-pw" aria-label="Show password" onclick="(function(){var i=document.getElementById(&#39;a-pass&#39;),b=document.getElementById(&#39;toggle-pw&#39;);if(i.type===&#39;password&#39;){i.type=&#39;text&#39;;b.textContent=&#39;🙈&#39;;}else{i.type=&#39;password&#39;;b.textContent=&#39;👁&#39;;}})();" style="position:absolute;right:8px;background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 4px;color:var(--muted);line-height:1;user-select:none;">👁</button>
     </div>
-    <div id="remember-row" style="display:none;align-items:center;gap:8px;margin-top:10px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
       <input type="checkbox" id="a-remember" style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
       <label for="a-remember" style="font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);cursor:pointer;user-select:none;">Remember me</label>
     </div>
     <button class="btn-auth" onclick="login()">Sign in →</button>
-    <input type="hidden" id="a-key" value="">
-
-
-
+    <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+      <label class="f-label">Gemini API Key <span style="color:var(--dim)">(for live scoring)</span></label>
+      <input class="f-input" id="a-key" type="password" placeholder="AIza…" style="font-size:.8rem;font-family:var(--mono)">
+    </div>
+    <div class="auth-note">
+      Trainer: trainer@clarion.com · Clarion@2026<br>
+      Demo: demo@clarion.com · Demo@2026<br>
+      Students: use your Student ID &amp; password
+    </div>
   </div>
 </div>
 
@@ -1038,8 +1043,8 @@ function getNextDayLabel() {
 // ════════════════════════════════════════════════
 // AUTH & STUDENT REGISTRY
 // ════════════════════════════════════════════════
-const TRAINER_EMAIL    = 'manu';
-const TRAINER_PASSWORD = '980242';
+const TRAINER_EMAIL    = 'trainer@clarion.com';
+const TRAINER_PASSWORD = 'Clarion@2026';
 const TRAINER_NAME     = 'Trainer';
 let EMBEDDED_STUDENTS  = {"STU001":{"studentId":"STU001","name":"Suhasini","password":"Seemu2025","batch":"Batch A 2026","active":true,"accessType":"lum"}};
 let STUDENT_REGISTRY   = {};
@@ -1110,140 +1115,41 @@ function getAllSubs(){
 // ════════════════════════════════════════════════
 // AUTH
 // ════════════════════════════════════════════════
-
-// ── Apply remembered login to the form (without wiping the pre-filled ID) ───
-// ── Remember me debug panel ─────────────────────────────────────────────────
-// ── Remember me — single source of truth ─────────────────────────────────────
-// clarion_rem    : JSON {role, id}  — username/ID for trainer OR student
-// clarion_rem_pw : trainer password string — only written when trainer logs in
-//                  with Remember Me; never written for students
-//
-// ── Credential persistence — student only ────────────────────────────────────
-// Storage keys:
-//   clarion_rem    = {role:'student', id}      — student ID
-//   clarion_rem_pw = btoa(student password)    — student password only
-//
-// Trainer: username 'manu' always shown; password NEVER saved or restored.
-// Student: both ID and password saved when Remember Me checked.
-
-function _showRememberRow(visible){
-  var row = document.getElementById('remember-row');
-  if(row) row.style.display = visible ? 'flex' : 'none';
-}
-
-function saveStudentCredentials(id, pw){
-  // Both keys use localStorage — persists across browser close/reopen/device restart.
-  // Password stored as encodeURIComponent (handles all Unicode, no deprecated fns).
+// ── Remember me helpers ─────────────────────────────────────────────────────
+function saveRememberMe(role, loginId){
   try{
-    localStorage.setItem('clarion_rem',    JSON.stringify({role:'student', id: id}));
-    localStorage.setItem('clarion_rem_pw', encodeURIComponent(pw));
-  }catch(e){ console.warn('saveStudentCredentials error', e); }
+    localStorage.setItem('clarion_rem', JSON.stringify({role:role, id:loginId}));
+  }catch(e){}
 }
-
-function clearStudentCredentials(){
-  try{ localStorage.removeItem('clarion_rem');    }catch(e){}
-  try{ localStorage.removeItem('clarion_rem_pw'); }catch(e){}
+function clearRememberMe(){
+  try{ localStorage.removeItem('clarion_rem'); }catch(e){}
 }
-
-function getStudentCredentials(){
-  // Returns {id, pw} if valid student credentials are stored, otherwise null.
-  // Handles both new format (encodeURIComponent) and old base64 format gracefully.
+function getRememberMe(){
   try{
-    var raw = localStorage.getItem('clarion_rem');
-    if(!raw) return null;
-    var parsed = JSON.parse(raw);
-    if(!parsed || parsed.role !== 'student' || !parsed.id) return null;
-
-    var enc = localStorage.getItem('clarion_rem_pw');
-    var pw = '';
-    if(enc){
-      // Try new percent-encoding format first
-      try{
-        pw = decodeURIComponent(enc);
-      }catch(e1){
-        // Fall back to old base64 format for existing stored sessions
-        try{
-          pw = decodeURIComponent(escape(atob(enc)));
-        }catch(e2){
-          pw = '';  // corrupt value — treat as blank, user will re-enter
-          console.warn('[CLARION] Could not decode stored password — cleared');
-          localStorage.removeItem('clarion_rem_pw');
-        }
-      }
-    }
-    return {id: parsed.id, pw: pw};
-  }catch(e){
-    console.warn('[CLARION] getStudentCredentials error:', e);
-    return null;
-  }
+    const raw = localStorage.getItem('clarion_rem');
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
 }
 
-function applyRememberedLogin(){
-  // Only restores student credentials. Trainer tab always starts with 'manu' + blank pw.
-  var creds = getStudentCredentials();
-  if(!creds) return;   // nothing stored — leave form as-is (trainer default)
-
-  // Switch to student tab
-  authRole = 'student';
-  document.querySelectorAll('.role-btn').forEach(function(b){
-    b.classList.toggle('on', b.textContent.trim().toLowerCase() === 'student');
-  });
-
-  var emailEl = document.getElementById('a-email');
-  var labelEl = document.getElementById('a-login-label');
-  var passEl  = document.getElementById('a-pass');
-  var remEl   = document.getElementById('a-remember');
-
-  if(emailEl){
-    emailEl.type        = 'text';
-    emailEl.placeholder = 'Your Student ID';
-    if(labelEl) labelEl.textContent = 'Student ID';
-    emailEl.value = creds.id;
-  }
-  if(passEl)  passEl.value  = creds.pw;
-  if(remEl)   remEl.checked = true;
-  _showRememberRow(true);
-
-  if(passEl) setTimeout(function(){ passEl.focus(); }, 80);
-}
-
-function updateRemDebug(){ /* removed for production */ }
-
-// Legacy aliases so old call sites don't crash
-function saveRememberMe(role, id){ if(role==='student') saveStudentCredentials(id,''); }
-function clearRememberMe(){ clearStudentCredentials(); }
-function getRememberMe(){ return getStudentCredentials(); }
-function saveTrainerPassword(pw){ /* trainer pw never stored */ }
-function getRememberedTrainerPassword(){ return null; }
-
-function setRole(r, btn){
-  authRole = r;
-  document.querySelectorAll('.role-btn').forEach(function(b){ b.classList.remove('on'); });
+function setRole(r,btn){
+  authRole=r;
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
-  var emailEl = document.getElementById('a-email');
-  var labelEl = document.getElementById('a-login-label');
-  var passEl  = document.getElementById('a-pass');
-  var remEl   = document.getElementById('a-remember');
-
-  if(r === 'trainer'){
-    emailEl.type        = 'text';
-    emailEl.placeholder = 'Trainer username';
-    if(labelEl) labelEl.textContent = 'Username';
-    emailEl.value = TRAINER_EMAIL;   // always show 'manu'
-    if(passEl)  passEl.value  = '';  // always blank — never restored
-    if(remEl)   remEl.checked = false;
-    _showRememberRow(false);         // hide Remember Me on trainer tab
+  const emailInput=document.getElementById('a-email');
+  const loginLabel=document.getElementById('a-login-label');
+  const passInput=document.getElementById('a-pass');
+  if(r==='trainer'){
+    emailInput.value='trainer@clarion.com';
+    emailInput.type='email';
+    emailInput.placeholder='Trainer email';
+    if(loginLabel) loginLabel.textContent='Email';
   } else {
-    emailEl.type        = 'text';
-    emailEl.placeholder = 'Your Student ID';
-    if(labelEl) labelEl.textContent = 'Student ID';
-    // Restore remembered student credentials; otherwise blank
-    var creds = getStudentCredentials();
-    emailEl.value      = creds ? creds.id : '';
-    if(passEl) passEl.value = creds ? creds.pw : '';
-    if(remEl)  remEl.checked = !!creds;
-    _showRememberRow(true);          // show Remember Me on student tab
+    emailInput.value='';
+    emailInput.type='text';
+    emailInput.placeholder='Your Student ID';
+    if(loginLabel) loginLabel.textContent='Student ID';
   }
+  if(passInput) passInput.value='';
 }
 function login(){
   // ── Read inputs ───────────────────────────────────────────────────────────
@@ -1276,7 +1182,7 @@ function login(){
   if(btn){btn.textContent='Signing in…';btn.disabled=true;}
 
   // ── Debug logging (no password values printed) ────────────────────────────
-  console.log('[CLARION LOGIN DEBUG]');
+  console.group('[CLARION LOGIN DEBUG]');
   console.log('Selected role (authRole):', authRole);
   console.log('Login ID length:', loginVal.length, '| chars:', JSON.stringify(loginVal));
   console.log('Password length:', pass.length);
@@ -1298,9 +1204,9 @@ function login(){
     // Demo login (trainer tab — demo is a trainer-side credential)
     if(loginVal===DEMO_EMAIL){
       console.log('Sub-branch: DEMO');
-      if(pass!==DEMO_PASSWORD){console.log('Demo password match: false');fail('Incorrect demo password.');return;}
-      console.log('Demo password match: true');
-      // Demo logins are never remembered — ephemeral session only
+      if(pass!==DEMO_PASSWORD){console.log('Demo password match: false');console.groupEnd();fail('Incorrect demo password.');return;}
+      console.log('Demo password match: true');console.groupEnd();
+      if(rememberMe) saveRememberMe('trainer', loginVal); else clearRememberMe();
       S.user={email:loginVal,name:'Demo Mode',role:'demo',id:'DEMO',batch:'Client Demo'};S.role='demo';finishLogin();return;
     }
 
@@ -1311,17 +1217,12 @@ function login(){
     console.log('Stored trainer pw length:', trainerPw.length);
     console.log('Trainer password match:', pass===trainerPw);
     if(!loginMatchesTrainer){
-      
+      console.groupEnd();
       fail('Trainer email not recognised.');return;
     }
-    if(pass!==trainerPw){fail('Incorrect trainer password.');return;}
-    
-    // Trainer credentials are NEVER saved to storage — password must be typed each time
-    // Clear any stale trainer-role remember-me data from old sessions
-    try{
-      var _rem = localStorage.getItem('clarion_rem');
-      if(_rem){ var _p = JSON.parse(_rem); if(_p && _p.role === 'trainer') clearStudentCredentials(); }
-    }catch(e){}
+    if(pass!==trainerPw){console.groupEnd();fail('Incorrect trainer password.');return;}
+    console.groupEnd();
+    if(rememberMe) saveRememberMe('trainer', TRAINER_EMAIL); else clearRememberMe();
     S.user={email:TRAINER_EMAIL,name:TRAINER_NAME,role:'admin',id:'T001',batch:''};S.role='admin';finishLogin();return;
   }
 
@@ -1346,10 +1247,10 @@ function login(){
 
   if(!st){
     console.log('Student not found in registry. Keys available:', Object.keys(allStudents));
-    
+    console.groupEnd();
     fail('Student ID not found. Contact your trainer.');return;
   }
-  if(!st.active){fail('Account inactive. Contact your trainer.');return;}
+  if(!st.active){console.groupEnd();fail('Account inactive. Contact your trainer.');return;}
 
   // Compare passwords — single source of truth: getStudents() returned st.password
   const storedPw = sanitisePass(String(st.password||''));
@@ -1357,14 +1258,10 @@ function login(){
   console.log('Stored password length:', storedPw.length);
   console.log('Entered password length:', pass.length);
   console.log('Password match:', pwMatch);
-  if(!pwMatch){fail('Incorrect password.');return;}
+  if(!pwMatch){console.groupEnd();fail('Incorrect password.');return;}
 
-  
-  if(rememberMe){
-    saveStudentCredentials(st.studentId||foundKey, pass);  // save both ID and pw
-  } else {
-    clearStudentCredentials();  // uncheck = clear immediately
-  }
+  console.groupEnd();
+  if(rememberMe) saveRememberMe('student', st.studentId||foundKey); else clearRememberMe();
   const accessType=st.accessType||'lum';
   S.user={email:foundKey,name:st.name,role:'student',id:st.studentId||foundKey,batch:st.batch||'Batch A',accessType};
   S.role='student';finishLogin();
@@ -1389,25 +1286,15 @@ function finishLogin(){
     b.className='tb-badge '+(S.role==='admin'?'badge-admin':S.role==='demo'?'badge-admin':'badge-student');
     buildSidebar();
     if(S.role==='demo'){
-      document.getElementById('sidebar').innerHTML='<div class="nav-grp">Demo Mode</div><div class="nav-item on" id="ni-stu-demo" data-id="stu-demo" onclick="nav(this.dataset.id)"><span class="nav-ic">🎬</span>Demo Questions</div><div class="nav-item" id="ni-stu-dash" data-id="stu-dash" onclick="nav(this.dataset.id)"><span class="nav-ic">📊</span>My Dashboard</div>';
+      document.getElementById('sidebar').innerHTML='<div class="nav-grp">Demo Mode</div><div class="nav-item on" id="ni-stu-demo" data-id="stu-demo" onclick="nav(this.dataset.id)"><span class="nav-ic">🎬</span>Demo Questions</div>';
       nav('stu-demo');
     } else {
       if(S.role==='admin'){
         nav('adm-dash');
       } else {
         const acc=S.user?.accessType||'lum';
-        if(acc==='demo'){
-          // Student enrolled with demo accessType — show demo sidebar and demo questions only
-          document.getElementById('sidebar').innerHTML=
-            '<div class="nav-grp">Demo Mode</div>'+
-            '<div class="nav-item on" id="ni-stu-demo" data-id="stu-demo" onclick="nav(this.dataset.id)">'+
-            '<span class="nav-ic">🎬</span>Demo Questions</div>';
-          nav('stu-demo');
-        } else if(acc==='diagnostic'){
-          nav('stu-diag');
-        } else {
-          nav('stu-home');
-        }
+        if(acc==='diagnostic') nav('stu-diag');
+        else nav('stu-home');
       }
     }
     const btn=document.querySelector('.btn-auth');
@@ -1415,42 +1302,55 @@ function finishLogin(){
   }catch(e){console.error(e);toast('Login error: '+e.message,'err');const btn=document.querySelector('.btn-auth');if(btn){btn.textContent='Sign in →';btn.disabled=false;}}
 }
 function logout(){
-  // Stop any active recording and release microphone before clearing state
-  if(S.recording || (S.mediaRec && S.mediaRec.state !== 'inactive')){
-    clearInterval(S.recTimer);
-    try{
-      if(S.mediaRec && S.mediaRec.state !== 'inactive') S.mediaRec.stop();
-      // Release mic stream tracks
-      if(S.mediaRec && S.mediaRec.stream){
-        S.mediaRec.stream.getTracks().forEach(function(t){ t.stop(); });
-      }
-    }catch(e){}
-  }
-  // Revoke any blob URL to free memory
-  if(S.audioEl && S.audioEl.src && S.audioEl.src.startsWith('blob:')){
-    try{ URL.revokeObjectURL(S.audioEl.src); }catch(e){}
-  }
   S.user=null;S.role=null;
   clearInterval(S.recTimer);
   document.getElementById('app').classList.remove('on');
-  // Reset to trainer tab — username 'manu' shown, password blank, Remember Me hidden
+  // Reset auth form to trainer-mode default
   const emailInput=document.getElementById('a-email');
   const loginLabel=document.getElementById('a-login-label');
   const passInput=document.getElementById('a-pass');
-  const rememberChk=document.getElementById('a-remember');
-  if(emailInput){emailInput.value=TRAINER_EMAIL;emailInput.type='text';}
-  if(loginLabel){loginLabel.textContent='Username';}
+  if(emailInput){emailInput.value='trainer@clarion.com';emailInput.type='email';}
+  if(loginLabel){loginLabel.textContent='Email';}
   if(passInput){passInput.value='';passInput.type='password';}
-  if(rememberChk){rememberChk.checked=false;}
-  _showRememberRow(false);
   // Reset password visibility toggle icon
   const toggleBtn=document.getElementById('toggle-pw');
   if(toggleBtn){toggleBtn.textContent='👁';}
-  // Activate Trainer tab
-  document.querySelectorAll('.role-btn').forEach(function(b){ b.classList.remove('on'); });
-  var trainerBtn = document.querySelector('.role-btn:last-child');
-  if(trainerBtn) trainerBtn.classList.add('on');
-  authRole = 'trainer';
+  // Restore remembered role and login ID (if any), else default to Trainer
+  const rem = getRememberMe();
+  if(rem && rem.id){
+    // Restore role tab
+    const targetRole = rem.role || 'trainer';
+    authRole = targetRole;
+    document.querySelectorAll('.role-btn').forEach(function(b){
+      b.classList.toggle('on', b.textContent.trim().toLowerCase() === targetRole);
+    });
+    // Restore login ID and field state
+    const emailEl = document.getElementById('a-email');
+    const labelEl = document.getElementById('a-login-label');
+    if(emailEl){
+      if(targetRole === 'student'){
+        emailEl.type = 'text';
+        emailEl.placeholder = 'Your Student ID';
+        if(labelEl) labelEl.textContent = 'Student ID';
+      } else {
+        emailEl.type = 'email';
+        emailEl.placeholder = 'Trainer email';
+        if(labelEl) labelEl.textContent = 'Email';
+      }
+      emailEl.value = rem.id;
+    }
+    // Keep Remember me checked and focus password
+    const remEl = document.getElementById('a-remember');
+    if(remEl) remEl.checked = true;
+    const passEl = document.getElementById('a-pass');
+    if(passEl) setTimeout(function(){ passEl.focus(); }, 80);
+  } else {
+    // No remembered login — default to Trainer tab
+    document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('on'));
+    const trainerBtn=document.querySelector('.role-btn:last-child');
+    if(trainerBtn)trainerBtn.classList.add('on');
+    authRole='trainer';
+  }
   document.getElementById('auth').style.display='flex';
 }
 
@@ -1491,17 +1391,6 @@ function buildSidebar(){
     const diagFinished=diagDone>=diagTotal&&diagTotal>0;
     const access=S.user?.accessType||'lum';
 
-    // Demo accessType: show only the demo sidebar (matches role='demo' experience)
-    if(access==='demo'){
-      document.getElementById('sidebar').innerHTML=
-        '<div class="nav-grp">Demo Mode</div>'+
-        '<div class="nav-item on" id="ni-stu-demo" data-id="stu-demo" onclick="nav(this.dataset.id)">'+
-        '<span class="nav-ic">🎬</span>Demo Questions</div>'+
-        '<div class="nav-item" id="ni-stu-dash" data-id="stu-dash" onclick="nav(this.dataset.id)">'+
-        '<span class="nav-ic">📊</span>My Dashboard</div>';
-      return;
-    }
-
     let allowedIds;
     if(access==='diagnostic'){
       allowedIds=['stu-diag','stu-dash'];
@@ -1510,10 +1399,8 @@ function buildSidebar(){
       allowedIds=['stu-home','stu-dash'];
       if(getAdvPIAccess(S.user.email)) allowedIds.splice(1,0,'stu-advpi');
     } else {
-      // lum (and any unrecognised fallback) — today's question + dashboard only.
-      // Full practice bank is NOT accessible to LUM students; they see only
-      // the daily assigned question via renderHome().
-      allowedIds=['stu-home','stu-dash'];
+      // lum (and any unrecognised fallback) — daily practice + dashboard
+      allowedIds=['stu-home','stu-bank','stu-dash'];
     }
     const visibleItems=items.filter(function(i){return allowedIds.includes(i.id);});
     visibleItems.forEach(function(i){
@@ -1531,88 +1418,20 @@ function buildSidebar(){
     document.getElementById('sidebar').innerHTML=html;
   }
 }
-// ── Role-gated navigation — the single enforcement point ─────────────────────
-// All page access goes through nav(). Role is checked here; hiding the sidebar
-// item alone is NOT sufficient. Students can never reach adm-* pages via any
-// path: direct call, console, stored state, or back button.
-
-const PAGES = {
-  'stu-diag':  {render:()=>renderDiagnostic(), roles:['student']},
-  'stu-home':  {render:()=>renderHome(),        roles:['student']},
-  'stu-bank':  {render:()=>renderBank(),         roles:['student']},
-  'stu-ppi':   {render:()=>renderPlacementPI(),  roles:['student']},
-  'stu-pgd':   {render:()=>renderPlacementGD(),  roles:['student']},
-  'stu-advpi': {render:()=>renderAdvancedPI(),   roles:['student']},
-  'stu-dash':  {render:()=>renderStudentDash(),  roles:['student','demo']},
-  'stu-demo':  {render:()=>renderDemo(),         roles:['demo','student']},
-  'adm-dash':      {render:()=>renderAdminDash(),     roles:['admin']},
-  'adm-banks':     {render:()=>renderAdminBanks(),    roles:['admin']},
-  'adm-diag':      {render:()=>renderAdminDiag(),     roles:['admin']},
-  'adm-ppi':       {render:()=>renderAdminPPI(),      roles:['admin']},
-  'adm-pgd':       {render:()=>renderAdminPGD(),      roles:['admin']},
-  'adm-advpi':     {render:()=>renderAdminAdvPI(),     roles:['admin']},
-  'adm-students':  {render:()=>renderAdminStudents(),  roles:['admin']},
-  'adm-review':    {render:()=>renderAdminReview(),    roles:['admin']},
-  'adm-setup':     {render:()=>renderSetup(),          roles:['admin']},
-};
-
-function _safeDefaultPage(){
-  // Returns the correct fallback page for the current role, never a protected one.
-  if(!S.role || !S.user){
-    // Not logged in — show auth screen and stop
-    document.getElementById('app').classList.remove('on');
-    document.getElementById('auth').style.display='flex';
-    return null;
-  }
-  if(S.role==='admin')  return 'adm-dash';
-  if(S.role==='demo')   return 'stu-demo';
-  // student — same logic as sidebar
-  const acc = S.user?.accessType||'lum';
-  if(acc==='diagnostic') return 'stu-diag';
-  return 'stu-home';
-}
-
 function nav(id){
-  // ── Role guard ──────────────────────────────────────────────────────────────
-  if(!S.role || !S.user){
-    // Not authenticated — abort and show login
-    document.getElementById('app').classList.remove('on');
-    document.getElementById('auth').style.display='flex';
-    return;
-  }
-  const page = PAGES[id];
-  if(!page || !page.roles.includes(S.role)){
-    // Requested page is not allowed for this role.
-    // Silently redirect to safe default — no error exposed to user.
-    console.warn('[CLARION] nav blocked: role='+S.role+' tried id='+id);
-    const safe = _safeDefaultPage();
-    if(safe && safe !== id) nav(safe);
-    return;
-  }
-  // Access-type guard: 'stu-bank' is only for non-LUM student roles
-  if(id==='stu-bank' && S.role==='student'){
-    const acc = S.user?.accessType||'lum';
-    if(acc==='lum' || acc==='diagnostic'){
-      console.warn('[CLARION] nav blocked: accessType='+acc+' tried stu-bank');
-      const safe = _safeDefaultPage();
-      if(safe && safe !== id) nav(safe);
-      return;
-    }
-  }
-  // Demo role (or student with demo accessType) may only access stu-demo
-  const _isDemoAccess = S.role==='demo' ||
-    (S.role==='student' && (S.user?.accessType||'') === 'demo');
-  if(_isDemoAccess && id !== 'stu-demo' && id !== 'stu-dash'){
-    console.warn('[CLARION] nav blocked: demo access tried '+id);
-    nav('stu-demo');
-    return;
-  }
-  // ── Authorised ─────────────────────────────────────────────────────────────
-  S.page = id;
+  S.page=id;
   document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('on'));
-  const el = document.getElementById('ni-'+id);
-  if(el) el.classList.add('on');
-  page.render();
+  const el=document.getElementById('ni-'+id);if(el)el.classList.add('on');
+  ({
+    'stu-diag':renderDiagnostic,'stu-home':renderHome,'stu-bank':renderBank,
+    'stu-ppi':renderPlacementPI,'stu-pgd':renderPlacementGD,'stu-advpi':renderAdvancedPI,
+    'stu-dash':renderStudentDash,'stu-demo':renderDemo,
+    'adm-dash':renderAdminDash,'adm-banks':renderAdminBanks,
+    'adm-diag':renderAdminDiag,'adm-ppi':renderAdminPPI,'adm-pgd':renderAdminPGD,'adm-advpi':renderAdminAdvPI,
+    'adm-students':renderAdminStudents,
+    'adm-review':renderAdminReview,'adm-setup':renderSetup,
+  }[id]||renderHome)();
+  // Auto-close drawer on mobile after navigation
   closeDrawer();
 }
 
@@ -1681,11 +1500,7 @@ function getPlacementTask(email){
 }
 
 function renderHome(){
-  if(S.role==='admin'){nav('adm-dash');return;}
   const access=S.user?.accessType||'lum';
-
-  // Demo-accessType student: must never see LUM question — redirect to demo view
-  if(access==='demo'){nav('stu-demo');return;}
 
   // Diagnostic-only users: redirect wall
   if(access==='diagnostic'){
@@ -1764,7 +1579,6 @@ function renderHome(){
 
 // ── submitPlacementDaily: scores placement PI/GD task from home page ─────────
 async function submitPlacementDaily(){
-  if(!S.user || !S.user.email){ toast('Session expired. Please log in again.','err'); return; }
   if(!S.recorded&&S.recSecs===0){toast('Record your response first','err');return;}
   const q=S.currentQ; const bank=S.currentBank; if(!q||!bank)return;
   const today=new Date().toISOString().split('T')[0];
@@ -1950,8 +1764,6 @@ function renderScoreHTML(sub, showBanner){
 // RECORDING
 // ════════════════════════════════════════════════
 function startRec(limit){
-  // Guard: don't start a second recording if one is already running
-  if(S.recording){ return; }
   S.recSecs=0;S.recLimit=limit;S.recording=true;
   document.getElementById('btn-go').classList.add('hidden');
   document.getElementById('btn-stop').classList.remove('hidden');
@@ -1993,12 +1805,7 @@ function stopRec(){
 }
 function playRec(){if(S.audioEl){S.audioEl.currentTime=0;S.audioEl.play();}else toast('Demo: '+S.recSecs+'s recorded');}
 function reRecord(){
-  clearInterval(S.recTimer);
-  // Revoke blob URL from previous recording to free browser memory
-  if(S.audioEl && S.audioEl.src && S.audioEl.src.startsWith('blob:')){
-    try{ URL.revokeObjectURL(S.audioEl.src); }catch(e){}
-  }
-  S.recSecs=0;S.recorded=false;S.recording=false;S.audioBlob=null;S.audioEl=null;
+  clearInterval(S.recTimer);S.recSecs=0;S.recorded=false;S.recording=false;S.audioBlob=null;S.audioEl=null;
   ['btn-go'].forEach(id=>document.getElementById(id)?.classList.remove('hidden'));
   ['btn-stop','btn-play','btn-rerec'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));
   document.getElementById('btn-submit').disabled=true;
@@ -2081,8 +1888,6 @@ Return ONLY valid JSON — no markdown, no backticks, no extra text:
 }`;
 
 async function doSubmitDaily(){
-  // Session guard: ensure user is still logged in before writing submission
-  if(!S.user || !S.user.email){ toast('Session expired. Please log in again.','err'); return; }
   if(!S.recorded&&S.recSecs===0){
     // Allow text-only submission if no audio recorded
     const textEl=document.getElementById('stu-text-response');
@@ -2143,13 +1948,7 @@ function demoScore(){return {score:7.0,criteria:{structure_clarity:2,content_dep
 // ════════════════════════════════════════════════
 let pbFilter = 'all';
 function renderBank(){
-  if(S.role==='admin'){nav('adm-dash');return;}
   const access=S.user?.accessType||'lum';
-  // LUM students: today's question only — full bank is not part of their workflow
-  if(access==='lum'){
-    nav('stu-home');
-    return;
-  }
   if(access==='placement'){
     set('<div class="ph"><div class="ph-title">Practice Bank</div></div>'+
       '<div class="banner banner-info"><span class="banner-ic">🔒</span><div><div class="banner-title">Access restricted</div>'+
@@ -2257,7 +2056,6 @@ async function doSubmit(subKey){
 // STUDENT DASHBOARD
 // ════════════════════════════════════════════════
 function renderStudentDash(){
-  if(S.role==='admin'){nav('adm-dash');return;}
   const allSubs = getSubs(S.user.email);
   const subs = Object.values(allSubs).filter(s=>s&&s.score!==undefined);
   const total = subs.length;
@@ -2320,7 +2118,8 @@ function renderStudentDash(){
           '</div>'+
           '<div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end">'+
             (diagDoneCount>=DIAGNOSTIC_BANK.length?
-              '<button class="btn-primary" style="font-size:.78rem;padding:7px 14px" onclick="renderDiagnosticReport()">View Report →</button>':'')+
+              '<button class="btn-primary" style="font-size:.78rem;padding:7px 14px" onclick="renderDiagnosticReport()">View Report →</button>':
+              '<button class="btn-primary" style="font-size:.78rem;padding:7px 14px" data-nav="stu-diag" onclick="nav(this.dataset.nav)">Continue →</button>')+
           '</div>'+
         '</div>'+
       '</div>':'')+
@@ -2338,7 +2137,6 @@ function renderStudentDash(){
 // ADMIN: DASHBOARD
 // ════════════════════════════════════════════════
 function renderAdminDash(){
-  if(S.role!=='admin'){nav(_safeDefaultPage());return;}
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
   const info = getTodayQuestion(null); // admin preview uses calendar-based fallback
@@ -2648,7 +2446,6 @@ function startClientDemo(qid){
 // ADMIN: STUDENTS
 // ════════════════════════════════════════════════
 function renderAdminStudents(){
-  if(S.role!=='admin'){nav(_safeDefaultPage());return;}
   loadRegistry();
   const todayStr=new Date().toISOString().split('T')[0];
   const rows=ALL_STUDENT_EMAILS.map(email=>{
@@ -2742,7 +2539,6 @@ function viewStudent(email){
 // ADMIN: REVIEW
 // ════════════════════════════════════════════════
 function renderAdminReview(){
-  if(S.role!=='admin'){nav(_safeDefaultPage());return;}
   loadRegistry();
   const all=ALL_STUDENT_EMAILS.flatMap(email=>{
     const u=getStudents()[email]||{name:email};
@@ -2817,7 +2613,6 @@ function renderAdminQbank(){
 // ADMIN: SETUP
 // ════════════════════════════════════════════════
 function renderSetup(){
-  if(S.role!=='admin'){nav(_safeDefaultPage());return;}
   const allStudents=getStudents();
   const entries=Object.entries(allStudents);
   const active=entries.filter(([,s])=>s.active).length;
@@ -3067,29 +2862,13 @@ function renderSetup(){
     // ── TRAINER PASSWORD ─────────────────────────────────────────────────
     '<div class="card"><div class="card-lbl">Change trainer password</div>'+
       '<p style="font-size:.82rem;color:var(--muted);margin-bottom:10px">'+
-        'Default: <strong style="color:var(--ink)">980242</strong>'+
+        'Default: <strong style="color:var(--ink)">Clarion@2026</strong>'+
       '</p>'+
       '<div style="display:flex;gap:9px">'+
         '<input id="new-pw" class="f-input" type="password" placeholder="New password" style="flex:1">'+
         '<button class="btn-primary" onclick="changeTrainerPw()">Update</button>'+
       '</div>'+
       '<button class="btn-secondary" style="margin-top:8px;font-size:.78rem" onclick="resetTrainerPw()">Reset to default</button>'+
-    '</div>'+
-
-    // ── GEMINI API KEY ───────────────────────────────────────────────────────
-    '<div class="card"><div class="card-lbl">Gemini API Key <span style="font-weight:400;color:var(--muted)">(live scoring)</span></div>'+
-      '<p style="font-size:.82rem;color:var(--muted);margin-bottom:10px">'+
-        'Enter your Gemini API key to enable live AI scoring. Stored for this session only — never saved to disk.'+
-      '</p>'+
-      '<div style="display:flex;gap:9px">'+
-        '<input id="adm-api-key" class="f-input" type="password" placeholder="AIza…" '+
-          'style="font-size:.8rem;font-family:var(--mono);flex:1" '+
-          'value="'+(sessionStorage.getItem('clarion_key')||'')+'">'+
-        '<button class="btn-primary" onclick="setApiKey()">Apply</button>'+
-      '</div>'+
-      (S.apiKey ?
-        '<p style="margin-top:8px;font-family:var(--mono);font-size:.72rem;color:var(--green)">✓ API key active this session</p>'
-      : '<p style="margin-top:8px;font-family:var(--mono);font-size:.72rem;color:var(--muted)">No key set — demo scoring active</p>')+
     '</div>'
   );
 }
@@ -3534,16 +3313,6 @@ function exportAllWhatsAppMessages(){
   toast('WhatsApp messages exported','ok');
 }
 
-// ── Gemini API key (trainer-only, session storage) ───────────────────────────
-function setApiKey(){
-  var k = (document.getElementById('adm-api-key')?.value||'').trim();
-  if(!k){ toast('Enter an API key first','err'); return; }
-  S.apiKey = k;
-  sessionStorage.setItem('clarion_key', k);
-  toast('API key applied for this session ✓','ok');
-  renderSetup();  // refresh to show ✓ status
-}
-
 // ── Trainer password ──────────────────────────────────────────────────────────
 function changeTrainerPw(){
   const pw=document.getElementById('new-pw').value.trim();
@@ -3553,7 +3322,7 @@ function changeTrainerPw(){
 }
 function resetTrainerPw(){
   localStorage.removeItem('clarion_trainer_pw');
-  toast('Reset to default password','ok');
+  toast('Reset to Clarion@2026','ok');
 }
 
 
@@ -3596,7 +3365,6 @@ function closeModal(){document.getElementById('overlay').classList.remove('on');
 // DIAGNOSTIC — STUDENT VIEW
 // ════════════════════════════════════════════════
 function renderDiagnostic(){
-  if(S.role==='admin'){nav('adm-dash');return;}
   const access=S.user?.accessType||'lum';
   if(access!=='diagnostic'&&S.role!=='admin'){
     set('<div class="ph"><div class="ph-title">Diagnostic</div></div>'+
@@ -4334,7 +4102,6 @@ async function submitDemo(){
 // TRAINER: QUESTION BANKS OVERVIEW
 // ════════════════════════════════════════════════
 function renderAdminBanks(){
-  if(S.role!=='admin'){nav(_safeDefaultPage());return;}
   loadRegistry();
   const emails=ALL_STUDENT_EMAILS;
 
@@ -4482,7 +4249,6 @@ function renderAdminBanks(){
 
 // Stub pages for trainer bank views (to be built when content is added)
 function renderAdminDiag(){
-  if(S.role!=='admin'){nav(_safeDefaultPage());return;}
   loadRegistry();
   purgeAllStaleDiag(); // enforce 7-day retention policy on load
   const emails=ALL_STUDENT_EMAILS;
@@ -4602,7 +4368,6 @@ function renderAdminDiag(){
 }
 
 function renderAdminPPI(){
-  if(S.role!=='admin'){nav(_safeDefaultPage());return;}
   set('<div class="ph"><div class="ph-title">Placement PI Bank</div><div class="ph-sub">'+PLACEMENT_PI_BANK.length+' questions</div></div>'+
     (PLACEMENT_PI_BANK.length===0?
       '<div class="banner banner-warn"><span class="banner-ic">⚠️</span><div><div class="banner-title">40 PI questions not yet added</div><div class="banner-sub">Questions will be added in the next build step.</div></div></div>':
@@ -4610,7 +4375,6 @@ function renderAdminPPI(){
 }
 
 function renderAdminPGD(){
-  if(S.role!=='admin'){nav(_safeDefaultPage());return;}
   set('<div class="ph"><div class="ph-title">Placement GD Bank</div><div class="ph-sub">'+PLACEMENT_GD_BANK.length+' prompts</div></div>'+
     (PLACEMENT_GD_BANK.length===0?
       '<div class="banner banner-warn"><span class="banner-ic">⚠️</span><div><div class="banner-title">16 GD prompts not yet added</div><div class="banner-sub">Prompts will be added in the next build step.</div></div></div>':
@@ -4618,7 +4382,6 @@ function renderAdminPGD(){
 }
 
 function renderAdminAdvPI(){
-  if(S.role!=='admin'){nav(_safeDefaultPage());return;}
   loadRegistry();
   const emails=ALL_STUDENT_EMAILS;
   // Build category groups
@@ -4706,41 +4469,53 @@ window.onload=()=>{
   _seedStudentsIfEmpty();
 
   const k=sessionStorage.getItem('clarion_key');
-  if(k){ S.apiKey=k; }  // key restored from session; set via trainer Setup panel
+  if(k){S.apiKey=k;document.getElementById('a-key').value=k;}
   const savedPw=localStorage.getItem('clarion_trainer_pw');
   if(savedPw)window.__trainerPw=savedPw;
-  // ── Credential restore on load ───────────────────────────────────────────
+  // ── Restore remembered login (role + ID, no password) ───────────────────
   try{
-    // Remove all legacy keys from previous implementations
-    localStorage.removeItem('clarion_remembered_login');
-
-    // Purge any stale trainer-role data or known demo/seed IDs
-    var _STALE_IDS = ['stu001','STU001','demo@clarion.com','trainer@clarion.com',
-                      'demo','Demo','DEMO','Clarion@2026','Demo@2026'];
-    var _remRaw = localStorage.getItem('clarion_rem');
-    if(_remRaw){
-      try{
-        var _remParsed = JSON.parse(_remRaw);
-        var _isStale = !_remParsed || !_remParsed.id
-          || _remParsed.role === 'trainer'  // trainer creds must never persist
-          || _STALE_IDS.indexOf(_remParsed.id) !== -1
-          || _STALE_IDS.indexOf((_remParsed.id||'').toUpperCase()) !== -1;
-        if(_isStale){
-          localStorage.removeItem('clarion_rem');
-          localStorage.removeItem('clarion_rem_pw');
-          console.log('[CLARION] Wiped stale/trainer remember-me data');
-        }
-      }catch(e){ localStorage.removeItem('clarion_rem'); localStorage.removeItem('clarion_rem_pw'); }
+    // Migrate old single-key format if present
+    const oldKey = localStorage.getItem('clarion_remembered_login');
+    if(oldKey && !localStorage.getItem('clarion_rem')){
+      // Best-guess role: if it contains '@' it's likely trainer
+      const guessedRole = oldKey.includes('@') ? 'trainer' : 'student';
+      saveRememberMe(guessedRole, oldKey);
+      localStorage.removeItem('clarion_remembered_login');
     }
 
-    // Set trainer username visible by default (trainer tab is default)
-    var _emailEl = document.getElementById('a-email');
-    if(_emailEl && authRole === 'trainer') _emailEl.value = TRAINER_EMAIL;
-    _showRememberRow(false); // hidden on trainer tab by default
+    const rem = getRememberMe();
+    if(rem && rem.id){
+      const targetRole = rem.role || 'trainer';
+      authRole = targetRole;
 
-    // If valid student creds exist, applyRememberedLogin switches to student tab
-    applyRememberedLogin();
-  }catch(e){ console.warn('Credential restore error:', e); }
+      // Activate the correct tab button
+      document.querySelectorAll('.role-btn').forEach(function(b){
+        b.classList.toggle('on', b.textContent.trim().toLowerCase() === targetRole);
+      });
+
+      // Set field type, label, and value
+      const emailEl = document.getElementById('a-email');
+      const labelEl = document.getElementById('a-login-label');
+      if(emailEl){
+        if(targetRole === 'student'){
+          emailEl.type = 'text';
+          emailEl.placeholder = 'Your Student ID';
+          if(labelEl) labelEl.textContent = 'Student ID';
+        } else {
+          emailEl.type = 'email';
+          emailEl.placeholder = 'Trainer email';
+          if(labelEl) labelEl.textContent = 'Email';
+        }
+        emailEl.value = rem.id;
+      }
+
+      // Check the checkbox and focus the password field
+      const remEl = document.getElementById('a-remember');
+      if(remEl) remEl.checked = true;
+      const passEl = document.getElementById('a-pass');
+      if(passEl) setTimeout(function(){ passEl.focus(); }, 80);
+    }
+  }catch(e){}
   // Enforce 7-day diagnostic retention policy on startup
   try{loadRegistry();purgeAllStaleDiag();}catch(e){}
 };
