@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0044)file:///C:/Users/Manu/Downloads/index_1.html -->
+<!-- saved from url=(0042)file:///C:/Users/Manu/Downloads/index.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -466,7 +466,7 @@ tr:hover td{background:rgba(26,23,20,.015)}
     <label class="f-label">Password</label>
     <div style="position:relative;display:flex;align-items:center;">
       <input class="f-input" id="a-pass" type="password" value="" style="padding-right:38px;" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="text" data-lpignore="true" data-form-type="other" onkeydown="if(event.key===&#39;Enter&#39;){event.preventDefault();login();}">
-      <button type="button" id="toggle-pw" aria-label="Show password" onclick="(function(){var i=document.getElementById(&#39;a-pass&#39;),b=document.getElementById(&#39;toggle-pw&#39;);if(i.type===&#39;password&#39;){i.type=&#39;text&#39;;i.setAttribute(&#39;autocomplete&#39;,&#39;off&#39;);i.setAttribute(&#39;autocorrect&#39;,&#39;off&#39;);i.setAttribute(&#39;spellcheck&#39;,&#39;false&#39;);b.textContent=&#39;🙈&#39;;}else{i.type=&#39;password&#39;;i.setAttribute(&#39;autocomplete&#39;,&#39;new-password&#39;);i.setAttribute(&#39;autocorrect&#39;,&#39;off&#39;);b.textContent=&#39;👁&#39;;}})();" style="position:absolute;right:8px;background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 4px;color:var(--muted);line-height:1;user-select:none;">👁</button>
+      <button type="button" id="toggle-pw" aria-label="Show password" onclick="(function(){var i=document.getElementById(&#39;a-pass&#39;),b=document.getElementById(&#39;toggle-pw&#39;);if(i.type===&#39;password&#39;){i.type=&#39;text&#39;;b.textContent=&#39;🙈&#39;;}else{i.type=&#39;password&#39;;b.textContent=&#39;👁&#39;;}})();" style="position:absolute;right:8px;background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 4px;color:var(--muted);line-height:1;user-select:none;">👁</button>
     </div>
     <div id="remember-row" style="display:none;align-items:center;gap:8px;margin-top:10px;">
       <input type="checkbox" id="a-remember" style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
@@ -474,7 +474,6 @@ tr:hover td{background:rgba(26,23,20,.015)}
     </div>
     <button class="btn-auth" onclick="login()">Sign in →</button>
     <input type="hidden" id="a-key" value="">
-    <div id="login-diag" style="display:none;margin-top:12px;padding:10px;background:#1a1a1a;border:1px solid #444;border-radius:6px;font-family:monospace;font-size:.7rem;color:#ccc;line-height:1.8;word-break:break-all;"></div>
 
 
 
@@ -1273,9 +1272,7 @@ function login(){
       .replace(/[\u2018\u2019\u201A\u201B]/g,"'")
       .replace(/[\u201C\u201D\u201E\u201F]/g,'"')
       // Normalise non-breaking and other typographic spaces → regular space
-      .replace(/[\u00A0\u202F\u2009\u2008\u2007\u2006\u2005\u2004\u2003\u2002\u2001]/g,' ')
-      // Strip leading/trailing CR/LF that Android 'Done' key can append
-      .replace(/^[\r\n]+|[\r\n]+$/g,'');
+      .replace(/[\u00A0\u202F\u2009\u2008\u2007\u2006\u2005\u2004\u2003\u2002\u2001]/g,' ');
   }
 
   const rawLogin = document.getElementById('a-email').value;
@@ -1285,15 +1282,7 @@ function login(){
   const key      = document.getElementById('a-key').value.trim();
   const btn      = document.querySelector('.btn-auth');
   const rememberMe = !!(document.getElementById('a-remember') && document.getElementById('a-remember').checked);
-  const diagEl = document.getElementById('login-diag');
-  const fail =(m,diagData)=>{
-    toast(m,'err');
-    if(btn){btn.textContent='Sign in →';btn.disabled=false;}
-    if(diagEl && diagData){
-      diagEl.style.display='block';
-      diagEl.innerHTML=diagData;
-    }
-  };
+  const fail =(m)=>{toast(m,'err');if(btn){btn.textContent='Sign in →';btn.disabled=false;}};
   if(btn){btn.textContent='Signing in…';btn.disabled=true;}
 
   if(key){S.apiKey=key;sessionStorage.setItem('clarion_key',key);}
@@ -1352,26 +1341,7 @@ function login(){
   console.log('[CLARION] entered pw length:', pass.length, '| stored pw length:', storedPw.length);
   const pwMatch = (storedPw === pass);
   console.log('[CLARION] password match:', pwMatch);
-  if(!pwMatch){
-    // Build diagnostic data for on-screen display (no password values shown)
-    function hexOf(s){ return Array.from(s).map(function(c){ return 'U+'+c.codePointAt(0).toString(16).toUpperCase().padStart(4,'0'); }).join(' '); }
-    var diagLines = [
-      '<b style="color:#f90">✗ Password mismatch — diagnostic</b>',
-      'Role tab: <b>'+authRole+'</b>',
-      'Student ID entered: <b>'+loginVal+'</b> ('+loginVal.length+' chars)',
-      'Student found: <b>'+!!st+'</b>  Active: <b>'+st.active+'</b>',
-      '─────────────────────────',
-      'Entered length: <b>'+pass.length+'</b>',
-      'Stored  length: <b>'+storedPw.length+'</b>',
-      'Entered chars: '+hexOf(pass),
-      'Stored  chars: '+hexOf(storedPw),
-      '─────────────────────────',
-      'Raw entered length: <b>'+rawPass.length+'</b>',
-      'Raw→sanitised delta: <b>'+(rawPass.length-pass.length)+' chars removed</b>',
-    ];
-    fail('Incorrect password.', diagLines.join('<br>'));
-    return;
-  }
+  if(!pwMatch){fail('Incorrect password.');return;}
 
   
   if(rememberMe){
@@ -1381,7 +1351,6 @@ function login(){
   }
   const accessType=st.accessType||'lum';
   S.user={email:foundKey,name:st.name,role:'student',id:st.studentId||foundKey,batch:st.batch||'Batch A',accessType};
-  var _diag=document.getElementById('login-diag');if(_diag)_diag.style.display='none';
   S.role='student';finishLogin();
 }
 function finishLogin(){
