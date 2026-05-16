@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0044)file:///C:/Users/Manu/Downloads/index_1.html -->
+<!-- saved from url=(0042)file:///C:/Users/Manu/Downloads/index.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -474,6 +474,7 @@ tr:hover td{background:rgba(26,23,20,.015)}
     </div>
     <button class="btn-auth" onclick="login()">Sign in →</button>
     <input type="hidden" id="a-key" value="">
+    <div id="login-diag" style="display:none;margin-top:12px;padding:10px;background:#1a1a1a;border:1px solid #444;border-radius:6px;font-family:monospace;font-size:.7rem;color:#ccc;line-height:1.8;word-break:break-all;"></div>
 
 
 
@@ -1316,7 +1317,15 @@ function login(){
   const key      = document.getElementById('a-key').value.trim();
   const btn      = document.querySelector('.btn-auth');
   const rememberMe = !!(document.getElementById('a-remember') && document.getElementById('a-remember').checked);
-  const fail=(m)=>{toast(m,'err');if(btn){btn.textContent='Sign in →';btn.disabled=false;}};
+  const diagEl = document.getElementById('login-diag');
+  const fail =(m,diagData)=>{
+    toast(m,'err');
+    if(btn){btn.textContent='Sign in →';btn.disabled=false;}
+    if(diagEl && diagData){
+      diagEl.style.display='block';
+      diagEl.innerHTML=diagData;
+    }
+  };
   if(btn){btn.textContent='Signing in…';btn.disabled=true;}
 
   if(key){S.apiKey=key;sessionStorage.setItem('clarion_key',key);}
@@ -1351,6 +1360,7 @@ function login(){
   }
 
   // ── Student branch ────────────────────────────────────────────────────────
+  console.log('[CLARION] role:', authRole);
   loadRegistry();
   const allStudents = getStudents();
   let st=null, foundKey=null;
@@ -1365,12 +1375,35 @@ function login(){
     if(allStudents[emailLower]){st=allStudents[emailLower];foundKey=emailLower;}
   }
 
-  if(!st){ fail('Incorrect Student ID or password.'); return; }
-  if(!st.active){ fail('Account inactive. Contact your trainer.'); return; }
+  console.log('[CLARION] student found:', !!st);
+  if(!st){ fail('Student ID not found. Contact your trainer.');return; }
+  if(!st.active){fail('Account inactive. Contact your trainer.');return;}
 
   // Compare passwords — single source of truth: getStudents() returned st.password
   const storedPw = sanitisePass(String(st.password||''));
-  if(storedPw !== pass){ fail('Incorrect Student ID or password.'); return; }
+  console.log('[CLARION] entered pw length:', pass.length, '| stored pw length:', storedPw.length);
+  const pwMatch = (storedPw === pass);
+  console.log('[CLARION] password match:', pwMatch);
+  if(!pwMatch){
+    // Build diagnostic data for on-screen display (no password values shown)
+    function hexOf(s){ return Array.from(s).map(function(c){ return 'U+'+c.codePointAt(0).toString(16).toUpperCase().padStart(4,'0'); }).join(' '); }
+    var diagLines = [
+      '<b style="color:#f90">✗ Password mismatch — diagnostic</b>',
+      'Role tab: <b>'+authRole+'</b>',
+      'Student ID entered: <b>'+loginVal+'</b> ('+loginVal.length+' chars)',
+      'Student found: <b>'+!!st+'</b>  Active: <b>'+st.active+'</b>',
+      '─────────────────────────',
+      'Entered length: <b>'+pass.length+'</b>',
+      'Stored  length: <b>'+storedPw.length+'</b>',
+      'Entered chars: '+hexOf(pass),
+      'Stored  chars: '+hexOf(storedPw),
+      '─────────────────────────',
+      'Raw entered length: <b>'+rawPass.length+'</b>',
+      'Raw→sanitised delta: <b>'+(rawPass.length-pass.length)+' chars removed</b>',
+    ];
+    fail('Incorrect password.', diagLines.join('<br>'));
+    return;
+  }
 
   
   if(rememberMe){
@@ -1380,6 +1413,7 @@ function login(){
   }
   const accessType=st.accessType||'lum';
   S.user={email:foundKey,name:st.name,role:'student',id:st.studentId||foundKey,batch:st.batch||'Batch A',accessType};
+  var _diag=document.getElementById('login-diag');if(_diag)_diag.style.display='none';
   S.role='student';finishLogin();
 }
 function finishLogin(){
