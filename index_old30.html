@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0044)file:///C:/Users/Manu/Downloads/index_1.html -->
+<!-- saved from url=(0042)file:///C:/Users/Manu/Downloads/index.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -1262,14 +1262,7 @@ function login(){
   // add silently, but we do NOT trim whitespace — a legitimate password could
   // start or end with a space, and trimming was the root cause of the mobile bug.
   function sanitisePass(v){
-    return v
-      // Strip invisible/zero-width chars mobile keyboards silently insert
-      .replace(/[\u00AD\u200B-\u200D\uFEFF\u2060]/g,'')
-      // Normalise smart apostrophes/quotes to plain ASCII
-      .replace(/[\u2018\u2019\u201A\u201B]/g,"'")
-      .replace(/[\u201C\u201D\u201E\u201F]/g,'"')
-      // Normalise non-breaking space and other space variants to regular space
-      .replace(/[\u00A0\u202F\u2009\u2008\u2007\u2006\u2005\u2004\u2003\u2002\u2001]/g,' ');
+    return v.replace(/[\u00AD\u200B-\u200D\uFEFF\u2060]/g,'');
   }
 
   const rawLogin = document.getElementById('a-email').value;
@@ -1314,7 +1307,6 @@ function login(){
   }
 
   // ── Student branch ────────────────────────────────────────────────────────
-  console.log('[CLARION] role:', authRole);
   loadRegistry();
   const allStudents = getStudents();
   let st=null, foundKey=null;
@@ -1329,16 +1321,12 @@ function login(){
     if(allStudents[emailLower]){st=allStudents[emailLower];foundKey=emailLower;}
   }
 
-  console.log('[CLARION] student found:', !!st);
   if(!st){ fail('Student ID not found. Contact your trainer.');return; }
   if(!st.active){fail('Account inactive. Contact your trainer.');return;}
 
   // Compare passwords — single source of truth: getStudents() returned st.password
   const storedPw = sanitisePass(String(st.password||''));
-  console.log('[CLARION] entered pw length:', pass.length, '| stored pw length:', storedPw.length);
-  const pwMatch = (storedPw === pass);
-  console.log('[CLARION] password match:', pwMatch);
-  if(!pwMatch){fail('Incorrect password.');return;}
+  if(storedPw !== pass){fail('Incorrect password.');return;}
 
   
   if(rememberMe){
@@ -2855,14 +2843,14 @@ function renderSetup(){
 
     // ── CREDENTIAL TEST ────────────────────────────────────────────────
     '<div class="card" style="border-left:4px solid var(--blue);margin-bottom:16px">'+
-      '<div class="card-lbl" style="margin-bottom:8px">Login Test — verify student login</div>'+
+      '<div class="card-lbl" style="margin-bottom:8px">Credential Test — verify student login</div>'+
       '<p style="font-size:.78rem;color:var(--muted);margin-bottom:10px">'+
-        'Select a student to see their stored credentials, then type a password to test whether login would pass.'+
+        'Select a student and type a password to check whether login would pass — without logging in.'+
       '</p>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">'+
         '<div>'+
           '<div class="f-label">Student</div>'+
-          '<select id="cred-test-student" class="f-input" style="padding:6px 10px;font-size:.82rem;min-width:160px" onchange="showStoredPassword(this.value)">'+
+          '<select id="cred-test-student" class="f-input" style="padding:6px 10px;font-size:.82rem;min-width:160px">'+
             '<option value="">— select —</option>'+
             Object.entries(getStudents()).map(function([key,s]){
               return '<option value="'+key+'">'+(s.name||key)+' ('+( s.studentId||key)+')</option>';
@@ -3381,23 +3369,6 @@ function downloadUpdatedApp(){
 
 
 
-
-// ── Show stored password when student is selected in Login Test ───────────────
-function showStoredPassword(key){
-  var resEl = document.getElementById('cred-test-result');
-  if(!resEl || !key) return;
-  var all = getStudents();
-  var s = all[key];
-  if(!s){ resEl.innerHTML = ''; return; }
-  var sid = s.studentId || key;
-  resEl.innerHTML =
-    '<div style="font-size:.78rem;color:var(--muted);margin-top:4px">'+
-    'Student: <strong style="color:var(--ink)">'+(s.name||key)+'</strong> &nbsp;·&nbsp; '+
-    'ID: <code style="background:var(--bg);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">'+sid+'</code> &nbsp;·&nbsp; '+
-    'Stored password: <code style="background:var(--bg);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">'+(s.password||'—')+'</code>'+
-    '</div>';
-}
-
 // ── Credential test ───────────────────────────────────────────────────────────
 function credentialTest(){
   const key  = document.getElementById('cred-test-student')?.value;
@@ -3407,46 +3378,30 @@ function credentialTest(){
   if(!key){   resEl.innerHTML='<span style="color:var(--gold)">⚠ Select a student first.</span>'; return; }
   if(!pw){    resEl.innerHTML='<span style="color:var(--gold)">⚠ Enter a password to test.</span>'; return; }
 
-  // Exact same sanitiser as login() — must stay in sync
-  function sanitise(v){
-    return v
-      .replace(/[\u00AD\u200B-\u200D\uFEFF\u2060]/g,'')
-      .replace(/[\u2018\u2019\u201A\u201B]/g,"'")
-      .replace(/[\u201C\u201D\u201E\u201F]/g,'"')
-      .replace(/[\u00A0\u202F\u2009\u2008\u2007\u2006\u2005\u2004\u2003\u2002\u2001]/g,' ');
-  }
+  // Use the same sanitiser as the real login
+  function sanitise(v){ return v.replace(/[\u00AD\u200B-\u200D\uFEFF\u2060]/g,''); }
 
   const all = getStudents();
   const s   = all[key];
   if(!s){ resEl.innerHTML='<span style="color:var(--red)">✗ Student not found in data store.</span>'; return; }
 
-  const sid       = s.studentId || key;
-  const name      = s.name || key;
-  const rawStored = String(s.password||'');
-  const storedPw  = sanitise(rawStored);
+  const storedPw  = sanitise(String(s.password||''));
   const enteredPw = sanitise(pw);
   const match     = storedPw === enteredPw;
 
-  const infoRow =
-    '<div style="margin-top:8px;font-size:.75rem;color:var(--muted)">'+
-    'Student: <strong style="color:var(--ink)">'+name+'</strong> &nbsp;·&nbsp; '+
-    'ID: <code style="background:var(--bg);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">'+sid+'</code> &nbsp;·&nbsp; '+
-    'Stored password: <code style="background:var(--bg);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">'+rawStored+'</code>'+
-    '</div>'+
-    '<div style="margin-top:4px;font-size:.72rem;color:var(--muted)">'+
-    'Stored length: '+storedPw.length+' &nbsp;·&nbsp; Entered length: '+enteredPw.length+
-    '</div>';
+  const sid  = s.studentId || key;
+  const name = s.name || key;
 
   if(match){
     resEl.innerHTML =
-      '<span style="color:var(--green);font-weight:600;font-size:.85rem">✓ LOGIN WOULD PASS</span>'+
-      ' &nbsp;·&nbsp; <span style="color:var(--muted)">password matches stored record</span>'+
-      infoRow;
+      '<span style="color:var(--green);font-weight:600">✓ LOGIN WOULD PASS</span>' +
+      ' &nbsp;·&nbsp; <span style="color:var(--muted)">'+name+' ('+sid+') — password matches stored record</span>';
   } else {
     resEl.innerHTML =
-      '<span style="color:var(--red);font-weight:600;font-size:.85rem">✗ LOGIN WOULD FAIL</span>'+
-      ' &nbsp;·&nbsp; <span style="color:var(--muted)">password does not match</span>'+
-      infoRow;
+      '<span style="color:var(--red);font-weight:600">✗ LOGIN WOULD FAIL</span>' +
+      ' &nbsp;·&nbsp; <span style="color:var(--muted)">'+name+' ('+sid+')</span><br>' +
+      '<span style="color:var(--muted)">Stored password length: '+storedPw.length+' &nbsp;·&nbsp; Entered length: '+enteredPw.length+'</span><br>' +
+      '<span style="color:var(--muted)">Stored (visible): <code style="background:var(--bg);padding:1px 5px;border-radius:3px;border:1px solid var(--border)">'+s.password+'</code></span>';
   }
 }
 
