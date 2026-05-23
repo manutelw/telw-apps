@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0044)file:///C:/Users/Manu/Downloads/index_2.html -->
+<!-- saved from url=(0042)file:///C:/Users/Manu/Downloads/index.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -1165,104 +1165,32 @@ function _sheetAccessToType(raw){
   return 'lum';
 }
 
-// ── Student ID generation — AAA001/YY format ─────────────────────────────────
-// prefix  : 3-letter institution prefix (e.g. "FII", "SUS", "IND", "UNK")
-// batch   : raw batch/year string (e.g. "2025-2027", "2026", "MBA 2025-27")
-// existing: current students object — used to find the highest serial for this prefix
-//
-// Returns : e.g. "FII003/27"
-//
-// Rules:
-//  • Serial is per-prefix and independent of other prefixes.
-//  • Year suffix is the last two digits of the end year extracted from batch string.
-//  • If no year can be extracted, falls back to current calendar year % 100.
-//  • Never overwrites an existing ID — caller must check before calling.
-
-function _institutionPrefix(institutionRaw){
-  var inst = (institutionRaw || '').trim();
-  if(!inst) return 'UNK';
-
-  // Detect independent / direct students
-  var lower = inst.toLowerCase();
-  if(lower === 'independent' || lower === 'direct' ||
-     lower === 'self' || lower === 'na' || lower === 'n/a' || lower === '-'){
-    return 'IND';
-  }
-
-  // Take first 3 letters of alphabetic characters (ignore leading punctuation/spaces)
-  var letters = inst.replace(/[^a-zA-Z]/g, '');
-  if(!letters) return 'UNK';
-  return letters.substring(0, 3).toUpperCase();
-}
-
-function _yearSuffix(batchRaw){
-  var b = (batchRaw || '').trim();
-
-  // Try patterns: "2025-2027", "2025-27", "2025/2027", "2025/27"
-  var rangeMatch = b.match(/\b20(\d{2})[\/\-–](?:20)?(\d{2})\b/);
-  if(rangeMatch) return rangeMatch[2].padStart(2, '0');  // end year last 2 digits
-
-  // Single year: "2027", "27"
-  var singleFull = b.match(/\b20(\d{2})\b/g);
-  if(singleFull && singleFull.length){
-    // Take the last year mentioned (usually the graduation year)
-    var last = singleFull[singleFull.length - 1];
-    return last.slice(-2);
-  }
-
-  // Two-digit year: "27", "28"
-  var twoDigit = b.match(/\b(\d{2})\b/);
-  if(twoDigit) return twoDigit[1];
-
-  // Fallback: current year
-  return String(new Date().getFullYear()).slice(-2);
-}
-
-function _nextSerialForPrefix(prefix, yearSuffix, existing){
-  // Find the highest serial number already used for this prefix+year combination
-  // Pattern: prefix + digits + "/" + yearSuffix   e.g. "FII003/27"
-  var maxSerial = 0;
-  var pattern = new RegExp('^' + prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(\\d+)\\/' + yearSuffix + '$', 'i');
-  Object.values(existing).forEach(function(s){
-    var id = String(s.studentId || '');
-    var m = id.match(pattern);
-    if(m){
-      var n = parseInt(m[1], 10);
-      if(n > maxSerial) maxSerial = n;
-    }
-  });
-  return maxSerial + 1;
-}
-
-function _generateClarionStudentId(institutionRaw, batchRaw, existing){
-  var prefix = _institutionPrefix(institutionRaw);
-  var year   = _yearSuffix(batchRaw);
-  var serial = _nextSerialForPrefix(prefix, year, existing);
-  return prefix + String(serial).padStart(3, '0') + '/' + year;
-}
-
-// Legacy shim: used by Add Student form (manual adds).
-// Falls back to simple sequential numeric ID for manually-added students without institution data.
+// Auto-generate a CLARION student ID that follows the existing numbering system.
+// Looks at all existing studentId values, finds the highest numeric one,
+// and returns the next number zero-padded to 3 digits (e.g. "007", "042").
+// Falls back to a timestamp-based ID if no numeric IDs exist yet.
 function _generateStudentId(existing){
-  var maxNum = 0;
+  let maxNum = 0;
   Object.values(existing).forEach(function(s){
-    var id = String(s.studentId || '');
-    var m = id.match(/(\d+)$/);
+    const id = String(s.studentId || '');
+    // Extract trailing digits from IDs like "STU007", "007", "42", "003"
+    const m = id.match(/(\d+)$/);
     if(m){
-      var n = parseInt(m[1], 10);
+      const n = parseInt(m[1], 10);
       if(n > maxNum) maxNum = n;
     }
   });
-  return String(maxNum + 1).padStart(3, '0');
+  // Increment and pad to 3 digits minimum
+  const next = maxNum + 1;
+  return String(next).padStart(3, '0');
 }
 
 // Fetch students from the Google Sheet via the Apps Script reader URL.
 // Uses Email ID as the primary matching key.
-// - Rows where status !== 'Accepted'/'Approved' are skipped.
-// - If email already exists in CLARION: update name, batch, programme, accessType, active,
-//   institution, groupCode. Password and studentId are NEVER overwritten.
-// - If email is new: use sheet-supplied studentId if present, otherwise generate one
-//   using the AAA001/YY format from institution + batch data.
+// - Rows where status !== 'Accepted' (case-insensitive) are skipped.
+// - If email already exists in CLARION: update name, batch, programme, accessType, active.
+//   Password is NEVER overwritten.
+// - If email is new: auto-generate a student ID and password, create the record.
 // - Rows with no email AND no name are skipped with a warning.
 // Returns: { added: N, updated: N, skipped: N, total: N, ts } or throws on failure.
 async function syncFromSheet(sheetUrl){
@@ -1296,16 +1224,12 @@ async function syncFromSheet(sheetUrl){
   let added = 0, updated = 0, skipped = 0;
 
   rows.forEach(function(row){
-    const name        = (row.name||'').trim();
-    const email       = (row.email||'').trim();
-    const batch       = (row.batch||'Batch A').trim();
-    const programme   = (row.programme||'').trim();
-    const status      = (row.status||'').trim().toLowerCase();
-    const access      = (row.access||'LUM').trim();
-    // New fields — flexible: sheet may or may not supply these
-    const institution = (row.institution || row.institute || row.college || '').trim();
-    const sheetSid    = (row.studentId   || row.student_id || row.id || '').trim();
-    const groupCode   = (row.groupCode   || row.group      || row.group_code || '').trim();
+    const name      = (row.name||'').trim();
+    const email     = (row.email||'').trim();
+    const batch     = (row.batch||'Batch A').trim();
+    const programme = (row.programme||'').trim();
+    const status    = (row.status||'').trim().toLowerCase();
+    const access    = (row.access||'LUM').trim();
 
     // Skip rows with no usable identity
     if(!email && !name){
@@ -1315,6 +1239,7 @@ async function syncFromSheet(sheetUrl){
     }
 
     // Accept rows where status is 'accepted' OR 'approved' (case-insensitive)
+    // The live endpoint returns 'Approved'; older configs may return 'Accepted'.
     const statusOk = status === 'accepted' || status === 'approved';
     if(!statusOk){
       console.log('[CLARION] Skipped row (status="'+row.status+'")', email||name);
@@ -1331,40 +1256,19 @@ async function syncFromSheet(sheetUrl){
 
     if(existingKey && existing[existingKey]){
       // ── Update existing student ──────────────────────────────────────────
-      existing[existingKey].name        = name        || existing[existingKey].name;
+      existing[existingKey].name        = name || existing[existingKey].name;
       existing[existingKey].batch       = batch;
       existing[existingKey].programme   = programme;
       existing[existingKey].accessType  = accessType;
       existing[existingKey].active      = active;
       existing[existingKey]._email      = email;
       existing[existingKey]._sheetSynced = true;
-      if(institution) existing[existingKey].institution = institution;
-      // Update groupCode only if not already set manually
-      if(groupCode && !existing[existingKey].groupCode)
-        existing[existingKey].groupCode = groupCode;
-      // Student ID and password are NEVER overwritten on update
-      console.log('[CLARION] Updated student:', existing[existingKey].studentId,
-        '|', name, '|', email);
+      // Password is NEVER touched here
+      console.log('[CLARION] Updated student:', existing[existingKey].studentId, '|', name, '|', email);
       updated++;
     } else {
       // ── Create new student ───────────────────────────────────────────────
-      // Prefer the Student ID supplied by the sheet (generated server-side).
-      // If not supplied, generate one client-side using institution + batch.
-      let newId;
-      if(sheetSid){
-        // Use the sheet-supplied ID — verify it isn't already taken
-        const isDupe = Object.values(existing).some(function(s){
-          return String(s.studentId||'').toLowerCase() === sheetSid.toLowerCase();
-        });
-        newId = isDupe ? _generateClarionStudentId(institution, batch, existing) : sheetSid;
-        if(isDupe) console.warn('[CLARION] Duplicate sheet ID "'+sheetSid+'" — generated new ID:', newId);
-      } else {
-        newId = _generateClarionStudentId(institution, batch, existing);
-      }
-
-      // Derive groupCode from prefix if not supplied by sheet
-      const derivedGroup = groupCode || _institutionPrefix(institution);
-
+      const newId  = _generateStudentId(existing);
       const newPw  = generatePassword();
       const newKey = newId;  // storage key = student ID
 
@@ -1376,17 +1280,14 @@ async function syncFromSheet(sheetUrl){
         programme:    programme,
         active:       active,
         accessType:   accessType,
-        institution:  institution,
-        groupCode:    derivedGroup,
         _email:       email,
         _sheetSynced: true
       };
 
-      // Register email→key so subsequent rows in same sync don't double-add
+      // Register email→key so subsequent rows in the same sync don't double-add
       if(emailLower) emailToKey[emailLower] = newKey;
 
-      console.log('[CLARION] Inserted new student:', newId, '|', name, '|', email,
-        '| group:', derivedGroup);
+      console.log('[CLARION] Inserted new student:', newId, '|', name, '|', email);
       added++;
     }
   });
@@ -4268,9 +4169,8 @@ function renderSetup(){
         '<button class="btn-primary" onclick="saveSheetUrl()">Save</button>'+
         '<button class="btn-secondary" onclick="clearSheetUrl()">Clear</button>'+
       '</div>'+
-      '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">'+
+      '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'+
         '<button class="btn-primary" style="background:var(--green)" onclick="manualSheetSync()">↻ Sync Now</button>'+
-        '<button class="btn-secondary" style="font-size:.78rem" onclick="generateMissingStudentIds()">🪪 Generate Missing Student IDs</button>'+
         '<span id="sheet-sync-status" style="font-family:var(--mono);font-size:.72rem;color:var(--muted)">'+
           (localStorage.getItem('clarion_sheet_url')
             ? (localStorage.getItem('clarion_sheet_last_sync')
@@ -4279,180 +4179,10 @@ function renderSetup(){
             : 'No URL set — students loaded from local store only')+
         '</span>'+
       '</div>'+
-      '<p style="margin-top:4px;font-family:var(--mono);font-size:.68rem;color:var(--dim)">'+
-        'Sheet columns used: Timestamp · Full Name · Email ID · Institution · Batch · Student ID · Status (Accepted/Approved) · Access (LUM / GD / PI / DEMO / NONE). '+
-        'Student IDs are generated as <strong>AAA001/YY</strong> (institution prefix + serial + year). Email ID is the matching key.'+
+      '<p style="margin-top:8px;font-family:var(--mono);font-size:.68rem;color:var(--dim)">'+
+        'Sheet columns used: Full Name · Email ID · Batch · Programme / Domain · Status (Accepted/Pending) · Access (LUM / GD / PI / DEMO / NONE). '+
+        'Email ID is the matching key — student IDs and passwords are auto-generated by CLARION.'+
       '</p>'+
-
-      // ── Apps Script template for sheet reader ─────────────────────────────
-      '<details style="margin-top:10px">'+
-        '<summary style="font-family:var(--mono);font-size:.72rem;color:var(--muted);cursor:pointer;user-select:none">'+
-          '📋 Apps Script — Sheet Reader + Student ID Generation template'+
-        '</summary>'+
-        '<div style="margin-top:10px;font-size:.78rem;color:var(--ink2);line-height:1.7">'+
-          '<p style="margin-bottom:6px">Deploy this as a Web App (Execute as: Me · Access: Anyone) and paste the <code style="font-family:var(--mono);background:var(--bg);padding:1px 5px;border-radius:3px">/exec</code> URL above.</p>'+
-          '<p style="margin-bottom:6px">The script reads your Google Sheet, auto-generates a Student ID (<code style="font-family:var(--mono)">AAA001/YY</code> format) for any row where the Student ID cell is blank, writes it back to the sheet, then returns all Accepted/Approved rows to CLARION.</p>'+
-          '<p style="margin-bottom:8px;color:var(--gold);font-weight:600">⚠ Set SHEET_NAME and SPREADSHEET_ID in the script constants before deploying.</p>'+
-          '<div style="padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:.65rem;color:var(--muted);line-height:1.8;white-space:pre-wrap;word-break:break-all;max-height:420px;overflow-y:auto">'+
-'// ═══════════════════════════════════════════════\n'+
-'// CLARION Sheet Reader + Student ID Generator\n'+
-'// Deploy as: Web App · Execute as: Me · Access: Anyone\n'+
-'// ═══════════════════════════════════════════════\n'+
-'var SPREADSHEET_ID = "YOUR_SPREADSHEET_ID_HERE"; // ← replace\n'+
-'var SHEET_NAME     = "Form Responses 1";          // ← sheet tab name\n'+
-'\n'+
-'// Column header flexible matching — covers common variants\n'+
-'var COL = {\n'+
-'  timestamp:   ["timestamp","submitted","date"],\n'+
-'  name:        ["student name","full name","name"],\n'+
-'  email:       ["email","email id","email address"],\n'+
-'  institution: ["institution","institute","college","university","school","organisation"],\n'+
-'  batch:       ["batch","academic year","year","programme year","cohort"],\n'+
-'  programme:   ["programme","program","domain","course","specialisation"],\n'+
-'  status:      ["status","approval","approval status"],\n'+
-'  access:      ["access","access type","package","plan"],\n'+
-'  studentId:   ["student id","studentid","student_id","id"],\n'+
-'};\n'+
-'\n'+
-'function doGet(e) {\n'+
-'  var action = (e.parameter && e.parameter.action) || "";\n'+
-'  if(action === "students") return getStudents_();\n'+
-'  if(action === "generateIds") return generateMissing_();\n'+
-'  return out({error: "unknown action"});\n'+
-'}\n'+
-'\n'+
-'function getStudents_() {\n'+
-'  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);\n'+
-'  var sheet = ss.getSheetByName(SHEET_NAME);\n'+
-'  if(!sheet) return out({error: "Sheet not found: " + SHEET_NAME});\n'+
-'\n'+
-'  var data    = sheet.getDataRange().getValues();\n'+
-'  var headers = data[0].map(function(h){ return h.toString().toLowerCase().trim(); });\n'+
-'  var colIdx  = mapColumns_(headers);\n'+
-'\n'+
-'  // Auto-generate missing Student IDs before returning rows\n'+
-'  generateMissingInSheet_(sheet, data, headers, colIdx);\n'+
-'  // Re-read after writes\n'+
-'  data = sheet.getDataRange().getValues();\n'+
-'\n'+
-'  var rows = [];\n'+
-'  for(var i = 1; i < data.length; i++) {\n'+
-'    var r = data[i];\n'+
-'    var status = get_(r, colIdx.status);\n'+
-'    if(!status || (status.toLowerCase() !== "accepted" && status.toLowerCase() !== "approved")) continue;\n'+
-'    rows.push({\n'+
-'      timestamp:   get_(r, colIdx.timestamp),\n'+
-'      name:        get_(r, colIdx.name),\n'+
-'      email:       get_(r, colIdx.email),\n'+
-'      institution: get_(r, colIdx.institution),\n'+
-'      batch:       get_(r, colIdx.batch),\n'+
-'      programme:   get_(r, colIdx.programme),\n'+
-'      status:      status,\n'+
-'      access:      get_(r, colIdx.access) || "LUM",\n'+
-'      studentId:   get_(r, colIdx.studentId),\n'+
-'      groupCode:   institutionPrefix_(get_(r, colIdx.institution)),\n'+
-'    });\n'+
-'  }\n'+
-'  return out({students: rows});\n'+
-'}\n'+
-'\n'+
-'function generateMissing_() {\n'+
-'  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);\n'+
-'  var sheet = ss.getSheetByName(SHEET_NAME);\n'+
-'  if(!sheet) return out({error: "Sheet not found"});\n'+
-'  var data    = sheet.getDataRange().getValues();\n'+
-'  var headers = data[0].map(function(h){ return h.toString().toLowerCase().trim(); });\n'+
-'  var colIdx  = mapColumns_(headers);\n'+
-'  var n = generateMissingInSheet_(sheet, data, headers, colIdx);\n'+
-'  return out({generated: n});\n'+
-'}\n'+
-'\n'+
-'// Scans rows, generates IDs for blank Student ID cells, writes back to sheet.\n'+
-'// Returns count of IDs written.\n'+
-'function generateMissingInSheet_(sheet, data, headers, colIdx) {\n'+
-'  if(colIdx.studentId < 0) return 0; // no Student ID column\n'+
-'  var generated = 0;\n'+
-'  // Build map of existing IDs to prevent duplicates\n'+
-'  var usedIds = {};\n'+
-'  for(var i = 1; i < data.length; i++) {\n'+
-'    var sid = get_(data[i], colIdx.studentId).trim();\n'+
-'    if(sid) usedIds[sid.toUpperCase()] = true;\n'+
-'  }\n'+
-'  for(var i = 1; i < data.length; i++) {\n'+
-'    var r   = data[i];\n'+
-'    var sid = get_(r, colIdx.studentId).trim();\n'+
-'    if(sid) continue; // already has an ID\n'+
-'    var inst  = get_(r, colIdx.institution).trim();\n'+
-'    var batch = get_(r, colIdx.batch).trim();\n'+
-'    var ts    = get_(r, colIdx.timestamp);\n'+
-'    var newId = generateId_(inst, batch, usedIds);\n'+
-'    usedIds[newId.toUpperCase()] = true;\n'+
-'    sheet.getRange(i + 1, colIdx.studentId + 1).setValue(newId);\n'+
-'    data[i][colIdx.studentId] = newId; // update in-memory copy too\n'+
-'    generated++;\n'+
-'  }\n'+
-'  return generated;\n'+
-'}\n'+
-'\n'+
-'function generateId_(institutionRaw, batchRaw, usedIds) {\n'+
-'  var prefix = institutionPrefix_(institutionRaw);\n'+
-'  var year   = yearSuffix_(batchRaw);\n'+
-'  var serial = 1;\n'+
-'  var candidate;\n'+
-'  do {\n'+
-'    candidate = prefix + pad_(serial, 3) + "/" + year;\n'+
-'    serial++;\n'+
-'  } while(usedIds[candidate.toUpperCase()]);\n'+
-'  return candidate;\n'+
-'}\n'+
-'\n'+
-'function institutionPrefix_(raw) {\n'+
-'  var s = (raw || "").trim();\n'+
-'  if(!s) return "UNK";\n'+
-'  var lo = s.toLowerCase();\n'+
-'  if(lo === "independent" || lo === "direct" || lo === "self" || lo === "na" || lo === "n/a" || lo === "-") return "IND";\n'+
-'  var letters = s.replace(/[^a-zA-Z]/g, "");\n'+
-'  if(!letters) return "UNK";\n'+
-'  return letters.substring(0, 3).toUpperCase();\n'+
-'}\n'+
-'\n'+
-'function yearSuffix_(raw) {\n'+
-'  var b = (raw || "").trim();\n'+
-'  var m = b.match(/\\b20(\\d{2})[\\/\\-\\u2013](?:20)?(\\d{2})\\b/);\n'+
-'  if(m) return m[2];\n'+
-'  var all = b.match(/\\b20(\\d{2})\\b/g);\n'+
-'  if(all && all.length) return all[all.length-1].slice(-2);\n'+
-'  var td = b.match(/\\b(\\d{2})\\b/);\n'+
-'  if(td) return td[1];\n'+
-'  return new Date().getFullYear().toString().slice(-2);\n'+
-'}\n'+
-'\n'+
-'function pad_(n, len) { return String(n).padStart(len, "0"); }\n'+
-'\n'+
-'function mapColumns_(headers) {\n'+
-'  var result = {};\n'+
-'  for(var key in COL) {\n'+
-'    result[key] = -1;\n'+
-'    for(var j = 0; j < headers.length; j++) {\n'+
-'      var h = headers[j];\n'+
-'      for(var k = 0; k < COL[key].length; k++) {\n'+
-'        if(h.indexOf(COL[key][k]) !== -1) { result[key] = j; break; }\n'+
-'      }\n'+
-'      if(result[key] !== -1) break;\n'+
-'    }\n'+
-'  }\n'+
-'  return result;\n'+
-'}\n'+
-'\n'+
-'function get_(row, idx) { return idx >= 0 && idx < row.length ? String(row[idx] || "").trim() : ""; }\n'+
-'\n'+
-'function out(obj) {\n'+
-'  return ContentService.createTextOutput(JSON.stringify(obj))\n'+
-'    .setMimeType(ContentService.MimeType.JSON);\n'+
-'}'+
-          '</div>'+
-        '</div>'+
-      '</details>'+
     '</div>' : '')+
 
     // ── GOOGLE DRIVE AUDIO UPLOAD ─────────────────────────────────────────────
@@ -5290,109 +5020,6 @@ function manualSheetSync(){
     if(el) el.textContent='Sync failed: '+e.message;
     console.error('[CLARION] Manual sheet sync failed:', e);
   });
-}
-
-// ── Generate Missing Student IDs — admin utility ──────────────────────────────
-// Scans all students in the local store. For any student whose studentId is blank,
-// numeric-only, or missing the AAA001/YY format, generates a new ID from their
-// institution + batch data. Never overwrites a valid existing ID.
-// Shows a modal summary: processed / generated / skipped / errors.
-function generateMissingStudentIds(){
-  const existing = getStudents();
-  const entries  = Object.entries(existing);
-
-  var processed = 0, generated = 0, skipped = 0;
-  var errors = [];
-  // Work on a snapshot copy to avoid mutation during iteration
-  var updated = JSON.parse(JSON.stringify(existing));
-
-  // We need to pass the growing `updated` map to the ID generator so serial
-  // numbers within this batch don't collide with each other.
-  entries.forEach(function([key, s]){
-    processed++;
-    var sid = (s.studentId || '').trim();
-
-    // Already has a properly formatted CLARION ID — skip
-    if(sid && /^[A-Z]{3}\d{3}\/\d{2}$/.test(sid)){
-      skipped++;
-      return;
-    }
-
-    // Blank, numeric-only, or malformed — generate a new one
-    try{
-      var newId = _generateClarionStudentId(
-        s.institution || s._institution || '',
-        s.batch       || '',
-        updated       // pass growing map so serials are unique within this run
-      );
-
-      // Safety: if somehow there's a collision, keep trying with incremented serial
-      var attempts = 0;
-      while(
-        Object.values(updated).some(function(x){ return x.studentId === newId; }) &&
-        attempts < 100
-      ){
-        // Increment serial manually for retry
-        var m = newId.match(/^([A-Z]{3})(\d+)\/(\d{2})$/);
-        if(m) newId = m[1] + String(parseInt(m[2])+1).padStart(3,'0') + '/' + m[3];
-        attempts++;
-      }
-
-      // If oldKey !== newId, we need to re-key the storage entry
-      var oldKey = key;
-      updated[newId] = Object.assign({}, updated[oldKey], { studentId: newId });
-      if(oldKey !== newId) delete updated[oldKey];
-
-      console.log('[CLARION] generateMissingIds: '+oldKey+' → '+newId
-        +' ('+s.name+')');
-      generated++;
-    } catch(err){
-      errors.push(s.name + ': ' + err.message);
-      skipped++;
-    }
-  });
-
-  if(generated > 0){
-    putStudents(updated);
-    loadRegistry();
-  }
-
-  // Show summary in modal
-  var overlay = document.getElementById('overlay');
-  var body    = document.getElementById('modal-body');
-  if(!overlay || !body) return;
-  body.innerHTML =
-    '<div style="padding:24px 20px">'+
-    '<div class="card-lbl" style="margin-bottom:12px">Generate Missing Student IDs — Summary</div>'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'+
-      '<div style="padding:12px;background:var(--bg);border-radius:var(--r);border:1px solid var(--border);text-align:center">'+
-        '<div style="font-family:var(--mono);font-size:1.4rem;color:var(--ink)">'+processed+'</div>'+
-        '<div style="font-size:.72rem;color:var(--muted)">Total scanned</div>'+
-      '</div>'+
-      '<div style="padding:12px;background:var(--bg);border-radius:var(--r);border:1px solid var(--green);text-align:center">'+
-        '<div style="font-family:var(--mono);font-size:1.4rem;color:var(--green)">'+generated+'</div>'+
-        '<div style="font-size:.72rem;color:var(--muted)">IDs generated</div>'+
-      '</div>'+
-      '<div style="padding:12px;background:var(--bg);border-radius:var(--r);border:1px solid var(--border);text-align:center">'+
-        '<div style="font-family:var(--mono);font-size:1.4rem;color:var(--muted)">'+skipped+'</div>'+
-        '<div style="font-size:.72rem;color:var(--muted)">Skipped (had ID)</div>'+
-      '</div>'+
-      (errors.length ?
-      '<div style="padding:12px;background:var(--bg);border-radius:var(--r);border:1px solid var(--red);text-align:center">'+
-        '<div style="font-family:var(--mono);font-size:1.4rem;color:var(--red)">'+errors.length+'</div>'+
-        '<div style="font-size:.72rem;color:var(--muted)">Errors</div>'+
-      '</div>' : '')+
-    '</div>'+
-    (errors.length ?
-      '<div style="font-family:var(--mono);font-size:.72rem;color:var(--red);margin-bottom:12px;max-height:120px;overflow-y:auto">'+
-        errors.map(function(e){ return '• '+e; }).join('<br>')+
-      '</div>' : '')+
-    (generated > 0 ?
-      '<p style="font-size:.82rem;color:var(--green);margin-bottom:12px">✓ '+generated+' IDs written to local student store.</p>' :
-      '<p style="font-size:.82rem;color:var(--muted);margin-bottom:12px">No IDs needed generating — all students already have valid IDs.</p>')+
-    '<button class="btn-primary" onclick="closeModal();renderSetup();">Done</button>'+
-    '</div>';
-  overlay.classList.add('on');
 }
 
 // ── Trainer password ──────────────────────────────────────────────────────────
