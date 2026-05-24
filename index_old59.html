@@ -1108,9 +1108,11 @@ async function _cloudConfigLoad(){
     if(!localStorage.getItem(AUTOOPS_CONFIG_KEY)){
       localStorage.setItem(AUTOOPS_CONFIG_KEY, aoUrl);
     }
-    // NOTE: clarion_admin_script_url is NOT written here.
-    // The Admin Auth script is a separate deployment from AutoOps.
-    // It defaults to DEFAULT_ADMIN_AUTH_URL and must never be overwritten with the AutoOps URL.
+    // Also write clarion_admin_script_url if not already set — ensures doAdminLogin
+    // uses backend verification on every device without manual configuration.
+    if(!localStorage.getItem('clarion_admin_script_url')){
+      localStorage.setItem('clarion_admin_script_url', aoUrl);
+    }
     // Populate localStorage and live state from cloud, but only overwrite if
     // the cloud has a non-empty value (preserves local overrides when cloud is blank)
     if(data.aiScoringUrl){
@@ -1597,14 +1599,6 @@ function _autoOpsUrl(){
   return localStorage.getItem(AUTOOPS_CONFIG_KEY) || DEFAULT_AUTOOPS_URL;
 }
 
-// Admin Auth URL — resolves the script that handles verifyAdmin / changeAdmin / resetAdmin.
-// This is SEPARATE from _autoOpsUrl() which points to the AutoOps / onboarding script.
-// Priority: 1) clarion_admin_script_url in localStorage  2) DEFAULT_ADMIN_AUTH_URL.
-// Never falls back to the AutoOps URL — that script does not have verifyAdmin.
-function _adminAuthUrl(){
-  return localStorage.getItem('clarion_admin_script_url') || DEFAULT_ADMIN_AUTH_URL;
-}
-
 // ── Core fetch helper ─────────────────────────────────────────────────────────
 async function _autoOpsFetch(action, extra){
   const base = _autoOpsUrl();
@@ -1896,12 +1890,10 @@ const ADMIN_EMAIL = 'admin';
 // No admin password, hash, or fallback credential is held in this file or in localStorage.
 // See the Admin Security card in Setup for configuration instructions.
 //
-// DEFAULT_ADMIN_AUTH_URL: the dedicated Admin Auth Apps Script (verifyAdmin / changeAdmin / resetAdmin).
-// This is SEPARATE from the AutoOps script. It is the only URL used for admin login verification.
-// Used on every device that has not manually saved a clarion_admin_script_url.
-const DEFAULT_ADMIN_AUTH_URL = 'https://script.google.com/macros/s/AKfycbzhAUjrOuo_axuQZ1NFuGLuqzCXcfnm0m6RoRvmrXE5UsbojuK3pyqAOmIbkcAo7Xkz/exec';
-//
-// BOOTSTRAP_PASSWORD is only accepted when the backend is unreachable AND an emergency flag is set.
+// BOOTSTRAP_PASSWORD is used ONLY when localStorage['clarion_admin_script_url'] is absent.
+// It grants one-time access to Setup → Admin Security so the admin can paste the Script URL.
+// Once the Script URL is saved, PATH A (central verification) takes over automatically.
+// If the Script URL is later cleared, bootstrap re-enables — the admin always has a way in.
 const BOOTSTRAP_PASSWORD = 'ClarionAdmin@2026';
 
 const ROLE_PERMISSIONS = {
@@ -2057,7 +2049,6 @@ function _showAdminLoginPanel(){
     '<input class="f-input" id="admin-login-pw" type="password" placeholder="Admin password" autocomplete="new-password" style="margin-bottom:16px" onkeydown="if(event.key===\'Enter\'){doAdminLogin();}">'+
     '<button class="btn-primary" onclick="doAdminLogin()" style="width:100%">Enter Admin Mode</button>'+
     '<div id="admin-login-err" style="font-family:var(--mono);font-size:.72rem;color:var(--red);margin-top:8px;display:none">Incorrect admin password.</div>'+
-    '<div id="admin-login-diag" style="font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-top:10px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:4px;line-height:1.7;display:none"></div>'+
     '</div>';
   overlay.classList.add('on');
   setTimeout(function(){ var el=document.getElementById('admin-login-pw');if(el)el.focus(); }, 80);
@@ -2071,96 +2062,86 @@ async function doAdminLogin(){
          .replace(/[\u201C\u201D\u201E\u201F]/g,'"')
          .replace(/^[\r\n]+|[\r\n]+$/g,'');
 
-  var errEl  = document.getElementById('admin-login-err');
-  var diagEl = document.getElementById('admin-login-diag');
-  var btn    = document.querySelector('#modal-body .btn-primary');
+  var errEl = document.getElementById('admin-login-err');
+  var btn   = document.querySelector('#modal-body .btn-primary');
 
   function showErr(msg){
     if(errEl){ errEl.textContent = msg; errEl.style.display = 'block'; }
     if(btn){ btn.textContent = 'Enter Admin Mode'; btn.disabled = false; }
   }
 
-  function showDiag(lines){
-    if(!diagEl) return;
-    diagEl.innerHTML = lines.map(function(l){
-      return '<div>'+l+'</div>';
-    }).join('');
-    diagEl.style.display = 'block';
-  }
-
   if(!pw){ showErr('Please enter the admin password.'); return; }
 
-  // Resolve admin auth URL. Uses _adminAuthUrl() which always falls back to
-  // DEFAULT_ADMIN_AUTH_URL — NEVER falls back to the AutoOps script URL.
-  var scriptUrl  = _adminAuthUrl();
-  var urlSource  = localStorage.getItem('clarion_admin_script_url')
-                   ? 'local/cloud'
-                   : 'default';
+  // Resolve the admin auth URL.
+  // Priority: explicitly saved admin script URL → AutoOps URL (which has DEFAULT_AUTOOPS_URL fallback).
+  // This ensures backend verification works on every device — including devices that have
+  // never had a URL manually pasted — as long as the hardcoded default script is reachable.
+  var scriptUrl = localStorage.getItem('clarion_admin_script_url') || _autoOpsUrl();
 
-  // ── PATH A: central verification ──────────────────────────────────────────
-  if(btn){ btn.textContent = 'Verifying…'; btn.disabled = true; }
-  if(errEl) errEl.style.display = 'none';
-  if(diagEl) diagEl.style.display = 'none';
+  // ── PATH A: central verification (always attempted when a URL is available) ─
+  if(scriptUrl){
+    if(btn){ btn.textContent = 'Verifying…'; btn.disabled = true; }
+    if(errEl) errEl.style.display = 'none';
 
-  var ok          = false;
-  var networkFail = false;
-  var httpStatus  = '';
-  var rawResponse = '';
+    var ok = false;
+    var networkFail = false;
+    try{
+      var url = scriptUrl + (scriptUrl.includes('?') ? '&' : '?') +
+                'action=verifyAdmin&pw=' + encodeURIComponent(pw);
+      var res  = await fetch(url, {method:'GET', cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      var data = await res.json();
+      ok = data.ok === true;
+    } catch(err){
+      console.warn('[CLARION] Admin verify network error:', err.message);
+      networkFail = true;
+    }
 
-  try{
-    var verifyUrl = scriptUrl + (scriptUrl.includes('?') ? '&' : '?') +
-                    'action=verifyAdmin&pw=' + encodeURIComponent(pw);
-    console.log('[CLARION] Admin auth URL:', scriptUrl, '| source:', urlSource);
-    var res = await fetch(verifyUrl, {method:'GET', cache:'no-store'});
-    httpStatus = String(res.status);
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    var data = await res.json();
-    rawResponse = JSON.stringify(data);
-    ok = data.ok === true;
-    console.log('[CLARION] Admin verify response:', rawResponse);
-  } catch(err){
-    console.warn('[CLARION] Admin verify error:', err.message);
-    networkFail = true;
-    rawResponse = err.message;
+    // Password verified by backend — grant access
+    if(ok){
+      _finishAdminLogin(false);   // normal — full access
+      return;
+    }
+
+    // Backend responded but rejected the password — hard stop, no fallback
+    if(!networkFail){
+      showErr('Incorrect admin password.');
+      return;
+    }
+
+    // Network/script failure — only allow bootstrap if emergency flag is active
+    // Emergency flag: localStorage['clarion_admin_emergency'] = expiry timestamp (ms)
+    var emergencyUntil = parseInt(localStorage.getItem('clarion_admin_emergency') || '0', 10);
+    var emergencyActive = emergencyUntil > Date.now();
+
+    if(!emergencyActive){
+      showErr('Admin verification unavailable. Please try again. ' +
+              'If the backend is permanently unavailable, use emergency access from Setup.');
+      return;
+    }
+
+    // Emergency flag is active — fall through to PATH B below
+    console.warn('[CLARION] Emergency bootstrap mode active — network auth failed');
   }
 
-  if(ok){
-    _finishAdminLogin(false);
+  // ── PATH B: emergency bootstrap — only when backend unreachable AND emergency flag set ──
+  // NEVER active on normal operation. The emergency flag is set via enableAdminEmergency()
+  // which is only callable from the Apps Script admin auth card in Setup.
+  // The flag expires automatically (default 15 minutes).
+  var emergencyUntil2 = parseInt(localStorage.getItem('clarion_admin_emergency') || '0', 10);
+  if(emergencyUntil2 <= Date.now()){
+    showErr('Admin verification unavailable. Backend unreachable.');
     return;
   }
 
-  // Show diagnostic whenever login fails so the admin can see what happened
-  showDiag([
-    'Auth URL: ' + scriptUrl.substring(0, 72) + '…',
-    'URL source: ' + urlSource,
-    'Backend reached: ' + (!networkFail ? 'yes (HTTP ' + httpStatus + ')' : 'no — ' + rawResponse),
-    'Backend ok: ' + (networkFail ? 'n/a' : String(ok)),
-  ]);
-
-  // Backend responded and rejected the password — hard stop, no fallback
-  if(!networkFail){
-    showErr('Incorrect admin password.');
-    return;
-  }
-
-  // Network failure — only allow bootstrap if emergency flag is active
-  var emergencyUntil = parseInt(localStorage.getItem('clarion_admin_emergency') || '0', 10);
-  if(emergencyUntil <= Date.now()){
-    showErr('Admin verification unavailable — backend unreachable. ' +
-            'If needed, enable emergency access from Setup.');
-    return;
-  }
-
-  // Emergency flag active — fall through to PATH B
-  console.warn('[CLARION] Emergency bootstrap active — network auth failed');
-
-  // ── PATH B: emergency bootstrap — backend unreachable + emergency flag ─────
-  localStorage.removeItem('clarion_admin_emergency');  // single-use
   if(pw !== BOOTSTRAP_PASSWORD){
     showErr('Incorrect emergency password.');
     return;
   }
-  _finishAdminLogin(true);   // bootstrap mode — restricted to adm-setup
+
+  // Clear the emergency flag immediately after use — single-use
+  localStorage.removeItem('clarion_admin_emergency');
+  _finishAdminLogin(true);   // bootstrap mode — navigation restricted to adm-setup
 }
 
 // Shared post-auth steps for both login paths.
@@ -5434,8 +5415,7 @@ function renderSetup(){
     (function(){
       // ── Compute live auth state for the diagnostic ─────────────────────
       var storedScriptUrl  = localStorage.getItem('clarion_admin_script_url') || '';
-      var effectiveAuthUrl = _adminAuthUrl();   // always DEFAULT_ADMIN_AUTH_URL as fallback
-      var urlSource        = storedScriptUrl ? 'local/cloud saved' : 'built-in default';
+      var effectiveAuthUrl = storedScriptUrl || _autoOpsUrl();
       var emergencyUntil   = parseInt(localStorage.getItem('clarion_admin_emergency') || '0', 10);
       var emergencyActive  = emergencyUntil > Date.now();
       var emergencyMinsLeft = emergencyActive ? Math.ceil((emergencyUntil - Date.now()) / 60000) : 0;
@@ -5444,7 +5424,9 @@ function renderSetup(){
       if(effectiveAuthUrl){
         authSource = 'Backend verification';
         authColor  = 'var(--green)';
-        authDesc   = 'URL: ' + effectiveAuthUrl.substring(0,72) + '… (' + urlSource + ')';
+        authDesc   = storedScriptUrl
+          ? 'Saved URL: ' + storedScriptUrl.substring(0,72) + '…'
+          : 'Cloud-bootstrapped default URL (no manual entry needed)';
       } else {
         authSource = 'Error — no URL available';
         authColor  = 'var(--red)';
