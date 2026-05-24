@@ -1108,11 +1108,6 @@ async function _cloudConfigLoad(){
     if(!localStorage.getItem(AUTOOPS_CONFIG_KEY)){
       localStorage.setItem(AUTOOPS_CONFIG_KEY, aoUrl);
     }
-    // Also write clarion_admin_script_url if not already set — ensures doAdminLogin
-    // uses backend verification on every device without manual configuration.
-    if(!localStorage.getItem('clarion_admin_script_url')){
-      localStorage.setItem('clarion_admin_script_url', aoUrl);
-    }
     // Populate localStorage and live state from cloud, but only overwrite if
     // the cloud has a non-empty value (preserves local overrides when cloud is blank)
     if(data.aiScoringUrl){
@@ -2072,19 +2067,14 @@ async function doAdminLogin(){
 
   if(!pw){ showErr('Please enter the admin password.'); return; }
 
-  // Resolve the admin auth URL.
-  // Priority: explicitly saved admin script URL → AutoOps URL (which has DEFAULT_AUTOOPS_URL fallback).
-  // This ensures backend verification works on every device — including devices that have
-  // never had a URL manually pasted — as long as the hardcoded default script is reachable.
-  var scriptUrl = localStorage.getItem('clarion_admin_script_url') || _autoOpsUrl();
+  var scriptUrl = localStorage.getItem('clarion_admin_script_url') || '';
 
-  // ── PATH A: central verification (always attempted when a URL is available) ─
+  // ── PATH A: central verification — Script URL is configured ──────────────
   if(scriptUrl){
     if(btn){ btn.textContent = 'Verifying…'; btn.disabled = true; }
     if(errEl) errEl.style.display = 'none';
 
     var ok = false;
-    var networkFail = false;
     try{
       var url = scriptUrl + (scriptUrl.includes('?') ? '&' : '?') +
                 'action=verifyAdmin&pw=' + encodeURIComponent(pw);
@@ -2094,54 +2084,26 @@ async function doAdminLogin(){
       ok = data.ok === true;
     } catch(err){
       console.warn('[CLARION] Admin verify network error:', err.message);
-      networkFail = true;
-    }
-
-    // Password verified by backend — grant access
-    if(ok){
-      _finishAdminLogin(false);   // normal — full access
+      showErr('Admin verification unavailable. Please try again.');
       return;
     }
 
-    // Backend responded but rejected the password — hard stop, no fallback
-    if(!networkFail){
-      showErr('Incorrect admin password.');
-      return;
-    }
+    if(!ok){ showErr('Incorrect admin password.'); return; }
 
-    // Network/script failure — only allow bootstrap if emergency flag is active
-    // Emergency flag: localStorage['clarion_admin_emergency'] = expiry timestamp (ms)
-    var emergencyUntil = parseInt(localStorage.getItem('clarion_admin_emergency') || '0', 10);
-    var emergencyActive = emergencyUntil > Date.now();
-
-    if(!emergencyActive){
-      showErr('Admin verification unavailable. Please try again. ' +
-              'If the backend is permanently unavailable, use emergency access from Setup.');
-      return;
-    }
-
-    // Emergency flag is active — fall through to PATH B below
-    console.warn('[CLARION] Emergency bootstrap mode active — network auth failed');
-  }
-
-  // ── PATH B: emergency bootstrap — only when backend unreachable AND emergency flag set ──
-  // NEVER active on normal operation. The emergency flag is set via enableAdminEmergency()
-  // which is only callable from the Apps Script admin auth card in Setup.
-  // The flag expires automatically (default 15 minutes).
-  var emergencyUntil2 = parseInt(localStorage.getItem('clarion_admin_emergency') || '0', 10);
-  if(emergencyUntil2 <= Date.now()){
-    showErr('Admin verification unavailable. Backend unreachable.');
+    _finishAdminLogin(false);   // normal — full access
     return;
   }
 
+  // ── PATH B: bootstrap — no Script URL configured yet ─────────────────────
+  // The bootstrap password grants one-time access to Setup → Admin Security.
+  // This path is re-enabled whenever the Script URL is absent, which is correct:
+  // if the URL is cleared the admin must be able to get back in to reconfigure.
   if(pw !== BOOTSTRAP_PASSWORD){
-    showErr('Incorrect emergency password.');
+    showErr('Incorrect password.');
     return;
   }
 
-  // Clear the emergency flag immediately after use — single-use
-  localStorage.removeItem('clarion_admin_emergency');
-  _finishAdminLogin(true);   // bootstrap mode — navigation restricted to adm-setup
+  _finishAdminLogin(true);   // bootstrap — navigation restricted to adm-setup
 }
 
 // Shared post-auth steps for both login paths.
@@ -2539,8 +2501,7 @@ function logout(){
   if(S.audioEl && S.audioEl.src && S.audioEl.src.startsWith('blob:')){
     try{ URL.revokeObjectURL(S.audioEl.src); }catch(e){}
   }
-  S.user=null;S.role=null;S._publicDemo=false;S._bootstrapMode=false;
-  localStorage.removeItem('clarion_admin_emergency');  // emergency flag must never survive logout
+  S.user=null;S.role=null;S._publicDemo=false;
   autoOpsStopTimer();
   clearInterval(S.recTimer);
   document.getElementById('app').classList.remove('on');
@@ -5412,142 +5373,143 @@ function renderSetup(){
       '</div>');
     })() : '')+
     (S.role==='admin' ?
-    (function(){
-      // ── Compute live auth state for the diagnostic ─────────────────────
-      var storedScriptUrl  = localStorage.getItem('clarion_admin_script_url') || '';
-      var effectiveAuthUrl = storedScriptUrl || _autoOpsUrl();
-      var emergencyUntil   = parseInt(localStorage.getItem('clarion_admin_emergency') || '0', 10);
-      var emergencyActive  = emergencyUntil > Date.now();
-      var emergencyMinsLeft = emergencyActive ? Math.ceil((emergencyUntil - Date.now()) / 60000) : 0;
+    '<div class="card" style="border-left:4px solid var(--red);margin-top:8px">'+
+      '<div class="card-lbl" style="color:var(--red)">Admin Security</div>'+
+      '<p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">'+
+        'Admin passwords are verified by a central Google Apps Script. '+
+        'A change takes effect on every device immediately. '+
+        'No password is stored in this app or in any browser. '+
+        '<strong style="color:var(--ink)">Each device must have the Script URL pasted once.</strong>'+
+      '</p>'+
 
-      var authSource, authColor, authDesc;
-      if(effectiveAuthUrl){
-        authSource = 'Backend verification';
-        authColor  = 'var(--green)';
-        authDesc   = storedScriptUrl
-          ? 'Saved URL: ' + storedScriptUrl.substring(0,72) + '…'
-          : 'Cloud-bootstrapped default URL (no manual entry needed)';
-      } else {
-        authSource = 'Error — no URL available';
-        authColor  = 'var(--red)';
-        authDesc   = 'No backend URL found. Admin login will fail.';
-      }
-
-      var emergencyBanner = emergencyActive
-        ? '<div style="margin-bottom:12px;padding:8px 12px;background:rgba(196,50,10,.06);border:1px solid var(--red);border-radius:var(--r)">'+
-            '<div style="font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--red)">'+
-              '⚠ Emergency access active — expires in '+emergencyMinsLeft+' min'+
-            '</div>'+
-            '<div style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-top:2px">'+
-              'Bootstrap password accepted only when backend is also unreachable. Single-use.'+
-            '</div>'+
-            '<button class="btn-secondary" style="margin-top:8px;font-size:.72rem" onclick="clearAdminEmergency();renderSetup()">Revoke Emergency Access</button>'+
-          '</div>'
-        : '';
-
-      return (
-      '<div class="card" style="border-left:4px solid var(--red);margin-top:8px">'+
-        '<div class="card-lbl" style="color:var(--red)">Admin Security</div>'+
-
-        '<div style="margin-bottom:16px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r)">'+
-          '<div style="font-family:var(--mono);font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Auth Source Diagnostic</div>'+
-          '<div style="font-family:var(--mono);font-size:.78rem;font-weight:600;color:'+authColor+'">● '+authSource+'</div>'+
-          '<div style="font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-top:4px;word-break:break-all">'+authDesc+'</div>'+
-          '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'+
-            '<button class="btn-secondary" style="font-size:.72rem;padding:4px 10px" onclick="refreshAuthDiagnostic()">Refresh</button>'+
-            (effectiveAuthUrl ?
-              '<button class="btn-secondary" style="font-size:.72rem;padding:4px 10px" onclick="testAdminAuthLive()">Test Auth URL</button>'
-            : '')+
-          '</div>'+
-        '</div>'+
-
-        emergencyBanner+
-
-        '<p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">'+
-          'Admin passwords are verified against a central Google Apps Script. '+
-          'A change takes effect on every device immediately. '+
-          'No password is stored in this browser. '+
-          'New devices receive the backend URL automatically via cloud bootstrap.'+
+      // ── Step 1: Script URL ──
+      '<div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)">'+
+        '<div class="card-lbl" style="font-size:.72rem;margin-bottom:8px">Step 1 — Admin Verification Script URL</div>'+
+        '<p style="font-size:.78rem;color:var(--muted);margin-bottom:8px">'+
+          'Deploy the Admin Auth script (instructions below), paste the '+
+          '<code style="font-family:var(--mono);background:var(--bg);padding:1px 5px;border-radius:3px">/exec</code> '+
+          'URL here, and save. Repeat this step on every device that needs admin access. '+
+          'This URL is not a credential — it is just a pointer to the central verification service.'+
         '</p>'+
-
-        '<div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)">'+
-          '<div class="card-lbl" style="font-size:.72rem;margin-bottom:8px">Step 1 — Admin Verification Script URL</div>'+
-          '<p style="font-size:.78rem;color:var(--muted);margin-bottom:8px">'+
-            'New devices receive this URL automatically via cloud bootstrap. '+
-            'Only paste manually here if auto-detection fails.'+
-          '</p>'+
-          '<div style="display:flex;gap:9px;margin-bottom:6px">'+
-            '<input id="adm-sec-script-url" class="f-input" type="url" '+
-              'placeholder="https://script.google.com/macros/s/…/exec" '+
-              'style="font-size:.78rem;font-family:var(--mono);flex:1" '+
-              'value="'+storedScriptUrl+'">'+
-            '<button class="btn-primary" onclick="saveAdminScriptUrl()">Save</button>'+
-            '<button class="btn-secondary" onclick="clearAdminScriptUrl()">Clear</button>'+
-          '</div>'+
-          (storedScriptUrl ?
-            '<p style="font-family:var(--mono);font-size:.7rem;color:var(--green)">✓ Script URL saved on this device</p>'
-          : effectiveAuthUrl ?
-            '<p style="font-family:var(--mono);font-size:.7rem;color:var(--blue)">✓ Using cloud-bootstrapped URL — no manual entry needed</p>'
-          : '<p style="font-family:var(--mono);font-size:.7rem;color:var(--red)">⚠ No URL available — admin auth inactive</p>')+
+        '<div style="display:flex;gap:9px;margin-bottom:6px">'+
+          '<input id="adm-sec-script-url" class="f-input" type="url" '+
+            'placeholder="https://script.google.com/macros/s/…/exec" '+
+            'style="font-size:.78rem;font-family:var(--mono);flex:1" '+
+            'value="'+(localStorage.getItem('clarion_admin_script_url')||'')+'">'+
+          '<button class="btn-primary" onclick="saveAdminScriptUrl()">Save</button>'+
+          '<button class="btn-secondary" onclick="clearAdminScriptUrl()">Clear</button>'+
         '</div>'+
+        (localStorage.getItem('clarion_admin_script_url') ?
+          '<p style="font-family:var(--mono);font-size:.7rem;color:var(--green)">✓ Script URL configured on this device</p>' :
+          '<p style="font-family:var(--mono);font-size:.7rem;color:var(--red)">⚠ No Script URL — admin login will not work on this device until this is set</p>')+
+      '</div>'+
 
-        '<div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)">'+
-          '<div class="card-lbl" style="font-size:.72rem;margin-bottom:8px">Step 2 — Change Admin Password</div>'+
-          '<p style="font-size:.78rem;color:var(--muted);margin-bottom:10px">'+
-            'After changing, the old password stops working on every device immediately.'+
-          '</p>'+
-          '<div style="display:flex;flex-direction:column;gap:10px;max-width:420px">'+
-            '<div><div class="f-label">Current Admin Password</div>'+
-              '<input id="adm-sec-cur" class="f-input" type="password" placeholder="Current password" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"></div>'+
-            '<div><div class="f-label">New Admin Password</div>'+
-              '<input id="adm-sec-new" class="f-input" type="password" placeholder="New password (min 8 characters)" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"></div>'+
-            '<div><div class="f-label">Confirm New Password</div>'+
-              '<input id="adm-sec-cfm" class="f-input" type="password" placeholder="Repeat new password" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"></div>'+
-            '<div style="display:flex;gap:9px;margin-top:4px;flex-wrap:wrap">'+
-              '<button id="adm-sec-update-btn" class="btn-primary" onclick="changeAdminPw()">Update Admin Password</button>'+
-              '<button id="adm-sec-reset-btn" class="btn-secondary" onclick="resetAdminPw()">Reset to Default</button>'+
-            '</div>'+
+      // ── Step 2: Change password ──
+      '<div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)">'+
+        '<div class="card-lbl" style="font-size:.72rem;margin-bottom:8px">Step 2 — Change Admin Password</div>'+
+        '<p style="font-size:.78rem;color:var(--muted);margin-bottom:10px">'+
+          'After changing, the old password stops working on every device immediately.'+
+        '</p>'+
+        '<div style="display:flex;flex-direction:column;gap:10px;max-width:420px">'+
+          '<div>'+
+            '<div class="f-label">Current Admin Password</div>'+
+            '<input id="adm-sec-cur" class="f-input" type="password" placeholder="Current password" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false">'+
+          '</div>'+
+          '<div>'+
+            '<div class="f-label">New Admin Password</div>'+
+            '<input id="adm-sec-new" class="f-input" type="password" placeholder="New password (min 8 characters)" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false">'+
+          '</div>'+
+          '<div>'+
+            '<div class="f-label">Confirm New Password</div>'+
+            '<input id="adm-sec-cfm" class="f-input" type="password" placeholder="Repeat new password" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false">'+
+          '</div>'+
+          '<div style="display:flex;gap:9px;margin-top:4px;flex-wrap:wrap">'+
+            '<button id="adm-sec-update-btn" class="btn-primary" onclick="changeAdminPw()">Update Admin Password</button>'+
+            '<button id="adm-sec-reset-btn" class="btn-secondary" onclick="resetAdminPw()">Reset to Default</button>'+
           '</div>'+
         '</div>'+
+      '</div>'+
 
-        '<div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)">'+
-          '<div class="card-lbl" style="font-size:.72rem;margin-bottom:8px">First-time Setup — Initialise Admin Password</div>'+
-          '<p style="font-size:.78rem;color:var(--muted);margin-bottom:10px">'+
-            'Only works on a fresh Apps Script deployment where no password has been set yet.'+
+      // ── Step 3: First-time initialise (fresh deploy) ──
+      '<div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)">'+
+        '<div class="card-lbl" style="font-size:.72rem;margin-bottom:8px">First-time Setup — Initialise Admin Password</div>'+
+        '<p style="font-size:.78rem;color:var(--muted);margin-bottom:10px">'+
+          'Only works on a fresh Apps Script deployment where no password has been set yet. '+
+          'If a password already exists, this action is rejected by the script.'+
+        '</p>'+
+        '<div style="display:flex;flex-direction:column;gap:10px;max-width:420px">'+
+          '<div>'+
+            '<div class="f-label">Initial Password</div>'+
+            '<input id="adm-sec-seed" class="f-input" type="password" placeholder="Set initial admin password (min 8 characters)" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false">'+
+          '</div>'+
+          '<button id="adm-sec-seed-btn" class="btn-secondary" style="max-width:200px" onclick="seedAdminPw()">Initialise</button>'+
+          '<p style="font-family:var(--mono);font-size:.68rem;color:var(--dim);margin:0">'+
+            'If rejected: a password already exists — use the Change Password section above.'+
           '</p>'+
-          '<div style="display:flex;flex-direction:column;gap:10px;max-width:420px">'+
-            '<div><div class="f-label">Initial Password</div>'+
-              '<input id="adm-sec-seed" class="f-input" type="password" placeholder="Set initial admin password (min 8 characters)" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"></div>'+
-            '<button id="adm-sec-seed-btn" class="btn-secondary" style="max-width:200px" onclick="seedAdminPw()">Initialise</button>'+
-            '<p style="font-family:var(--mono);font-size:.68rem;color:var(--dim);margin:0">If rejected: a password already exists — use Change Password above.</p>'+
+        '</div>'+
+      '</div>'+
+
+      // ── Script setup instructions ──
+      '<details style="margin-top:4px">'+
+        '<summary style="font-family:var(--mono);font-size:.72rem;color:var(--muted);cursor:pointer;user-select:none">'+
+          '📋 How to set up the Admin Auth Apps Script'+
+        '</summary>'+
+        '<div style="margin-top:12px;font-size:.8rem;color:var(--ink2);line-height:1.7">'+
+          '<p style="margin-bottom:8px"><strong>1.</strong> Open <a href="https://script.google.com" target="_blank" style="color:var(--blue)">script.google.com</a> → New project → rename it "CLARION Admin Auth".</p>'+
+          '<p style="margin-bottom:8px"><strong>2.</strong> Delete all existing code and paste the script below.</p>'+
+          '<p style="margin-bottom:8px"><strong>3.</strong> Click <strong>Deploy → New deployment</strong>. Type: Web App. Execute as: <em>Me</em>. Who has access: <em>Anyone</em>. Click Deploy and authorise.</p>'+
+          '<p style="margin-bottom:8px"><strong>4.</strong> Copy the <code style="font-family:var(--mono);background:var(--bg);padding:1px 5px;border-radius:3px">/exec</code> URL. Paste it in Step 1 on every device.</p>'+
+          '<p style="margin-bottom:8px"><strong>5.</strong> Use the Initialise button above to set the first admin password. After that, use Change Password.</p>'+
+          '<p style="margin-bottom:4px;color:var(--red);font-weight:600">⚠ Important: this script has NO default or fallback password. There is no hardcoded secret. If you lose the password and cannot reset it, delete the Script Property "admin_pw" manually in Apps Script → Project Settings → Script Properties.</p>'+
+          '<div style="margin-top:12px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:.68rem;color:var(--muted);line-height:1.8;white-space:pre-wrap;word-break:break-all">'+
+'function doGet(e) {\n'+
+'  var p = e.parameter || {}, a = p.action || "";\n'+
+'  var props = PropertiesService.getScriptProperties();\n'+
+'  var stored = props.getProperty("admin_pw");\n'+
+'\n'+
+'  // ── verifyAdmin: check password against stored value ─────────────\n'+
+'  if (a === "verifyAdmin") {\n'+
+'    if (!stored) return out({ok:false, error:"not_initialised"});\n'+
+'    return out({ok: p.pw === stored});\n'+
+'  }\n'+
+'\n'+
+'  // ── seedAdmin: set password only on fresh deployment (no stored pw) ─\n'+
+'  if (a === "seedAdmin") {\n'+
+'    if (stored) return out({ok:false, error:"already_set"});\n'+
+'    if (!p.pw || p.pw.length < 8) return out({ok:false, error:"too_short"});\n'+
+'    props.setProperty("admin_pw", p.pw);\n'+
+'    return out({ok: true});\n'+
+'  }\n'+
+'\n'+
+'  // ── changeAdmin: verify current, then replace ────────────────────\n'+
+'  if (a === "changeAdmin") {\n'+
+'    if (!stored) return out({ok:false, error:"not_initialised"});\n'+
+'    if (p.cur !== stored) return out({ok:false, error:"wrong_current"});\n'+
+'    if (!p.nw || p.nw.length < 8) return out({ok:false, error:"too_short"});\n'+
+'    props.setProperty("admin_pw", p.nw);\n'+
+'    return out({ok: true});\n'+
+'  }\n'+
+'\n'+
+'  // ── resetAdmin: delete stored pw (re-enables seedAdmin) ─────────\n'+
+'  if (a === "resetAdmin") {\n'+
+'    if (!stored) return out({ok:false, error:"not_initialised"});\n'+
+'    if (p.cur !== stored) return out({ok:false, error:"wrong_current"});\n'+
+'    props.deleteProperty("admin_pw");\n'+
+'    return out({ok: true});\n'+
+'  }\n'+
+'\n'+
+'  return out({ok:false, error:"unknown_action"});\n'+
+'}\n'+
+'\n'+
+'function out(obj) {\n'+
+'  return ContentService\n'+
+'    .createTextOutput(JSON.stringify(obj))\n'+
+'    .setMimeType(ContentService.MimeType.JSON);\n'+
+'}'+
           '</div>'+
         '</div>'+
-
-        '<div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)">'+
-          '<div class="card-lbl" style="font-size:.72rem;margin-bottom:8px;color:var(--muted)">Emergency Access — Backend Unavailable</div>'+
-          '<p style="font-size:.78rem;color:var(--muted);margin-bottom:10px">'+
-            'Opens a short window where the bootstrap password is accepted ONLY if the backend also fails to respond. Auto-expires and single-use.'+
-          '</p>'+
-          '<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">'+
-            '<button class="btn-secondary" style="font-size:.78rem" onclick="enableAdminEmergency(15);renderSetup()">Enable Emergency Access (15 min)</button>'+
-            (emergencyActive ?
-              '<span style="font-family:var(--mono);font-size:.72rem;color:var(--red)">⚠ Active — '+emergencyMinsLeft+' min remaining</span>'
-            : '<span style="font-family:var(--mono);font-size:.72rem;color:var(--muted)">Not active</span>')+
-          '</div>'+
-        '</div>'+
-
-        '<details style="margin-top:4px">'+
-          '<summary style="font-family:var(--mono);font-size:.72rem;color:var(--muted);cursor:pointer;user-select:none">📋 How to set up the Admin Auth Apps Script</summary>'+
-          '<div style="margin-top:12px;font-size:.8rem;color:var(--ink2);line-height:1.7">'+
-            '<p style="margin-bottom:8px"><strong>1.</strong> Open <a href="https://script.google.com" target="_blank" style="color:var(--blue)">script.google.com</a> → New project → rename it "CLARION Admin Auth".</p>'+
-            '<p style="margin-bottom:8px"><strong>2.</strong> Delete all code and paste the script below.</p>'+
-            '<p style="margin-bottom:8px"><strong>3.</strong> Deploy → New deployment → Web App → Execute as Me → Access Anyone → Deploy.</p>'+
-            '<p style="margin-bottom:8px"><strong>4.</strong> Copy the /exec URL and paste it in Step 1 above, or let cloud bootstrap populate it automatically.</p>'+
-            '<p style="margin-bottom:4px;color:var(--red);font-weight:600">⚠ No default or fallback password. If you lose the password, delete Script Property "admin_pw" in Apps Script → Project Settings → Script Properties.</p>'+
-          '</div>'+
-        '</details>'+
-      '</div>');
-    })() : '')
+      '</details>'+
+    '</div>' : '')
   );
 }
 
@@ -5707,48 +5669,8 @@ function saveAdminScriptUrl(){
   // the admin must always have a route back in to reconfigure.
   S._bootstrapMode = false;
 
-  // Also clear any active emergency flag — URL is configured now, normal auth works
-  localStorage.removeItem('clarion_admin_emergency');
-
   toast('Admin Script URL saved. Central verification active — full admin access unlocked.','ok');
   renderSetup();   // re-render so warning banner disappears and status shows green
-}
-
-// ── Emergency bootstrap access ────────────────────────────────────────────────
-// Sets a short-lived flag (default 15 min) that allows the bootstrap password to be
-// accepted ONLY when the backend is also unreachable (network failure).
-// Must be called from within an active admin session — never available to students.
-// The flag is single-use: it is cleared immediately after bootstrap login succeeds.
-function enableAdminEmergency(minutes){
-  if(S.role !== 'admin'){ toast('Must be admin to enable emergency access.','err'); return; }
-  var ms = (minutes || 15) * 60 * 1000;
-  localStorage.setItem('clarion_admin_emergency', String(Date.now() + ms));
-  toast('Emergency admin access enabled for ' + (minutes||15) + ' min. ' +
-        'Only valid when backend is unreachable.', 'ok');
-}
-
-function clearAdminEmergency(){
-  localStorage.removeItem('clarion_admin_emergency');
-  toast('Emergency admin access cleared.', 'ok');
-}
-
-// ── Auth diagnostic helpers ───────────────────────────────────────────────────
-function refreshAuthDiagnostic(){
-  renderSetup();
-  toast('Auth diagnostic refreshed','ok');
-}
-
-async function testAdminAuthLive(){
-  var url = localStorage.getItem('clarion_admin_script_url') || _autoOpsUrl();
-  if(!url){ toast('No backend URL to test.','err'); return; }
-  try{
-    var res  = await fetch(url + (url.includes('?')?'&':'?') + 'action=aiHealth', {cache:'no-store'});
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    var data = await res.json();
-    toast('Auth endpoint reachable ✓ — response: ok=' + data.ok, 'ok');
-  }catch(e){
-    toast('Auth endpoint unreachable: ' + e.message, 'err');
-  }
 }
 
 function clearAdminScriptUrl(){
