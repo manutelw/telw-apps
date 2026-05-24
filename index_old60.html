@@ -1597,10 +1597,12 @@ function _autoOpsUrl(){
   return localStorage.getItem(AUTOOPS_CONFIG_KEY) || DEFAULT_AUTOOPS_URL;
 }
 
-// Admin Auth URL — TEMPORARILY FORCED to DEFAULT_ADMIN_AUTH_URL.
-// localStorage and cloud config are intentionally ignored during this diagnostic phase.
+// Admin Auth URL — resolves the script that handles verifyAdmin / changeAdmin / resetAdmin.
+// This is SEPARATE from _autoOpsUrl() which points to the AutoOps / onboarding script.
+// Priority: 1) clarion_admin_script_url in localStorage  2) DEFAULT_ADMIN_AUTH_URL.
+// Never falls back to the AutoOps URL — that script does not have verifyAdmin.
 function _adminAuthUrl(){
-  return DEFAULT_ADMIN_AUTH_URL;
+  return localStorage.getItem('clarion_admin_script_url') || DEFAULT_ADMIN_AUTH_URL;
 }
 
 // ── Core fetch helper ─────────────────────────────────────────────────────────
@@ -2091,7 +2093,9 @@ async function doAdminLogin(){
   // Resolve admin auth URL. Uses _adminAuthUrl() which always falls back to
   // DEFAULT_ADMIN_AUTH_URL — NEVER falls back to the AutoOps script URL.
   var scriptUrl  = _adminAuthUrl();
-  var urlSource  = 'forced-default';
+  var urlSource  = localStorage.getItem('clarion_admin_script_url')
+                   ? 'local/cloud'
+                   : 'default';
 
   // ── PATH A: central verification ──────────────────────────────────────────
   if(btn){ btn.textContent = 'Verifying…'; btn.disabled = true; }
