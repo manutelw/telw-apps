@@ -1232,11 +1232,11 @@ function _updateActionBadge(){
 }
 
 function _seedStudentsIfEmpty(){
-  // On every load, unconditionally enforce EMBEDDED_STUDENTS as the authority
-  // for any student whose key appears in EMBEDDED_STUDENTS.
-  // This guarantees that the password shown in the trainer panel, the password
-  // used by login, and the password in localStorage are always identical.
-  // Trainer-added students (not in EMBEDDED_STUDENTS) are never touched.
+  // Seeds EMBEDDED_STUDENTS on a fresh device (no localStorage data).
+  // For existing devices: only fills in keys that are completely absent.
+  // NEVER overwrites password or studentId for a record that was written by
+  // AutoOps sync (_autoOpsSynced===true or lastSyncedAt present) — those
+  // records are the source of truth for credentials.
   try{
     const raw = localStorage.getItem(STUDENT_STORE_KEY);
 
@@ -1246,30 +1246,27 @@ function _seedStudentsIfEmpty(){
       return;
     }
 
-    // Existing data — unconditionally sync embedded student passwords
+    // Existing data — only patch non-synced embedded students
     try{
       const stored = JSON.parse(raw);
       var changed = false;
       Object.entries(EMBEDDED_STUDENTS).forEach(function([key, embStu]){
         if(stored[key]){
-          // Always write embedded password — no conditions, no exceptions.
-          // If the trainer changed this student's password via Setup + Download,
-          // the new password is baked into EMBEDDED_STUDENTS, so this is correct.
-          if(stored[key].password !== embStu.password){
-            stored[key].password  = embStu.password;
-            changed = true;
+          // A synced record owns its own password. Do not touch it.
+          const isSynced = stored[key]._autoOpsSynced || stored[key].lastSyncedAt;
+          if(!isSynced){
+            if(stored[key].password !== embStu.password){ stored[key].password = embStu.password; changed = true; }
+            if(stored[key].studentId !== embStu.studentId){ stored[key].studentId = embStu.studentId; changed = true; }
           }
-          // Sync studentId only — preserve trainer-customised name
-          if(stored[key].studentId !== embStu.studentId){ stored[key].studentId = embStu.studentId; changed = true; }
         } else {
-          // Embedded student not in stored data — add them
+          // Key completely absent — add embedded student
           stored[key] = Object.assign({}, embStu);
           changed = true;
         }
       });
       if(changed) localStorage.setItem(STUDENT_STORE_KEY, JSON.stringify(stored));
-    }catch(e2){ console.warn('Student sync error:', e2); }
-  }catch(e){ console.warn('Could not seed student store:', e); }
+    }catch(e2){ console.warn('[CLARION] seed merge error:', e2); }
+  }catch(e){ console.warn('[CLARION] seed error:', e); }
 }
 
 function getStudents(){
@@ -2457,6 +2454,14 @@ function login(){
   // ── Student branch ────────────────────────────────────────────────────────
   loadRegistry();
   const allStudents = getStudents();
+  const dsKeys = Object.keys(allStudents);
+
+  // ── Auth diagnostics (temporary) ─────────────────────────────────────────
+  console.log('[CLARION auth] dataset size:', dsKeys.length,
+              '| synced:', dsKeys.filter(function(k){ return allStudents[k]._autoOpsSynced||allStudents[k].lastSyncedAt; }).length,
+              '| keys:', dsKeys.slice(0,15).join(', '));
+  console.log('[CLARION auth] entered ID: "' + rawLogin + '" | normalised: "' + loginVal + '"');
+
   let st=null, foundKey=null;
 
   // 1. Match by studentId (case-insensitive)
@@ -2469,23 +2474,26 @@ function login(){
     if(allStudents[emailLower]){st=allStudents[emailLower];foundKey=emailLower;}
   }
 
+  console.log('[CLARION auth] ID match:', st ? 'YES → key="'+foundKey+'" synced='+(!!( st._autoOpsSynced||st.lastSyncedAt)) : 'NO');
+
   if(!st){ fail('Incorrect Student ID or password.'); return; }
   if(!st.active){ fail('Account inactive. Contact your trainer.'); return; }
 
-  // Compare passwords — single source of truth: getStudents() returned st.password
   const storedPw = sanitisePass(String(st.password||''));
-  if(storedPw !== pass){ fail('Incorrect Student ID or password.'); return; }
+  const pwMatch  = (storedPw === pass);
+  console.log('[CLARION auth] password match:', pwMatch,
+              '| stored len:', storedPw.length, '| input len:', pass.length);
+  if(!pwMatch){ fail('Incorrect Student ID or password.'); return; }
 
-  
   if(rememberMe){
-    saveStudentCredentials(st.studentId||foundKey, pass);  // save both ID and pw
+    saveStudentCredentials(st.studentId||foundKey, pass);
   } else {
-    clearStudentCredentials();  // uncheck = clear immediately
+    clearStudentCredentials();
   }
   const accessType=st.accessType||'lum';
   S.user={email:foundKey,name:st.name,role:'student',id:st.studentId||foundKey,batch:st.batch||'Batch A',accessType};
   S.role='student';finishLogin();
-  // Silent background sync — keeps local data current without blocking login
+  console.log('[CLARION auth] SUCCESS user="'+S.user.name+'" id="'+S.user.id+'" access="'+accessType+'"');
   setTimeout(function(){ triggerSheetSync(true); }, 1500);
 }
 function finishLogin(){
