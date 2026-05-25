@@ -1251,18 +1251,17 @@ function _seedStudentsIfEmpty(){
     try{
       const stored = JSON.parse(raw);
       var changed = false;
-      Object.entries(EMBEDDED_STUDENTS).forEach(function([key, embStu]){
-        if(stored[key] && !stored[key]._autoOpsSynced){
-          // A synced record owns its own password. Do not touch it.
-          if(stored[key].password !== embStu.password){ stored[key].password = embStu.password; changed = true; }
-          if(stored[key].studentId !== embStu.studentId){ stored[key].studentId = embStu.studentId; changed = true; }
-          }
-        } else {
-          // Key completely absent — add embedded student
-          stored[key] = Object.assign({}, embStu);
-          changed = true;
-        }
-      });
+     Object.entries(EMBEDDED_STUDENTS).forEach(function([key, embStu]){
+  if(stored[key] && !stored[key]._autoOpsSynced && !stored[key].lastSyncedAt){
+    // Non-synced embedded record only — safe to patch.
+    if(stored[key].password !== embStu.password){ stored[key].password = embStu.password; changed = true; }
+    if(stored[key].studentId !== embStu.studentId){ stored[key].studentId = embStu.studentId; changed = true; }
+  } else if(!stored[key]){
+    // Key completely absent — add embedded student
+    stored[key] = Object.assign({}, embStu);
+    changed = true;
+  }
+});
       if(changed) localStorage.setItem(STUDENT_STORE_KEY, JSON.stringify(stored));
     }catch(e2){ console.warn('[CLARION] seed merge error:', e2); }
   }catch(e){ console.warn('[CLARION] seed error:', e); }
