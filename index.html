@@ -480,7 +480,8 @@ tr:hover td{background:rgba(26,23,20,.015)}
       <label for="a-remember" style="font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);cursor:pointer;user-select:none;">Remember me</label>
     </div>
     <button class="btn-auth" onclick="login()">Sign in →</button>
-    <input type="hidden" id="a-key" value="">
+<input type="hidden" id="a-key" value="">
+<div id="auth-debug" style="display:none;margin-top:12px;padding:10px 12px;border-radius:6px;background:rgba(0,0,0,.06);font-family:monospace;font-size:.68rem;line-height:1.7;color:#555;white-space:pre-wrap;word-break:break-all"></div>
 
 
 
@@ -2452,49 +2453,175 @@ function login(){
   }
 
   // ── Student branch ────────────────────────────────────────────────────────
-  loadRegistry();
-  const allStudents = getStudents();
-  const dsKeys = Object.keys(allStudents);
+// Read directly from localStorage — bypasses _seedStudentsIfEmpty's
+// EMBEDDED_STUDENTS overwrite so synced passwords reach the comparison.
+loadRegistry();
 
-  // ── Auth diagnostics (temporary) ─────────────────────────────────────────
-  console.log('[CLARION auth] dataset size:', dsKeys.length,
-              '| synced:', dsKeys.filter(function(k){ return allStudents[k]._autoOpsSynced||allStudents[k].lastSyncedAt; }).length,
-              '| keys:', dsKeys.slice(0,15).join(', '));
-  console.log('[CLARION auth] entered ID: "' + rawLogin + '" | normalised: "' + loginVal + '"');
+const _rawStore = localStorage.getItem(STUDENT_STORE_KEY);
 
-  let st=null, foundKey=null;
+const _syncedAny =
+  _rawStore &&
+  Object.values(JSON.parse(_rawStore)).some(function(s){
+    return s._autoOpsSynced || s.lastSyncedAt;
+  });
 
-  // 1. Match by studentId (case-insensitive)
-  for(const [key,s] of Object.entries(allStudents)){
-    if((s.studentId||'').toLowerCase()===loginVal.toLowerCase()){st=s;foundKey=key;break;}
+// If synced students exist read raw store directly.
+// Otherwise use normal getStudents().
+const allStudents = (_syncedAny ? JSON.parse(_rawStore) : getStudents());
+
+const _allKeys = Object.keys(allStudents);
+
+const _syncedKeys = _allKeys.filter(function(k){
+  return allStudents[k]._autoOpsSynced || allStudents[k].lastSyncedAt;
+});
+
+const _dsSource =
+  _syncedAny
+    ? 'localStorage[synced]'
+    : 'getStudents()[embedded/local]';
+
+console.log(
+  '[CLARION auth] source:',
+  _dsSource,
+  '| total:',
+  _allKeys.length,
+  '| synced:',
+  _syncedKeys.length
+);
+
+console.log(
+  '[CLARION auth] entered:"' +
+  rawLogin +
+  '" normalised:"' +
+  loginVal +
+  '"'
+);
+
+let st = null,
+    foundKey = null;
+
+// 1. Match by studentId (case-insensitive)
+for(const [key, s] of Object.entries(allStudents)){
+  if((s.studentId || '').toLowerCase() === loginVal.toLowerCase()){
+    st = s;
+    foundKey = key;
+    break;
   }
-  // 2. Legacy fallback: match by email key
-  if(!st && loginVal.includes('@')){
-    const emailLower=loginVal.toLowerCase();
-    if(allStudents[emailLower]){st=allStudents[emailLower];foundKey=emailLower;}
+}
+
+// 2. Legacy fallback: email key
+if(!st && loginVal.includes('@')){
+  const emailLower = loginVal.toLowerCase();
+
+  if(allStudents[emailLower]){
+    st = allStudents[emailLower];
+    foundKey = emailLower;
   }
+}
 
-  console.log('[CLARION auth] ID match:', st ? 'YES → key="'+foundKey+'" synced='+(!!( st._autoOpsSynced||st.lastSyncedAt)) : 'NO');
+console.log(
+  '[CLARION auth] ID match:',
+  st
+    ? ('YES key=' + foundKey)
+    : 'NO'
+);
 
-  if(!st){ fail('Incorrect Student ID or password.'); return; }
-  if(!st.active){ fail('Account inactive. Contact your trainer.'); return; }
+// Debug panel helper
+const _dbgEl = document.getElementById('auth-debug');
 
-  const storedPw = sanitisePass(String(st.password||''));
-  const pwMatch  = (storedPw === pass);
-  console.log('[CLARION auth] password match:', pwMatch,
-              '| stored len:', storedPw.length, '| input len:', pass.length);
-  if(!pwMatch){ fail('Incorrect Student ID or password.'); return; }
+const _showDbg = function(reason, pwMatch){
 
-  if(rememberMe){
-    saveStudentCredentials(st.studentId||foundKey, pass);
-  } else {
-    clearStudentCredentials();
-  }
-  const accessType=st.accessType||'lum';
-  S.user={email:foundKey,name:st.name,role:'student',id:st.studentId||foundKey,batch:st.batch||'Batch A',accessType};
-  S.role='student';finishLogin();
-  console.log('[CLARION auth] SUCCESS user="'+S.user.name+'" id="'+S.user.id+'" access="'+accessType+'"');
-  setTimeout(function(){ triggerSheetSync(true); }, 1500);
+  if(!_dbgEl) return;
+
+  const top5 = _allKeys
+    .slice(0,5)
+    .map(function(k){
+      return allStudents[k].studentId || k;
+    })
+    .join(', ');
+
+  _dbgEl.textContent = [
+    'source      : ' + _dsSource,
+    'dataset size: ' + _allKeys.length,
+    'entered ID  : ' + rawLogin,
+    'normalised  : ' + loginVal,
+    'ID match    : ' + (st ? 'YES' : 'NO'),
+    'pw match    : ' + (
+      pwMatch === undefined
+        ? 'n/a'
+        : (pwMatch ? 'YES' : 'NO')
+    ),
+    'failure     : ' + reason,
+    'first 5 IDs : ' + top5
+  ].join('\n');
+
+  _dbgEl.style.display = 'block';
+};
+
+if(!st){
+  _showDbg('no student record matches entered ID');
+  fail('Incorrect Student ID or password.');
+  return;
+}
+
+if(!st.active){
+  _showDbg('account inactive');
+  fail('Account inactive. Contact your trainer.');
+  return;
+}
+
+const storedPw = sanitisePass(String(st.password || ''));
+const pwMatch = (storedPw === pass);
+
+console.log(
+  '[CLARION auth] password match:',
+  pwMatch
+);
+
+if(!pwMatch){
+  _showDbg('password mismatch', false);
+  fail('Incorrect Student ID or password.');
+  return;
+}
+
+// Hide debug panel on success
+if(_dbgEl){
+  _dbgEl.style.display = 'none';
+}
+
+if(rememberMe){
+  saveStudentCredentials(
+    st.studentId || foundKey,
+    pass
+  );
+} else {
+  clearStudentCredentials();
+}
+
+const accessType = st.accessType || 'lum';
+
+S.user = {
+  email: foundKey,
+  name: st.name,
+  role: 'student',
+  id: st.studentId || foundKey,
+  batch: st.batch || 'Batch A',
+  accessType
+};
+
+S.role = 'student';
+
+finishLogin();
+
+console.log(
+  '[CLARION auth] SUCCESS user="' +
+  S.user.name +
+  '"'
+);
+
+setTimeout(function(){
+  triggerSheetSync(true);
+}, 1500);
 }
 function finishLogin(){
   // For students: persist startDate on first login if not already stored
