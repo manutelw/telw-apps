@@ -1688,8 +1688,7 @@ async function autoOpsSyncNow(silent){
         } else {
           newId = _generateClarionStudentId(institution, batch, existing);
         }
-        const derivedGroup = groupCode || _institutionPrefix(institution);
-        const newPw = generatePassword();
+        const newPw = row.password || generatePassword();
         existing[newId] = {
           studentId:       newId,
           name:            name,
