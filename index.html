@@ -1241,11 +1241,11 @@ function _seedStudentsIfEmpty(){
   try{
     const raw = localStorage.getItem(STUDENT_STORE_KEY);
 
-    if(!raw || raw === '{}' || raw === 'null'){
-      // Fresh device — seed entirely from embedded defaults
-      localStorage.setItem(STUDENT_STORE_KEY, JSON.stringify(EMBEDDED_STUDENTS));
-      return;
-    }
+   if(!raw || raw === '{}' || raw === 'null'){
+  // Fresh device — no embedded demo students. Synced students come from AutoOps.
+  localStorage.setItem(STUDENT_STORE_KEY, JSON.stringify({}));
+  return;
+}
 
     // Existing data — only patch non-synced embedded students
     try{
