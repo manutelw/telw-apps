@@ -1252,12 +1252,10 @@ function _seedStudentsIfEmpty(){
       const stored = JSON.parse(raw);
       var changed = false;
       Object.entries(EMBEDDED_STUDENTS).forEach(function([key, embStu]){
-        if(stored[key]){
+        if(stored[key] && !stored[key]._autoOpsSynced){
           // A synced record owns its own password. Do not touch it.
-          const isSynced = stored[key]._autoOpsSynced || stored[key].lastSyncedAt;
-          if(!isSynced){
-            if(stored[key].password !== embStu.password){ stored[key].password = embStu.password; changed = true; }
-            if(stored[key].studentId !== embStu.studentId){ stored[key].studentId = embStu.studentId; changed = true; }
+          if(stored[key].password !== embStu.password){ stored[key].password = embStu.password; changed = true; }
+          if(stored[key].studentId !== embStu.studentId){ stored[key].studentId = embStu.studentId; changed = true; }
           }
         } else {
           // Key completely absent — add embedded student
