@@ -3567,16 +3567,19 @@ if(S.audioBlob && S.driveUrl){
   toast('Audio uploaded. Transcription failed: '+e.message, '');
   return;
 }
-        if(textVal){
+       if(textVal){
   transcript = textVal;
 } else {
+  const scoringUrlNow = localStorage.getItem(CLARION_SCORING_URL_KEY) || '';
   if(proc) proc.innerHTML =
     '<div class="banner banner-info"><span class="banner-ic">⚠️</span><div>'
     +'<div class="banner-title">Audio uploaded successfully</div>'
-    +'<div class="banner-sub">Transcription is unavailable right now. Your audio has been saved. No demo feedback has been used for this submission.</div>'
+    +'<div class="banner-sub">Transcription failed. Your audio has been saved. No demo feedback has been used.</div>'
+    +'<div class="banner-sub">Error: '+esc(e.message || 'unknown transcription error')+'</div>'
+    +'<div class="banner-sub">Scoring URL configured: '+(scoringUrlNow ? 'yes' : 'no')+'</div>'
     +'</div></div>'
     + (opts.backBtn||'');
-  toast('Audio uploaded. Transcription unavailable — no demo feedback used.', '');
+  toast('Audio uploaded. Transcription failed: '+(e.message || 'unknown error'), '');
   return;
 }
 
