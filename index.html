@@ -3245,7 +3245,7 @@ function startRec(limit){
       S.mediaRec=new MediaRecorder(stream,{mimeType:mime});
       const chunks=[];
       S.mediaRec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
-      S.mediaRecS.mediaRec.onstop=()=>{
+      S.mediaRec.onstop=()=>{
   S.audioBlob=new Blob(chunks,{type:S.mediaRec.mimeType});
   S.audioEl=new Audio(URL.createObjectURL(S.audioBlob));
   stream.getTracks().forEach(t=>t.stop());
