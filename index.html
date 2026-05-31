@@ -3540,18 +3540,33 @@ if(S.audioBlob && S.driveUrl){
       }catch(e){
         console.error('[CLARION] Server transcription error:', e.message);
         if(e.message.includes('timed out') || e.message === 'no_scoring_url'){
-          if(driveLink){
-            const partialSub = {date:new Date().toISOString().split('T')[0],score:0,transcript:'',driveLink,flag:'needs_improvement',_pending:'transcription_timeout'};
-            try{ opts.storeFn(partialSub); }catch(_){}
-          }
-          if(proc) proc.innerHTML =
-            '<div class="banner banner-info"><span class="banner-ic">⚠️</span><div>'
-            +'<div class="banner-title">Audio uploaded successfully</div>'
-            +'<div class="banner-sub">Transcription is still processing. Please check back later.'+(driveLink?' Your audio has been saved.':'')+'</div>'
-            +'</div></div>'
-            + (opts.backBtn||'');
-          return;
-        }
+  if(driveLink){
+    const partialSub = {
+      date:new Date().toISOString().split('T')[0],
+      score:0,
+      transcript:'',
+      driveLink,
+      flag:'needs_improvement',
+      _pending:'transcription_failed',
+      _transcriptionError:e.message
+    };
+    try{ opts.storeFn(partialSub); }catch(_){}
+  }
+
+  const scoringUrlNow = localStorage.getItem(CLARION_SCORING_URL_KEY) || '';
+
+  if(proc) proc.innerHTML =
+    '<div class="banner banner-info"><span class="banner-ic">⚠️</span><div>'
+    +'<div class="banner-title">Audio uploaded successfully</div>'
+    +'<div class="banner-sub">Transcription did not complete. Your audio has been saved.</div>'
+    +'<div class="banner-sub">Error: '+esc(e.message)+'</div>'
+    +'<div class="banner-sub">Scoring URL configured: '+(scoringUrlNow ? 'yes' : 'no')+'</div>'
+    +'</div></div>'
+    + (opts.backBtn||'');
+
+  toast('Audio uploaded. Transcription failed: '+e.message, '');
+  return;
+}
         if(textVal){
   transcript = textVal;
 } else {
