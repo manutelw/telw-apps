@@ -3464,7 +3464,7 @@ async function _runSubmit(opts){
   let driveLink = null;
 
 // Refresh Drive URL at submit time, not only at login/load time
-S.driveUrl = (S.driveUrl || localStorage.getItem('clarion_drive_url') || '').trim();
+S.driveUrl = (S.driveUrl || localStorage.getItem('clarion_drive_url') || 'https://script.google.com/macros/s/AKfycbx1MOHh_zKba8CO_fJxE-Q83-MfTKj-CL9Vseiy_Nlt-EGFqvO4E-RC_Hp5Zonpo06v/exec' || '').trim();
 
 console.log('[CLARION] Upload precheck:', {
   audioBlob: !!S.audioBlob,
@@ -3473,14 +3473,16 @@ console.log('[CLARION] Upload precheck:', {
   driveUrlValue: S.driveUrl
 });
 
-if(!S.audioBlob || !S.driveUrl){
-  alert(
-    'CLARION upload skipped\n\n' +
-    'audioBlob: ' + (!!S.audioBlob) + '\n' +
-    'audioSize: ' + (S.audioBlob ? S.audioBlob.size : 0) + '\n' +
-    'driveUrl: ' + (!!S.driveUrl) + '\n' +
-    'driveUrlValue: ' + S.driveUrl
-  );
+if(!S.audioBlob){
+  alert('Recording not ready. Please record again, stop, wait for “Recorded”, then submit.');
+  setStage('Recording not ready — please re-record.', 'var(--red)');
+  return;
+}
+
+if(!S.driveUrl){
+  alert('Drive upload URL missing. Admin must save the Google Drive Audio Upload URL.');
+  setStage('Drive URL missing — upload stopped.', 'var(--red)');
+  return;
 }
 
 if(S.audioBlob && S.driveUrl){
