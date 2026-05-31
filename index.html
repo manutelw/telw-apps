@@ -3478,8 +3478,16 @@ console.log('[CLARION] Upload precheck:', {
   driveUrlValue: S.driveUrl
 });
 
+S.audioBlob = S.audioBlob || window.CLARION_LAST_AUDIO_BLOB || null;
+
 if(!S.audioBlob){
-  alert('Recording not ready. Please record again, stop, wait for “Recorded”, then submit.');
+  alert(
+    'Recording not ready.\n\n' +
+    'S.audioBlob: ' + (!!S.audioBlob) + '\n' +
+    'backupBlob: ' + (!!window.CLARION_LAST_AUDIO_BLOB) + '\n' +
+    'backupSize: ' + (window.CLARION_LAST_AUDIO_BLOB ? window.CLARION_LAST_AUDIO_BLOB.size : 0) + '\n\n' +
+    'Please record again, stop, wait for “Recorded”, then submit.'
+  );
   setStage('Recording not ready — please re-record.', 'var(--red)');
   return;
 }
