@@ -3877,7 +3877,7 @@ async function _serverTranscribe(audioBlob){
       headers: {'Content-Type': 'text/plain;charset=utf-8'},
       body:    JSON.stringify(body),
     }),
-    50000, 'Server transcription'
+    20000, 'Server transcription'
   );
   if(!res.ok) throw new Error('Transcription HTTP ' + res.status);
 
