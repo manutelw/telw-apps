@@ -3245,7 +3245,22 @@ function startRec(limit){
       S.mediaRec=new MediaRecorder(stream,{mimeType:mime});
       const chunks=[];
       S.mediaRec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
-      S.mediaRec.onstop=()=>{S.audioBlob=new Blob(chunks,{type:S.mediaRec.mimeType});S.audioEl=new Audio(URL.createObjectURL(S.audioBlob));stream.getTracks().forEach(t=>t.stop());};
+      S.mediaRecS.mediaRec.onstop=()=>{
+  S.audioBlob=new Blob(chunks,{type:S.mediaRec.mimeType});
+  S.audioEl=new Audio(URL.createObjectURL(S.audioBlob));
+  stream.getTracks().forEach(t=>t.stop());
+
+  document.getElementById('btn-play')?.classList.remove('hidden');
+  document.getElementById('btn-rerec')?.classList.remove('hidden');
+
+  const submitBtn=document.getElementById('btn-submit');
+  if(submitBtn) submitBtn.disabled=false;
+
+  const st=document.getElementById('rec-state');
+  if(st)st.textContent='Recorded — '+S.recSecs+'s. Review or submit.';
+
+  console.log('[CLARION] Audio blob ready:', S.audioBlob.size+'B type='+S.audioBlob.type);
+};
       S.mediaRec.start(100);
     }).catch(()=>toast('Mic access denied — demo mode','err'));
   }
@@ -3264,13 +3279,24 @@ function tickRec(){
 }
 function stopRec(){
   clearInterval(S.recTimer);S.recording=false;S.recorded=true;
-  if(S.mediaRec&&S.mediaRec.state!=='inactive')S.mediaRec.stop();
+
   const wv=document.getElementById('wv');if(wv)wv.classList.add('idle');
   document.getElementById('btn-stop').classList.add('hidden');
-  document.getElementById('btn-play').classList.remove('hidden');
-  document.getElementById('btn-rerec').classList.remove('hidden');
-  document.getElementById('btn-submit').disabled=false;
-  const st=document.getElementById('rec-state');if(st)st.textContent='Recorded — '+S.recSecs+'s. Review or submit.';
+
+  const submitBtn=document.getElementById('btn-submit');
+  if(submitBtn) submitBtn.disabled=true;
+
+  const st=document.getElementById('rec-state');
+  if(st)st.textContent='Finalising recording…';
+
+  if(S.mediaRec&&S.mediaRec.state!=='inactive'){
+    S.mediaRec.stop();
+  } else {
+    document.getElementById('btn-play').classList.remove('hidden');
+    document.getElementById('btn-rerec').classList.remove('hidden');
+    if(submitBtn) submitBtn.disabled=false;
+    if(st)st.textContent='Recorded — '+S.recSecs+'s. Review or submit.';
+  }
 }
 function playRec(){if(S.audioEl){S.audioEl.currentTime=0;S.audioEl.play();}else toast('Demo: '+S.recSecs+'s recorded');}
 function reRecord(){
