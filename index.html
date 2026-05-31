@@ -3862,7 +3862,7 @@ async function _serverTranscribe(audioBlob){
   const body   = {
     action:         'scoreResponse',
     studentId:      (S.user && (S.user.studentId || S.user.id)) || '',
-    transcribeOnly: true,              // tells the script to skip scoring and return transcript only
+    transcribeOnly: true,
     audioBase64:    base64,
     audioMime:      audioBlob.type || 'audio/webm',
     transcript:     '',
@@ -3871,22 +3871,42 @@ async function _serverTranscribe(audioBlob){
     diagMode:       false,
   };
 
-  const res = await withTimeout(
-    fetch(scoringUrl, {
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(), 20000);
+
+  let res;
+  try{
+    res = await fetch(scoringUrl, {
       method:  'POST',
       headers: {'Content-Type': 'text/plain;charset=utf-8'},
       body:    JSON.stringify(body),
-    }),
-    20000, 'Server transcription'
-  );
+      signal:  controller.signal
+    });
+  }catch(e){
+    if(e.name === 'AbortError'){
+      throw new Error('Server transcription timed out after 20 seconds');
+    }
+    throw new Error('Server transcription fetch failed: ' + e.message);
+  }finally{
+    clearTimeout(timer);
+  }
+
   if(!res.ok) throw new Error('Transcription HTTP ' + res.status);
 
   let data;
-  try{ data = await res.json(); }
-  catch(e){ throw new Error('Transcription: server returned non-JSON'); }
+  try{
+    data = await res.json();
+  }catch(e){
+    const raw = await res.text().catch(()=>'(unreadable)');
+    throw new Error('Transcription returned non-JSON: ' + raw.substring(0,160));
+  }
+
+  console.log('[CLARION] _serverTranscribe raw response:', data);
 
   if(data.error === 'no_key') throw new Error('no_gemini_key');
   if(!data.ok && data.error)  throw new Error(data.message || data.error);
+  if(!data.transcript) throw new Error('empty_transcript_from_server');
+
   return data.transcript || '';
 }
 
