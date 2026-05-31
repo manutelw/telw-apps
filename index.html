@@ -3552,8 +3552,19 @@ if(S.audioBlob && S.driveUrl){
             + (opts.backBtn||'');
           return;
         }
-        transcript = textVal || demoTranscript();
-        toast('Transcription unavailable — demo transcript used', '');
+        if(textVal){
+  transcript = textVal;
+} else {
+  if(proc) proc.innerHTML =
+    '<div class="banner banner-info"><span class="banner-ic">⚠️</span><div>'
+    +'<div class="banner-title">Audio uploaded successfully</div>'
+    +'<div class="banner-sub">Transcription is unavailable right now. Your audio has been saved. No demo feedback has been used for this submission.</div>'
+    +'</div></div>'
+    + (opts.backBtn||'');
+  toast('Audio uploaded. Transcription unavailable — no demo feedback used.', '');
+  return;
+}
+
       }
     } else if(S.apiKey){
       // PATH B: legacy client-side Gemini (session key — admin use only)
@@ -3571,22 +3582,38 @@ if(S.audioBlob && S.driveUrl){
         } else { throw new Error('Transcription HTTP '+txRes.status); }
       }catch(e){
         console.error('[CLARION] Legacy transcription error:', e.message);
-        transcript = textVal || demoTranscript();
-        toast('Transcription unavailable — demo transcript used', '');
+        if(textVal){
+  transcript = textVal;
+} else {
+  if(proc) proc.innerHTML =
+    '<div class="banner banner-info"><span class="banner-ic">⚠️</span><div>'
+    +'<div class="banner-title">Audio uploaded successfully</div>'
+    +'<div class="banner-sub">Legacy transcription failed. Your audio has been saved. No demo feedback has been used for this submission.</div>'
+    +'</div></div>'
+    + (opts.backBtn||'');
+  toast('Audio uploaded. Legacy transcription failed — no demo feedback used.', '');
+  return;
+}
+ 
       }
-    } else {
-      // PATH C: no scoring configured — fall back to text or demo
-      transcript = textVal || demoTranscript();
-      toast('AI scoring not configured — demo transcript used', '');
-    }
+   } else {
+  // PATH C: no scoring configured — do not use demo scoring for real submissions
+  if(textVal){
+    transcript = textVal;
+  } else {
+    alert('AI scoring is not configured. Your audio was uploaded, but no feedback was generated.');
+    setStage('AI scoring not configured — feedback stopped.', 'var(--red)');
+    return;
+  }
+}
   } else if(textVal){
     transcript = textVal;
     console.log('[CLARION] Using typed text response, length:', textVal.length);
   } else {
-    await sleep(800);
-    transcript = demoTranscript();
-    if(!scoringUrl && !S.apiKey) toast('AI scoring not configured — demo score active', '');
-  }
+  alert('No audio or typed answer found. Please record or type an answer before submitting.');
+  setStage('No answer found — submit stopped.', 'var(--red)');
+  return;
+}
 
   // ── Stage 3: Scoring ──────────────────────────────────────────────────────
   setStage('Evaluating response…', 'var(--blue)');
