@@ -3461,10 +3461,29 @@ async function _runSubmit(opts){
 
   // ── Stage 1: Drive upload ─────────────────────────────────────────────────
   setStage('Uploading audio…', 'var(--gold)');
-  console.log('[CLARION] Recording blob created:', S.audioBlob ? S.audioBlob.size+'B type='+S.audioBlob.type : 'none');
-
   let driveLink = null;
-  if(S.audioBlob && S.driveUrl){
+
+// Refresh Drive URL at submit time, not only at login/load time
+S.driveUrl = (S.driveUrl || localStorage.getItem('clarion_drive_url') || '').trim();
+
+console.log('[CLARION] Upload precheck:', {
+  audioBlob: !!S.audioBlob,
+  audioSize: S.audioBlob ? S.audioBlob.size : 0,
+  driveUrl: !!S.driveUrl,
+  driveUrlValue: S.driveUrl
+});
+
+if(!S.audioBlob || !S.driveUrl){
+  alert(
+    'CLARION upload skipped\n\n' +
+    'audioBlob: ' + (!!S.audioBlob) + '\n' +
+    'audioSize: ' + (S.audioBlob ? S.audioBlob.size : 0) + '\n' +
+    'driveUrl: ' + (!!S.driveUrl) + '\n' +
+    'driveUrlValue: ' + S.driveUrl
+  );
+}
+
+if(S.audioBlob && S.driveUrl){
     console.log('[CLARION] Drive upload request sent → label:', opts.driveLabel);
     try{
       driveLink = await withTimeout(uploadToDrive(S.user.email, opts.driveLabel), 30000, 'Drive upload');
