@@ -3247,6 +3247,7 @@ function startRec(limit){
       S.mediaRec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
       S.mediaRec.onstop=()=>{
   S.audioBlob=new Blob(chunks,{type:S.mediaRec.mimeType});
+  window.CLARION_LAST_AUDIO_BLOB = S.audioBlob;
   S.audioEl=new Audio(URL.createObjectURL(S.audioBlob));
   stream.getTracks().forEach(t=>t.stop());
 
@@ -3464,7 +3465,11 @@ async function _runSubmit(opts){
   let driveLink = null;
 
 // Refresh Drive URL at submit time, not only at login/load time
-S.driveUrl = (S.driveUrl || localStorage.getItem('clarion_drive_url') || 'https://script.google.com/macros/s/AKfycbx1MOHh_zKba8CO_fJxE-Q83-MfTKj-CL9Vseiy_Nlt-EGFqvO4E-RC_Hp5Zonpo06v/exec' || '').trim();
+if(!S.audioBlob && window.CLARION_LAST_AUDIO_BLOB){
+  S.audioBlob = window.CLARION_LAST_AUDIO_BLOB;
+}
+  
+  S.driveUrl = (S.driveUrl || localStorage.getItem('clarion_drive_url') || 'https://script.google.com/macros/s/AKfycbx1MOHh_zKba8CO_fJxE-Q83-MfTKj-CL9Vseiy_Nlt-EGFqvO4E-RC_Hp5Zonpo06v/exec' || '').trim();
 
 console.log('[CLARION] Upload precheck:', {
   audioBlob: !!S.audioBlob,
