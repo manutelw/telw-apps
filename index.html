@@ -3535,7 +3535,8 @@ if(S.audioBlob && S.driveUrl){
       // PATH A: server-side transcription (Gemini key lives on server)
       try{
         console.log('[CLARION] Server transcription started');
-        transcript = await _serverTranscribe(S.audioBlob);
+        transcript = '';
+console.log('[CLARION] Audio present. Skipping separate transcription; scoring backend will transcribe and score.');
         console.log('[CLARION] Server transcript length:', transcript.length);
       }catch(e){
         console.error('[CLARION] Server transcription error:', e.message);
@@ -3648,12 +3649,14 @@ if(S.audioBlob && S.driveUrl){
     try{
       console.log('[CLARION] Server scoring started');
       result = await _serverScore({
-        transcript:  transcript,
-        prompt:      prompt,      // fully substituted — no placeholders remain
-        moduleType:  opts.moduleType || (opts.diagMode ? 'Diagnostics' : (q.type||'LUM')),
-        maxScore:    opts.maxScore   || q.maxScore || 10,
-        diagMode:    opts.diagMode   || false,
-      });
+  transcript:  transcript,
+  audioBase64: (!transcript && S.audioBlob) ? await blobToBase64(S.audioBlob) : '',
+  audioMime:   (!transcript && S.audioBlob) ? (S.audioBlob.type || 'audio/webm') : '',
+  prompt:      prompt,      // fully substituted — no placeholders remain
+  moduleType:  opts.moduleType || (opts.diagMode ? 'Diagnostics' : (q.type||'LUM')),
+  maxScore:    opts.maxScore   || q.maxScore || 10,
+  diagMode:    opts.diagMode   || false,
+});
       console.log('[CLARION] Server score received:', result.score);
     }catch(e){
       console.error('[CLARION] Server scoring error:', e.message);
@@ -3810,6 +3813,8 @@ async function _serverScore(opts){
     taskId:      (S.currentQ && S.currentQ.id) || '',
     moduleType:  opts.moduleType  || 'LUM',
     transcript:  opts.transcript  || '',
+    audioBase64: opts.audioBase64 || '',
+    audioMime:   opts.audioMime || '',
     prompt:      fullPrompt,          // fully substituted — no {T} or other placeholders remain
     maxScore:    opts.maxScore    || 10,
     diagMode:    opts.diagMode    || false,
