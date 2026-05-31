@@ -3667,15 +3667,23 @@ console.log('[CLARION] Audio present. Skipping separate transcription; scoring b
                      : isNoKey  ? 'Gemini key not set on server'
                      : isNoUrl  ? 'Scoring URL not configured'
                      : 'Scoring error: ' + e.message;
-      result = opts.diagMode
-        ? { score: Math.round((opts.maxScore || q.maxScore || 10) * 0.72),
-            feedback:     errLabel + ' — response saved, review manually.',
-            improvement:  'Resubmit when the issue is resolved.',
-            cando_feedback: '',
-            flag:         'needs_improvement',
-            _scoringError: e.message }
-        : { ...demoScore(), _scoringError: e.message };
-      toast(errLabel + ' — demo result used', '');
+      result = {
+  score: 0,
+  criteria: {},
+  feedback: {
+    scoring_error: {
+      worked: 'Audio was uploaded and the scoring backend was contacted.',
+      weak: errLabel,
+      fix: 'Check CLARION Scoring Apps Script deployment, Gemini key, and server response.'
+    }
+  },
+  cando: 'No live score was generated because server scoring failed.',
+  flag: 'needs_improvement',
+  transcript: transcript || '',
+  _scoringError: e.message
+};
+
+toast(errLabel + ' — no demo score used', 'err');
     }
   } else if(S.apiKey){
     // PATH B: legacy client-side scoring (admin session key)
@@ -3698,12 +3706,10 @@ console.log('[CLARION] Audio present. Skipping separate transcription; scoring b
       toast('Scoring unavailable — demo result used', '');
     }
   } else {
-    // PATH C: demo scoring (no AI configured)
-    await sleep(800);
-    result = opts.diagMode
-      ? {score:Math.round((opts.maxScore||10)*0.72),feedback:'Demo score — configure AI Scoring URL in Setup for live scoring.',improvement:'Practise with more specific examples.',cando_feedback:'',flag:'pass'}
-      : demoScore();
-  }
+  alert('AI Scoring URL is not configured. Submission stopped. No demo score will be used.');
+  setStage('AI scoring URL missing — no demo score used.', 'var(--red)');
+  return;
+}
 
   // ── Stage 4: Save & render ────────────────────────────────────────────────
   const sub = opts.buildSub(result, transcript, driveLink);
