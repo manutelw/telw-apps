@@ -4990,9 +4990,12 @@ function _fetchReviewSubmissions(){
   const url = localStorage.getItem(CLARION_SUBMISSIONS_URL_KEY) || '';
   console.log('[CLARION] review fetch started; central URL configured:', !!url);
   if(!url) return Promise.resolve([]);
-  const u = url + (url.indexOf('?')>=0?'&':'?') + 'action=listSubmissions';
-  return fetch(u, { method:'GET' })
-    .then(function(r){ return r.json(); })
+  return fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action: 'listSubmissions' })
+  })
+  .then(function(r){ return r.json(); })
     .then(function(data){
       const rows = (data && (data.submissions||data.rows||data.data)) || [];
       return rows.map(function(r){
