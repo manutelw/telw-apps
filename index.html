@@ -1638,13 +1638,16 @@ async function autoOpsSyncNow(silent){
     const data = await _autoOpsFetch('students');
     if(data.error) throw new Error(data.error);
 
-    const rows = data.students || [];
+const rows = data.students || [];
+    console.log('[AutoOps] sync URL used:', url);
+    console.log('[AutoOps] rows fetched:', rows.length);
     const existing = getStudents();
     const emailToKey = {};
     Object.entries(existing).forEach(function([key,s]){
       if(s._email) emailToKey[s._email.toLowerCase()] = key;
     });
 
+    const seenKeys = {};
     let added=0, updated=0, skipped=0;
     rows.forEach(function(row){
       const name        = (row.name||'').trim();
@@ -1676,7 +1679,8 @@ async function autoOpsSyncNow(silent){
         existing[existingKey].lastSyncedAt   = new Date().toISOString();
         if(institution) existing[existingKey].institution = institution;
         if(groupCode && !existing[existingKey].groupCode) existing[existingKey].groupCode = groupCode;
-        if(sheetRowNum) existing[existingKey].sheetRowNumber = sheetRowNum;
+      if(sheetRowNum) existing[existingKey].sheetRowNumber = sheetRowNum;
+        seenKeys[existingKey] = true;
         updated++;
       } else {
         // Create new
@@ -1708,14 +1712,31 @@ async function autoOpsSyncNow(silent){
           lastSyncedAt:    new Date().toISOString(),
           syncStatus:      'synced'
         };
-        if(emailLower) emailToKey[emailLower] = newId;
+         if(emailLower) emailToKey[emailLower] = newId;
+        seenKeys[newId] = true;
         added++;
+      }
+    });
+
+    // Remove stale AutoOps students absent from the latest accepted sheet response.
+    // Manually-created (non-AutoOps) students are preserved.
+    let staleRemoved=0;
+    Object.keys(existing).forEach(function(key){
+      const isAutoOps = existing[key]._autoOpsSynced === true;
+      if(isAutoOps && !seenKeys[key]){
+        delete existing[key];
+        staleRemoved++;
       }
     });
 
     putStudents(existing);
     loadRegistry();
-    studentsResult = { added, updated, skipped, total: rows.length };
+    const finalCount = Object.keys(existing).length;
+    console.log('[AutoOps] added:', added);
+    console.log('[AutoOps] updated:', updated);
+    console.log('[AutoOps] stale removed:', staleRemoved);
+    console.log('[AutoOps] final count:', finalCount);
+    studentsResult = { added, updated, skipped, staleRemoved, total: rows.length, finalCount };
   } catch(err){
     console.error('[AutoOps] students fetch failed:', err.message);
     addAction('', 'System', 'AutoOps student sync failed: ' + err.message, 'autoops-sync');
