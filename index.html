@@ -1079,6 +1079,9 @@ const AUTOOPS_LAST_STATUS_KEY = 'clarion_autoops_last_status';
 // AI Scoring — URL of the Apps Script that proxies Gemini server-side.
 // The Gemini key is stored in Script Properties on the server — never in the browser.
 const CLARION_SCORING_URL_KEY = 'clarion_scoring_url';
+// Central submission store — URL of the Apps Script Web App that persists every
+// scored submission to a Google Sheet so Admin/Trainer Review works across devices.
+const CLARION_SUBMISSIONS_URL_KEY = 'clarion_submissions_url';
 
 // Default backend URL — used on every device before the admin has pasted a custom URL.
 // Allows new devices to bootstrap cloud config automatically without manual setup.
@@ -3747,8 +3750,10 @@ toast(errLabel + ' — no demo score used', 'err');
         ? 'client-ai'
         : 'demo';
 
-  try{ opts.storeFn(sub); }catch(e){ console.error('[CLARION] storeFn error:', e); }
+try{ opts.storeFn(sub); }catch(e){ console.error('[CLARION] storeFn error:', e); }
 
+  // Central backend persistence (non-blocking). localStorage above remains the local backup.
+  try{ _pushSubmissionToBackend(sub); }catch(e){ console.error('[CLARION] backend push error:', e); }
   if(proc) proc.innerHTML = opts.renderFn(sub) + (opts.backBtn||'');
   const rec = document.getElementById('recorder');
   if(rec) rec.style.display = 'none';
@@ -3757,8 +3762,41 @@ toast(errLabel + ' — no demo score used', 'err');
   console.log('[CLARION] Submission complete, score:', sub.score, 'driveLink:', sub.driveLink||'none');
 }
 
-// ── Google Drive audio upload ─────────────────────────────────────────────────
-// Uploads S.audioBlob to Google Drive via the configured Web App URL.
+// ── Central submission persistence ────────────────────────────────────────────
+// Fire-and-forget POST of each scored submission to the central Apps Script store.
+// Never blocks the student result screen; localStorage stays the local backup.
+function _pushSubmissionToBackend(sub){
+  const url = localStorage.getItem(CLARION_SUBMISSIONS_URL_KEY) || '';
+  if(!url){ console.warn('[CLARION] submission save skipped — no submissions URL configured'); return; }
+  const payload = {
+    action:       'saveSubmission',
+    timestamp:    new Date().toISOString(),
+    studentId:    sub.studentId || (S.user && (S.user.studentId||S.user.id)) || '',
+    studentName:  sub.studentName || (S.user && S.user.name) || '',
+    email:        (S.user && S.user.email) || '',
+    batch:        (S.user && S.user.batch) || '',
+    moduleType:   sub.moduleType || sub.type || 'LUM',
+    question:     sub.qtext || sub.text || '',
+    score:        (sub.score!==undefined ? sub.score : ''),
+    maxScore:     sub.maxScore || '',
+    criteria:     JSON.stringify(sub.criteria || {}),
+    feedback:     JSON.stringify(sub.feedback || {}),
+    cando:        sub.cando || '',
+    flag:         sub.flag || '',
+    transcript:   sub.transcript || '',
+    duration:     sub.duration || 0,
+    driveLink:    sub.driveLink || '',
+    scoringSource: sub.scoringSource || ''
+  };
+  console.log('[CLARION] submission save started →', payload.studentId, payload.moduleType, 'score', payload.score);
+  // text/plain avoids a CORS preflight (same approach as _serverScore)
+  fetch(url, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) })
+    .then(function(r){ return r.text(); })
+    .then(function(t){ console.log('[CLARION] submission save success:', (t||'').slice(0,140)); })
+    .catch(function(e){ console.error('[CLARION] submission save failure:', e.message); });
+}
+
+// ── Google Drive audio upload ─────────────────────────────────────────────────// Uploads S.audioBlob to Google Drive via the configured Web App URL.
 // Returns the public Drive file URL, or null on failure.
 //
 // Payload fields sent to the Apps Script doPost endpoint:
@@ -4946,8 +4984,35 @@ function viewStudent(email){
 // ════════════════════════════════════════════════
 // ADMIN: REVIEW
 // ════════════════════════════════════════════════
-function renderAdminReview(){
-  if(S.role!=='admin' && S.role!=='trainer'){nav(_safeDefaultPage());return;}
+// Fetch all centrally-stored submissions and normalise them into the same shape
+// the Review table/openReview already expect (criteria/feedback parsed to objects).
+function _fetchReviewSubmissions(){
+  const url = localStorage.getItem(CLARION_SUBMISSIONS_URL_KEY) || '';
+  console.log('[CLARION] review fetch started; central URL configured:', !!url);
+  if(!url) return Promise.resolve([]);
+  const u = url + (url.indexOf('?')>=0?'&':'?') + 'action=listSubmissions';
+  return fetch(u, { method:'GET' })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      const rows = (data && (data.submissions||data.rows||data.data)) || [];
+      return rows.map(function(r){
+        let crit={}, fb={};
+        try{ crit = typeof r.criteria==='string' ? JSON.parse(r.criteria||'{}') : (r.criteria||{}); }catch(_){}
+        try{ fb   = typeof r.feedback==='string' ? JSON.parse(r.feedback||'{}') : (r.feedback||{}); }catch(_){}
+        const mt = r.moduleType||r.type||'LUM';
+        return { studentId:r.studentId||'', studentName:r.studentName||r.studentId||'(unknown)',
+                 email:r.email||'', batch:r.batch||'',
+                 date:String(r.timestamp||r.date||'').slice(0,10), score:r.score, maxScore:r.maxScore||10,
+                 moduleType:mt, type:mt, _displayType:mt, _maxScore:parseFloat(r.maxScore||10),
+                 duration:parseFloat(r.duration||0), _duration:parseFloat(r.duration||0),
+                 qtext:r.question||r.qtext||'', transcript:r.transcript||'',
+                 driveLink:r.driveLink||r.audioLink||'', scoringSource:r.scoringSource||'central',
+                 criteria:crit, feedback:fb, cando:r.cando||'', flag:r.flag||'' };
+      });
+    });
+}
+
+function renderAdminReview(){  if(S.role!=='admin' && S.role!=='trainer'){nav(_safeDefaultPage());return;}
   loadRegistry();
 
   // Merge regular subs + diag subs across all students into one flat list
@@ -4984,24 +5049,46 @@ return [...reg,...diag,...modules];
     return '<span class="tag '+cls+'">'+t+'</span>';
   };
 
-  set('<div class="ph"><div class="ph-title">Review</div>'+
-    '<div class="ph-sub">'+all.length+' submissions across all students</div></div>'+
-    '<div style="display:flex;gap:10px;margin-bottom:16px">'+
-      '<button class="btn-gold" onclick="pickRandom()">🎲 Random Sample</button>'+
-    '</div>'+
-    '<div class="tbl-wrap"><table><thead><tr>'+
-      '<th>Student</th><th>Date</th><th>Type</th><th>Score</th><th>Source</th><th>Duration</th><th></th>'+
-    '</tr></thead><tbody>'+
-    all.map(s=>'<tr>'+
-      '<td style="font-weight:600;font-size:.85rem">'+s.studentName+'</td>'+
-      '<td style="font-family:var(--mono);font-size:.75rem">'+(s.date||'—')+'</td>'+
-      '<td>'+typeTag(s)+'</td>'+
-      '<td>'+scorePill(parseFloat(s.score||0), s._maxScore)+'</td>'+
-      '<td style="font-family:var(--mono);font-size:.68rem;color:var(--muted)">'+(s.scoringSource||'—')+'</td>'+
-      '<td style="font-family:var(--mono);font-size:.75rem">'+(s._duration?s._duration+'s':'—')+'</td>'+
-      '<td><button class="btn-secondary" style="font-size:.75rem;padding:5px 10px" '+
-        'data-sub="'+encodeURIComponent(JSON.stringify(s))+'" onclick="openReview(this.dataset.sub)">View</button></td>'+
-    '</tr>').join('')+'</tbody></table></div>');
+  const _draw = function(rows, note){
+    set('<div class="ph"><div class="ph-title">Review</div>'+
+      '<div class="ph-sub">'+rows.length+' submissions across all students'+(note?' · '+note:'')+'</div></div>'+
+      '<div style="display:flex;gap:10px;margin-bottom:16px">'+
+        '<button class="btn-gold" onclick="pickRandom()">🎲 Random Sample</button>'+
+      '</div>'+
+      '<div class="tbl-wrap"><table><thead><tr>'+
+        '<th>Student</th><th>Date</th><th>Type</th><th>Score</th><th>Source</th><th>Duration</th><th></th>'+
+      '</tr></thead><tbody>'+
+      rows.map(s=>'<tr>'+
+        '<td style="font-weight:600;font-size:.85rem">'+s.studentName+'</td>'+
+        '<td style="font-family:var(--mono);font-size:.75rem">'+(s.date||'—')+'</td>'+
+        '<td>'+typeTag(s)+'</td>'+
+        '<td>'+scorePill(parseFloat(s.score||0), s._maxScore)+'</td>'+
+        '<td style="font-family:var(--mono);font-size:.68rem;color:var(--muted)">'+(s.scoringSource||'—')+'</td>'+
+        '<td style="font-family:var(--mono);font-size:.75rem">'+(s._duration?s._duration+'s':'—')+'</td>'+
+        '<td><button class="btn-secondary" style="font-size:.75rem;padding:5px 10px" '+
+          'data-sub="'+encodeURIComponent(JSON.stringify(s))+'" onclick="openReview(this.dataset.sub)">View</button></td>'+
+      '</tr>').join('')+'</tbody></table></div>');
+  };
+
+  // Read central backend first; render local cache immediately so the panel is never blank.
+  _draw(all, 'local cache — syncing central store…');
+  _fetchReviewSubmissions().then(function(backendRows){
+    if(!backendRows || !backendRows.length){ _draw(all, 'central store empty/unavailable — local cache'); return; }
+    // Trainer batch scoping — only applied when the trainer has an assigned batch; admin sees all.
+    let bRows = backendRows;
+    if(S.role==='trainer' && S.user && S.user.batch){
+      bRows = bRows.filter(function(r){ return (r.batch||'')===S.user.batch; });
+    }
+    const key=function(s){return [s.studentId||s.email||'',(s.moduleType||s._displayType||s.type||''),(s.date||''),(s.score!==undefined?s.score:'')].join('|');};
+    const seen={}; bRows.forEach(function(r){ seen[key(r)]=true; });
+    const merged = bRows.concat(all.filter(function(s){ return !seen[key(s)]; }))
+      .sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+    console.log('[CLARION] review fetch count:', bRows.length, '| merged total:', merged.length);
+    _draw(merged, 'central store + local cache');
+  }).catch(function(e){
+    console.error('[CLARION] review fetch failure:', e.message);
+    _draw(all, 'central fetch failed — local cache');
+  });
 }
 
 function pickRandom(){
