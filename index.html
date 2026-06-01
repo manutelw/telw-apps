@@ -5060,10 +5060,8 @@ function openReview(subStr){
 
   document.getElementById('modal-body').innerHTML=
     '<div class="modal-title">'+(s.studentName||'Review')+'</div>'+
-    '<div class="modal-sub">'+
-      (s.date||'—')+' · '+displayType+(duration?' · '+duration+'s':'')+
-      ' · Score: '+s.score+'/'+maxSc+srcBadge+
-    '</div>'+
+    '<button class="btn-secondary" style="margin-bottom:12px;font-size:.78rem" data-nav="'+((S.role==='admin'||S.role==='trainer')?'adm-diag':'stu-diag')+'" onclick="nav(this.dataset.nav)">← Back to Diagnostic'+((S.role==='admin'||S.role==='trainer')?' Reports':'')+'</button>'+
+'<div class="ph-title">Diagnostic Report</div>'+
     '<div style="margin-bottom:12px"><div class="card-lbl">Question</div>'+
       '<div style="font-family:var(--serif);font-size:1rem;line-height:1.5">'+(s.qtext||s.text||'—')+'</div></div>'+
     audioSection+
