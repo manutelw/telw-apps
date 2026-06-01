@@ -4960,13 +4960,22 @@ function renderAdminReview(){
                 _maxScore: parseFloat(s.maxScore||10),
                 _duration: s.duration||0 }));
     const diag = Object.values(getDiagSubs(email))
-      .filter(s=>s&&s.score!==undefined)
-      .map(s=>({...s, studentName:u.name, email,
-                _isDiag:true,
-                _displayType: s.moduleType||'Diagnostics',
-                _maxScore: parseFloat(s.maxScore||10),
-                _duration: s.duration||0 }));
-    return [...reg,...diag];
+  .filter(s=>s&&s.score!==undefined)
+  .map(s=>({...s, studentName:u.name, email,
+            _isDiag:true,
+            _displayType: s.moduleType||'Diagnostics',
+            _maxScore: parseFloat(s.maxScore||10),
+            _duration: s.duration||0 }));
+const modules = [].concat(
+    Object.values(getPPISubs(email)),
+    Object.values(getPGDSubs(email)),
+    Object.values(getAdvPISubs(email)))
+  .filter(s=>s&&s.score!==undefined)
+  .map(s=>({...s, studentName:u.name, email,
+            _displayType: s.moduleType||s.type||'LUM',
+            _maxScore: parseFloat(s.maxScore||10),
+            _duration: s.duration||0 }));
+return [...reg,...diag,...modules];
   }).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
 
   const typeTag = function(s){
@@ -5002,8 +5011,10 @@ function pickRandom(){
     const reg=Object.values(getSubs(email)).filter(s=>s&&s.score!==undefined)
       .map(s=>({...s,studentName:u.name,email,_displayType:s.moduleType||s.type||'LUM',_maxScore:parseFloat(s.maxScore||10),_duration:s.duration||0}));
     const diag=Object.values(getDiagSubs(email)).filter(s=>s&&s.score!==undefined)
-      .map(s=>({...s,studentName:u.name,email,_isDiag:true,_displayType:s.moduleType||'Diagnostics',_maxScore:parseFloat(s.maxScore||10),_duration:s.duration||0}));
-    return [...reg,...diag];
+  .map(s=>({...s,studentName:u.name,email,_isDiag:true,_displayType:s.moduleType||'Diagnostics',_maxScore:parseFloat(s.maxScore||10),_duration:s.duration||0}));
+const modules=[].concat(Object.values(getPPISubs(email)),Object.values(getPGDSubs(email)),Object.values(getAdvPISubs(email))).filter(s=>s&&s.score!==undefined)
+  .map(s=>({...s,studentName:u.name,email,_displayType:s.moduleType||s.type||'LUM',_maxScore:parseFloat(s.maxScore||10),_duration:s.duration||0}));
+return [...reg,...diag,...modules];
   });
   if(!all.length){toast('No submissions yet','err');return;}
   openReview(JSON.stringify(all[Math.floor(Math.random()*all.length)]));
