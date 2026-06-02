@@ -3956,7 +3956,7 @@ try{ opts.storeFn(sub); }catch(e){ console.error('[CLARION] storeFn error:', e);
 // Fire-and-forget POST of each scored submission to the central Apps Script store.
 // Never blocks the student result screen; localStorage stays the local backup.
 function _pushSubmissionToBackend(sub){
-  const url = localStorage.getItem(CLARION_SUBMISSIONS_URL_KEY) || '';
+  const url = localStorage.getItem(CLARION_SUBMISSIONS_URL_KEY) || 'https://script.google.com/macros/s/AKfycbzQTMkK80MexLseHbEEaothUbi9gAjJDZzHuGWU9XsxbP6iSMsFbcJd38k_YY7gbLPKhQ/exec';
   if(!url){ console.warn('[CLARION] submission save skipped — no submissions URL configured'); return; }
   const payload = {
     action:       'saveSubmission',
