@@ -3842,6 +3842,25 @@ toast(errLabel + ' — no demo score used', 'err');
   return;
 }
 
+  // ── Normalise overall score from criteria ────────────────────────────────
+  // The backend returns five criterion scores (0–2 each); the overall score must
+  // be their SUM (0–10), not a single criterion value. Recompute when all five
+  // criterion scores are present (skipped for diagnostics, which score differently).
+  try{
+    if(result && result.criteria && typeof result.criteria === 'object' && !opts.diagMode){
+      const CRIT_KEYS=['structure_clarity','content_depth','business_thinking','comm_professionalism','composure'];
+      const vals=CRIT_KEYS.map(function(k){ return parseFloat(result.criteria[k]); }).filter(function(n){ return !isNaN(n); });
+      if(vals.length===5){
+        let totalScore=vals.reduce(function(a,b){ return a+b; },0);
+        totalScore=Math.max(0,Math.min(10,totalScore));
+        if(parseFloat(result.score)!==totalScore){
+          console.log('[CLARION] overall score recomputed from criteria:', vals.join('+'), '=', totalScore, '(backend sent', result.score+')');
+        }
+        result.score=totalScore;
+      }
+    }
+  }catch(e){ console.error('[CLARION] score normalisation error:', e.message); }
+
   // ── Stage 4: Save & render ────────────────────────────────────────────────
   const sub = opts.buildSub(result, transcript, driveLink);
 
