@@ -3291,8 +3291,55 @@ function renderScoreHTML(sub, showBanner){
 // ════════════════════════════════════════════════
 // RECORDING
 // ════════════════════════════════════════════════
+/* ===== TEMP MOBILE DEBUG PANEL — remove after testing. Observation only; no app logic. ===== */
+window.__clarionProbeState = window.__clarionProbeState || { startRec:'NO', stopRec:'NO', onstop:'NO', runSubmit:'NO', err:'—' };
+function __clarionProbe(evt, info){ try{
+  const st=window.__clarionProbeState, t=new Date().toLocaleTimeString();
+  if(evt==='startRec')  st.startRec  = 'YES @ '+t;
+  if(evt==='stopRec')   st.stopRec   = 'YES @ '+t;
+  if(evt==='onstop')    st.onstop    = 'YES @ '+t+' · chunks='+(info&&info.chunks!=null?info.chunks:'?');
+  if(evt==='runSubmit') st.runSubmit = 'YES @ '+t+' · audioBlob='+(info&&info.audioBlob?'true':'false')+' · winBlob='+(info&&info.winBlob?'true':'false');
+  if(evt==='err')       st.err       = (info&&info.msg)||'—';
+  __clarionProbeRender();
+}catch(e){} }
+
+function __clarionProbeRender(){ try{
+  if(typeof S==='undefined' || !S || S.role!=='student') return;
+  let p=document.getElementById('clarion-probe-panel');
+  if(!p){
+    p=document.createElement('div');
+    p.id='clarion-probe-panel';
+    p.style.cssText='position:fixed;left:6px;right:6px;bottom:6px;z-index:999999;background:rgba(10,10,12,.93);color:#39ff14;font:11px/1.45 monospace;padding:8px 10px;border-radius:8px;border:1px solid #333;max-height:46vh;overflow:auto;white-space:pre-wrap;box-shadow:0 4px 18px rgba(0,0,0,.5)';
+    p.title='tap to hide';
+    p.onclick=function(){ p.style.display='none'; };
+    document.body.appendChild(p);
+  }
+  const st=window.__clarionProbeState;
+  const ab=(typeof S!=='undefined'&&S&&S.audioBlob)?(S.audioBlob.size+'B '+(S.audioBlob.type||'')):'null';
+  const wb=window.CLARION_LAST_AUDIO_BLOB?(window.CLARION_LAST_AUDIO_BLOB.size+'B '+(window.CLARION_LAST_AUDIO_BLOB.type||'')):'null';
+  const rs=(typeof S!=='undefined'&&S&&S.mediaRec)?S.mediaRec.state:'no-recorder';
+  p.textContent='CLARION DEBUG (temporary — tap to hide)\n'
+    +'1 startRec  : '+st.startRec+'\n'
+    +'2 stopRec   : '+st.stopRec+'\n'
+    +'3 onstop    : '+st.onstop+'\n'
+    +'4 _runSubmit: '+st.runSubmit+'\n---\n'
+    +'S.audioBlob : '+ab+'\n'
+    +'window blob : '+wb+'\n'
+    +'recorder st : '+rs+'\n'
+    +'last error  : '+st.err;
+}catch(e){} }
+
+if(typeof window!=='undefined' && !window.__clarionProbeErrHook){
+  window.__clarionProbeErrHook=true;
+  window.addEventListener('error', function(e){
+    __clarionProbe('err',{msg:(e&&e.message)||'error'});
+  });
+}
+/* ===== END TEMP DEBUG PANEL ===== */
+
 function startRec(limit){
     console.log('[PROBE] startRec called | limit=', limit, '| recording=', S.recording);
+  __clarionProbe('startRec');
   // Guard: don't start a second recording if one is already running
   if(S.recording){ return; }
   S.recSecs=0;S.recLimit=limit;S.recording=true;
@@ -3309,6 +3356,7 @@ function startRec(limit){
       S.mediaRec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
      S.mediaRec.onstop=()=>{
                console.log('[PROBE] onstop FIRED | chunks=', chunks.length);
+                 __clarionProbe('onstop', {chunks: chunks.length});
   // Final recorded Blob — build once, then assign to the SAME field the scoring path reads (S.audioBlob).
   const finalBlob = new Blob(chunks, {type: S.mediaRec.mimeType});
   console.log('[CLARION] recorder final blob:', finalBlob.size+'B', 'type='+finalBlob.type, 'chunks='+chunks.length);
@@ -3349,9 +3397,10 @@ function tickRec(){
 }
 function stopRec(){
     console.log('[PROBE] stopRec called | mediaRec=', !!S.mediaRec, '| state=', S.mediaRec && S.mediaRec.state, '| recSecs=', S.recSecs);
+  __clarionProbe('stopRec');
   clearInterval(S.recTimer);S.recording=false;S.recorded=true;
 
-  const wv=document.getElementById('wv');if(wv)wv.classList.add('idle');
+  const wv=document.getElementById('wv');if(wv)wv.classList.add('idle');console.log('[PROBE] onstop FIRED | chunks=', chunks.length);
   document.getElementById('btn-stop').classList.add('hidden');
 
   const submitBtn=document.getElementById('btn-submit');
@@ -3520,6 +3569,7 @@ function withTimeout(promise, ms, label){
 // }
 async function _runSubmit(opts){
     console.log('[PROBE] _runSubmit (submit) entered | audioBlob=', !!S.audioBlob, '| winBlob=', !!window.CLARION_LAST_AUDIO_BLOB);
+  __clarionProbe('runSubmit', {audioBlob: !!S.audioBlob, winBlob: !!window.CLARION_LAST_AUDIO_BLOB});
   const proc = opts.proc;
   const q    = S.currentQ;
   if(!q) return;
