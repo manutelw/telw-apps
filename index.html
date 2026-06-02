@@ -3306,9 +3306,15 @@ function startRec(limit){
       S.mediaRec=new MediaRecorder(stream,{mimeType:mime});
       const chunks=[];
       S.mediaRec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
-      S.mediaRec.onstop=()=>{
-  S.audioBlob=new Blob(chunks,{type:S.mediaRec.mimeType});
-  window.CLARION_LAST_AUDIO_BLOB = S.audioBlob;
+     S.mediaRec.onstop=()=>{
+  // Final recorded Blob — build once, then assign to the SAME field the scoring path reads (S.audioBlob).
+  const finalBlob = new Blob(chunks, {type: S.mediaRec.mimeType});
+  console.log('[CLARION] recorder final blob:', finalBlob.size+'B', 'type='+finalBlob.type, 'chunks='+chunks.length);
+  S.audioBlob = finalBlob;
+  window.CLARION_LAST_AUDIO_BLOB = finalBlob;
+  console.log('[CLARION] S.audioBlob assigned:', !!S.audioBlob, S.audioBlob ? (S.audioBlob.size+'B type='+S.audioBlob.type) : 'null');
+  // Safe external debug handle (window.S is intentionally not global).
+  window.__clarionAudioDebug = { hasBlob: !!S.audioBlob, size: S.audioBlob?S.audioBlob.size:0, type: S.audioBlob?S.audioBlob.type:'', updatedAt: new Date().toISOString() };
   S.audioEl=new Audio(URL.createObjectURL(S.audioBlob));
   stream.getTracks().forEach(t=>t.stop());
 
