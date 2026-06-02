@@ -1117,7 +1117,9 @@ async function _cloudConfigLoad(){
     // It defaults to DEFAULT_ADMIN_AUTH_URL and must never be overwritten with the AutoOps URL.
     // Populate localStorage and live state from cloud, but only overwrite if
     // the cloud has a non-empty value (preserves local overrides when cloud is blank)
-      if(data.aiScoringUrl){
+    if(data.aiScoringUrl){
+      localStorage.setItem(CLARION_SCORING_URL_KEY, data.aiScoringUrl);
+    }
     if(data.audioUploadUrl){
       localStorage.setItem('clarion_drive_url', data.audioUploadUrl);
       S.driveUrl = data.audioUploadUrl;
@@ -5706,9 +5708,7 @@ function renderSetup(){
           'Gemini key is stored in Apps Script → Project Settings → Script Properties. It never leaves the server.'+
         '</p>'+
       '</div>';
-       })() : '')+
-
-    
+    })() : '')+
 
     // ── GOOGLE SHEET LIVE SYNC ────────────────────────────────────────────────
     (S.role==='admin' ?
@@ -6860,26 +6860,6 @@ function clearScoringUrl(){
   var el = document.getElementById('adm-scoring-url');
   if(el) el.value = '';
   toast('AI Scoring URL cleared — demo scoring active','ok');
-  renderSetup();
-}
-
-// ── Central Submissions backend URL (admin-only) ──
-async function saveSubmissionsUrl(){
-  var u = (document.getElementById('adm-submissions-url')||{value:''}).value.trim();
-  if(!u){ toast('Paste the Submissions Web App URL first','err'); return; }
-  if(!u.startsWith('https://')){ toast('URL must start with https://','err'); return; }
-  localStorage.setItem(CLARION_SUBMISSIONS_URL_KEY, u);
-  toast('Submissions URL saved ✓ — scored submissions will reach the central sheet','ok');
-  // Push to cloud config so other devices pick it up automatically (harmless if unsupported)
-  try{ await _cloudConfigSave({ submissionsUrl: u }); }catch(e){}
-  renderSetup();
-}
-
-function clearSubmissionsUrl(){
-  localStorage.removeItem(CLARION_SUBMISSIONS_URL_KEY);
-  var el = document.getElementById('adm-submissions-url');
-  if(el) el.value = '';
-  toast('Submissions URL cleared — submissions stay in local storage only','ok');
   renderSetup();
 }
 
