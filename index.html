@@ -3557,13 +3557,16 @@ if(S.audioBlob && S.driveUrl){
   if(S.audioBlob){
     if(scoringUrl){
       // PATH A: server-side transcription (Gemini key lives on server)
-      try{
-        console.log('[CLARION] Server transcription started');
-        transcript = '';
-console.log('[CLARION] Audio present. Skipping separate transcription; scoring backend will transcribe and score.');
-        console.log('[CLARION] Server transcript length:', transcript.length);
-      }catch(e){
-        console.error('[CLARION] Server transcription error:', e.message);
+    try{
+  console.log('[CLARION] audio blob exists:', !!S.audioBlob, '| size:', S.audioBlob ? S.audioBlob.size+'B' : 0);
+  console.log('[CLARION] audio MIME type:', (S.audioBlob && S.audioBlob.type) || '(none)');
+  console.log('[CLARION] scoring URL present:', !!scoringUrl);
+  console.log('[CLARION] server transcription started');
+  transcript = '';
+  console.log('[CLARION] Audio present. Skipping separate transcription; scoring backend will transcribe and score.');
+  console.log('[CLARION] Server transcript length:', transcript.length);
+}catch(e){
+  console.error('[CLARION] server transcription failed:', e.message);
         if(e.message.includes('timed out') || e.message === 'no_scoring_url'){
   if(driveLink){
     const partialSub = {
@@ -3670,20 +3673,27 @@ console.log('[CLARION] Audio present. Skipping separate transcription; scoring b
 
   if(scoringUrl){
     // PATH A: server-side scoring (preferred — Gemini key never leaves server)
-    try{
-      console.log('[CLARION] Server scoring started');
-      result = await _serverScore({
+   try{
+  // Audio-only submission (no transcript): send the audio so the scoring
+  // backend can transcribe AND score in one call. Text-only keeps transcript.
+  const _sendAudio = (!transcript && !!S.audioBlob);
+  const _audioB64  = _sendAudio ? await blobToBase64(S.audioBlob) : '';
+  const _audioMime = _sendAudio ? (S.audioBlob.type || 'audio/webm') : '';
+  console.log('[CLARION] audio blob exists:', !!S.audioBlob, '| base64 length:', _audioB64.length, '| audio MIME:', _audioMime || '(none)');
+  console.log('[CLARION] scoring URL present:', !!scoringUrl, '| transcript length:', (transcript||'').length, '| sending audio to scorer:', _sendAudio);
+  console.log('[CLARION] server scoring started');
+  result = await _serverScore({
   transcript:  transcript,
-  audioBase64: (!transcript && S.audioBlob) ? await blobToBase64(S.audioBlob) : '',
-  audioMime:   (!transcript && S.audioBlob) ? (S.audioBlob.type || 'audio/webm') : '',
+  audioBase64: _audioB64,
+  audioMime:   _audioMime,
   prompt:      prompt,      // fully substituted — no placeholders remain
   moduleType:  opts.moduleType || (opts.diagMode ? 'Diagnostics' : (q.type||'LUM')),
   maxScore:    opts.maxScore   || q.maxScore || 10,
   diagMode:    opts.diagMode   || false,
 });
-      console.log('[CLARION] Server score received:', result.score);
-    }catch(e){
-      console.error('[CLARION] Server scoring error:', e.message);
+  console.log('[CLARION] Server score received:', result.score);
+}catch(e){
+  console.error('[CLARION] server scoring failed:', e.message);
       const isQuota  = e.message === 'quota_exceeded';
       const isNoKey  = e.message === 'no_gemini_key';
       const isNoUrl  = e.message === 'no_scoring_url';
@@ -3913,7 +3923,8 @@ async function _serverScore(opts){
   console.log('[CLARION] _serverScore raw response:', data);
 
   if(!data.ok){
-    if(data.error === 'no_key')         throw new Error('no_gemini_key');
+  console.error('[CLARION] scoring backend returned ok:false — error:', data.error||'(none)', '| message:', data.message||'(none)', '| full:', data);
+  if(data.error === 'no_key')         throw new Error('no_gemini_key');
     if(data.error === 'quota_exceeded') throw new Error('quota_exceeded');
     if(data.error === 'no_transcript')  throw new Error('no_transcript — send transcript or audio');
     throw new Error((data.message || data.error || 'Server scoring failed') + ' [server]');
