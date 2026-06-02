@@ -3400,7 +3400,7 @@ function stopRec(){
   __clarionProbe('stopRec');
   clearInterval(S.recTimer);S.recording=false;S.recorded=true;
 
-  const wv=document.getElementById('wv');if(wv)wv.classList.add('idle');console.log('[PROBE] onstop FIRED | chunks=', chunks.length);
+  const wv=document.getElementById('wv');if(wv)wv.classList.add('idle');
   document.getElementById('btn-stop').classList.add('hidden');
 
   const submitBtn=document.getElementById('btn-submit');
