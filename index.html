@@ -1117,9 +1117,7 @@ async function _cloudConfigLoad(){
     // It defaults to DEFAULT_ADMIN_AUTH_URL and must never be overwritten with the AutoOps URL.
     // Populate localStorage and live state from cloud, but only overwrite if
     // the cloud has a non-empty value (preserves local overrides when cloud is blank)
-    if(data.aiScoringUrl){
-      localStorage.setItem(CLARION_SCORING_URL_KEY, data.aiScoringUrl);
-    }
+      if(data.aiScoringUrl){
     if(data.audioUploadUrl){
       localStorage.setItem('clarion_drive_url', data.audioUploadUrl);
       S.driveUrl = data.audioUploadUrl;
@@ -5708,6 +5706,31 @@ function renderSetup(){
           'Gemini key is stored in Apps Script → Project Settings → Script Properties. It never leaves the server.'+
         '</p>'+
       '</div>';
+       })() : '')+
+
+    // ── CENTRAL SUBMISSIONS BACKEND ───────────────────────────────────────────
+    (S.role==='admin' ?
+    (function(){
+      var subsUrl = localStorage.getItem(CLARION_SUBMISSIONS_URL_KEY) || '';
+      return '<div class="card" style="border-left:4px solid var(--gold)"><div class="card-lbl">Central Submissions URL <span style="font-weight:400;color:var(--muted)">(scored submissions → Google Sheet)</span></div>'+
+        '<p style="font-size:.82rem;color:var(--muted);margin-bottom:10px">'+
+          'Paste the Apps Script Web App URL for the central CLARION Submissions Sheet. '+
+          'Every scored submission is saved here so Admin/Trainer Review works across devices. '+
+          'Leave blank to keep submissions in local browser storage only.'+
+        '</p>'+
+        '<div class="f-label" style="margin-bottom:5px">Submissions Backend Web App URL</div>'+
+        '<div style="display:flex;gap:9px;margin-bottom:8px">'+
+          '<input id="adm-submissions-url" class="f-input" type="url" placeholder="https://script.google.com/macros/s/…/exec" '+
+            'style="font-size:.78rem;font-family:var(--mono);flex:1" value="'+subsUrl+'">'+
+          '<button class="btn-primary" onclick="saveSubmissionsUrl()">Save</button>'+
+          '<button class="btn-secondary" onclick="clearSubmissionsUrl()">Clear</button>'+
+        '</div>'+
+        '<div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">'+
+          '<span id="submissions-url-status" style="font-family:var(--mono);font-size:.72rem;color:'+(subsUrl?'var(--green)':'var(--red)')+'">'+
+            (subsUrl ? '✓ Submissions URL configured: YES' : '✗ Submissions URL configured: NO — submissions stay local only')+
+          '</span>'+
+        '</div>'+
+      '</div>';
     })() : '')+
 
     // ── GOOGLE SHEET LIVE SYNC ────────────────────────────────────────────────
@@ -6860,6 +6883,26 @@ function clearScoringUrl(){
   var el = document.getElementById('adm-scoring-url');
   if(el) el.value = '';
   toast('AI Scoring URL cleared — demo scoring active','ok');
+  renderSetup();
+}
+
+// ── Central Submissions backend URL (admin-only) ──
+async function saveSubmissionsUrl(){
+  var u = (document.getElementById('adm-submissions-url')||{value:''}).value.trim();
+  if(!u){ toast('Paste the Submissions Web App URL first','err'); return; }
+  if(!u.startsWith('https://')){ toast('URL must start with https://','err'); return; }
+  localStorage.setItem(CLARION_SUBMISSIONS_URL_KEY, u);
+  toast('Submissions URL saved ✓ — scored submissions will reach the central sheet','ok');
+  // Push to cloud config so other devices pick it up automatically (harmless if unsupported)
+  try{ await _cloudConfigSave({ submissionsUrl: u }); }catch(e){}
+  renderSetup();
+}
+
+function clearSubmissionsUrl(){
+  localStorage.removeItem(CLARION_SUBMISSIONS_URL_KEY);
+  var el = document.getElementById('adm-submissions-url');
+  if(el) el.value = '';
+  toast('Submissions URL cleared — submissions stay in local storage only','ok');
   renderSetup();
 }
 
