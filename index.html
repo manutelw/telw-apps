@@ -3352,11 +3352,11 @@ function startRec(limit){
     navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
       const mime=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
       S.mediaRec=new MediaRecorder(stream,{mimeType:mime});
-      const chunks=[];
+      const chunks=[]; S._recChunks=chunks;
       S.mediaRec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
      S.mediaRec.onstop=()=>{
                console.log('[PROBE] onstop FIRED | chunks=', chunks.length);
-                 __clarionProbe('onstop', {chunks: chunks.length});
+                 __clarionProbe('onstop', {chunks: (S._recChunks && S._recChunks.length) || 0});
   // Final recorded Blob — build once, then assign to the SAME field the scoring path reads (S.audioBlob).
   const finalBlob = new Blob(chunks, {type: S.mediaRec.mimeType});
   console.log('[CLARION] recorder final blob:', finalBlob.size+'B', 'type='+finalBlob.type, 'chunks='+chunks.length);
@@ -3409,7 +3409,7 @@ function stopRec(){
   const st=document.getElementById('rec-state');
   if(st)st.textContent='Finalising recording…';
 
-  if(S.mediaRec&&S.mediaRec.state!=='inactive'){
+    if(S.mediaRec&&S.mediaRec.state!=='inactive'){
     S.mediaRec.stop();
   } else {
     document.getElementById('btn-play').classList.remove('hidden');
@@ -3417,6 +3417,52 @@ function stopRec(){
     if(submitBtn) submitBtn.disabled=false;
     if(st)st.textContent='Recorded — '+S.recSecs+'s. Review or submit.';
   }
+
+  // ACTIVE-path guarantee: ensure the final Blob + debug globals are set after Stop,
+  // even if the recorder's async onstop did not run. Scoring reads S.audioBlob
+  // with window.CLARION_LAST_AUDIO_BLOB fallback, so we set both here too.
+  setTimeout(function(){
+    if(!window.CLARION_LAST_AUDIO_BLOB && S._recChunks && S._recChunks.length){
+      const mime = (S.mediaRec && S.mediaRec.mimeType) || 'audio/webm';
+      const finalBlob = new Blob(S._recChunks, {type: mime});
+
+      console.log('[CLARION] ACTIVE recorder final blob:', finalBlob.size+'B', 'type='+finalBlob.type, 'chunks='+S._recChunks.length);
+
+      S.audioBlob = finalBlob;
+      window.CLARION_LAST_AUDIO_BLOB = finalBlob;
+      window.__clarionAudioDebug = {
+        hasBlob: !!S.audioBlob,
+        size: S.audioBlob ? S.audioBlob.size : 0,
+        type: S.audioBlob ? S.audioBlob.type : '',
+        updatedAt: new Date().toISOString()
+      };
+
+      if(!S.audioEl){
+        try{ S.audioEl = new Audio(URL.createObjectURL(finalBlob)); }catch(e){}
+      }
+
+      document.getElementById('btn-play')?.classList.remove('hidden');
+      document.getElementById('btn-rerec')?.classList.remove('hidden');
+      if(submitBtn) submitBtn.disabled=false;
+      if(st) st.textContent='Recorded — '+S.recSecs+'s. Review or submit.';
+
+      if(typeof __clarionProbe === 'function') __clarionProbeRender();
+
+      console.log('[CLARION] ACTIVE audio blob assigned:', !!S.audioBlob, S.audioBlob?(S.audioBlob.size+'B type='+S.audioBlob.type):'null');
+
+    } else if(window.CLARION_LAST_AUDIO_BLOB){
+      S.audioBlob = S.audioBlob || window.CLARION_LAST_AUDIO_BLOB;
+
+      if(typeof __clarionProbe === 'function') __clarionProbeRender();
+
+      console.log('[CLARION] ACTIVE recorder final blob: already finalised by onstop —', window.CLARION_LAST_AUDIO_BLOB.size+'B type='+window.CLARION_LAST_AUDIO_BLOB.type);
+      console.log('[CLARION] ACTIVE audio blob assigned:', !!S.audioBlob);
+
+    } else {
+      console.warn('[CLARION] ACTIVE recorder final blob: no audio chunks captured — nothing to assign');
+      if(typeof __clarionProbe === 'function') __clarionProbe('err',{msg:'No audio chunks captured after Stop'});
+    }
+  }, 350);
 }
 function playRec(){if(S.audioEl){S.audioEl.currentTime=0;S.audioEl.play();}else toast('Demo: '+S.recSecs+'s recorded');}
 function reRecord(){
