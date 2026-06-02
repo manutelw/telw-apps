@@ -1685,15 +1685,52 @@ const rows = data.students || [];
       if(sheetRowNum) existing[existingKey].sheetRowNumber = sheetRowNum;
         seenKeys[existingKey] = true;
         updated++;
-      } else {
-        // Create new
+     } else {
+        // No email match yet — decide the Student ID for this row.
         let newId;
         if(sheetSid){
-          const isDupe = Object.values(existing).some(function(s){ return String(s.studentId||'').toLowerCase()===sheetSid.toLowerCase(); });
-          newId = isDupe ? _generateClarionStudentId(institution, batch, existing) : sheetSid;
-          if(isDupe){ console.warn('[AutoOps] Dupe ID "'+sheetSid+'" → generated:', newId); }
+          // Sheet provided an explicit Student ID — use it EXACTLY; never generate.
+          let idKey = null;
+          Object.keys(existing).forEach(function(k){
+            if(String(existing[k].studentId||'').toLowerCase() === sheetSid.toLowerCase()) idKey = k;
+          });
+          console.log('[AutoOps] sheet student ID:', sheetSid, '| email:', email||'(none)', '| existing key match:', idKey||'(none)');
+          if(idKey){
+            const existingEmail = String(existing[idKey]._email||'').toLowerCase();
+            if(emailLower && emailLower === existingEmail){
+              // Same Student ID AND same email → same person: update in place, preserve password & ID.
+              console.log('[AutoOps] duplicate conflict: no | final student ID used:', existing[idKey].studentId);
+              existing[idKey].name       = name || existing[idKey].name;
+              existing[idKey].batch      = batch || existing[idKey].batch;
+              existing[idKey].programme  = programme || existing[idKey].programme;
+              existing[idKey].accessType = accessType;
+              existing[idKey].active     = active;
+              existing[idKey]._email     = email;
+              existing[idKey]._autoOpsSynced = true;
+              existing[idKey].lastSyncedAt   = new Date().toISOString();
+              if(institution) existing[idKey].institution = institution;
+              if(groupCode && !existing[idKey].groupCode) existing[idKey].groupCode = groupCode;
+              if(sheetRowNum) existing[idKey].sheetRowNumber = sheetRowNum;
+              if(emailLower) emailToKey[emailLower] = idKey;
+              seenKeys[idKey] = true;
+              updated++;
+              return;
+            }
+            // Same Student ID but a DIFFERENT email → real duplicate-ID conflict: skip, never generate.
+            console.warn('[AutoOps] duplicate conflict: yes | sheet student ID:', sheetSid,
+              '| sheet email:', email||'(none)', '| already used by:', existing[idKey]._email||'(unknown email)',
+              '— row skipped, no new ID generated, existing record preserved');
+            seenKeys[idKey] = true;
+            skipped++;
+            return;
+          }
+          // No existing student uses this ID — accept the sheet's exact Student ID.
+          newId = sheetSid;
+          console.log('[AutoOps] duplicate conflict: no | final student ID used:', newId);
         } else {
+          // Blank Student ID cell → auto-generate.
           newId = _generateClarionStudentId(institution, batch, existing);
+          console.log('[AutoOps] sheet student ID: (blank) | email:', email||'(none)', '| existing key match: (none) | duplicate conflict: no | final student ID used (generated):', newId);
         }
         const derivedGroup = groupCode || _institutionPrefix(institution);
         const newPw = row.password || generatePassword();
