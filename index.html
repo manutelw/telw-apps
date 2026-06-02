@@ -5952,7 +5952,32 @@ function renderSetup(){
         '<p style="margin-top:8px;font-family:var(--mono);font-size:.72rem;color:var(--green)">✓ Drive upload active — audio saved on each submission</p>'
       : '<p style="margin-top:8px;font-family:var(--mono);font-size:.72rem;color:var(--muted)">No URL set — audio will not be saved to Drive</p>')+
       '<p style="margin-top:6px;font-family:var(--mono);font-size:.68rem;color:var(--dim)">In your Apps Script: set FOLDER_ID to the folder ID only — the part after /folders/ in the Drive URL, not the full URL.</p>'+
-    '</div>' : '')+
+       '</div>' : '')+
+
+    // ── CENTRAL SUBMISSIONS BACKEND ───────────────────────────────────────────
+    (S.role==='admin' ?
+    (function(){
+      var subsUrl = localStorage.getItem(CLARION_SUBMISSIONS_URL_KEY) || '';
+      return '<div class="card" style="border-left:4px solid var(--gold)"><div class="card-lbl">Central Submissions URL <span style="font-weight:400;color:var(--muted)">(scored submissions → Google Sheet)</span></div>'+
+        '<p style="font-size:.82rem;color:var(--muted);margin-bottom:10px">'+
+          'Paste the Apps Script Web App URL for the central CLARION Submissions Sheet. '+
+          'Every scored submission is saved here so Admin/Trainer Review works across devices. '+
+          'Leave blank to keep submissions in local browser storage only.'+
+        '</p>'+
+        '<div class="f-label" style="margin-bottom:5px">Submissions Backend Web App URL</div>'+
+        '<div style="display:flex;gap:9px;margin-bottom:8px">'+
+          '<input id="adm-submissions-url" class="f-input" type="url" placeholder="https://script.google.com/macros/s/…/exec" '+
+            'style="font-size:.78rem;font-family:var(--mono);flex:1" value="'+subsUrl+'">'+
+          '<button class="btn-primary" onclick="saveSubmissionsUrl()">Save</button>'+
+          '<button class="btn-secondary" onclick="clearSubmissionsUrl()">Clear</button>'+
+        '</div>'+
+        '<div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">'+
+          '<span id="submissions-url-status" style="font-family:var(--mono);font-size:.72rem;color:'+(subsUrl?'var(--green)':'var(--red)')+'">'+
+            (subsUrl ? '✓ Submissions URL configured: YES' : '✗ Submissions URL configured: NO — submissions stay local only')+
+          '</span>'+
+        '</div>'+
+      '</div>';
+    })() : '')+
 
     // ── AUTOOPS — admin only ──────────────────────────────────────────────────
     (S.role==='admin' ?
