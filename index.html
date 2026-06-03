@@ -5068,7 +5068,7 @@ function renderAdminStudents(){
       '<select id="stu-access" class="f-input" style="padding:7px 10px;font-size:.82rem;width:auto" onchange="filterStudents()">'+
         '<option value="">All access types</option>'+
         ['lum','placement','diagnostic','demo'].map(function(a){const stuAccessFilter=window._stuAccess||'';return '<option value="'+a+'"'+(stuAccessFilter===a?' selected':'')+'>'+
-          (a==='lum'?'LUM':a==='placement'?'Placement':a==='diagnostic'?'Diagnostic':'Demo')+'</option>';}).join('')+
+          (a==='lum'?'Managerial Communication':a==='placement'?'PI/GD':a==='diagnostic'?'Diagnostic':'Demo')+'</option>';}).join('')+
       '</select>'+
       '<button class="btn-secondary" style="font-size:.78rem;padding:7px 12px" onclick="exportStudentsCSV()">⬇ Export CSV</button>'+
     '</div>'+
@@ -5099,7 +5099,7 @@ function renderAdminStudents(){
                     (a==='lum'?'LUM':a==='placement'?'Placement':a==='diagnostic'?'Diagnostic':'Demo')+'</option>';
                 }).join('')+
               '</select>'
-            : '<span style="font-family:var(--mono);font-size:.7rem;color:'+aColor+'">'+(access==='lum'?'LUM':access==='placement'?'Placement':access==='diagnostic'?'Diagnostic':'Demo')+'</span>'
+            : '<span style="font-family:var(--mono);font-size:.7rem;color:'+aColor+'">'+(access==='lum'?'Managerial Communication':access==='placement'?'PI/GD':access==='diagnostic'?'Diagnostic':'Demo')+'</span>'
           )+
         '</td>'+
         '<td>'+advCell+'</td>'+
