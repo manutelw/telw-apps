@@ -5096,7 +5096,7 @@ function renderAdminStudents(){
                 'data-email="'+r.email+'" onchange="setAccess(this.dataset.email,this.value);this.style.color=\'var(--ink)\'">'+
                 ['lum','placement','diagnostic','demo'].map(function(a){
                   return '<option value="'+a+'"'+(access===a?' selected':'')+'>'+
-                    (a==='lum'?'LUM':a==='placement'?'Placement':a==='diagnostic'?'Diagnostic':'Demo')+'</option>';
+                    (a==='lum'?'Managerial Communication':a==='placement'?'PI/GD':a==='diagnostic'?'Diagnostic':'Demo')+'</option>';
                 }).join('')+
               '</select>'
             : '<span style="font-family:var(--mono);font-size:.7rem;color:'+aColor+'">'+(access==='lum'?'Managerial Communication':access==='placement'?'PI/GD':access==='diagnostic'?'Diagnostic':'Demo')+'</span>'
@@ -5632,7 +5632,7 @@ function renderSetup(){
                 'data-email="'+email+'" onchange="setAccess(this.dataset.email,this.value)">'+
                 ['lum','placement','diagnostic','demo'].map(function(a){
                   return '<option value="'+a+'"'+(access===a?' selected':'')+'>'+
-                    (a==='lum'?'LUM':a==='placement'?'Placement':a==='diagnostic'?'Diagnostic':'Demo')+'</option>';
+                    (a==='lum'?'Managerial Communication':a==='placement'?'PI/GD':a==='diagnostic'?'Diagnostic':'Demo')+'</option>';
                 }).join('')+
               '</select>'+
             '</td>'+
