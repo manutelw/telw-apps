@@ -2713,7 +2713,7 @@ function finishLogin(){
     b.className='tb-badge '+(S.role==='admin'||S.role==='trainer'?'badge-admin':S.role==='demo'?'badge-admin':'badge-student');
     buildSidebar();
     if(S.role==='demo'){
-      document.getElementById('sidebar').innerHTML='<div class="nav-grp">Demo Mode</div><div class="nav-item on" id="ni-stu-demo" data-id="stu-demo" onclick="nav(this.dataset.id)"><span class="nav-ic">🎬</span>Demo Questions</div><div class="nav-item" id="ni-stu-dash" data-id="stu-dash" onclick="nav(this.dataset.id)"><span class="nav-ic">📊</span>My Dashboard</div>';
+      document.getElementById('sidebar').innerHTML='<div class="nav-grp">Demo Mode</div><div class="nav-item on" id="ni-stu-demo" data-id="stu-demo" onclick="nav(this.dataset.id)"><span class="nav-ic">🎬</span>Demo</div><div class="nav-item" id="ni-stu-dash" data-id="stu-dash" onclick="nav(this.dataset.id)"><span class="nav-ic">📊</span>My Dashboard</div>';
       nav('stu-demo');
     } else {
       if(S.role==='admin' || S.role==='trainer'){
@@ -2725,7 +2725,7 @@ function finishLogin(){
           document.getElementById('sidebar').innerHTML=
             '<div class="nav-grp">Demo Mode</div>'+
             '<div class="nav-item on" id="ni-stu-demo" data-id="stu-demo" onclick="nav(this.dataset.id)">'+
-            '<span class="nav-ic">🎬</span>Demo Questions</div>';
+            '<span class="nav-ic">🎬</span>Demo</div>';
           nav('stu-demo');
         } else if(acc==='diagnostic'){
           nav('stu-diag');
@@ -2789,13 +2789,11 @@ function logout(){
 // NAV
 // ════════════════════════════════════════════════
 const STU_NAV=[
-  {id:'stu-diag',    ic:'🔬', lbl:'Diagnostic',      grp:'Start Here'},
-  {id:'stu-home',    ic:'🎙', lbl:"Today&#39;s Question", grp:'Daily Practice'},
-  {id:'stu-bank',    ic:'📚', lbl:'Practice Bank',   grp:'Daily Practice'},
-  {id:'stu-ppi',     ic:'🎯', lbl:'Placement PI',    grp:'Placement Prep'},
-  {id:'stu-pgd',     ic:'💬', lbl:'Placement GD',    grp:'Placement Prep'},
-  {id:'stu-advpi',   ic:'🔥', lbl:'Advanced PI',     grp:'Placement Prep'},
-  {id:'stu-dash',    ic:'📊', lbl:'My Dashboard',    grp:'My Progress'},
+  {id:'stu-diag',    ic:'🔬', lbl:'Diagnostic',              grp:'Practice'},
+  {id:'stu-home',    ic:'🎙', lbl:'Managerial Communication', grp:'Practice'},
+  {id:'stu-ppi',     ic:'🎯', lbl:'PI',                      grp:'Practice'},
+  {id:'stu-pgd',     ic:'💬', lbl:'GD',                      grp:'Practice'},
+  {id:'stu-advpi',   ic:'🔥', lbl:'Advanced PI',             grp:'Practice'},
 ];
 const ADM_NAV=[
   {id:'adm-dash',     ic:'📊', lbl:'Dashboard'},
@@ -3022,7 +3020,7 @@ function getPlacementTask(email){
       const msDay=86400000;
       idx=Math.max(0,Math.floor((new Date()-PROGRAM_START)/msDay))%PLACEMENT_PI_BANK.length;
     }
-    return {type:'PI',mode:'placement',bank:'ppi',q:PLACEMENT_PI_BANK[idx],dayLabel:'Mon–Thu · Placement PI'};
+    return {type:'PI',mode:'placement',bank:'ppi',q:PLACEMENT_PI_BANK[idx],dayLabel:'Mon–Thu · PI'};
   } else if(day===5){
     if(!PLACEMENT_GD_BANK.length) return {type:'GD',mode:'empty'};
     let idx=0;
@@ -3035,7 +3033,7 @@ function getPlacementTask(email){
       const msDay=86400000;
       idx=Math.max(0,Math.floor((new Date()-PROGRAM_START)/msDay))%PLACEMENT_GD_BANK.length;
     }
-    return {type:'GD',mode:'placement',bank:'pgd',q:PLACEMENT_GD_BANK[idx],dayLabel:'Friday · Placement GD'};
+    return {type:'GD',mode:'placement',bank:'pgd',q:PLACEMENT_GD_BANK[idx],dayLabel:'Friday · GD'};
   } else {
     return {type:'LUM',mode:'lum'};
   }
@@ -3075,7 +3073,7 @@ function renderHome(){
       const existing=getSubs(S.user.email)[subKey];
       S.currentQ=q; S.currentBank=task.bank;
       S.recorded=false;S.recording=false;S.recSecs=0;S.recLimit=q.limit||60;S.audioBlob=null;S.audioEl=null;
-      const typeLabel=task.type==='PI'?'Placement PI':'Placement GD';
+      const typeLabel=task.type==='PI'?'PI':'GD';
       set(
         '<div class="ph"><div class="ph-title">Today\'s Task</div>'+
         '<div class="ph-sub">'+task.dayLabel+' · Scheduled for today</div></div>'+
@@ -3107,7 +3105,7 @@ function renderHome(){
   S.recorded=false;S.recording=false;S.recSecs=0;S.recLimit=60;S.audioBlob=null;S.audioEl=null;
 
   set(
-    '<div class="ph"><div class="ph-title">Today\'s Question</div>'+
+    '<div class="ph"><div class="ph-title">Managerial Communication</div>'+
     '<div class="ph-sub">'+(access==='placement'?'Weekend · LUM Practice · ':'')+''+dayName+' · '+info.type+' · Session '+(info.idx+1)+' of '+info.bankLen+'</div></div>'+
     '<div class="q-hero">'+
       '<span class="q-badge '+(info.type==='PI'?'q-pi':'q-gd')+'">'+info.type+' · TELW '+q.telw+'</span>'+
@@ -7834,14 +7832,14 @@ function renderAdminBanks(){
   const diagNotStarted=diagStats.filter(function(s){return s.done===0;}).length;
   const diagInProgress=diagStats.filter(function(s){return s.done>0&&(DIAGNOSTIC_BANK.length===0||s.done<DIAGNOSTIC_BANK.length);}).length;
 
-  set('<div class="ph"><div class="ph-title">Question Banks</div><div class="ph-sub">Overview of all 5 banks · Click any bank to manage</div></div>'+
+  set('<div class="ph"><div class="ph-title">Training Modules</div><div class="ph-sub">Overview of all 5 modules · Click any module to manage</div></div>'+
 
     // ── BANK 1: DIAGNOSTIC ──
     '<div class="card" style="border-left:4px solid var(--gold);margin-bottom:14px">'+
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
         '<div>'+
           '<div class="card-lbl">Bank 1 — Diagnostic</div>'+
-          '<div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Baseline Assessment</div>'+
+          '<div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Diagnostic</div>'+
           '<div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">'+DIAGNOSTIC_BANK.length+' questions · 100 points total · One attempt per question</div>'+
           '<div style="display:flex;gap:16px;margin-top:10px;font-family:var(--mono);font-size:.72rem">'+
             '<span style="color:var(--green)">✓ Complete: '+diagComplete_count+'</span>'+
@@ -7861,9 +7859,9 @@ function renderAdminBanks(){
     '<div class="card" style="border-left:4px solid var(--blue);margin-bottom:14px">'+
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
         '<div>'+
-          '<div class="card-lbl">Bank 2 — Daily Practice</div>'+
+          '<div class="card-lbl">Bank 2 — Managerial Communication</div>'+
           '<div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Managerial Communication · TELW 1.0 &amp; 2.0</div>'+
-          '<div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">250 questions · Mon–Thu PI · Fri–Sun GD · Scheduled daily</div>'+
+          '<div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">250 questions · TELW 1.0 &amp; 2.0 · Open practice</div>'+
           '<div style="display:flex;gap:12px;margin-top:10px;font-family:var(--mono);font-size:.72rem;color:var(--muted)">'+
             '<span>TELW 1.0: 150 questions</span>'+
             '<span>TELW 2.0: 100 questions</span>'+
@@ -7881,8 +7879,8 @@ function renderAdminBanks(){
     '<div class="card" style="border-left:4px solid var(--gold);margin-bottom:14px">'+
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
         '<div>'+
-          '<div class="card-lbl">Bank 3 — Placement PI</div>'+
-          '<div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Personal Interview Preparation</div>'+
+          '<div class="card-lbl">Bank 3 — PI</div>'+
+          '<div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">PI</div>'+
           '<div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">'+PLACEMENT_PI_BANK.length+' questions · Unlimited attempts · Available anytime</div>'+
           (PLACEMENT_PI_BANK.length===0?'<div style="font-family:var(--mono);font-size:.72rem;color:var(--gold);margin-top:8px">⚠ Questions not yet added</div>':'')+
         '</div>'+
@@ -7898,8 +7896,8 @@ function renderAdminBanks(){
     '<div class="card" style="border-left:4px solid var(--blue);margin-bottom:14px">'+
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
         '<div>'+
-          '<div class="card-lbl">Bank 4 — Placement GD</div>'+
-          '<div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Group Discussion Preparation</div>'+
+          '<div class="card-lbl">Bank 4 — GD</div>'+
+          '<div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">GD</div>'+
           '<div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">'+PLACEMENT_GD_BANK.length+' prompts · Unlimited attempts · Available anytime</div>'+
           (PLACEMENT_GD_BANK.length===0?'<div style="font-family:var(--mono);font-size:.72rem;color:var(--gold);margin-top:8px">⚠ Prompts not yet added</div>':'')+
         '</div>'+
@@ -7915,8 +7913,8 @@ function renderAdminBanks(){
     '<div class="card" style="border-left:4px solid var(--red);margin-bottom:14px">'+
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">'+
         '<div>'+
-          '<div class="card-lbl">Bank 5 — Advanced PI Conditioning</div>'+
-          '<div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Recruiter-Style Pressure Rounds</div>'+
+          '<div class="card-lbl">Bank 5 — Advanced PI</div>'+
+          '<div style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Advanced PI</div>'+
           '<div style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">'+ADVANCED_PI_BANK.length+' questions · 5 categories · Trainer-controlled access · TELW PI Rubric</div>'+
           '<div style="font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-top:6px">Default OFF — enable per student from Students page</div>'+
         '</div>'+
@@ -8098,7 +8096,7 @@ function renderAdminDiag(){
 
 function renderAdminPPI(){
   if(S.role!=='admin' && S.role!=='trainer'){nav(_safeDefaultPage());return;}
-  set('<div class="ph"><div class="ph-title">Placement PI Bank</div><div class="ph-sub">'+PLACEMENT_PI_BANK.length+' questions</div></div>'+
+  set('<div class="ph"><div class="ph-title">PI Bank</div><div class="ph-sub">'+PLACEMENT_PI_BANK.length+' questions</div></div>'+
     (PLACEMENT_PI_BANK.length===0?
       '<div class="banner banner-warn"><span class="banner-ic">⚠️</span><div><div class="banner-title">40 PI questions not yet added</div><div class="banner-sub">Questions will be added in the next build step.</div></div></div>':
       '<div>'+PLACEMENT_PI_BANK.map(function(q){return '<div class="pb-item"><div><span style="font-family:var(--mono);font-size:.68rem;color:var(--dim)">PI '+q.num+'</span><div class="pb-q" style="margin-top:5px">'+q.text+'</div></div></div>';}).join('')+'</div>'));
@@ -8106,7 +8104,7 @@ function renderAdminPPI(){
 
 function renderAdminPGD(){
   if(S.role!=='admin' && S.role!=='trainer'){nav(_safeDefaultPage());return;}
-  set('<div class="ph"><div class="ph-title">Placement GD Bank</div><div class="ph-sub">'+PLACEMENT_GD_BANK.length+' prompts</div></div>'+
+  set('<div class="ph"><div class="ph-title">GD Bank</div><div class="ph-sub">'+PLACEMENT_GD_BANK.length+' prompts</div></div>'+
     (PLACEMENT_GD_BANK.length===0?
       '<div class="banner banner-warn"><span class="banner-ic">⚠️</span><div><div class="banner-title">16 GD prompts not yet added</div><div class="banner-sub">Prompts will be added in the next build step.</div></div></div>':
       '<div>'+PLACEMENT_GD_BANK.map(function(q){return '<div class="pb-item"><div><span style="font-family:var(--mono);font-size:.68rem;color:var(--dim)">GD '+q.num+'</span><div class="pb-q" style="margin-top:5px">'+q.text+'</div></div></div>';}).join('')+'</div>'));
@@ -8131,7 +8129,7 @@ function renderAdminAdvPI(){
     '<div class="card" style="background:var(--gold-bg);border-color:var(--gold);margin-bottom:16px">'+
       '<div class="card-lbl">Access Summary</div>'+
       '<div style="display:flex;gap:20px;flex-wrap:wrap;font-family:var(--mono);font-size:.78rem;margin-bottom:8px">'+
-        '<span>Placement students: <strong>'+placementStudents.length+'</strong></span>'+
+        '<span>PI/GD students: <strong>'+placementStudents.length+'</strong></span>'+
         '<span style="color:var(--green)">Access ON: <strong>'+enabledCount+'</strong></span>'+
         '<span style="color:var(--blue)">Eligible (16 PI done): <strong>'+eligibleCount+'</strong></span>'+
       '</div>'+
