@@ -2864,7 +2864,9 @@ function buildSidebar(){
         if(diagFinished) badge='<span style="margin-left:auto;font-family:var(--mono);font-size:.6rem;color:var(--green);background:var(--green-bg);padding:1px 6px;border-radius:10px">Done</span>';
         else badge='<span style="margin-left:auto;font-family:var(--mono);font-size:.6rem;color:var(--gold);background:var(--gold-bg);padding:1px 6px;border-radius:10px">'+diagDone+'/'+diagTotal+'</span>';
       }
-      html+='<div class="nav-item" id="ni-'+i.id+'" data-id="'+i.id+'" onclick="nav(this.dataset.id)"><span class="nav-ic">'+i.ic+'</span>'+i.lbl+badge+'</div>';
+      let itemLbl=i.lbl;
+if(access==='placement' && i.id==='stu-home') itemLbl='PI/GD';
+html+='<div class="nav-item" id="ni-'+i.id+'" data-id="'+i.id+'" onclick="nav(this.dataset.id)"><span class="nav-ic">'+i.ic+'</span>'+itemLbl+badge+'</div>';
     });
     document.getElementById('sidebar').innerHTML=html;
   }
