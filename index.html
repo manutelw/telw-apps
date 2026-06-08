@@ -3939,6 +3939,8 @@ toast(errLabel + ' — no demo score used', 'err');
       : S.apiKey
         ? 'client-ai'
         : 'demo';
+  sub.communicationBand = result && result.communicationBand ? result.communicationBand : '';
+  sub.communicationReason = result && result.communicationReason ? result.communicationReason : '';
 
 try{ opts.storeFn(sub); }catch(e){ console.error('[CLARION] storeFn error:', e); }
 
@@ -3973,6 +3975,8 @@ function _pushSubmissionToBackend(sub){
     feedback:     JSON.stringify(sub.feedback || {}),
     cando:        sub.cando || '',
     flag:         sub.flag || '',
+    communicationBand:   sub.communicationBand || '',
+    communicationReason: sub.communicationReason || '',
     transcript:   sub.transcript || '',
     duration:     sub.duration || 0,
     driveLink:    sub.driveLink || '',
