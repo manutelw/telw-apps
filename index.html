@@ -3940,10 +3940,6 @@ toast(errLabel + ' — no demo score used', 'err');
         ? 'client-ai'
         : 'demo';
 
-  // Internal only: save communication band to backend; do not render in student UI.
-  sub.communicationBand   = result && result.communicationBand   ? result.communicationBand   : '';
-  sub.communicationReason = result && result.communicationReason ? result.communicationReason : '';
-
 try{ opts.storeFn(sub); }catch(e){ console.error('[CLARION] storeFn error:', e); }
 
   // Central backend persistence (non-blocking). localStorage above remains the local backup.
@@ -3977,8 +3973,6 @@ function _pushSubmissionToBackend(sub){
     feedback:     JSON.stringify(sub.feedback || {}),
     cando:        sub.cando || '',
     flag:         sub.flag || '',
-    communicationBand:   sub.communicationBand || '',
-    communicationReason: sub.communicationReason || '',
     transcript:   sub.transcript || '',
     duration:     sub.duration || 0,
     driveLink:    sub.driveLink || '',
