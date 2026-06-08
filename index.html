@@ -3312,7 +3312,7 @@ function __clarionProbeRender(){ try{
     p.style.cssText='position:fixed;left:6px;right:6px;top:6px;z-index:999999;background:rgba(10,10,12,.93);color:#39ff14;font:11px/1.45 monospace;padding:8px 10px;border-radius:8px;border:1px solid #333;max-height:46vh;overflow:auto;white-space:pre-wrap;box-shadow:0 4px 18px rgba(0,0,0,.5)';
     p.title='tap to hide';
     p.onclick=function(){ p.remove(); };
-    document.body.appendChild(p);
+    // document.body.appendChild(p);
   }
   const st=window.__clarionProbeState;
   const ab=(typeof S!=='undefined'&&S&&S.audioBlob)?(S.audioBlob.size+'B '+(S.audioBlob.type||'')):'null';
