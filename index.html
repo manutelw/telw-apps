@@ -7203,7 +7203,21 @@ async function submitDiag(){
     maxScore: q.maxScore,
     backBtn: '',
     buildSub: function(result, transcript, driveLink){
-      return {qid:q.id,qnum:q.num,qtext:q.text,score:result.score||0,maxScore:q.maxScore,feedback:result.feedback||'',improvement:result.improvement||'',cando_fb:result.cando_feedback||'',flag:result.flag||'needs_improvement',transcript,duration:S.recSecs,date:new Date().toISOString().split('T')[0],driveLink:driveLink||''};
+      return {
+  qid:q.id,
+  qnum:q.num,
+  qtext:q.text,
+  score:Number(result.score || 0),
+  maxScore:q.maxScore,
+  feedback:typeof result.feedback==='string' ? result.feedback : '',
+  improvement:typeof result.improvement==='string' ? result.improvement : '',
+  cando_fb:typeof result.cando_feedback==='string' ? result.cando_feedback : '',
+  flag:result.flag || 'needs_improvement',
+  transcript,
+  duration:S.recSecs,
+  date:new Date().toISOString().split('T')[0],
+  driveLink:driveLink || ''
+};
     },
     storeFn: function(sub){ putDiagSub(S.user.email,q.id,sub); window._lastDiagSub=sub; },
     renderFn: function(sub){
