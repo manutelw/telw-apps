@@ -3875,7 +3875,8 @@ if(S.audioBlob && S.driveUrl){
   cando: 'No live score was generated because server scoring failed.',
   flag: 'needs_improvement',
   transcript: transcript || '',
-  _scoringError: e.message
+  _scoringError: e.message,
+communicationReason: e.message
 };
 
 toast(errLabel + ' — no demo score used', 'err');
