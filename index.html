@@ -4092,7 +4092,7 @@ async function _serverScore(opts){
       headers: {'Content-Type': 'text/plain;charset=utf-8'},
       body:    JSON.stringify(body),
     }),
-    50000, 'Server scoring'
+    120000, 'Server scoring'
   );
 
   if(!res.ok){
