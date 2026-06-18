@@ -3849,7 +3849,7 @@ if(S.audioBlob && S.driveUrl){
   audioMime:   _audioMime,
   prompt:      prompt,      // fully substituted — no placeholders remain
   moduleType:  opts.moduleType || (opts.diagMode ? 'Diagnostics' : (q.type||'LUM')),
-  maxScore:    opts.maxScore   || q.maxScore || 10,
+  maxScore:    opts.diagMode ? 10 : (opts.maxScore || q.maxScore || 10),
   diagMode:    opts.diagMode   || false,
 });
   console.log('[CLARION] Server score received:', result.score);
