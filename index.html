@@ -3940,7 +3940,9 @@ toast(errLabel + ' — no demo score used', 'err');
         ? 'client-ai'
         : 'demo';
   sub.communicationBand = result && result.communicationBand ? result.communicationBand : '';
-  sub.communicationReason = result && result.communicationReason ? result.communicationReason : '';
+  sub.communicationReason = result && result.communicationReason
+  ? result.communicationReason
+  : (result && result._scoringError ? result._scoringError : '');
 
 try{ opts.storeFn(sub); }catch(e){ console.error('[CLARION] storeFn error:', e); }
 
