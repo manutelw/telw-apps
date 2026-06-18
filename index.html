@@ -3855,6 +3855,7 @@ if(S.audioBlob && S.driveUrl){
   console.log('[CLARION] Server score received:', result.score);
 }catch(e){
   console.error('[CLARION] server scoring failed:', e.message);
+     alert('CLARION SERVER SCORING ERROR:\n\n' + e.message);
       const isQuota  = e.message === 'quota_exceeded';
       const isNoKey  = e.message === 'no_gemini_key';
       const isNoUrl  = e.message === 'no_scoring_url';
