@@ -2452,7 +2452,7 @@ function setRole(r, btn){
     _showRememberRow(true);          // show Remember Me on student tab
   }
 }
-function login(){
+function loginLegacy(){
   // ── Read inputs ───────────────────────────────────────────────────────────
   // Sanitise the login ID: trim whitespace and strip any Unicode zero-width /
   // smart-punctuation characters that mobile keyboards can silently insert.
@@ -2702,7 +2702,109 @@ setTimeout(function(){
   triggerSheetSync(true);
 }, 1500);
 }
-function finishLogin(){
+async function login(){
+  // Keep the existing Student and Demo login unchanged.
+  if(authRole !== 'trainer'){
+    return loginLegacy();
+  }
+
+  const loginInput = String(
+    document.getElementById('a-email').value || ''
+  ).trim().toLowerCase();
+
+  const password = String(
+    document.getElementById('a-pass').value || ''
+  );
+
+  // Preserve the existing trainer-side Demo credential.
+  if(typeof DEMO_EMAIL !== 'undefined' && loginInput === String(DEMO_EMAIL).toLowerCase()){
+    return loginLegacy();
+  }
+
+  const btn = document.querySelector('.btn-auth');
+
+  function fail(message){
+    toast(message, 'err');
+    if(btn){
+      btn.textContent = 'Sign in →';
+      btn.disabled = false;
+    }
+  }
+
+  if(btn){
+    btn.textContent = 'Signing in…';
+    btn.disabled = true;
+  }
+
+  try{
+    // The visible trainer username remains "manu".
+    // Supabase Authentication requires the actual email address.
+    const email =
+      loginInput === 'manu'
+        ? 'manutelw@gmail.com'
+        : loginInput;
+
+    const result = await clarionSupabase.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if(result.error){
+      throw result.error;
+    }
+
+    const user = result.data && result.data.user;
+
+    if(!user){
+      throw new Error('Login could not be completed.');
+    }
+
+    const profileResult = await clarionSupabase
+      .from('profiles')
+      .select('id, full_name, email, role, active, access_type')
+      .eq('id', user.id)
+      .single();
+
+    if(profileResult.error){
+      throw profileResult.error;
+    }
+
+    const profile = profileResult.data;
+
+    if(!profile || profile.active === false){
+      await clarionSupabase.auth.signOut();
+      throw new Error('Account inactive.');
+    }
+
+    if(profile.role !== 'trainer' && profile.role !== 'admin'){
+      await clarionSupabase.auth.signOut();
+      throw new Error('This account does not have trainer access.');
+    }
+
+    S.user = {
+      email: profile.email || email,
+      name: profile.full_name || 'Trainer',
+      role: 'trainer',
+      id: profile.id,
+      batch: '',
+      accessType: profile.access_type || ''
+    };
+
+    S.role = 'trainer';
+    S.supabaseUser = user;
+
+    finishLogin();
+
+  }catch(error){
+    console.error('[CLARION Supabase login]', error);
+    fail(
+      error && error.message
+        ? error.message
+        : 'Unable to sign in.'
+    );
+  }
+}
+  function finishLogin(){
   // For students: persist startDate on first login if not already stored
   if(S.role==='student' && S.user?.email){
     const cur=getStudents();
