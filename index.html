@@ -779,22 +779,22 @@ const QUESTION_BANK = [
 // ════════════════════════════════════════════════
 // BANK 1 — DIAGNOSTIC BANK (13 questions)
 // Pre-MBA Communication Readiness Set
-// Each question is scored out of 10; the final report is normalised to 100
+// Total max score: 100 points across 13 questions
 // ════════════════════════════════════════════════
 const DIAGNOSTIC_BANK = [
-  {id:'D01',num:1,text:'Tell us a little about yourself.',instructions:['Speak for up to 45 seconds','Cover your background, interests, and college','Keep it natural — do not read from notes','No fillers like umm, basically, so'],coaching_focus:'Present simple, self-description, sentence continuity, basic confidence.',cando:'Can introduce themselves clearly with basic personal and academic context.',complexity:'Low',maxScore:10,limit:45},
-  {id:'D02',num:2,text:'What do you usually do in your free time?',instructions:['Speak for up to 45 seconds','Talk about one or two activities','Explain why you enjoy them','Speak continuously — do not stop mid-sentence'],coaching_focus:'Present simple, habits and routines, fluency, topic sustaining.',cando:'Can describe personal habits and interests in simple connected sentences.',complexity:'Low',maxScore:10,limit:45},
-  {id:'D03',num:3,text:'Tell us about something you have learned recently.',instructions:['Speak for up to 45 seconds','It can be from college, daily life, or online','Say what it was, how you learned it, and why it matters','No fillers like umm, basically, so'],coaching_focus:'Present perfect, reflection, recent experience expression.',cando:'Can describe a recent learning experience with basic present perfect accuracy.',complexity:'Low',maxScore:10,limit:45},
-  {id:'D04',num:4,text:'Describe an experience that helped you grow.',instructions:['Speak for up to 60 seconds','It can be from college, teamwork, or personal life','Say what happened, what you did, and what changed after','Be specific — name a real situation'],coaching_focus:'Present perfect and past simple, experience narration, personal ownership.',cando:'Can narrate a real experience and connect it to personal growth.',complexity:'Low–Moderate',maxScore:10,limit:60},
-  {id:'D05',num:5,text:'Describe a situation where you had to complete an important task.',instructions:['Speak for up to 60 seconds','Set up the situation clearly — what was happening and why it mattered','Tell us what your responsibility was','No fillers like umm, basically, so'],coaching_focus:'Past simple, situation-setting, context clarity.',cando:'Can set up a situation clearly and state the task or responsibility involved.',complexity:'Moderate',maxScore:10,limit:60},
-  {id:'D06',num:6,text:'What exactly did you do in that situation?',instructions:['Continue from your previous answer if possible','Speak for up to 60 seconds','Focus on your specific actions — what YOU did, step by step','Use action verbs — avoid vague phrases like "I helped" or "I was involved"'],coaching_focus:'Past simple action verbs, personal ownership, specificity.',cando:'Can describe their own actions clearly and take individual ownership.',complexity:'Moderate',maxScore:10,limit:60},
-  {id:'D07',num:7,text:'What challenges did you face?',instructions:['Speak for up to 60 seconds','Describe one or two real difficulties','Explain what made each one difficult','Speak clearly and without stopping'],coaching_focus:'Problem explanation, challenge language, sentence continuity.',cando:'Can explain a challenge or difficulty with enough detail to be understood.',complexity:'Moderate',maxScore:10,limit:60},
-  {id:'D08',num:8,text:'Why did you choose those actions?',instructions:['Speak for up to 60 seconds','Explain the thinking behind what you did','Say what you were trying to achieve','Show that you made a deliberate decision — not just a reaction'],coaching_focus:'Decision reasoning, because-clauses, intentional language.',cando:'Can explain the reasoning behind a decision using basic cause-and-effect language.',complexity:'Moderate',maxScore:10,limit:60},
-  {id:'D09',num:9,text:'What was the result of what you did?',instructions:['Speak for up to 60 seconds','Say what changed after your actions','Be specific — mention one outcome or impact','If possible, use a number or example'],coaching_focus:'Result and outcome language, past simple, specificity.',cando:'Can state the result of their actions and describe one concrete outcome.',complexity:'Moderate',maxScore:10,limit:60},
-  {id:'D10',num:10,text:'What did you learn from that experience?',instructions:['Speak for up to 60 seconds','Connect the experience to a lesson','Say how it changed the way you think or work','Keep it honest — avoid generic answers like "I learned teamwork"'],coaching_focus:'Reflection, learning articulation, present perfect with past context.',cando:'Can reflect on experience and articulate a specific personal learning.',complexity:'Moderate–High',maxScore:10,limit:60},
-  {id:'D11',num:11,text:'What do you find most challenging about communicating in professional situations?',instructions:['Speak for up to 60 seconds','Be honest — name a real difficulty','Explain when or why it happens','Do not just list skills — give a real example if possible'],coaching_focus:'Self-awareness language, professional context, honest evaluation.',cando:'Can identify a communication challenge and give a situated explanation.',complexity:'High',maxScore:10,limit:60},
-  {id:'D12',num:12,text:'Describe a situation where communication did not go well.',instructions:['Speak for up to 60 seconds','Say what happened and why it went wrong','Explain what you would do differently now','No fillers like umm, basically, so'],coaching_focus:'Reflection, hindsight language, accountability, counterfactual thinking.',cando:'Can reflect on a communication failure and articulate an improved approach.',complexity:'High',maxScore:10,limit:60},
-  {id:'D13',num:13,text:'What would you like to improve during your MBA programme?',instructions:['Speak for up to 60 seconds','Be specific — name one or two real areas','Explain why those areas matter for your goals','Show that you have thought about this'],coaching_focus:'Future expression, self-awareness, goal-oriented language.',cando:'Can express a specific improvement goal and connect it to professional development.',complexity:'High',maxScore:10,limit:60},
+  {id:'D01',num:1,text:'Tell us a little about yourself.',instructions:['Speak for up to 45 seconds','Cover your background, interests, and college','Keep it natural — do not read from notes','No fillers like umm, basically, so'],coaching_focus:'Present simple, self-description, sentence continuity, basic confidence.',cando:'Can introduce themselves clearly with basic personal and academic context.',complexity:'Low',maxScore:8,limit:45},
+  {id:'D02',num:2,text:'What do you usually do in your free time?',instructions:['Speak for up to 45 seconds','Talk about one or two activities','Explain why you enjoy them','Speak continuously — do not stop mid-sentence'],coaching_focus:'Present simple, habits and routines, fluency, topic sustaining.',cando:'Can describe personal habits and interests in simple connected sentences.',complexity:'Low',maxScore:8,limit:45},
+  {id:'D03',num:3,text:'Tell us about something you have learned recently.',instructions:['Speak for up to 45 seconds','It can be from college, daily life, or online','Say what it was, how you learned it, and why it matters','No fillers like umm, basically, so'],coaching_focus:'Present perfect, reflection, recent experience expression.',cando:'Can describe a recent learning experience with basic present perfect accuracy.',complexity:'Low',maxScore:8,limit:45},
+  {id:'D04',num:4,text:'Describe an experience that helped you grow.',instructions:['Speak for up to 60 seconds','It can be from college, teamwork, or personal life','Say what happened, what you did, and what changed after','Be specific — name a real situation'],coaching_focus:'Present perfect and past simple, experience narration, personal ownership.',cando:'Can narrate a real experience and connect it to personal growth.',complexity:'Low–Moderate',maxScore:8,limit:60},
+  {id:'D05',num:5,text:'Describe a situation where you had to complete an important task.',instructions:['Speak for up to 60 seconds','Set up the situation clearly — what was happening and why it mattered','Tell us what your responsibility was','No fillers like umm, basically, so'],coaching_focus:'Past simple, situation-setting, context clarity.',cando:'Can set up a situation clearly and state the task or responsibility involved.',complexity:'Moderate',maxScore:8,limit:60},
+  {id:'D06',num:6,text:'What exactly did you do in that situation?',instructions:['Continue from your previous answer if possible','Speak for up to 60 seconds','Focus on your specific actions — what YOU did, step by step','Use action verbs — avoid vague phrases like "I helped" or "I was involved"'],coaching_focus:'Past simple action verbs, personal ownership, specificity.',cando:'Can describe their own actions clearly and take individual ownership.',complexity:'Moderate',maxScore:8,limit:60},
+  {id:'D07',num:7,text:'What challenges did you face?',instructions:['Speak for up to 60 seconds','Describe one or two real difficulties','Explain what made each one difficult','Speak clearly and without stopping'],coaching_focus:'Problem explanation, challenge language, sentence continuity.',cando:'Can explain a challenge or difficulty with enough detail to be understood.',complexity:'Moderate',maxScore:8,limit:60},
+  {id:'D08',num:8,text:'Why did you choose those actions?',instructions:['Speak for up to 60 seconds','Explain the thinking behind what you did','Say what you were trying to achieve','Show that you made a deliberate decision — not just a reaction'],coaching_focus:'Decision reasoning, because-clauses, intentional language.',cando:'Can explain the reasoning behind a decision using basic cause-and-effect language.',complexity:'Moderate',maxScore:8,limit:60},
+  {id:'D09',num:9,text:'What was the result of what you did?',instructions:['Speak for up to 60 seconds','Say what changed after your actions','Be specific — mention one outcome or impact','If possible, use a number or example'],coaching_focus:'Result and outcome language, past simple, specificity.',cando:'Can state the result of their actions and describe one concrete outcome.',complexity:'Moderate',maxScore:7,limit:60},
+  {id:'D10',num:10,text:'What did you learn from that experience?',instructions:['Speak for up to 60 seconds','Connect the experience to a lesson','Say how it changed the way you think or work','Keep it honest — avoid generic answers like "I learned teamwork"'],coaching_focus:'Reflection, learning articulation, present perfect with past context.',cando:'Can reflect on experience and articulate a specific personal learning.',complexity:'Moderate–High',maxScore:7,limit:60},
+  {id:'D11',num:11,text:'What do you find most challenging about communicating in professional situations?',instructions:['Speak for up to 60 seconds','Be honest — name a real difficulty','Explain when or why it happens','Do not just list skills — give a real example if possible'],coaching_focus:'Self-awareness language, professional context, honest evaluation.',cando:'Can identify a communication challenge and give a situated explanation.',complexity:'High',maxScore:7,limit:60},
+  {id:'D12',num:12,text:'Describe a situation where communication did not go well.',instructions:['Speak for up to 60 seconds','Say what happened and why it went wrong','Explain what you would do differently now','No fillers like umm, basically, so'],coaching_focus:'Reflection, hindsight language, accountability, counterfactual thinking.',cando:'Can reflect on a communication failure and articulate an improved approach.',complexity:'High',maxScore:7,limit:60},
+  {id:'D13',num:13,text:'What would you like to improve during your MBA programme?',instructions:['Speak for up to 60 seconds','Be specific — name one or two real areas','Explain why those areas matter for your goals','Show that you have thought about this'],coaching_focus:'Future expression, self-awareness, goal-oriented language.',cando:'Can express a specific improvement goal and connect it to professional development.',complexity:'High',maxScore:8,limit:60},
 ];
 
 // ════════════════════════════════════════════════
@@ -3137,7 +3137,6 @@ async function submitPlacementDaily(){
   await _runSubmit({
     proc,
     driveLabel: typeLabel+'_'+subKey,
-    moduleType: typeLabel,
     rubricPrompt: RUBRIC_PROMPT.replace('{COACH}','').replace('{CANDO}','').replace('{Q}',q.text).replace('{T}','{T}'),
     backBtn: '<div style="margin-top:14px"><button class="btn-secondary" data-nav="stu-home" onclick="nav(this.dataset.nav)">← Today\'s Task</button></div>',
     buildSub: function(result, transcript, driveLink){
@@ -3590,7 +3589,6 @@ async function doSubmitDaily(){
   await _runSubmit({
     proc,
     driveLabel: subKey,
-    moduleType: 'LUM',
     rubricPrompt: RUBRIC_PROMPT.replace('{COACH}',q.coach).replace('{CANDO}',q.cando).replace('{Q}',q.q).replace('{T}','{T}'),
     backBtn: '',
     buildSub: function(result, transcript, driveLink){
@@ -3647,24 +3645,6 @@ async function _runSubmit(opts){
       + '<div class="loader-txt">'+msg+'</div></div>';
   }
 
-  // Create the permanent backend record BEFORE audio upload or AI processing.
-  setStage('Creating secure submission…', 'var(--gold)');
-  let backendRecord;
-  try{
-    backendRecord = await _createSubmissionBackend(opts, q);
-  }catch(e){
-    console.error('[CLARION] secure submission creation failed:', e.message);
-    setStage('Submission could not be created. Nothing was sent.', 'var(--red)');
-    if(proc) proc.innerHTML += '<div class="banner banner-info" style="margin-top:12px"><span class="banner-ic">⚠️</span><div><div class="banner-title">Please try again</div><div class="banner-sub">The secure submission record could not be created, so audio upload was not started.</div></div></div>'+(opts.backBtn||'');
-    toast('Submission could not be created. Please try again.', 'err');
-    return;
-  }
-
-  const submissionId = backendRecord.submissionId;
-  const attemptNumber = backendRecord.attemptNumber || 1;
-  const backendModuleType = backendRecord.moduleType || _clarionModuleType(opts, q);
-  const backendQuestionId = backendRecord.questionId || _clarionQuestionId(q, backendModuleType);
-
   // ── Stage 1: Drive upload ─────────────────────────────────────────────────
   setStage('Uploading audio…', 'var(--gold)');
   let driveLink = null;
@@ -3704,39 +3684,25 @@ if(!S.driveUrl){
 }
 
 if(S.audioBlob && S.driveUrl){
-    console.log('[CLARION] Drive upload request sent → label:', opts.driveLabel, '| submission:', submissionId);
+    console.log('[CLARION] Drive upload request sent → label:', opts.driveLabel);
     try{
-      const uploadInfo = await withTimeout(uploadToDrive(S.user.email, opts.driveLabel, submissionId), 30000, 'Drive upload');
-      driveLink = uploadInfo && uploadInfo.url ? uploadInfo.url : (typeof uploadInfo === 'string' ? uploadInfo : '');
-      if(!driveLink) throw new Error('No Drive URL returned');
-
-      await _updateSubmissionBackend(submissionId, {
-        processingStatus: 'Uploaded',
-        driveLink: driveLink,
-        audioFileId: (uploadInfo && uploadInfo.fileId) || _driveFileIdFromUrl(driveLink),
-        audioFilename: (uploadInfo && uploadInfo.filename) || '',
-        audioMimeType: (uploadInfo && uploadInfo.mimeType) || (S.audioBlob.type || 'audio/webm'),
-        duration: S.recSecs || 0,
-        uploadedAt: new Date().toISOString(),
-        processingError: ''
-      });
-
-      console.log('[CLARION] Audio uploaded and backend marked Uploaded:', submissionId, driveLink);
-      toast('Audio uploaded safely ✓', 'ok');
+      driveLink = await withTimeout(uploadToDrive(S.user.email, opts.driveLabel), 30000, 'Drive upload');
+      if(driveLink){
+        console.log('[CLARION] Drive URL received:', driveLink);
+        toast('Audio uploaded ✓', 'ok');
+      } else {
+        console.warn('[CLARION] Drive upload returned null — no URL');
+        toast('Upload failed. Please try again.', 'err');
+        setStage('Upload failed — please try again.', 'var(--red)');
+        if(proc) proc.innerHTML += '<div style="margin-top:12px"><button class="btn-secondary" onclick="location.reload()">Retry</button></div>';
+        return; // do not proceed
+      }
     }catch(e){
-      console.error('[CLARION] audio save/update error:', e.message);
-      try{
-        await _updateSubmissionBackend(submissionId, {
-          processingStatus: driveLink ? 'Uploaded' : 'Upload Failed',
-          driveLink: driveLink || '',
-          processingError: e.message || String(e)
-        });
-      }catch(_updateErr){}
-
-      setStage(driveLink ? 'Audio saved, but processing could not continue.' : 'Upload failed — please try again.', 'var(--red)');
-      if(proc) proc.innerHTML += '<div class="banner banner-info" style="margin-top:12px"><span class="banner-ic">⚠️</span><div><div class="banner-title">'+(driveLink?'Your audio is safe':'Audio was not uploaded')+'</div><div class="banner-sub">Submission ID: '+esc(submissionId)+'</div><div class="banner-sub">'+esc(e.message||String(e))+'</div></div></div>'+(opts.backBtn||'');
-      toast(driveLink ? 'Audio saved. Processing is pending.' : 'Upload failed. Please try again.', 'err');
-      return;
+      console.error('[CLARION] Drive upload error:', e.message);
+      toast('Upload failed. Please try again.', 'err');
+      setStage('Upload failed — please try again.', 'var(--red)');
+      if(proc) proc.innerHTML += '<div style="margin-top:12px"><button class="btn-secondary" onclick="location.reload()">Retry</button></div>';
+      return; // do not proceed
     }
   } else {
     console.log('[CLARION] Drive upload skipped — audioBlob:', !!S.audioBlob, 'driveUrl:', !!S.driveUrl);
@@ -3888,7 +3854,8 @@ if(S.audioBlob && S.driveUrl){
 });
   console.log('[CLARION] Server score received:', result.score);
 }catch(e){
-      console.error('[CLARION] server scoring failed:', e.message);
+  console.error('[CLARION] server scoring failed:', e.message);
+     alert('CLARION SERVER SCORING ERROR:\n\n' + e.message);
       const isQuota  = e.message === 'quota_exceeded';
       const isNoKey  = e.message === 'no_gemini_key';
       const isNoUrl  = e.message === 'no_scoring_url';
@@ -3896,24 +3863,24 @@ if(S.audioBlob && S.driveUrl){
                      : isNoKey  ? 'Gemini key not set on server'
                      : isNoUrl  ? 'Scoring URL not configured'
                      : 'Scoring error: ' + e.message;
+      result = {
+  score: 0,
+  criteria: {},
+  feedback: {
+    scoring_error: {
+      worked: 'Audio was uploaded and the scoring backend was contacted.',
+      weak: errLabel,
+      fix: 'Check CLARION Scoring Apps Script deployment, Gemini key, and server response.'
+    }
+  },
+  cando: 'No live score was generated because server scoring failed.',
+  flag: 'needs_improvement',
+  transcript: transcript || '',
+  _scoringError: e.message,
+communicationReason: e.message
+};
 
-      try{
-        await _updateSubmissionBackend(submissionId, {
-          processingStatus: 'Pending Evaluation',
-          transcript: transcript || '',
-          processingError: errLabel,
-          scoringSource: 'server-ai'
-        });
-      }catch(_pendingErr){}
-
-      if(proc) proc.innerHTML =
-        '<div class="banner banner-info"><span class="banner-ic">⏳</span><div>'
-        +'<div class="banner-title">Audio saved — evaluation pending</div>'
-        +'<div class="banner-sub">No score has been issued. The trainer can reprocess this submission.</div>'
-        +'<div class="banner-sub">Submission ID: '+esc(submissionId)+'</div>'
-        +'</div></div>'+(opts.backBtn||'');
-      toast('Audio saved. Evaluation is pending.', '');
-      return;
+toast(errLabel + ' — no demo score used', 'err');
     }
   } else if(S.apiKey){
     // PATH B: legacy client-side scoring (admin session key)
@@ -3930,69 +3897,32 @@ if(S.audioBlob && S.driveUrl){
       } else { throw new Error('Scoring HTTP '+scRes.status); }
     }catch(e){
       console.error('[CLARION] Legacy scoring error:', e.message);
-      try{
-        await _updateSubmissionBackend(submissionId, {
-          processingStatus: 'Pending Evaluation',
-          transcript: transcript || '',
-          processingError: 'Legacy scoring error: ' + (e.message || String(e)),
-          scoringSource: 'client-ai'
-        });
-      }catch(_pendingErr){}
-      if(proc) proc.innerHTML = '<div class="banner banner-info"><span class="banner-ic">⏳</span><div><div class="banner-title">Audio saved — evaluation pending</div><div class="banner-sub">No score has been issued. Submission ID: '+esc(submissionId)+'</div></div></div>'+(opts.backBtn||'');
-      toast('Audio saved. Evaluation is pending.', '');
-      return;
+      result = opts.diagMode
+        ? {score:Math.round((opts.maxScore||10)*0.72),feedback:'Scoring unavailable — please review manually.',improvement:'Resubmit when connectivity improves.',cando_feedback:'',flag:'needs_improvement'}
+        : demoScore();
+      toast('Scoring unavailable — demo result used', '');
     }
   } else {
-    try{
-      await _updateSubmissionBackend(submissionId, {
-        processingStatus: 'Pending Evaluation',
-        transcript: transcript || '',
-        processingError: 'AI scoring URL is not configured'
-      });
-    }catch(_pendingErr){}
-    setStage('Audio saved — evaluation pending.', 'var(--red)');
-    if(proc) proc.innerHTML += '<div class="banner banner-info" style="margin-top:12px"><span class="banner-ic">⏳</span><div><div class="banner-title">No score has been issued</div><div class="banner-sub">Submission ID: '+esc(submissionId)+'</div></div></div>'+(opts.backBtn||'');
-    return;
+  alert('AI Scoring URL is not configured. Submission stopped. No demo score will be used.');
+  setStage('AI scoring URL missing — no demo score used.', 'var(--red)');
+  return;
 }
 
-  // The server can transcribe and score in one call. Capture and save that transcript.
-  if(result && !transcript && result.transcript){
-    transcript = String(result.transcript || '').trim();
-  }
-
-  if(transcript){
-    try{
-      await _updateSubmissionBackend(submissionId, {
-        processingStatus: 'Transcribed',
-        transcript: transcript,
-        transcribedAt: new Date().toISOString(),
-        processingError: ''
-      });
-    }catch(e){
-      console.error('[CLARION] transcript save failed:', e.message);
-      if(proc) proc.innerHTML = '<div class="banner banner-info"><span class="banner-ic">⏳</span><div><div class="banner-title">Audio saved — processing pending</div><div class="banner-sub">The transcript could not be saved, so no score has been displayed.</div><div class="banner-sub">Submission ID: '+esc(submissionId)+'</div></div></div>'+(opts.backBtn||'');
-      toast('Audio saved. Transcript saving is pending.', '');
-      return;
-    }
-  }
-
-  // ── Normalise overall score from five 1–5 criterion scores ───────────────
-  // The scoring backend returns five rubric levels from 1 to 5. The required
-  // score out of 10 is: average criterion level × 2. Recompute in the browser
-  // as a safety check for PI, GD, LUM, and Diagnostic.
+  // ── Normalise overall score from criteria ────────────────────────────────
+  // The backend returns five criterion scores (0–2 each); the overall score must
+  // be their SUM (0–10), not a single criterion value. Recompute when all five
+  // criterion scores are present (skipped for diagnostics, which score differently).
   try{
-    if(result && result.criteria && typeof result.criteria === 'object'){
-      const lumKeys=['structure_clarity','business_thinking','language_control','confidence_delivery','professionalism'];
-      const piGdKeys=['structure_clarity','content_depth','business_thinking','comm_professionalism','composure'];
-      const keys=lumKeys.every(function(k){ return result.criteria[k]!==undefined; }) ? lumKeys : piGdKeys;
-      const vals=keys.map(function(k){ return parseFloat(result.criteria[k]); }).filter(function(n){ return !isNaN(n) && n>=1 && n<=5; });
+    if(result && result.criteria && typeof result.criteria === 'object' && !opts.diagMode){
+      const CRIT_KEYS=['structure_clarity','content_depth','business_thinking','comm_professionalism','composure'];
+      const vals=CRIT_KEYS.map(function(k){ return parseFloat(result.criteria[k]); }).filter(function(n){ return !isNaN(n); });
       if(vals.length===5){
-        const score10=Math.round(((vals.reduce(function(a,b){ return a+b; },0)/5)*2)*10)/10;
-        if(parseFloat(result.score)!==score10){
-          console.log('[CLARION] /10 score verified from 1–5 criteria:', vals.join('+'), '=>', score10, '(backend sent', result.score+')');
+        let totalScore=vals.reduce(function(a,b){ return a+b; },0);
+        totalScore=Math.max(0,Math.min(10,totalScore));
+        if(parseFloat(result.score)!==totalScore){
+          console.log('[CLARION] overall score recomputed from criteria:', vals.join('+'), '=', totalScore, '(backend sent', result.score+')');
         }
-        result.score=score10;
-        result.maxScore=10;
+        result.score=totalScore;
       }
     }
   }catch(e){ console.error('[CLARION] score normalisation error:', e.message); }
@@ -4016,159 +3946,16 @@ if(S.audioBlob && S.driveUrl){
   ? result.communicationReason
   : (result && result._scoringError ? result._scoringError : '');
 
-  // Preserve the complete new scoring result even when an older module-specific
-  // buildSub function knows only the legacy fields.
-  sub.criteria = (result && result.criteria) || sub.criteria || {};
-  sub.criterionNames = (result && result.criterionNames) || sub.criterionNames || {};
-  sub.criterionFeedback = (result && result.criterionFeedback) || sub.criterionFeedback || {};
-  sub.feedback = sub.criterionFeedback && Object.keys(sub.criterionFeedback).length
-    ? sub.criterionFeedback
-    : ((result && result.feedback) || sub.feedback || {});
-  sub.overallFeedback = (result && result.overallFeedback) || sub.overallFeedback || (typeof result.feedback==='string' ? result.feedback : '');
-  sub.readinessStatus = (result && result.readinessStatus) || sub.readinessStatus || '';
-  sub.lowestCriterion = (result && result.lowestCriterion) || sub.lowestCriterion || '';
-  sub.nextAction = (result && result.nextAction) || (result && result.improvement) || sub.nextAction || sub.improvement || '';
-  sub.practiceTask = (result && result.practiceTask) || sub.practiceTask || '';
-  sub.languageCorrections = (result && result.languageCorrections) || sub.languageCorrections || [];
-  sub.cando = (result && (result.cando || result.cando_feedback)) || sub.cando || sub.cando_fb || '';
-  sub.geminiModel = (result && (result.geminiModel || result.modelVersion)) || sub.geminiModel || '';
-  sub.maxScore = 10;
+try{ opts.storeFn(sub); }catch(e){ console.error('[CLARION] storeFn error:', e); }
 
-  sub.submissionId = submissionId;
-  sub.attemptNumber = attemptNumber;
-  sub.questionId = backendQuestionId;
-  sub.processingStatus = 'Completed';
-
-  // Save the complete result BEFORE displaying it to the student.
-  try{
-    await _updateSubmissionBackend(submissionId, {
-      questionId: backendQuestionId,
-      moduleType: backendModuleType,
-      score: (sub.score !== undefined ? sub.score : ''),
-      maxScore: 10,
-      criteria: sub.criteria || {},
-      feedback: sub.feedback || {},
-      cando: sub.cando || sub.cando_fb || '',
-      flag: sub.flag || '',
-      communicationBand: sub.communicationBand || '',
-      communicationReason: sub.communicationReason || '',
-      readinessStatus: sub.readinessStatus || '',
-      lowestCriterion: sub.lowestCriterion || '',
-      nextAction: sub.nextAction || sub.improvement || '',
-      practiceTask: sub.practiceTask || '',
-      geminiModel: sub.geminiModel || '',
-      transcript: transcript || sub.transcript || '',
-      duration: sub.duration || S.recSecs || 0,
-      driveLink: driveLink || sub.driveLink || '',
-      scoringSource: sub.scoringSource || '',
-      processingStatus: 'Completed',
-      processingError: '',
-      evaluatedAt: new Date().toISOString(),
-      completedAt: new Date().toISOString()
-    });
-  }catch(e){
-    console.error('[CLARION] final result save failed:', e.message);
-    try{
-      await _updateSubmissionBackend(submissionId, {
-        processingStatus: 'Pending Evaluation',
-        processingError: 'Evaluation completed but result save failed: ' + (e.message || String(e))
-      });
-    }catch(_pendingErr){}
-    if(proc) proc.innerHTML = '<div class="banner banner-info"><span class="banner-ic">⏳</span><div><div class="banner-title">Audio saved — result pending</div><div class="banner-sub">No score has been displayed because the complete result could not be saved safely.</div><div class="banner-sub">Submission ID: '+esc(submissionId)+'</div></div></div>'+(opts.backBtn||'');
-    toast('Audio saved. Result saving is pending.', '');
-    return;
-  }
-
-  try{ opts.storeFn(sub); }catch(e){ console.error('[CLARION] storeFn error:', e); }
+  // Central backend persistence (non-blocking). localStorage above remains the local backup.
+  try{ _pushSubmissionToBackend(sub); }catch(e){ console.error('[CLARION] backend push error:', e); }
   if(proc) proc.innerHTML = opts.renderFn(sub) + (opts.backBtn||'');
   const rec = document.getElementById('recorder');
   if(rec) rec.style.display = 'none';
   toast('Submitted and scored', 'ok');
   if(opts.afterSave) opts.afterSave(sub);
-  console.log('[CLARION] Submission complete:', submissionId, 'score:', sub.score, 'driveLink:', sub.driveLink||'none');
-}
-
-// ── Stable submission pipeline helpers ──────────────────────────────────────
-function _submissionStoreUrl(){
-  return (localStorage.getItem(CLARION_SUBMISSIONS_URL_KEY) || 'https://script.google.com/macros/s/AKfycbzQTMkK80MexLseHbEEaothUbi9gAjJDZzHuGWU9XsxbP6iSMsFbcJd38k_YY7gbLPKhQ/exec').trim();
-}
-
-function _clarionModuleType(opts, q){
-  if(opts && opts.moduleType) return String(opts.moduleType);
-  if(opts && opts.diagMode) return 'Diagnostics';
-  const bank = String(S.currentBank || '').toLowerCase();
-  const label = String((opts && opts.driveLabel) || '').toLowerCase();
-  if(bank === 'pgd' || label.indexOf('placementgd') !== -1) return 'GD';
-  if(bank === 'ppi' || bank === 'advpi' || label.indexOf('placementpi') !== -1 || label.indexOf('advpi') !== -1) return 'PI';
-  if(label.indexOf('daily_') === 0 || label.indexOf('practice_') === 0) return 'LUM';
-  const qt = String((q && q.type) || '').toUpperCase();
-  return qt === 'GD' ? 'GD' : qt === 'PI' ? 'PI' : 'LUM';
-}
-
-function _clarionQuestionId(q, moduleType){
-  if(q && q.id) return String(q.id);
-  const n = q && (q.no || q.num);
-  if(!n) return '';
-  const prefix = String(moduleType || '').toUpperCase() === 'LUM' ? 'LUM' : String(moduleType || 'Q').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);
-  return prefix + String(n).padStart(3, '0');
-}
-
-function _clarionQuestionText(q){
-  return String((q && (q.text || q.q)) || '');
-}
-
-async function _submissionBackendRequest(action, payload, attempts){
-  const url = _submissionStoreUrl();
-  if(!url) throw new Error('Submission store URL missing');
-  const maxAttempts = attempts || 3;
-  let lastError;
-  for(let i=1;i<=maxAttempts;i++){
-    try{
-      const res = await withTimeout(fetch(url, {
-        method:'POST',
-        headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify(Object.assign({action:action}, payload||{}))
-      }), 30000, 'Submission store');
-      if(!res.ok) throw new Error('Submission store HTTP '+res.status);
-      const text = await res.text();
-      let data;
-      try{ data = JSON.parse(text); }catch(_){ throw new Error('Submission store returned invalid JSON'); }
-      if(!data || data.ok !== true) throw new Error((data && (data.message||data.error)) || 'Submission store rejected request');
-      return data;
-    }catch(e){
-      lastError=e;
-      console.warn('[CLARION] submission store attempt '+i+' failed:', e.message);
-      if(i<maxAttempts) await sleep(800*i);
-    }
-  }
-  throw lastError || new Error('Submission store request failed');
-}
-
-async function _createSubmissionBackend(opts, q){
-  const moduleType = _clarionModuleType(opts, q);
-  const questionId = _clarionQuestionId(q, moduleType);
-  const data = await _submissionBackendRequest('createSubmission', {
-    timestamp:new Date().toISOString(),
-    studentId:(S.user && (S.user.studentId || S.user.id || S.user.email)) || '',
-    studentName:(S.user && S.user.name) || '',
-    email:(S.user && S.user.email) || '',
-    batch:(S.user && S.user.batch) || '',
-    moduleType:moduleType,
-    questionId:questionId,
-    question:_clarionQuestionText(q)
-  }, 3);
-  data.moduleType=moduleType;
-  data.questionId=questionId;
-  return data;
-}
-
-async function _updateSubmissionBackend(submissionId, fields){
-  return _submissionBackendRequest('updateSubmission', Object.assign({submissionId:submissionId}, fields||{}), 3);
-}
-
-function _driveFileIdFromUrl(url){
-  const m=String(url||'').match(/\/d\/([a-zA-Z0-9_-]+)/);
-  return m ? m[1] : '';
+  console.log('[CLARION] Submission complete, score:', sub.score, 'driveLink:', sub.driveLink||'none');
 }
 
 // ── Central submission persistence ────────────────────────────────────────────
@@ -4187,18 +3974,13 @@ function _pushSubmissionToBackend(sub){
     moduleType:   sub.moduleType || sub.type || 'LUM',
     question:     sub.qtext || sub.text || '',
     score:        (sub.score!==undefined ? sub.score : ''),
-    maxScore:     10,
+    maxScore:     sub.maxScore || '',
     criteria:     JSON.stringify(sub.criteria || {}),
     feedback:     JSON.stringify(sub.feedback || {}),
     cando:        sub.cando || '',
     flag:         sub.flag || '',
     communicationBand:   sub.communicationBand || '',
     communicationReason: sub.communicationReason || '',
-    readinessStatus: sub.readinessStatus || '',
-    lowestCriterion: sub.lowestCriterion || '',
-    nextAction: sub.nextAction || sub.improvement || '',
-    practiceTask: sub.practiceTask || '',
-    geminiModel: sub.geminiModel || '',
     transcript:   sub.transcript || '',
     duration:     sub.duration || 0,
     driveLink:    sub.driveLink || '',
@@ -4228,7 +4010,7 @@ function _pushSubmissionToBackend(sub){
 // request that browsers send before application/json fetches. Sending as
 // text/plain bypasses the preflight (simple CORS request) while the Apps Script
 // still receives the JSON string in e.postData.contents.
-async function uploadToDrive(studentEmail, taskId, submissionId){
+async function uploadToDrive(studentEmail, taskId){
   if(!S.audioBlob || !S.driveUrl) return null;
   try{
     const base64   = await blobToBase64(S.audioBlob);
@@ -4237,8 +4019,7 @@ async function uploadToDrive(studentEmail, taskId, submissionId){
     const studentId   = S.user?.id   || S.user?.email || 'unknown';
     const studentName = S.user?.name || 'Unknown';
     const ts       = new Date().toISOString();
-    const safeName = (submissionId ? submissionId.replace(/[^a-z0-9_-]/gi,'_') + '_' : '')
-                   + studentId.replace(/[^a-z0-9]/gi,'_')
+    const safeName = studentId.replace(/[^a-z0-9]/gi,'_')
                    + '_' + taskId.replace(/[^a-z0-9]/gi,'_')
                    + '_' + ts.replace(/[:.]/g,'-')
                    + '.' + ext;
@@ -4250,8 +4031,7 @@ async function uploadToDrive(studentEmail, taskId, submissionId){
       studentId:   studentId,
       studentName: studentName,
       taskId:      taskId,
-      timestamp:   ts,
-      submissionId: submissionId || ''
+      timestamp:   ts
     };
 
     // Send as text/plain to avoid CORS preflight (Apps Script limitation)
@@ -4263,7 +4043,7 @@ async function uploadToDrive(studentEmail, taskId, submissionId){
 
     if(!r.ok) throw new Error('Upload HTTP ' + r.status);
     const d = await r.json();
-    if(d.url) return {url:d.url,fileId:d.fileId||_driveFileIdFromUrl(d.url),filename:safeName,mimeType:mime};
+    if(d.url) return d.url;
     throw new Error(d.error || 'No URL returned from Apps Script');
   }catch(e){
     console.warn('[CLARION] Drive upload failed:', e.message);
@@ -4518,7 +4298,6 @@ async function doSubmit(subKey){
   await _runSubmit({
     proc,
     driveLabel: 'practice_'+subKey,
-    moduleType: 'LUM',
     rubricPrompt: RUBRIC_PROMPT.replace('{COACH}',q.coach).replace('{CANDO}',q.cando).replace('{Q}',q.q).replace('{T}','{T}'),
     backBtn: '<div style="margin-top:14px"><button class="btn-secondary" data-nav="stu-bank" onclick="nav(this.dataset.nav)">← Back to Practice Bank</button></div>',
     buildSub: function(result, transcript, driveLink){
@@ -7400,70 +7179,6 @@ function startDiag(qid){
     '<div id="proc-area"></div>');
 }
 
-function _diagnosticCriterionKeys(){
-  return ['structure_clarity','business_thinking','language_control','confidence_delivery','professionalism'];
-}
-
-function _diagnosticCriterionNames(){
-  return {
-    structure_clarity:'Structure & Clarity',
-    business_thinking:'Business Thinking',
-    language_control:'Language Control',
-    confidence_delivery:'Confidence & Delivery',
-    professionalism:'Professionalism'
-  };
-}
-
-function _renderDiagnosticCriteria(sub){
-  const criteria=sub.criteria||{};
-  const feedback=sub.criterionFeedback||sub.feedback||{};
-  const names=Object.assign({},_diagnosticCriterionNames(),sub.criterionNames||{});
-  return _diagnosticCriterionKeys().map(function(key){
-    const score=criteria[key];
-    if(score===undefined || score===null || score==='') return '';
-    const fb=feedback[key]||{};
-    return '<div class="fb-box" style="margin-top:10px">'
-      +'<div style="display:flex;justify-content:space-between;gap:12px;align-items:center">'
-      +'<div class="fb-lbl">'+esc(names[key]||key)+'</div>'
-      +'<div style="font-family:var(--mono);font-size:.78rem;color:var(--gold);font-weight:700">'+esc(score)+'/5</div>'
-      +'</div>'
-      +(fb.worked?'<div class="fb-txt" style="margin-top:7px"><strong>What worked:</strong> '+esc(fb.worked)+'</div>':'')
-      +(fb.weak?'<div class="fb-txt" style="margin-top:7px"><strong>What was weak:</strong> '+esc(fb.weak)+'</div>':'')
-      +(fb.fix?'<div class="fb-txt" style="margin-top:7px"><strong>What to do:</strong> '+esc(fb.fix)+'</div>':'')
-      +'</div>';
-  }).join('');
-}
-
-function _renderDiagnosticLanguageCorrections(sub){
-  const items=Array.isArray(sub.languageCorrections)?sub.languageCorrections:[];
-  if(!items.length) return '';
-  return '<div class="fb-box" style="margin-top:10px"><div class="fb-lbl">Important language correction</div>'
-    +items.slice(0,2).map(function(item){
-      return '<div class="fb-txt" style="margin-top:7px">'+esc(item.original||'')+' → <strong>'+esc(item.improved||'')+'</strong></div>';
-    }).join('')+'</div>';
-}
-
-function _renderDiagnosticResultBody(sub, includeNotice){
-  const readiness=sub.readinessStatus||'';
-  const overall=sub.overallFeedback || (typeof sub.feedback==='string'?sub.feedback:'');
-  return '<div class="score-box"><div class="sc-head"><div>'
-    +'<div style="font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:3px">Score</div>'
-    +'<div class="sc-num">'+esc(sub.score)+'</div>'
-    +'<div class="sc-denom">out of 10</div>'
-    +(readiness?'<span class="sc-flag '+(readiness==='Meets Current Readiness Benchmark'?'flag-pass':'flag-needs')+'">'+esc(readiness)+'</span>':'')
-    +'</div></div><div class="sc-body">'
-    +_renderDiagnosticCriteria(sub)
-    +(overall?'<div class="fb-box" style="margin-top:10px"><div class="fb-lbl">Overall feedback</div><div class="fb-txt">'+esc(overall)+'</div></div>':'')
-    +(sub.lowestCriterion?'<div class="imp-box"><div class="fb-lbl" style="color:var(--blue)">Priority improvement area</div><div class="fb-txt" style="color:var(--blue)">'+esc(sub.lowestCriterion)+'</div></div>':'')
-    +(sub.nextAction||sub.improvement?'<div class="imp-box"><div class="fb-lbl" style="color:var(--blue)">Next action</div><div class="fb-txt" style="color:var(--blue)">'+esc(sub.nextAction||sub.improvement)+'</div></div>':'')
-    +(sub.practiceTask?'<div class="fb-box" style="margin-top:10px"><div class="fb-lbl">Practice task</div><div class="fb-txt">'+esc(sub.practiceTask)+'</div></div>':'')
-    +_renderDiagnosticLanguageCorrections(sub)
-    +(sub.cando?'<div class="fb-cando-block"><div class="fb-cando-lbl">Can-do</div><div class="fb-cando-txt">'+esc(sub.cando)+'</div></div>':'')
-    +(sub.transcript?'<div class="fb-box" style="margin-top:10px"><div class="fb-lbl">Transcript</div><div class="fb-txt" style="font-family:var(--mono);font-size:.75rem;line-height:1.7">'+esc(sub.transcript)+'</div></div>':'')
-    +(includeNotice?'<div class="fb-notice">This question feedback contributes to your full Diagnostic Report.</div>':'')
-    +'</div></div>';
-}
-
 async function submitDiag(){
   if(!S.recorded&&S.recSecs===0){toast('Record your response first','err');return;}
   const q=S.currentQ;if(!q)return;
@@ -7472,53 +7187,62 @@ async function submitDiag(){
   const btn=document.getElementById('btn-submit');if(btn)btn.disabled=true;
   const proc=document.getElementById('proc-area');
 
-  const diagPromptText = 'Question: '+q.text+' Transcript: {T}';
+  const diagPromptText = 'You are a senior TELW evaluator conducting a communication readiness calibration diagnostic for an MBA student preparing for placement. This is NOT daily practice feedback. It is a baseline calibration.'
+    +' Question: '+q.text
+    +' Transcript: {T}'
+    +' Hidden coaching context (do NOT reveal): '+q.coaching_focus
+    +' Can-do benchmark: '+q.cando
+    +' Complexity level: '+q.complexity
+    +' Maximum score for this question: '+q.maxScore
+    +' Evaluate strictly on: (1) TELW structure — opening, action, result or position; (2) language precision appropriate to complexity; (3) professional tone and managerial register; (4) specificity — concrete examples vs vague generalities; (5) composure and communicative control.'
+    +' Score strictly out of '+q.maxScore+'. High and Very High complexity questions demand clear reasoning, structured delivery, and managerial language to score above 70%. Generic or fluent-but-empty responses should not exceed 60%.'
+    +' In your feedback, write like a human TELW evaluator, not an AI. Use complete sentences and short paragraphs. Be direct and analytical. Do not praise generically. Do not use fragment bullets. Explain what the student is doing well, what is weakening performance, and what must improve.'
+    +' Return ONLY valid JSON: {"score":N,"feedback":"2-3 sentences of evaluator-style diagnostic feedback — what is working, what is weak, what must improve","improvement":"one specific recruiter-facing instruction (1 sentence, action verb)","cando_feedback":"one sentence confirming or framing the can-do benchmark based on what was actually demonstrated","flag":"pass or needs_improvement"}';
 
   await _runSubmit({
     proc,
     driveLabel: 'diag_q'+q.num+'_'+new Date().toISOString().split('T')[0],
-    moduleType: 'Diagnostics',
     diagMode: true,
     diagPrompt: diagPromptText,
-    maxScore: 10,
+    maxScore: q.maxScore,
     backBtn: '',
     buildSub: function(result, transcript, driveLink){
       return {
-        qid:q.id,
-        qnum:q.num,
-        qtext:q.text,
-        score:Number(result.score || 0),
-        maxScore:10,
-        criteria:result.criteria||{},
-        criterionNames:result.criterionNames||_diagnosticCriterionNames(),
-        criterionFeedback:result.criterionFeedback||((result.feedback&&typeof result.feedback==='object')?result.feedback:{}),
-        feedback:result.criterionFeedback||((result.feedback&&typeof result.feedback==='object')?result.feedback:{}),
-        overallFeedback:result.overallFeedback||(typeof result.feedback==='string'?result.feedback:''),
-        readinessStatus:result.readinessStatus||'',
-        lowestCriterion:result.lowestCriterion||'',
-        nextAction:result.nextAction||result.improvement||'',
-        improvement:result.nextAction||result.improvement||'',
-        practiceTask:result.practiceTask||'',
-        languageCorrections:result.languageCorrections||[],
-        cando:result.cando||result.cando_feedback||'',
-        cando_fb:result.cando||result.cando_feedback||'',
-        flag:result.flag||'needs_improvement',
-        geminiModel:result.geminiModel||result.modelVersion||'',
-        transcript:transcript||result.transcript||'',
-        duration:S.recSecs,
-        date:new Date().toISOString().split('T')[0],
-        driveLink:driveLink||''
-      };
+  qid:q.id,
+  qnum:q.num,
+  qtext:q.text,
+  score:Number(result.score || 0),
+  maxScore:q.maxScore,
+  feedback:typeof result.feedback==='string' ? result.feedback : '',
+  improvement:typeof result.improvement==='string' ? result.improvement : '',
+  cando_fb:typeof result.cando_feedback==='string' ? result.cando_feedback : '',
+  flag:result.flag || 'needs_improvement',
+  transcript,
+  duration:S.recSecs,
+  date:new Date().toISOString().split('T')[0],
+  driveLink:driveLink || ''
+};
     },
     storeFn: function(sub){ putDiagSub(S.user.email,q.id,sub); window._lastDiagSub=sub; },
     renderFn: function(sub){
       const allDone=diagComplete(S.user.email);
-      return '<div class="banner banner-ok"><span class="banner-ic">✅</span><div><div class="banner-title" style="color:var(--green)">Submitted — '+esc(sub.score)+'/10</div></div></div>'
-        +_renderDiagnosticResultBody(sub,true)
-        +'<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'
-        +(allDone?'<button class="btn-primary" style="font-size:.85rem" onclick="renderDiagnosticReport()">View Full Diagnostic Report →</button>':'')
-        +'<button class="btn-primary" onclick="nav(\'stu-diag\')">Next Question →</button>'
-        +'</div>';
+      return '<div class="banner banner-ok"><span class="banner-ic">✅</span><div><div class="banner-title" style="color:var(--green)">Submitted — '+sub.score+'/'+sub.maxScore+' points</div></div></div>'
+        +'<div class="score-box"><div class="sc-head"><div>'
+          +'<div style="font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:3px">Score</div>'
+          +'<div class="sc-num">'+sub.score+'</div>'
+          +'<div class="sc-denom">out of '+q.maxScore+'</div>'
+          +'<span class="sc-flag '+(parseFloat(sub.score)/q.maxScore>=0.6?'flag-pass':'flag-needs')+'">'+(parseFloat(sub.score)/q.maxScore>=0.6?'On track':'Developing')+'</span>'
+        +'</div></div>'
+        +'<div class="sc-body">'
+          +(sub.feedback?'<div class="fb-box"><div class="fb-lbl">Evaluator Feedback</div><div class="fb-txt">'+sub.feedback+'</div></div>':'')
+          +(sub.improvement?'<div class="imp-box"><div class="fb-lbl" style="color:var(--blue)">Priority Improvement</div><div class="fb-txt" style="color:var(--blue)">'+sub.improvement+'</div></div>':'')
+          +(sub.cando_fb?'<div class="fb-cando-block"><div class="fb-cando-lbl">Can-do</div><div class="fb-cando-txt">'+sub.cando_fb+'</div></div>':'')
+          +'<div class="fb-notice">This question feedback is temporary. Your full Diagnostic Report will be available after all '+DIAGNOSTIC_BANK.length+' questions are completed.</div>'
+          +'<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'
+            +(allDone?'<button class="btn-primary" style="font-size:.85rem" onclick="renderDiagnosticReport()">View Full Diagnostic Report →</button>':'')
+            +'<button class="btn-primary" onclick="nav(\'stu-diag\')">Next Question →</button>'
+          +'</div>'
+        +'</div></div>';
     },
     afterSave: function(){ buildSidebar(); toast('Diagnostic Q'+q.num+' submitted','ok'); }
   });
@@ -7526,9 +7250,14 @@ async function submitDiag(){
 
 function viewDiagResult(qid){
   const sub=getDiagSubs(S.user.email)[qid];if(!sub)return;
-  document.getElementById('modal-body').innerHTML='<div class="modal-title">Diagnostic Q'+esc(sub.qnum)+'</div>'
-    +'<div class="modal-sub">'+esc(sub.qtext)+'</div>'
-    +_renderDiagnosticResultBody(sub,false);
+  document.getElementById('modal-body').innerHTML='<div class="modal-title">Diagnostic Q'+sub.qnum+'</div>'+
+    '<div class="modal-sub">'+sub.qtext+'</div>'+
+    '<div class="score-box"><div class="sc-head"><div><div class="sc-num">'+sub.score+'</div><div class="sc-denom">of '+sub.maxScore+'</div></div></div>'+
+    '<div class="sc-body">'+
+      (sub.feedback?'<div class="fb-box"><div class="fb-lbl">Evaluator Feedback</div><div class="fb-txt">'+sub.feedback+'</div></div>':'')+
+      (sub.improvement?'<div class="imp-box"><div class="fb-lbl" style="color:var(--blue)">Priority Improvement</div><div class="fb-txt" style="color:var(--blue)">'+sub.improvement+'</div></div>':'')+
+      (sub.transcript?'<div class="fb-box" style="margin-top:10px"><div class="fb-lbl">Transcript</div><div class="fb-txt" style="font-family:var(--mono);font-size:.75rem;line-height:1.7">'+sub.transcript+'</div></div>':'')+
+    '</div></div>';
   document.getElementById('overlay').classList.add('on');
 }
 
@@ -7947,7 +7676,6 @@ async function submitAdvancedPI(){
   await _runSubmit({
     proc,
     driveLabel: 'advPI_q'+q.num+'_'+new Date().toISOString().split('T')[0],
-    moduleType: 'PI',
     rubricPrompt: RUBRIC_PROMPT.replace('{COACH}','').replace('{CANDO}','').replace('{Q}',q.text).replace('{T}','{T}'),
     backBtn: '<div style="margin-top:14px"><button class="btn-secondary" onclick="nav(\'stu-advpi\')">← Back to Advanced PI</button></div>',
     buildSub: function(result, transcript, driveLink){
@@ -7993,7 +7721,6 @@ async function submitPlacement(){
   await _runSubmit({
     proc,
     driveLabel: plcBank+'_q'+q.num+'_'+new Date().toISOString().split('T')[0],
-    moduleType: bank==='ppi'?'PI':'GD',
     rubricPrompt: RUBRIC_PROMPT.replace('{COACH}','').replace('{CANDO}','').replace('{Q}',q.text).replace('{T}','{T}'),
     backBtn: '<div style="margin-top:14px"><button class="btn-secondary" data-nav="'+backNav+'" onclick="nav(this.dataset.nav)">← Back to '+typeLabel+'</button></div>',
     buildSub: function(result, transcript, driveLink){
