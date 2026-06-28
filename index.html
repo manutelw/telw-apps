@@ -4331,36 +4331,172 @@ try{ opts.storeFn(sub); }catch(e){ console.error('[CLARION] storeFn error:', e);
 // Fire-and-forget POST of each scored submission to the central Apps Script store.
 // Never blocks the student result screen; localStorage stays the local backup.
 function _pushSubmissionToBackend(sub){
-  const url = localStorage.getItem(CLARION_SUBMISSIONS_URL_KEY) || 'https://script.google.com/macros/s/AKfycbzQTMkK80MexLseHbEEaothUbi9gAjJDZzHuGWU9XsxbP6iSMsFbcJd38k_YY7gbLPKhQ/exec';
-  if(!url){ console.warn('[CLARION] submission save skipped — no submissions URL configured'); return; }
+  const url =
+    localStorage.getItem(CLARION_SUBMISSIONS_URL_KEY) ||
+    'https://script.google.com/macros/s/AKfycbzQTMkK80MexLseHbEEaothUbi9gAjJDZzHuGWU9XsxbP6iSMsFbcJd38k_YY7gbLPKhQ/exec';
+
+  if(!url){
+    console.warn(
+      '[CLARION] submission save skipped — no submissions URL configured'
+    );
+    return;
+  }
+
   const payload = {
-    action:       'saveSubmission',
-    timestamp:    new Date().toISOString(),
-    studentId:    sub.studentId || (S.user && (S.user.studentId||S.user.id)) || '',
-    studentName:  sub.studentName || (S.user && S.user.name) || '',
-    email:        (S.user && S.user.email) || '',
-    batch:        (S.user && S.user.batch) || '',
-    moduleType:   sub.moduleType || sub.type || 'LUM',
-    question:     sub.qtext || sub.text || '',
-    score:        (sub.score!==undefined ? sub.score : ''),
-    maxScore:     sub.maxScore || '',
-    criteria:     JSON.stringify(sub.criteria || {}),
-    feedback:     JSON.stringify(sub.feedback || {}),
-    cando:        sub.cando || '',
-    flag:         sub.flag || '',
-    communicationBand:   sub.communicationBand || '',
-    communicationReason: sub.communicationReason || '',
-    transcript:   sub.transcript || '',
-    duration:     sub.duration || 0,
-    driveLink:    sub.driveLink || '',
-    scoringSource: sub.scoringSource || ''
+    action: 'saveSubmission',
+    timestamp: new Date().toISOString(),
+
+    studentId:
+      sub.studentId ||
+      (S.user && (S.user.studentId || S.user.id)) ||
+      '',
+
+    studentName:
+      sub.studentName ||
+      (S.user && S.user.name) ||
+      '',
+
+    email:
+      (S.user && S.user.email) ||
+      '',
+
+    batch:
+      (S.user && S.user.batch) ||
+      '',
+
+    moduleType:
+      sub.moduleType ||
+      sub.type ||
+      'LUM',
+
+    questionId:
+      sub.qid ||
+      sub.questionId ||
+      '',
+
+    question:
+      sub.qtext ||
+      sub.text ||
+      '',
+
+    score:
+      sub.score !== undefined
+        ? sub.score
+        : '',
+
+    maxScore:
+      sub.maxScore ||
+      '',
+
+    criteria:
+      JSON.stringify(
+        sub.criteria || {}
+      ),
+
+    feedback:
+      sub.overallFeedback ||
+      sub.feedback ||
+      '',
+
+    cando:
+      sub.cando ||
+      sub.cando_fb ||
+      '',
+
+    flag:
+      sub.flag ||
+      '',
+
+    communicationBand:
+      sub.communicationBand ||
+      '',
+
+    communicationReason:
+      sub.communicationReason ||
+      '',
+
+    transcript:
+      sub.transcript ||
+      '',
+
+    duration:
+      sub.duration ||
+      0,
+
+    driveLink:
+      sub.driveLink ||
+      '',
+
+    scoringSource:
+      sub.scoringSource ||
+      '',
+
+    readinessStatus:
+      sub.readinessStatus ||
+      '',
+
+    lowestCriterion:
+      sub.lowestCriterion ||
+      '',
+
+    nextAction:
+      sub.nextAction ||
+      sub.improvement ||
+      '',
+
+    practiceTask:
+      sub.practiceTask ||
+      '',
+
+    geminiModel:
+      sub.geminiModel ||
+      '',
+
+    processingStatus:
+      sub._scoringError
+        ? 'Pending Evaluation'
+        : 'Completed',
+
+    processingError:
+      sub._scoringError ||
+      '',
+
+    trainerReviewStatus:
+      sub.trainerReviewStatus ||
+      'Not Reviewed'
   };
-  console.log('[CLARION] submission save started →', payload.studentId, payload.moduleType, 'score', payload.score);
-  // text/plain avoids a CORS preflight (same approach as _serverScore)
-  fetch(url, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) })
-    .then(function(r){ return r.text(); })
-    .then(function(t){ console.log('[CLARION] submission save success:', (t||'').slice(0,140)); })
-    .catch(function(e){ console.error('[CLARION] submission save failure:', e.message); });
+
+  console.log(
+    '[CLARION] submission save started →',
+    payload.studentId,
+    payload.moduleType,
+    'score',
+    payload.score
+  );
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type':
+        'text/plain;charset=utf-8'
+    },
+    body: JSON.stringify(payload)
+  })
+    .then(function(r){
+      return r.text();
+    })
+    .then(function(t){
+      console.log(
+        '[CLARION] submission save success:',
+        (t || '').slice(0, 140)
+      );
+    })
+    .catch(function(e){
+      console.error(
+        '[CLARION] submission save failure:',
+        e.message
+      );
+    });
 }
 
 // ── Google Drive audio upload ─────────────────────────────────────────────────// Uploads S.audioBlob to Google Drive via the configured Web App URL.
