@@ -4997,7 +4997,7 @@ function _mpNum(value){
   return Number.isFinite(n)?n:null;
 }
 
-const _MP_CRITERIA=[
+const _MP_PI_CRITERIA=[
   {label:'Structure & Clarity',column:'structure_clarity',keys:['structure_clarity']},
   {label:'Content Depth & Evidence',column:'content_depth_evidence',keys:['content_depth_evidence','content_depth']},
   {label:'Business Thinking',column:'business_thinking',keys:['business_thinking']},
@@ -5005,19 +5005,57 @@ const _MP_CRITERIA=[
   {label:'Composure Under Pressure',column:'composure_under_pressure',keys:['composure_under_pressure','composure']}
 ];
 
+const _MP_GD_CRITERIA=[
+  {label:'Entry & Clarity',column:'structure_clarity',keys:['structure_clarity']},
+  {label:'Reasoning (Content + Logic)',column:'content_depth_evidence',keys:['content_depth_evidence','content_depth']},
+  {label:'Listening & Response',column:'business_thinking',keys:['business_thinking']},
+  {label:'Leadership Moves',column:'communication_professionalism',keys:['communication_professionalism','comm_professionalism']},
+  {label:'Composure Under Pressure',column:'composure_under_pressure',keys:['composure_under_pressure','composure']}
+];
+
+const _MP_LUM_CRITERIA=[
+  {label:'Structure & Clarity',column:'structure_clarity',keys:['structure_clarity']},
+  {label:'Business Thinking',column:'content_depth_evidence',keys:['business_thinking']},
+  {label:'Language Control',column:'business_thinking',keys:['language_control']},
+  {label:'Confidence & Delivery',column:'communication_professionalism',keys:['confidence_delivery']},
+  {label:'Professionalism',column:'composure_under_pressure',keys:['professionalism']}
+];
+
+function _mpModuleFamily(row){
+  const type=String((row&&row.module_type)||'').toLowerCase();
+  if(type.includes('gd')||type.includes('group discussion')) return 'GD';
+  if(type.includes('pi')||type.includes('personal interview')||type==='interview') return 'PI';
+  return 'LUM';
+}
+
+function _mpCriteriaFor(row){
+  const family=_mpModuleFamily(row);
+  if(family==='GD') return _MP_GD_CRITERIA;
+  if(family==='PI') return _MP_PI_CRITERIA;
+  return _MP_LUM_CRITERIA;
+}
+
+function _mpModuleLabel(row){
+  const type=String((row&&row.module_type)||'').toLowerCase();
+  if(type.includes('diagnostic')) return 'Diagnostic';
+  if(_mpModuleFamily(row)==='GD') return 'GD';
+  if(_mpModuleFamily(row)==='PI') return 'PI';
+  return 'LUM / Managerial Communication';
+}
+
 function _mpRaw(row){
   const raw=_mpJson(row&&row.raw_evaluation);
   return raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
 }
 
 function _mpCriterionScore(row,criterion){
-  const direct=_mpNum(row&&row[criterion.column]);
-  if(direct!==null) return direct;
   const criteria=_mpJson(row&&row.criteria)||_mpRaw(row).criteria||{};
   for(const key of criterion.keys){
     const value=_mpNum(criteria&&criteria[key]);
     if(value!==null) return value;
   }
+  const direct=_mpNum(row&&row[criterion.column]);
+  if(direct!==null) return direct;
   return null;
 }
 
@@ -5074,10 +5112,11 @@ function _mpDate(value){
 }
 
 function _mpComparableKey(row){
+  const family=_mpModuleFamily(row);
   const qid=String((row&&row.question_id)||'').trim();
-  if(qid) return 'id:'+qid;
+  if(qid) return family+':id:'+qid;
   const q=String((row&&row.question)||'').trim().toLowerCase().replace(/\s+/g,' ');
-  return q?'q:'+q:'';
+  return q?family+':q:'+q:'';
 }
 
 function _mpDelta(delta,emptyText){
@@ -5118,15 +5157,16 @@ function _mpAttemptHtml(row,previous){
   const nextAction=_mpField(row,'next_action','nextAction');
   const practiceTask=_mpField(row,'practice_task','practiceTask');
   const readiness=_mpField(row,'readiness_status','readinessStatus')||_mpRaw(row).readiness_status||'';
+  const criteriaSet=_mpCriteriaFor(row);
 
-  const criterionRows=_MP_CRITERIA.map(function(c){
+  const criterionRows=criteriaSet.map(function(c){
     const current=_mpCriterionScore(row,c);
     const old=previous?_mpCriterionScore(previous,c):null;
     const delta=current!==null&&old!==null?current-old:null;
     return '<tr><td style="font-size:.82rem;font-weight:600">'+c.label+'</td><td style="font-family:var(--mono);font-weight:700">'+(current===null?'—':current.toFixed(1))+'</td><td>'+_mpDelta(delta,'No comparable score')+'</td></tr>';
   }).join('');
 
-  const feedbackCards=_MP_CRITERIA.map(function(c){
+  const feedbackCards=criteriaSet.map(function(c){
     const body=_mpFeedbackHtml(row,c);
     if(!body) return '';
     return '<div style="border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-top:9px"><div style="font-size:.82rem;font-weight:700">'+c.label+'</div>'+body+'</div>';
@@ -5205,14 +5245,19 @@ async function renderStudentDash(){
     });
     const improved=deltas.filter(function(d){return d>0;}).length;
 
-    const criterionAverages=_MP_CRITERIA.map(function(c){
-      const values=rows.map(function(row){return _mpCriterionScore(row,c);}).filter(function(v){return v!==null;});
+    const summaryRow=scored[0]||rows[0];
+    const summaryFamily=_mpModuleFamily(summaryRow);
+    const summaryRows=scored.filter(function(row){return _mpModuleFamily(row)===summaryFamily;});
+    const summaryCriteria=_mpCriteriaFor(summaryRow);
+    const criterionAverages=summaryCriteria.map(function(c){
+      const values=summaryRows.map(function(row){return _mpCriterionScore(row,c);}).filter(function(v){return v!==null;});
       return {criterion:c,average:values.length?values.reduce(function(a,b){return a+b;},0)/values.length:null};
     }).filter(function(x){return x.average!==null;});
     const strongest=criterionAverages.length?criterionAverages.reduce(function(a,b){return b.average>a.average?b:a;}):null;
     const weakest=criterionAverages.length?criterionAverages.reduce(function(a,b){return b.average<a.average?b:a;}):null;
+    const capabilityLabel=_mpModuleLabel(summaryRow);
 
-    const capability=criterionAverages.length?'<div class="card"><div class="card-lbl">Capability pattern across all attempts</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">'+
+    const capability=criterionAverages.length?'<div class="card"><div class="card-lbl">Capability pattern across '+_mpEsc(capabilityLabel)+' attempts</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">'+
       (strongest?'<div><div style="font-family:var(--mono);font-size:.65rem;color:var(--green);margin-bottom:5px">STRONGEST AVERAGE</div><div style="font-weight:700">'+strongest.criterion.label+'</div><div style="font-family:var(--mono);font-size:.76rem;color:var(--muted);margin-top:4px">'+strongest.average.toFixed(1)+'/5</div></div>':'')+
       (weakest?'<div><div style="font-family:var(--mono);font-size:.65rem;color:var(--red);margin-bottom:5px">CURRENT FOCUS AREA</div><div style="font-weight:700">'+weakest.criterion.label+'</div><div style="font-family:var(--mono);font-size:.76rem;color:var(--muted);margin-top:4px">'+weakest.average.toFixed(1)+'/5</div></div>':'')+
       '</div></div>':'';
