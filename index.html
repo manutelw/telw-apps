@@ -4299,21 +4299,155 @@ toast(errLabel + ' — no demo score used', 'err');
   // ── Stage 4: Save & render ────────────────────────────────────────────────
   const sub = opts.buildSub(result, transcript, driveLink);
 
-  // Augment with fields required for admin visibility — regardless of module or scoring path
-  sub.studentId    = S.user?.studentId || S.user?.id || S.user?.email || '';
-  sub.studentName  = S.user?.name  || '';
-  sub.moduleType   = opts.moduleType || (opts.diagMode ? 'Diagnostics' : (sub.type || 'LUM'));
-  sub.scoringSource = result && result._scoringError
+  // Augment with fields required for admin and database visibility.
+
+// Audio-only answers are transcribed by the scoring server.
+// Recover that returned transcript before saving the submission.
+if(!transcript && result && result.transcript){
+  transcript = String(result.transcript || '').trim();
+}
+
+sub.studentId =
+  S.user?.studentId ||
+  S.user?.id ||
+  S.user?.email ||
+  '';
+
+sub.studentName =
+  S.user?.name ||
+  '';
+
+sub.moduleType =
+  opts.moduleType ||
+  (
+    opts.diagMode
+      ? 'Diagnostics'
+      : (sub.type || 'LUM')
+  );
+
+sub.scoringSource =
+  result && result._scoringError
     ? 'error-fallback'
     : scoringUrl
       ? 'server-ai'
       : S.apiKey
         ? 'client-ai'
         : 'demo';
-  sub.communicationBand = result && result.communicationBand ? result.communicationBand : '';
-  sub.communicationReason = result && result.communicationReason
-  ? result.communicationReason
-  : (result && result._scoringError ? result._scoringError : '');
+
+sub.communicationBand =
+  result && result.communicationBand
+    ? result.communicationBand
+    : '';
+
+sub.communicationReason =
+  result && result.communicationReason
+    ? result.communicationReason
+    : (
+        result && result._scoringError
+          ? result._scoringError
+          : ''
+      );
+
+// Ensure the server-generated transcript is saved.
+sub.transcript =
+  sub.transcript ||
+  transcript ||
+  '';
+
+// Preserve structured criterion scores whenever the scorer returns them.
+sub.criteria =
+  (
+    sub.criteria &&
+    typeof sub.criteria === 'object' &&
+    Object.keys(sub.criteria).length
+  )
+    ? sub.criteria
+    : (
+        result && result.criteria
+          ? result.criteria
+          : {}
+      );
+
+// Preserve the overall feedback paragraph separately.
+sub.overallFeedback =
+  sub.overallFeedback ||
+  (
+    result &&
+    typeof result.overallFeedback === 'string'
+      ? result.overallFeedback
+      : result &&
+        typeof result.feedback === 'string'
+          ? result.feedback
+          : ''
+  );
+
+sub.lowestCriterion =
+  sub.lowestCriterion ||
+  (
+    result &&
+    (
+      result.lowestCriterion ||
+      result.lowest_criterion
+    )
+  ) ||
+  '';
+
+sub.nextAction =
+  sub.nextAction ||
+  sub.improvement ||
+  (
+    result &&
+    (
+      result.nextAction ||
+      result.improvement
+    )
+  ) ||
+  '';
+
+sub.practiceTask =
+  sub.practiceTask ||
+  (
+    result &&
+    (
+      result.practiceTask ||
+      result.practice_task
+    )
+  ) ||
+  '';
+
+sub.cando =
+  sub.cando ||
+  sub.cando_fb ||
+  (
+    result &&
+    (
+      result.cando ||
+      result.cando_feedback
+    )
+  ) ||
+  '';
+
+sub.readinessStatus =
+  sub.readinessStatus ||
+  (
+    result &&
+    (
+      result.readinessStatus ||
+      result.readiness_status
+    )
+  ) ||
+  '';
+
+sub.geminiModel =
+  sub.geminiModel ||
+  (
+    result &&
+    (
+      result.geminiModel ||
+      result.modelVersion
+    )
+  ) ||
+  '';
 
 try{ opts.storeFn(sub); }catch(e){ console.error('[CLARION] storeFn error:', e); }
 
