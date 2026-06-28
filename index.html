@@ -2702,101 +2702,359 @@ setTimeout(function(){
   triggerSheetSync(true);
 }, 1500);
 }
+async function _clarionStudentAuthEmail(studentCode){
+  // Use the complete student ID. Do not assume any college,
+  // programme, year, slash or numbering format.
+  const canonicalCode = String(studentCode || '')
+    .normalize('NFC')
+    .trim()
+    .toUpperCase();
+
+  const encoded = new TextEncoder().encode(canonicalCode);
+
+  const hashBuffer = await crypto.subtle.digest(
+    'SHA-256',
+    encoded
+  );
+
+  const hashHex = Array.from(
+    new Uint8Array(hashBuffer)
+  ).map(function(byte){
+    return byte.toString(16).padStart(2, '0');
+  }).join('');
+
+  return (
+    'sid-' +
+    hashHex.slice(0, 24) +
+    '@students.clarionprep.com'
+  );
+}
+
+
 async function login(){
-  // Keep the existing Student and Demo login unchanged.
-  if(authRole !== 'trainer'){
+
+  // Public Demo continues to use the existing working login.
+  if(authRole === 'demo'){
     return loginLegacy();
   }
 
-  const loginInput = String(
+  const rawLogin = String(
     document.getElementById('a-email').value || ''
-  ).trim().toLowerCase();
+  ).trim();
 
   const password = String(
     document.getElementById('a-pass').value || ''
   );
 
-  // Preserve the existing trainer-side Demo credential.
-  if(typeof DEMO_EMAIL !== 'undefined' && loginInput === String(DEMO_EMAIL).toLowerCase()){
-    return loginLegacy();
-  }
+  const rememberBox =
+    document.getElementById('a-remember');
 
-  const btn = document.querySelector('.btn-auth');
+  const rememberMe =
+    authRole === 'student' &&
+    !!(rememberBox && rememberBox.checked);
 
-  function fail(message){
-    toast(message, 'err');
+  const btn =
+    document.querySelector('.btn-auth');
+
+
+  function resetButton(){
     if(btn){
       btn.textContent = 'Sign in →';
       btn.disabled = false;
     }
   }
 
+
+  function fail(message){
+    resetButton();
+    toast(message, 'err');
+  }
+
+
+  if(!rawLogin || !password){
+    fail('Enter your login details.');
+    return;
+  }
+
+
   if(btn){
     btn.textContent = 'Signing in…';
     btn.disabled = true;
   }
 
+
   try{
-    // The visible trainer username remains "manu".
-    // Supabase Authentication requires the actual email address.
-    const email =
-      loginInput === 'manu'
-        ? 'manutelw@gmail.com'
-        : loginInput;
 
-    const result = await clarionSupabase.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
+    let authEmail = '';
+    let enteredStudentCode = '';
 
-    if(result.error){
-      throw result.error;
+    /*
+      TRAINER LOGIN
+      The visible username "manu" maps to the secure
+      Supabase authentication email.
+    */
+    if(authRole === 'trainer'){
+
+      authEmail =
+        rawLogin.toLowerCase() === 'manu'
+          ? 'manutelw@gmail.com'
+          : rawLogin.toLowerCase();
+
+    /*
+      STUDENT LOGIN
+      The student continues to enter their normal Student ID.
+      The complete ID is converted into the hidden Supabase
+      authentication email.
+    */
+    }else if(authRole === 'student'){
+
+      enteredStudentCode = rawLogin
+        .normalize('NFC')
+        .trim()
+        .toUpperCase();
+
+      authEmail =
+        await _clarionStudentAuthEmail(
+          enteredStudentCode
+        );
+
+    }else{
+
+      resetButton();
+      return loginLegacy();
     }
 
-    const user = result.data && result.data.user;
+
+    const authResult =
+      await clarionSupabase.auth.signInWithPassword({
+        email: authEmail,
+        password: password
+      });
+
+
+    /*
+      During migration, students who have not yet been added
+      to Supabase continue through the existing login system.
+      This prevents the current working student app from breaking.
+    */
+    if(authResult.error){
+
+      if(authRole === 'student'){
+        resetButton();
+        return loginLegacy();
+      }
+
+      throw authResult.error;
+    }
+
+
+    const user =
+      authResult.data &&
+      authResult.data.user;
+
 
     if(!user){
-      throw new Error('Login could not be completed.');
+      throw new Error(
+        'Login could not be completed.'
+      );
     }
 
-    const profileResult = await clarionSupabase
-      .from('profiles')
-      .select('id, full_name, email, role, active, access_type')
-      .eq('id', user.id)
-      .single();
+
+    const profileResult =
+      await clarionSupabase
+        .from('profiles')
+        .select(
+          'id, student_code, full_name, email, role, batch_id, access_type, active'
+        )
+        .eq('id', user.id)
+        .single();
+
 
     if(profileResult.error){
+      await clarionSupabase.auth.signOut();
       throw profileResult.error;
     }
 
-    const profile = profileResult.data;
+
+    const profile =
+      profileResult.data;
+
 
     if(!profile || profile.active === false){
       await clarionSupabase.auth.signOut();
-      throw new Error('Account inactive.');
+      throw new Error(
+        'Account inactive. Contact your trainer.'
+      );
     }
 
-    if(profile.role !== 'trainer' && profile.role !== 'admin'){
-      await clarionSupabase.auth.signOut();
-      throw new Error('This account does not have trainer access.');
+
+    /*
+      TRAINER OR ADMIN PROFILE
+    */
+    if(authRole === 'trainer'){
+
+      if(
+        profile.role !== 'trainer' &&
+        profile.role !== 'admin'
+      ){
+        await clarionSupabase.auth.signOut();
+
+        throw new Error(
+          'This account does not have trainer access.'
+        );
+      }
+
+
+      S.user = {
+        email: profile.email || authEmail,
+        name: profile.full_name || 'Trainer',
+        role: 'trainer',
+        id: profile.id,
+        batch: '',
+        accessType:
+          profile.access_type || 'trainer',
+        supabaseId: profile.id,
+        authEmail: authEmail
+      };
+
+      S.role = 'trainer';
+      S.supabaseUser = user;
+
+      finishLogin();
+      return;
     }
+
+
+    /*
+      STUDENT PROFILE
+    */
+    if(profile.role !== 'student'){
+      await clarionSupabase.auth.signOut();
+
+      throw new Error(
+        'This account does not have student access.'
+      );
+    }
+
+
+    const profileStudentCode = String(
+      profile.student_code || ''
+    )
+      .normalize('NFC')
+      .trim()
+      .toUpperCase();
+
+
+    if(
+      !profileStudentCode ||
+      profileStudentCode !== enteredStudentCode
+    ){
+      await clarionSupabase.auth.signOut();
+
+      throw new Error(
+        'Student ID does not match this account.'
+      );
+    }
+
+
+    /*
+      Read only the existing local metadata needed to keep the
+      current question banks, batch and access screens working
+      during migration. The password is not checked locally.
+    */
+    loadRegistry();
+
+    const allStudents = getStudents();
+
+    let localStudent = null;
+    let foundKey = null;
+
+
+    for(
+      const [key, student]
+      of Object.entries(allStudents)
+    ){
+
+      const localCode = String(
+        student.studentId || ''
+      )
+        .normalize('NFC')
+        .trim()
+        .toUpperCase();
+
+
+      if(localCode === enteredStudentCode){
+        localStudent = student;
+        foundKey = key;
+        break;
+      }
+    }
+
+
+    if(rememberMe){
+
+      saveStudentCredentials(
+        enteredStudentCode,
+        password
+      );
+
+    }else{
+
+      clearStudentCredentials();
+    }
+
 
     S.user = {
-      email: profile.email || email,
-      name: profile.full_name || 'Trainer',
-      role: 'trainer',
-      id: profile.id,
-      batch: '',
-      accessType: profile.access_type || ''
+      email:
+        foundKey ||
+        profile.email ||
+        authEmail,
+
+      authEmail: authEmail,
+
+      name:
+        profile.full_name ||
+        (localStudent && localStudent.name) ||
+        enteredStudentCode,
+
+      role: 'student',
+
+      id: profile.student_code,
+
+      studentId: profile.student_code,
+
+      batch:
+        (localStudent && localStudent.batch) ||
+        '',
+
+      batchId:
+        profile.batch_id || null,
+
+      accessType:
+        (
+          localStudent &&
+          localStudent.accessType
+        ) ||
+        profile.access_type ||
+        'normal',
+
+      supabaseId: profile.id
     };
 
-    S.role = 'trainer';
+
+    S.role = 'student';
     S.supabaseUser = user;
 
     finishLogin();
 
+
   }catch(error){
-    console.error('[CLARION Supabase login]', error);
+
+    console.error(
+      '[CLARION Supabase login]',
+      error
+    );
+
     fail(
       error && error.message
         ? error.message
