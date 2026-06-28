@@ -1,1 +1,612 @@
-TEMP
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CLARION turns spoken communication practice into transcripts, criterion-level scores, precise feedback and focused next actions.">
+  <meta name="theme-color" content="#151326">
+  <title>CLARION · Communication Readiness, Made Visible</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%23151326%22/><path d=%22M41 18c-3-3-7-5-12-5-10 0-17 8-17 19s7 19 17 19c5 0 9-2 12-5l-6-7c-2 2-4 3-6 3-5 0-8-4-8-10s3-10 8-10c2 0 4 1 6 3z%22 fill=%22%23F5B642%22/></svg>">
+  <style>
+    :root {
+      --ink: #151326;
+      --ink-soft: #312e4a;
+      --paper: #fbfaf7;
+      --surface: #ffffff;
+      --line: #e8e4ef;
+      --muted: #6f6b7d;
+      --violet: #6d4aff;
+      --violet-soft: #eee9ff;
+      --teal: #008f86;
+      --teal-soft: #e2f7f4;
+      --coral: #f05a47;
+      --coral-soft: #ffebe7;
+      --gold: #f5b642;
+      --gold-soft: #fff3d2;
+      --blue: #2c6bed;
+      --blue-soft: #e8f0ff;
+      --green: #2d8a57;
+      --green-soft: #e7f5ec;
+      --shadow: 0 24px 70px rgba(31, 25, 65, .12);
+      --shadow-small: 0 10px 30px rgba(31, 25, 65, .08);
+      --radius: 22px;
+      --radius-small: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    .wrap { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    .mono { font-family: "DM Mono", monospace; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(251, 250, 247, .88);
+      border-bottom: 1px solid rgba(232, 228, 239, .8);
+      backdrop-filter: blur(18px);
+    }
+    .nav {
+      height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      background: var(--ink);
+      color: var(--gold);
+      display: grid;
+      place-items: center;
+      font-family: "Manrope", sans-serif;
+      font-weight: 800;
+      box-shadow: 0 8px 20px rgba(21, 19, 38, .16);
+    }
+    .brand-copy { display: flex; flex-direction: column; line-height: 1.15; }
+    .brand-name { font-family: "Manrope", sans-serif; font-weight: 800; letter-spacing: .12em; font-size: .98rem; }
+    .brand-sub { color: var(--muted); font-size: .66rem; letter-spacing: .05em; }
+    .nav-links { display: flex; align-items: center; gap: 26px; font-size: .88rem; font-weight: 600; color: var(--ink-soft); }
+    .nav-links a:hover { color: var(--violet); }
+    .nav-actions { display: flex; gap: 10px; }
+    .menu-button { display: none; border: 0; background: transparent; font-size: 1.45rem; cursor: pointer; }
+
+    .button {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 18px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      font-weight: 700;
+      font-size: .88rem;
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .button:hover { transform: translateY(-2px); }
+    .button-dark { background: var(--ink); color: white; box-shadow: 0 10px 25px rgba(21, 19, 38, .18); }
+    .button-dark:hover { box-shadow: 0 14px 32px rgba(21, 19, 38, .24); }
+    .button-light { background: var(--surface); border-color: var(--line); color: var(--ink); }
+    .button-violet { background: var(--violet); color: white; box-shadow: 0 12px 28px rgba(109, 74, 255, .26); }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 82px 0 72px;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(109,74,255,.16), rgba(109,74,255,0) 67%);
+      top: -220px;
+      left: -160px;
+      pointer-events: none;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,143,134,.14), rgba(0,143,134,0) 68%);
+      right: -190px;
+      bottom: -250px;
+      pointer-events: none;
+    }
+    .hero-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: .93fr 1.07fr;
+      gap: 70px;
+      align-items: center;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 11px;
+      border: 1px solid #d9d0ff;
+      border-radius: 999px;
+      background: var(--violet-soft);
+      color: #4b31c7;
+      font-family: "DM Mono", monospace;
+      font-size: .68rem;
+      font-weight: 500;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+    .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--violet); box-shadow: 0 0 0 5px rgba(109, 74, 255, .12); }
+    h1 {
+      font-family: "Manrope", sans-serif;
+      font-size: clamp(3.05rem, 6vw, 5.45rem);
+      line-height: .99;
+      letter-spacing: -.055em;
+      max-width: 760px;
+      margin-bottom: 24px;
+    }
+    .gradient-word {
+      background: linear-gradient(100deg, var(--violet), var(--blue) 48%, var(--teal));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero-copy {
+      font-size: 1.08rem;
+      color: var(--muted);
+      max-width: 620px;
+      margin-bottom: 30px;
+    }
+    .hero-copy strong { color: var(--ink); font-weight: 700; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+    .hero-note { display: flex; align-items: flex-start; gap: 10px; color: var(--muted); font-size: .8rem; max-width: 530px; }
+    .hero-note strong { color: var(--ink); }
+    .note-mark { width: 21px; height: 21px; border-radius: 50%; display: grid; place-items: center; background: var(--gold-soft); color: #9b6900; font-size: .75rem; flex: 0 0 auto; }
+
+    .evaluation-shell {
+      border-radius: 28px;
+      padding: 12px;
+      background: linear-gradient(135deg, #241d54, #151326 56%, #123c4b);
+      box-shadow: var(--shadow);
+      transform: rotate(1deg);
+    }
+    .evaluation-card {
+      background: var(--surface);
+      border-radius: 19px;
+      padding: 24px;
+      transform: rotate(-1deg);
+    }
+    .eval-top { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; margin-bottom: 18px; }
+    .eval-label { color: var(--muted); font-family: "DM Mono", monospace; font-size: .63rem; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 5px; }
+    .eval-question { font-weight: 700; line-height: 1.35; max-width: 330px; }
+    .score-orbit {
+      width: 92px;
+      height: 92px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(var(--violet) 0 60%, #ece9f2 60% 100%);
+      position: relative;
+      flex: 0 0 auto;
+    }
+    .score-orbit::after { content: ""; width: 72px; height: 72px; border-radius: 50%; background: white; position: absolute; }
+    .score-copy { position: relative; z-index: 1; text-align: center; line-height: 1; }
+    .score-number { font-family: "Manrope", sans-serif; font-size: 1.55rem; font-weight: 800; }
+    .score-outof { color: var(--muted); font-size: .62rem; margin-top: 5px; }
+    .status-line { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .status-chip { font-family: "DM Mono", monospace; font-size: .62rem; padding: 5px 8px; border-radius: 7px; }
+    .status-amber { background: var(--gold-soft); color: #835700; }
+    .status-blue { background: var(--blue-soft); color: #1e54b8; }
+    .criteria { display: grid; gap: 10px; margin-bottom: 18px; }
+    .criterion { display: grid; grid-template-columns: 152px 1fr 34px; gap: 10px; align-items: center; font-size: .73rem; }
+    .criterion-name { color: var(--ink-soft); font-weight: 600; white-space: nowrap; }
+    .bar { height: 8px; background: #efedf3; border-radius: 999px; overflow: hidden; }
+    .fill { height: 100%; border-radius: inherit; }
+    .fill-violet { width: 60%; background: var(--violet); }
+    .fill-teal { width: 60%; background: var(--teal); }
+    .fill-coral { width: 60%; background: var(--coral); }
+    .fill-blue { width: 60%; background: var(--blue); }
+    .fill-green { width: 60%; background: var(--green); }
+    .criterion-score { font-family: "DM Mono", monospace; color: var(--muted); text-align: right; }
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .action-box { border-radius: 12px; padding: 12px; min-height: 105px; }
+    .action-box.next { background: var(--coral-soft); }
+    .action-box.practice { background: var(--teal-soft); }
+    .action-title { font-family: "DM Mono", monospace; font-size: .58rem; letter-spacing: .07em; text-transform: uppercase; margin-bottom: 6px; }
+    .action-box.next .action-title { color: #b73a2c; }
+    .action-box.practice .action-title { color: #006e67; }
+    .action-text { font-size: .72rem; line-height: 1.45; color: var(--ink-soft); }
+    .illustrative { text-align: right; color: var(--muted); font-family: "DM Mono", monospace; font-size: .56rem; margin-top: 10px; }
+
+    .module-strip { padding-bottom: 68px; }
+    .module-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: var(--surface);
+      box-shadow: var(--shadow-small);
+    }
+    .module { padding: 18px 20px; border-right: 1px solid var(--line); display: flex; gap: 12px; align-items: center; }
+    .module:last-child { border-right: 0; }
+    .module-icon { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: .82rem; }
+    .module:nth-child(1) .module-icon { background: var(--violet-soft); color: var(--violet); }
+    .module:nth-child(2) .module-icon { background: var(--teal-soft); color: var(--teal); }
+    .module:nth-child(3) .module-icon { background: var(--coral-soft); color: var(--coral); }
+    .module:nth-child(4) .module-icon { background: var(--blue-soft); color: var(--blue); }
+    .module-title { font-weight: 700; font-size: .84rem; }
+    .module-sub { color: var(--muted); font-size: .68rem; }
+
+    section { padding: 88px 0; }
+    .section-kicker { font-family: "DM Mono", monospace; color: var(--violet); text-transform: uppercase; letter-spacing: .1em; font-size: .68rem; font-weight: 500; margin-bottom: 12px; }
+    .section-title { font-family: "Manrope", sans-serif; font-size: clamp(2rem, 4vw, 3.35rem); line-height: 1.08; letter-spacing: -.04em; max-width: 780px; }
+    .section-intro { color: var(--muted); font-size: 1rem; max-width: 700px; margin-top: 17px; }
+    .section-head { margin-bottom: 44px; }
+
+    .how { background: var(--ink); color: white; position: relative; overflow: hidden; }
+    .how::after { content: ""; position: absolute; width: 470px; height: 470px; border-radius: 50%; right: -180px; top: -220px; border: 90px solid rgba(245,182,66,.06); }
+    .how .section-kicker { color: var(--gold); }
+    .how .section-intro { color: rgba(255,255,255,.62); }
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; position: relative; z-index: 1; }
+    .step { min-height: 250px; border: 1px solid rgba(255,255,255,.11); border-radius: 18px; padding: 22px; background: rgba(255,255,255,.045); }
+    .step-number { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; font-family: "DM Mono", monospace; font-size: .72rem; margin-bottom: 40px; }
+    .step:nth-child(1) .step-number { background: var(--violet); }
+    .step:nth-child(2) .step-number { background: var(--teal); }
+    .step:nth-child(3) .step-number { background: var(--coral); }
+    .step:nth-child(4) .step-number { background: var(--gold); color: var(--ink); }
+    .step h3 { font-family: "Manrope", sans-serif; font-size: 1.06rem; margin-bottom: 9px; }
+    .step p { color: rgba(255,255,255,.62); font-size: .82rem; }
+
+    .audiences { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .audience-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 32px; background: var(--surface); box-shadow: var(--shadow-small); }
+    .audience-card.student { border-top: 7px solid var(--violet); }
+    .audience-card.institution { border-top: 7px solid var(--teal); }
+    .audience-tag { font-family: "DM Mono", monospace; font-size: .64rem; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+    .student .audience-tag { color: var(--violet); }
+    .institution .audience-tag { color: var(--teal); }
+    .audience-card h3 { font-family: "Manrope", sans-serif; font-size: 1.65rem; line-height: 1.15; margin-bottom: 14px; }
+    .audience-card > p { color: var(--muted); margin-bottom: 22px; }
+    .output-list { display: grid; gap: 10px; }
+    .output { display: grid; grid-template-columns: 31px 1fr; gap: 10px; align-items: start; padding: 12px; border-radius: 11px; background: #f8f7fa; }
+    .output-icon { width: 31px; height: 31px; border-radius: 9px; display: grid; place-items: center; font-size: .76rem; font-weight: 800; }
+    .student .output-icon { background: var(--violet-soft); color: var(--violet); }
+    .institution .output-icon { background: var(--teal-soft); color: var(--teal); }
+    .output strong { display: block; font-size: .83rem; margin-bottom: 2px; }
+    .output span { color: var(--muted); font-size: .72rem; }
+
+    .evidence { background: #f1eff8; }
+    .evidence-grid { display: grid; grid-template-columns: .84fr 1.16fr; gap: 60px; align-items: center; }
+    .evidence-points { display: grid; gap: 12px; margin-top: 28px; }
+    .evidence-point { display: flex; gap: 11px; align-items: flex-start; color: var(--ink-soft); font-size: .85rem; }
+    .check { width: 23px; height: 23px; border-radius: 7px; display: grid; place-items: center; background: var(--green-soft); color: var(--green); font-weight: 800; flex: 0 0 auto; }
+    .feedback-panel { background: var(--surface); border-radius: 24px; padding: 25px; box-shadow: var(--shadow); border: 1px solid rgba(109,74,255,.13); }
+    .feedback-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+    .feedback-head h3 { font-family: "Manrope", sans-serif; font-size: 1.12rem; }
+    .feedback-score { font-family: "DM Mono", monospace; font-size: .66rem; background: var(--violet-soft); color: var(--violet); border-radius: 8px; padding: 5px 8px; }
+    .feedback-row { border-top: 1px solid var(--line); padding: 16px 0; }
+    .feedback-row:first-of-type { border-top: 0; padding-top: 0; }
+    .feedback-type { display: inline-block; font-family: "DM Mono", monospace; text-transform: uppercase; letter-spacing: .08em; font-size: .58rem; margin-bottom: 6px; }
+    .feedback-type.worked { color: var(--green); }
+    .feedback-type.weak { color: var(--coral); }
+    .feedback-type.fix { color: var(--blue); }
+    .feedback-row p { color: var(--ink-soft); font-size: .8rem; }
+
+    .data-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .data-card { min-height: 190px; padding: 22px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); }
+    .data-card:nth-child(1) { background: var(--violet-soft); border-color: #ddd3ff; }
+    .data-card:nth-child(2) { background: var(--teal-soft); border-color: #c8ece7; }
+    .data-card:nth-child(3) { background: var(--gold-soft); border-color: #f0dda2; }
+    .data-card:nth-child(4) { background: var(--coral-soft); border-color: #ffd2ca; }
+    .data-card:nth-child(5) { background: var(--blue-soft); border-color: #ccdcff; }
+    .data-card:nth-child(6) { background: var(--green-soft); border-color: #cfe8d8; }
+    .data-index { font-family: "DM Mono", monospace; font-size: .62rem; color: var(--muted); margin-bottom: 42px; }
+    .data-card h3 { font-family: "Manrope", sans-serif; font-size: 1.05rem; margin-bottom: 7px; }
+    .data-card p { color: var(--muted); font-size: .77rem; }
+
+    .principle {
+      margin-top: 28px;
+      border-left: 5px solid var(--gold);
+      background: #fffaf0;
+      padding: 18px 20px;
+      border-radius: 0 13px 13px 0;
+      color: var(--ink-soft);
+      font-size: .86rem;
+    }
+    .principle strong { color: var(--ink); }
+
+    .cta { padding-top: 30px; padding-bottom: 90px; }
+    .cta-box {
+      position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      background: linear-gradient(120deg, #5d39ef, #2c6bed 52%, #008f86);
+      color: white;
+      padding: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 30px;
+      box-shadow: var(--shadow);
+    }
+    .cta-box::after { content: ""; position: absolute; width: 260px; height: 260px; border-radius: 50%; right: -65px; bottom: -160px; border: 45px solid rgba(255,255,255,.09); }
+    .cta-copy { position: relative; z-index: 1; }
+    .cta-copy h2 { font-family: "Manrope", sans-serif; font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1.05; letter-spacing: -.04em; margin-bottom: 10px; }
+    .cta-copy p { color: rgba(255,255,255,.75); max-width: 650px; }
+    .cta-actions { display: flex; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; flex: 0 0 auto; }
+    .cta .button-light { border-color: transparent; }
+    .cta .button-dark { background: #151326; }
+
+    footer { border-top: 1px solid var(--line); padding: 30px 0 38px; }
+    .footer-row { display: flex; justify-content: space-between; gap: 24px; align-items: center; color: var(--muted); font-size: .73rem; }
+    .footer-links { display: flex; gap: 18px; }
+    .footer-links a:hover { color: var(--violet); }
+
+    @media (max-width: 980px) {
+      .hero-grid, .evidence-grid { grid-template-columns: 1fr; }
+      .hero-grid { gap: 48px; }
+      .evaluation-shell { max-width: 680px; width: 100%; margin: 0 auto; }
+      .steps { grid-template-columns: 1fr 1fr; }
+      .module-row { grid-template-columns: 1fr 1fr; }
+      .module:nth-child(2) { border-right: 0; }
+      .module:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .data-grid { grid-template-columns: 1fr 1fr; }
+      .nav-links { display: none; }
+    }
+
+    @media (max-width: 720px) {
+      .wrap { width: min(100% - 26px, 1180px); }
+      .nav { height: 66px; }
+      .brand-sub { display: none; }
+      .nav-actions .button-light { display: none; }
+      .hero { padding: 58px 0 54px; }
+      h1 { font-size: clamp(2.55rem, 14vw, 4.1rem); }
+      .hero-copy { font-size: .98rem; }
+      .evaluation-card { padding: 17px; }
+      .eval-top { align-items: center; }
+      .score-orbit { width: 78px; height: 78px; }
+      .score-orbit::after { width: 61px; height: 61px; }
+      .score-number { font-size: 1.3rem; }
+      .criterion { grid-template-columns: 128px 1fr 29px; gap: 7px; }
+      .criterion-name { font-size: .65rem; }
+      .action-grid, .audiences, .data-grid { grid-template-columns: 1fr; }
+      .module-row, .steps { grid-template-columns: 1fr; }
+      .module { border-right: 0; border-bottom: 1px solid var(--line); }
+      .module:last-child { border-bottom: 0; }
+      .step { min-height: auto; }
+      .step-number { margin-bottom: 25px; }
+      section { padding: 68px 0; }
+      .audience-card { padding: 24px; }
+      .cta-box { padding: 34px 24px; align-items: flex-start; flex-direction: column; }
+      .footer-row { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .button { transition: none; }
+      .button:hover { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap nav">
+      <a class="brand" href="#top" aria-label="CLARION home">
+        <span class="brand-mark">C</span>
+        <span class="brand-copy">
+          <span class="brand-name">CLARION</span>
+          <span class="brand-sub">Managerial Communication Performance</span>
+        </span>
+      </a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#how">How it works</a>
+        <a href="#students">For students</a>
+        <a href="#institutions">For institutions</a>
+        <a href="#evidence">What it measures</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="button button-light" href="./app/">Try the demo</a>
+        <a class="button button-dark" href="./app/">Login <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <div class="eyebrow"><span class="pulse"></span> Evidence-led communication practice</div>
+          <h1>Communication readiness, <span class="gradient-word">made visible.</span></h1>
+          <p class="hero-copy">CLARION turns a spoken response into a <strong>transcript, criterion-level scores, specific feedback, and one focused next task</strong>—so students know what to improve and trainers can see what has actually changed.</p>
+          <div class="hero-actions">
+            <a class="button button-violet" href="./app/">Open CLARION <span aria-hidden="true">→</span></a>
+            <a class="button button-light" href="#how">See how it works</a>
+          </div>
+          <div class="hero-note">
+            <span class="note-mark">✓</span>
+            <span><strong>No generic praise.</strong> Progress is shown only when comparable attempts and sufficient evidence exist.</span>
+          </div>
+        </div>
+
+        <div class="evaluation-shell" aria-label="Illustrative CLARION evaluation">
+          <div class="evaluation-card">
+            <div class="eval-top">
+              <div>
+                <div class="eval-label">Diagnostic · Illustrative evaluation</div>
+                <div class="eval-question">Describe an important task you handled recently and what you learnt from it.</div>
+              </div>
+              <div class="score-orbit">
+                <div class="score-copy">
+                  <div class="score-number">6.0</div>
+                  <div class="score-outof">out of 10</div>
+                </div>
+              </div>
+            </div>
+            <div class="status-line">
+              <span class="status-chip status-amber">Approaching readiness benchmark</span>
+              <span class="status-chip status-blue">Transcript available</span>
+            </div>
+            <div class="criteria">
+              <div class="criterion"><span class="criterion-name">Structure & clarity</span><span class="bar"><span class="fill fill-violet"></span></span><span class="criterion-score">3/5</span></div>
+              <div class="criterion"><span class="criterion-name">Business thinking</span><span class="bar"><span class="fill fill-teal"></span></span><span class="criterion-score">3/5</span></div>
+              <div class="criterion"><span class="criterion-name">Language control</span><span class="bar"><span class="fill fill-coral"></span></span><span class="criterion-score">3/5</span></div>
+              <div class="criterion"><span class="criterion-name">Confidence & delivery</span><span class="bar"><span class="fill fill-blue"></span></span><span class="criterion-score">3/5</span></div>
+              <div class="criterion"><span class="criterion-name">Professionalism</span><span class="bar"><span class="fill fill-green"></span></span><span class="criterion-score">3/5</span></div>
+            </div>
+            <div class="action-grid">
+              <div class="action-box next">
+                <div class="action-title">Next action</div>
+                <div class="action-text">Explain the broader business implication, not only what happened.</div>
+              </div>
+              <div class="action-box practice">
+                <div class="action-title">Practice task</div>
+                <div class="action-text">Record a 45-second answer linking one action to risk, stakeholder impact and outcome.</div>
+              </div>
+            </div>
+            <div class="illustrative">Example interface · no student data shown</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="module-strip">
+      <div class="wrap module-row">
+        <div class="module"><span class="module-icon">D</span><span><span class="module-title">Diagnostics</span><span class="module-sub">Baseline evidence</span></span></div>
+        <div class="module"><span class="module-icon">MC</span><span><span class="module-title">Managerial communication</span><span class="module-sub">Thought made visible</span></span></div>
+        <div class="module"><span class="module-icon">PI</span><span><span class="module-title">Personal interviews</span><span class="module-sub">Evidence under pressure</span></span></div>
+        <div class="module"><span class="module-icon">GD</span><span><span class="module-title">Group discussions</span><span class="module-sub">Reasoning and leadership</span></span></div>
+      </div>
+    </div>
+
+    <section class="how" id="how">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-kicker">How CLARION works</div>
+          <h2 class="section-title">One response becomes a practical improvement cycle.</h2>
+          <p class="section-intro">The platform does not stop at a score. It identifies the exact criterion holding the response back and turns it into the next practice task.</p>
+        </div>
+        <div class="steps">
+          <article class="step"><div class="step-number">01</div><h3>Respond</h3><p>Answer a realistic communication, interview or discussion task in your own voice.</p></article>
+          <article class="step"><div class="step-number">02</div><h3>See the evidence</h3><p>Review the transcript, overall score and criterion-level performance—not a vague impression.</p></article>
+          <article class="step"><div class="step-number">03</div><h3>Fix one priority</h3><p>Use the lowest criterion, next action and targeted practice task to focus the next attempt.</p></article>
+          <article class="step"><div class="step-number">04</div><h3>Reassess</h3><p>Compare like with like. Improvement is recorded only when a valid baseline and reassessment exist.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-kicker">Different users. One evidence trail.</div>
+          <h2 class="section-title">Useful to the person practising and the person responsible for development.</h2>
+        </div>
+        <div class="audiences">
+          <article class="audience-card student" id="students">
+            <div class="audience-tag">For students</div>
+            <h3>Know what to change in the next attempt.</h3>
+            <p>A score without direction is not training. CLARION shows the performance gap and the next concrete move.</p>
+            <div class="output-list">
+              <div class="output"><span class="output-icon">T</span><span><strong>Transcript</strong><span>See what was actually said, not what you intended to say.</span></span></div>
+              <div class="output"><span class="output-icon">5</span><span><strong>Five criterion scores</strong><span>Separate structure, thinking, language, delivery and professionalism.</span></span></div>
+              <div class="output"><span class="output-icon">→</span><span><strong>Next action</strong><span>One direct change for the next response.</span></span></div>
+              <div class="output"><span class="output-icon">P</span><span><strong>Practice task</strong><span>A short exercise aimed at the weakest area.</span></span></div>
+            </div>
+          </article>
+
+          <article class="audience-card institution" id="institutions">
+            <div class="audience-tag">For trainers and institutions</div>
+            <h3>See participation, gaps and defensible progress.</h3>
+            <p>CLARION builds a record of attempts, feedback and reassessment without claiming progress where the evidence is incomplete.</p>
+            <div class="output-list">
+              <div class="output"><span class="output-icon">B</span><span><strong>Baseline and latest attempt</strong><span>Compare the first valid performance with a comparable reassessment.</span></span></div>
+              <div class="output"><span class="output-icon">F</span><span><strong>Batch and student filters</strong><span>Locate participation, repeated weakness and support needs.</span></span></div>
+              <div class="output"><span class="output-icon">R</span><span><strong>Review status</strong><span>Separate automated evaluation from trainer review and follow-up.</span></span></div>
+              <div class="output"><span class="output-icon">E</span><span><strong>Evidence-conscious reporting</strong><span>Distinguish not assessed, baseline available, reassessed and improvement visible.</span></span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="evidence" id="evidence">
+      <div class="wrap evidence-grid">
+        <div>
+          <div class="section-kicker">Specific, not flattering</div>
+          <h2 class="section-title">Feedback explains why the answer is at this level.</h2>
+          <p class="section-intro">Each criterion separates what worked, what prevented a higher score, and what the learner should do differently.</p>
+          <div class="evidence-points">
+            <div class="evidence-point"><span class="check">✓</span><span>Scores are tied to defined rubric levels rather than general fluency.</span></div>
+            <div class="evidence-point"><span class="check">✓</span><span>Audio-only responses are not penalised for visual evidence that cannot be observed.</span></div>
+            <div class="evidence-point"><span class="check">✓</span><span>Length, polished vocabulary and confidence alone do not substitute for reasoning or evidence.</span></div>
+          </div>
+        </div>
+        <div class="feedback-panel">
+          <div class="feedback-head"><h3>Business thinking · 3/5</h3><span class="feedback-score">Developing</span></div>
+          <div class="feedback-row"><span class="feedback-type worked">What worked</span><p>The response connects the action to a clear operational result and shows ownership of the task.</p></div>
+          <div class="feedback-row"><span class="feedback-type weak">What holds it back</span><p>It explains what was done but does not examine risk, stakeholder impact, constraints or alternative choices.</p></div>
+          <div class="feedback-row"><span class="feedback-type fix">What moves it higher</span><p>Add one sentence showing what could have gone wrong, who was affected and why this action was chosen over another option.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-kicker">What CLARION records</div>
+          <h2 class="section-title">A usable learning record—not a pile of disconnected scores.</h2>
+          <p class="section-intro">Every completed response can carry the information needed for review, coaching and later comparison.</p>
+        </div>
+        <div class="data-grid">
+          <article class="data-card"><div class="data-index">01 · RESPONSE</div><h3>Question and transcript</h3><p>The task, student response and submission context stay connected.</p></article>
+          <article class="data-card"><div class="data-index">02 · PERFORMANCE</div><h3>Overall and criterion scores</h3><p>Five separate performance areas show where the overall number comes from.</p></article>
+          <article class="data-card"><div class="data-index">03 · EXPLANATION</div><h3>Worked, weak and fix</h3><p>Detailed comments explain the evidence behind every criterion score.</p></article>
+          <article class="data-card"><div class="data-index">04 · PRIORITY</div><h3>Lowest criterion</h3><p>The weakest demonstrated area becomes the immediate training priority.</p></article>
+          <article class="data-card"><div class="data-index">05 · ACTION</div><h3>Next action and practice task</h3><p>Feedback is converted into a small, executable next step.</p></article>
+          <article class="data-card"><div class="data-index">06 · REVIEW</div><h3>Readiness and trainer review</h3><p>Automated evaluation can sit alongside trainer judgement and follow-up.</p></article>
+        </div>
+        <div class="principle"><strong>CLARION does not treat every submission as proof of progress.</strong> A progress claim requires a valid baseline, a comparable reassessment and enough participation to support the comparison.</div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="wrap cta-box">
+        <div class="cta-copy">
+          <h2>Practise. See the gap. Improve the next attempt.</h2>
+          <p>Open the current CLARION application, or request a demonstration for a programme or institution.</p>
+        </div>
+        <div class="cta-actions">
+          <a class="button button-light" href="./app/">Try the demo</a>
+          <a class="button button-dark" href="./app/">Login to CLARION <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-row">
+      <div>CLARION · Managerial Communication Performance · Powered by TELW</div>
+      <div class="footer-links"><a href="#how">How it works</a><a href="./app/">Login</a><a href="./app/">Try demo</a></div>
+    </div>
+  </footer>
+</body>
+</html>
