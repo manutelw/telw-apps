@@ -4368,7 +4368,26 @@ sub.criteria =
           : {}
       );
 
-// Preserve the overall feedback paragraph separately.
+// Preserve detailed worked / weak / fix feedback for every criterion.
+sub.criterionFeedback =
+  (
+    sub.criterionFeedback &&
+    typeof sub.criterionFeedback === 'object' &&
+    Object.keys(sub.criterionFeedback).length
+  )
+    ? sub.criterionFeedback
+    : (
+        result && result.criterionFeedback
+          ? result.criterionFeedback
+          : (
+              result &&
+              result.feedback &&
+              typeof result.feedback === 'object'
+                ? result.feedback
+                : {}
+            )
+      );
+  // Preserve the overall feedback paragraph separately.
 sub.overallFeedback =
   sub.overallFeedback ||
   (
@@ -4523,11 +4542,16 @@ function _pushSubmissionToBackend(sub){
       '',
 
     criteria:
-      JSON.stringify(
-        sub.criteria || {}
-      ),
+  JSON.stringify(
+    sub.criteria || {}
+  ),
 
-    feedback:
+criterionFeedback:
+  JSON.stringify(
+    sub.criterionFeedback || {}
+  ),
+
+feedback:
       sub.overallFeedback ||
       sub.feedback ||
       '',
