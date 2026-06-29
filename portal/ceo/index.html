@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#17130f">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>CLARION · CEO Dashboard</title>
+<title>CLARION · Admin Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
@@ -38,15 +38,15 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}.hidden{d
 <body>
 <div class="shell">
 <header class="topbar">
-  <div class="brand"><div class="brand-mark">C</div><div><div class="brand-title">Clarion</div><div class="brand-sub">Executive communication-readiness dashboard</div></div></div>
-  <div class="top-actions"><a class="btn btn-ghost" href="/" id="siteBtn"><span>Website</span> ↗</a><button class="btn btn-ghost hidden" id="logoutBtn">Sign out</button></div>
+  <div class="brand"><div class="brand-mark">C</div><div><div class="brand-title">Clarion</div><div class="brand-sub">Admin communication-readiness dashboard</div></div></div>
+  <div class="top-actions"><a class="btn btn-ghost" href="./users/"><span>Manage users</span> →</a><a class="btn btn-ghost" href="/" id="siteBtn"><span>Website</span> ↗</a><button class="btn btn-ghost hidden" id="logoutBtn">Sign out</button></div>
 </header>
 
 <section id="loginScreen" class="login-wrap">
   <div class="login-card">
     <div class="login-intro">
       <div>
-        <div class="login-kicker">CEO</div>
+        <div class="login-kicker">Admin</div>
         <h1>See participation, readiness and evidence at institution level.</h1>
         <p>A concise management view of reach, module performance, comparable reassessment and areas requiring intervention.</p>
         <div class="login-points">
@@ -58,19 +58,19 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}.hidden{d
       <div class="login-kicker">TELW · The English Workshop</div>
     </div>
     <div class="login-panel" id="signInPanel">
-      <h2>CEO sign in</h2>
-      <p class="lead">Use the authorised CEO email and Supabase password.</p>
+      <h2>Admin sign in</h2>
+      <p class="lead">Use the authorised Admin email and Supabase password.</p>
       <form id="loginForm">
-        <div class="field"><label for="username">CEO email</label><input id="username" type="email" autocomplete="username" placeholder="name@institution.org" required></div>
+        <div class="field"><label for="username">Admin email</label><input id="username" type="email" autocomplete="username" placeholder="name@institution.org" required></div>
         <div class="field"><label for="password">Password</label><div class="password-wrap"><input id="password" type="password" autocomplete="current-password" required><button class="eye" id="eyeBtn" type="button" aria-label="Show password">◉</button></div></div>
         <button class="btn btn-primary login-submit" id="loginBtn" type="submit">Sign in →</button>
         <button class="auth-link" id="forgotBtn" type="button">Forgot password?</button>
         <div class="form-error" id="loginError"></div><div class="form-success" id="recoveryMessage"></div>
       </form>
-      <div class="security-note">A fresh sign-in is required whenever the page is opened or refreshed. The profile role must be CEO or admin.</div>
+      <div class="security-note">A fresh sign-in is required whenever the page is opened or refreshed. The profile role must be Admin or CEO.</div>
     </div>
     <div class="login-panel hidden" id="resetPanel">
-      <h2>Set a new password</h2><p class="lead">Enter the new Supabase password for this CEO account.</p>
+      <h2>Set a new password</h2><p class="lead">Enter the new Supabase password for this Admin account.</p>
       <form id="resetForm">
         <div class="field"><label for="newPassword">New password</label><input id="newPassword" type="password" autocomplete="new-password" required></div>
         <div class="field"><label for="confirmPassword">Confirm new password</label><input id="confirmPassword" type="password" autocomplete="new-password" required></div>
@@ -87,7 +87,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}.hidden{d
 
 <main class="main hidden" id="dashboard">
   <section class="hero">
-    <div class="hero-main"><div class="eyebrow">CEO dashboard</div><h1 id="ceoName">Executive view</h1><div class="hero-meta" id="ceoMeta">Institution-wide communication-readiness evidence</div></div>
+    <div class="hero-main"><div class="eyebrow">Admin dashboard</div><h1 id="ceoName">Executive view</h1><div class="hero-meta" id="ceoMeta">Institution-wide communication-readiness evidence</div></div>
     <div class="hero-side"><div class="hero-side-label">Evidence rule</div><div class="hero-side-value">Comparable attempts only</div><div class="hero-side-copy">A baseline is not improvement. Movement is shown only when the same student has a comparable reassessment in the same module.</div></div>
   </section>
 
@@ -119,7 +119,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}.hidden{d
   <section class="panel"><div class="action-list" id="actionList"></div><div class="empty hidden" id="actionEmpty">No students currently meet the follow-up rule in this view.</div></section>
 </main>
 
-<footer class="footer"><strong>CLARION</strong> · Executive reporting from the central Supabase store</footer>
+<footer class="footer"><strong>CLARION</strong> · Admin reporting from the central Supabase store</footer>
 <div class="toast" id="toast"></div>
 </div>
 <script>
@@ -179,10 +179,10 @@ function renderBatches(){const names=[...new Set(state.filteredStudents.map(p=>b
 function renderActions(){const list=state.summaries.filter(s=>['Incomplete','No improvement visible'].includes(s.status)).sort((a,b)=>{const order={'Incomplete':0,'No improvement visible':1};return order[a.status]-order[b.status]||((a.average??99)-(b.average??99))}).slice(0,15);el('actionEmpty').classList.toggle('hidden',list.length>0);el('actionList').innerHTML=list.map(s=>`<div class="action-row"><div><div class="student-name">${esc(s.profile.full_name||'Unnamed student')}</div><div class="student-code">${esc(s.profile.student_code||'No Student ID')}</div></div><div>${esc(s.batch)}</div><div>${badge(s.status)}</div><div class="score">${s.latest?one(s.latest.overall_score):'—'}</div></div>`).join('')}
 function populateFilters(){const names=[...new Set(state.students.map(p=>batchName(p.batch_id)))].sort();el('batchFilter').innerHTML='<option value="all">All batches</option>'+names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}
 function downloadCsv(){const rows=[['Batch','Students','Participating','Participation %','Scored Attempts','Average Score','Improvement Visible','Attention Needed']];const names=[...new Set(state.filteredStudents.map(p=>batchName(p.batch_id)))].sort();names.forEach(name=>{const students=state.filteredStudents.filter(p=>batchName(p.batch_id)===name),summaries=state.summaries.filter(s=>s.batch===name),subs=state.filteredSubmissions.filter(s=>students.some(p=>p.id===s.student_id)),ev=subs.filter(s=>num(s.overall_score)!==null&&!s.evaluation_error),participating=summaries.filter(s=>s.all.length>0).length,improved=summaries.filter(s=>s.status==='Improvement visible').length,attention=summaries.filter(s=>['Incomplete','No improvement visible'].includes(s.status)).length;rows.push([name,students.length,participating,students.length?(participating/students.length*100).toFixed(1):'',ev.length,ev.length?one(avg(ev.map(s=>s.overall_score))):'',improved,attention])});const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='CLARION_CEO_summary_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url)}
-async function loadCentralData(user){const me=await db.from('profiles').select('id,student_code,full_name,email,role,batch_id,access_type,active').eq('id',user.id).single();if(me.error)throw me.error;const profile=me.data,role=String(profile&&profile.role||'').toLowerCase();if(!profile||profile.active===false)throw new Error('Account inactive.');if(!['ceo','admin'].includes(role)){await db.auth.signOut();throw new Error('This page is for CEO or admin accounts only.')}state.ceo=profile;state.students=(await fetchAll('profiles','id,student_code,full_name,email,role,batch_id,access_type,active','full_name')).filter(p=>String(p.role||'').toLowerCase()==='student'&&p.active!==false);state.submissions=(await fetchAll('submissions','id,student_id,module_type,overall_score,structure_clarity,content_depth_evidence,business_thinking,communication_professionalism,composure_under_pressure,criteria,flag,processing_status,evaluation_error,trainer_review_status,raw_evaluation,submitted_at','submitted_at')).map(s=>({...s,_module:normalizeModule(s.module_type)}));state.batches={};const b=await db.from('batches').select('*');if(!b.error)(b.data||[]).forEach(x=>{state.batches[x.id]=x.name||x.batch_name||x.code||x.label||x.title||x.id});el('ceoName').textContent=profile.full_name||'Executive view';el('ceoMeta').textContent=(profile.email||'Authorised CEO account')+' · read-only central reporting';populateFilters();renderDashboard();setScreen('dashboard')}
-async function login(e){e.preventDefault();const email=el('username').value.trim().toLowerCase(),password=el('password').value,btn=el('loginBtn'),err=el('loginError');err.textContent='';el('recoveryMessage').textContent='';if(!email||!password){err.textContent='Enter the CEO email and password.';return}btn.disabled=true;btn.textContent='Signing in…';try{const auth=await db.auth.signInWithPassword({email,password});if(auth.error)throw auth.error;setScreen('loading');await loadCentralData(auth.data.user)}catch(ex){await db.auth.signOut().catch(()=>{});showSignInScreen();err.textContent=(ex&&ex.message&&!String(ex.message).toLowerCase().includes('invalid login'))?ex.message:'Incorrect CEO email or password.'}finally{btn.disabled=false;btn.textContent='Sign in →'}}
-async function sendRecovery(){const email=el('username').value.trim().toLowerCase(),btn=el('forgotBtn'),err=el('loginError'),msg=el('recoveryMessage');err.textContent='';msg.textContent='';if(!email||!email.includes('@')){err.textContent='Enter the authorised CEO email first.';return}btn.disabled=true;btn.textContent='Sending reset email…';try{const r=await db.auth.resetPasswordForEmail(email,{redirectTo:'https://clarionprep.com/portal/ceo/'});if(r.error)throw r.error;msg.textContent='Password reset email sent. Open the newest email and use its link.'}catch(ex){err.textContent=ex&&ex.message?ex.message:'The reset email could not be sent.'}finally{btn.disabled=false;btn.textContent='Forgot password?'}}
-async function saveNewPassword(e){e.preventDefault();const p=el('newPassword').value,c=el('confirmPassword').value,btn=el('resetBtn'),err=el('resetError');err.textContent='';if(p.length<6){err.textContent='Use at least 6 characters.';return}if(p!==c){err.textContent='The two passwords do not match.';return}btn.disabled=true;btn.textContent='Saving…';try{const r=await db.auth.updateUser({password:p});if(r.error)throw r.error;await db.auth.signOut();recoveryPending=false;history.replaceState({},document.title,location.pathname);showSignInScreen('Password updated. Sign in with the CEO email and new password.')}catch(ex){err.textContent=ex&&ex.message?ex.message:'The new password could not be saved. Request a fresh recovery email.'}finally{btn.disabled=false;btn.textContent='Save new password'}}
+async function loadCentralData(user){const me=await db.from('profiles').select('id,student_code,full_name,email,role,batch_id,access_type,active').eq('id',user.id).single();if(me.error)throw me.error;const profile=me.data,role=String(profile&&profile.role||'').toLowerCase();if(!profile||profile.active===false)throw new Error('Account inactive.');if(!['ceo','admin'].includes(role)){await db.auth.signOut();throw new Error('This page is for CEO or admin accounts only.')}state.ceo=profile;state.students=(await fetchAll('profiles','id,student_code,full_name,email,role,batch_id,access_type,active','full_name')).filter(p=>String(p.role||'').toLowerCase()==='student'&&p.active!==false);state.submissions=(await fetchAll('submissions','id,student_id,module_type,overall_score,structure_clarity,content_depth_evidence,business_thinking,communication_professionalism,composure_under_pressure,criteria,flag,processing_status,evaluation_error,trainer_review_status,raw_evaluation,submitted_at','submitted_at')).map(s=>({...s,_module:normalizeModule(s.module_type)}));state.batches={};const b=await db.from('batches').select('*');if(!b.error)(b.data||[]).forEach(x=>{state.batches[x.id]=x.name||x.batch_name||x.code||x.label||x.title||x.id});el('ceoName').textContent=profile.full_name||'Executive view';el('ceoMeta').textContent=(profile.email||'Authorised Admin account')+' · read-only central reporting';populateFilters();renderDashboard();setScreen('dashboard')}
+async function login(e){e.preventDefault();const email=el('username').value.trim().toLowerCase(),password=el('password').value,btn=el('loginBtn'),err=el('loginError');err.textContent='';el('recoveryMessage').textContent='';if(!email||!password){err.textContent='Enter the Admin email and password.';return}btn.disabled=true;btn.textContent='Signing in…';try{const auth=await db.auth.signInWithPassword({email,password});if(auth.error)throw auth.error;setScreen('loading');await loadCentralData(auth.data.user)}catch(ex){await db.auth.signOut().catch(()=>{});showSignInScreen();err.textContent=(ex&&ex.message&&!String(ex.message).toLowerCase().includes('invalid login'))?ex.message:'Incorrect Admin email or password.'}finally{btn.disabled=false;btn.textContent='Sign in →'}}
+async function sendRecovery(){const email=el('username').value.trim().toLowerCase(),btn=el('forgotBtn'),err=el('loginError'),msg=el('recoveryMessage');err.textContent='';msg.textContent='';if(!email||!email.includes('@')){err.textContent='Enter the authorised Admin email first.';return}btn.disabled=true;btn.textContent='Sending reset email…';try{const r=await db.auth.resetPasswordForEmail(email,{redirectTo:'https://clarionprep.com/portal/ceo/'});if(r.error)throw r.error;msg.textContent='Password reset email sent. Open the newest email and use its link.'}catch(ex){err.textContent=ex&&ex.message?ex.message:'The reset email could not be sent.'}finally{btn.disabled=false;btn.textContent='Forgot password?'}}
+async function saveNewPassword(e){e.preventDefault();const p=el('newPassword').value,c=el('confirmPassword').value,btn=el('resetBtn'),err=el('resetError');err.textContent='';if(p.length<6){err.textContent='Use at least 6 characters.';return}if(p!==c){err.textContent='The two passwords do not match.';return}btn.disabled=true;btn.textContent='Saving…';try{const r=await db.auth.updateUser({password:p});if(r.error)throw r.error;await db.auth.signOut();recoveryPending=false;history.replaceState({},document.title,location.pathname);showSignInScreen('Password updated. Sign in with the Admin email and new password.')}catch(ex){err.textContent=ex&&ex.message?ex.message:'The new password could not be saved. Request a fresh recovery email.'}finally{btn.disabled=false;btn.textContent='Save new password'}}
 async function logout(){await db.auth.signOut();state={ceo:null,students:[],submissions:[],batches:{},filteredStudents:[],filteredSubmissions:[],summaries:[]};el('password').value='';showSignInScreen()}
 async function refreshData(){if(!state.ceo)return;el('refreshBtn').disabled=true;try{const u=await db.auth.getUser();if(!u.data.user)throw new Error('Session unavailable. Sign in again.');setScreen('loading');await loadCentralData(u.data.user);showToast('Central records refreshed.')}catch(ex){await logout();el('loginError').textContent=ex.message||'Please sign in again.'}finally{el('refreshBtn').disabled=false}}
 db.auth.onAuthStateChange((event)=>{if(event==='PASSWORD_RECOVERY'){recoveryPending=true;setTimeout(showResetScreen,0)}});
