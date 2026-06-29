@@ -7901,13 +7901,6 @@ function closeModal(){document.getElementById('overlay').classList.remove('on');
 // ════════════════════════════════════════════════
 function renderDiagnostic(){
   if(S.role==='admin'){nav('adm-dash');return;}
-  const access=S.user?.accessType||'lum';
-  if(access!=='diagnostic'&&S.role!=='admin'){
-    set('<div class="ph"><div class="ph-title">Diagnostic</div></div>'+
-      '<div class="banner banner-info"><span class="banner-ic">🔒</span><div><div class="banner-title">Access restricted</div>'+
-      '<div class="banner-sub">The Diagnostic bank is for assessment-track students. Contact your trainer.</div></div></div>');
-    return;
-  }
   const email=S.user.email;
   const subs=getDiagSubs(email);
   const done=Object.keys(subs).length;
