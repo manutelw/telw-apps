@@ -6099,9 +6099,29 @@ function _fetchReviewSubmissions(){
     .then(function(data){
       const rows = (data && (data.submissions||data.rows||data.data)) || [];
       return rows.map(function(r){
-        let crit={}, fb={};
-        try{ crit = typeof r.criteria==='string' ? JSON.parse(r.criteria||'{}') : (r.criteria||{}); }catch(_){}
-        try{ fb   = typeof r.feedback==='string' ? JSON.parse(r.feedback||'{}') : (r.feedback||{}); }catch(_){}
+               let crit={}, fb={};
+
+        try{
+          crit = typeof r.criteria==='string'
+            ? JSON.parse(r.criteria||'{}')
+            : (r.criteria||{});
+        }catch(_){
+          crit={};
+        }
+
+        try{
+          const rawFb =
+            r.criterionFeedback ||
+            r.criterion_feedback ||
+            r.feedback ||
+            {};
+
+          fb = typeof rawFb==='string'
+            ? JSON.parse(rawFb||'{}')
+            : (rawFb||{});
+        }catch(_){
+          fb={};
+        }
         const mt = r.moduleType||r.type||'LUM';
         return { studentId:r.studentId||'', studentName:r.studentName||r.studentId||'(unknown)',
                  email:r.email||'', batch:r.batch||'',
