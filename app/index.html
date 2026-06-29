@@ -8586,8 +8586,9 @@ async function submitPlacement(){
   const backNav=bank==='ppi'?'stu-ppi':'stu-pgd';
   const typeLabel=bank==='ppi'?'Placement PI':'Placement GD';
 
-  await _runSubmit({
+    await _runSubmit({
     proc,
+    moduleType: bank==='ppi' ? 'PI' : 'GD',
     driveLabel: plcBank+'_q'+q.num+'_'+new Date().toISOString().split('T')[0],
     rubricPrompt: RUBRIC_PROMPT.replace('{COACH}','').replace('{CANDO}','').replace('{Q}',q.text).replace('{T}','{T}'),
     backBtn: '<div style="margin-top:14px"><button class="btn-secondary" data-nav="'+backNav+'" onclick="nav(this.dataset.nav)">← Back to '+typeLabel+'</button></div>',
