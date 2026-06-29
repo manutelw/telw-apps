@@ -1874,14 +1874,9 @@ async function autoOpsResendFailed(){
 
 // ── Start / stop periodic auto-sync ──────────────────────────────────────────
 function autoOpsStartTimer(){
+  // Manual-sync mode: never refresh the current page automatically.
   autoOpsStopTimer();
-  const intervalMin = parseInt(localStorage.getItem('clarion_autoops_interval') || '0', 10);
-  if(intervalMin > 0){
-    _autoOpsTimer = setInterval(function(){
-      autoOpsSyncNow(true);
-    }, intervalMin * 60 * 1000);
-    console.log('[AutoOps] Periodic sync started: every '+intervalMin+' min');
-  }
+  localStorage.setItem('clarion_autoops_interval','0');
 }
 
 function autoOpsStopTimer(){
@@ -2274,11 +2269,6 @@ function _finishAdminLogin(bootstrapMode){
   buildSidebar();
   loadRegistry();
 
-  // Kick off AutoOps sync and cloud config load in the background on every admin/trainer login
-  setTimeout(function(){ autoOpsSyncNow(true); }, 1200);
-  setTimeout(function(){ _cloudConfigLoad(); }, 1800);  // load cloud URLs silently after login
-  autoOpsStartTimer();
-
   if(bootstrapMode){
     nav('adm-setup');
     toast('Bootstrap mode — configure the Admin Script URL to continue.', 'ok');
@@ -2526,8 +2516,6 @@ function loginLegacy(){
     }catch(e){}
     S.user={email:TRAINER_EMAIL,name:TRAINER_NAME,role:'trainer',id:'T001',batch:''};S.role='trainer';
     finishLogin();
-    // Background sync from sheet on every trainer login — keeps student list fresh
-    setTimeout(function(){ triggerSheetSync(false); }, 800);
     return;
   }
 
@@ -3090,26 +3078,19 @@ async function login(){
       } else {
         const acc=S.user?.accessType||'lum';
         if(acc==='demo'){
-          // Student enrolled with demo accessType — show demo sidebar and demo questions only
+          // Demo accounts remain restricted to Demo.
           document.getElementById('sidebar').innerHTML=
             '<div class="nav-grp">Demo Mode</div>'+
             '<div class="nav-item on" id="ni-stu-demo" data-id="stu-demo" onclick="nav(this.dataset.id)">'+
             '<span class="nav-ic">🎬</span>Demo</div>';
           nav('stu-demo');
-        } else if(acc==='diagnostic'){
-          nav('stu-diag');
         } else {
-          nav('stu-home');
+          nav('stu-diag');
         }
       }
     }
     const btn=document.querySelector('.btn-auth');
     if(btn){btn.textContent='Sign in →';btn.disabled=false;}
-    // For trainer/admin logins: kick off AutoOps sync in background
-    if(S.role==='trainer' || S.role==='admin'){
-      setTimeout(function(){ autoOpsSyncNow(true); }, 1200);
-      autoOpsStartTimer();
-    }
   }catch(e){console.error(e);toast('Login error: '+e.message,'err');const btn=document.querySelector('.btn-auth');if(btn){btn.textContent='Sign in →';btn.disabled=false;}}
 }
 function logout(){
@@ -3158,12 +3139,12 @@ function logout(){
 // NAV
 // ════════════════════════════════════════════════
 const STU_NAV=[
-  {id:'stu-diag',    ic:'🔬', lbl:'Diagnostic',              grp:'Practice'},
-  {id:'stu-home',    ic:'🎙', lbl:'Managerial Communication', grp:'Practice'},
-  {id:'stu-ppi',     ic:'🎯', lbl:'PI',                      grp:'Practice'},
-  {id:'stu-pgd',     ic:'💬', lbl:'GD',                      grp:'Practice'},
-  {id:'stu-advpi',   ic:'🔥', lbl:'Advanced PI',             grp:'Practice'},
-  {id:'stu-dash',    ic:'📊', lbl:'My Progress',             grp:'Progress'},
+  {id:'stu-diag',    ic:'🔬', lbl:'Diagnostic',               grp:'Practice'},
+  {id:'stu-bank',    ic:'🎙', lbl:'Managerial Communication', grp:'Practice'},
+  {id:'stu-ppi',     ic:'🎯', lbl:'PI',                       grp:'Practice'},
+  {id:'stu-pgd',     ic:'💬', lbl:'GD',                       grp:'Practice'},
+  {id:'stu-advpi',   ic:'🔥', lbl:'Advanced PI',              grp:'Practice'},
+  {id:'stu-dash',    ic:'📊', lbl:'My Progress',              grp:'Progress'},
 ];
 const ADM_NAV=[
   {id:'adm-dash',     ic:'📊', lbl:'Dashboard'},
@@ -3210,18 +3191,12 @@ function buildSidebar(){
       return;
     }
 
-    let allowedIds;
-    if(access==='diagnostic'){
-      allowedIds=['stu-diag','stu-dash'];
-    } else if(access==='placement'){
-      // Only today's scheduled task nav item + Advanced PI if unlocked
-      allowedIds=['stu-home','stu-dash'];
-      if(getAdvPIAccess(S.user.email)) allowedIds.splice(1,0,'stu-advpi');
-    } else {
-      // lum (and any unrecognised fallback) — today's question + dashboard only.
-      // Full practice bank is NOT accessible to LUM students; they see only
-      // the daily assigned question via renderHome().
-      allowedIds=['stu-home','stu-dash'];
+    // Every normal student can choose the four core CLARION modules.
+    // Advanced PI remains separately controlled for selected students.
+    // Legacy accessType values remain stored for reporting only.
+    const allowedIds=['stu-diag','stu-bank','stu-ppi','stu-pgd','stu-dash'];
+    if(getAdvPIAccess(S.user.email)){
+      allowedIds.splice(4,0,'stu-advpi');
     }
     const visibleItems=items.filter(function(i){return allowedIds.includes(i.id);});
     visibleItems.forEach(function(i){
@@ -3234,9 +3209,7 @@ function buildSidebar(){
         if(diagFinished) badge='<span style="margin-left:auto;font-family:var(--mono);font-size:.6rem;color:var(--green);background:var(--green-bg);padding:1px 6px;border-radius:10px">Done</span>';
         else badge='<span style="margin-left:auto;font-family:var(--mono);font-size:.6rem;color:var(--gold);background:var(--gold-bg);padding:1px 6px;border-radius:10px">'+diagDone+'/'+diagTotal+'</span>';
       }
-      let itemLbl=i.lbl;
-if(access==='placement' && i.id==='stu-home') itemLbl='PI/GD';
-html+='<div class="nav-item" id="ni-'+i.id+'" data-id="'+i.id+'" onclick="nav(this.dataset.id)"><span class="nav-ic">'+i.ic+'</span>'+itemLbl+badge+'</div>';
+      html+='<div class="nav-item" id="ni-'+i.id+'" data-id="'+i.id+'" onclick="nav(this.dataset.id)"><span class="nav-ic">'+i.ic+'</span>'+i.lbl+badge+'</div>';
     });
     document.getElementById('sidebar').innerHTML=html;
   }
@@ -3280,10 +3253,8 @@ function _safeDefaultPage(){
   }
   if(S.role==='admin' || S.role==='trainer')  return 'adm-dash';
   if(S.role==='demo')   return 'stu-demo';
-  // student — same logic as sidebar
-  const acc = S.user?.accessType||'lum';
-  if(acc==='diagnostic') return 'stu-diag';
-  return 'stu-home';
+  // Normal students start at Diagnostic; all modules remain available.
+  return 'stu-diag';
 }
 
 function nav(id){
@@ -3319,16 +3290,6 @@ function nav(id){
     const safe = _safeDefaultPage();
     if(safe && safe !== id) nav(safe);
     return;
-  }
-  // Access-type guard: 'stu-bank' is only for non-LUM student roles
-  if(id==='stu-bank' && S.role==='student'){
-    const acc = S.user?.accessType||'lum';
-    if(acc==='lum' || acc==='diagnostic'){
-      console.warn('[CLARION] nav blocked: accessType='+acc+' tried stu-bank');
-      const safe = _safeDefaultPage();
-      if(safe && safe !== id) nav(safe);
-      return;
-    }
   }
   // Demo role (or student with demo accessType) may only access stu-demo
   const _isDemoAccess = S.role==='demo' ||
@@ -3413,84 +3374,8 @@ function getPlacementTask(email){
 
 function renderHome(){
   if(S.role==='admin'){nav('adm-dash');return;}
-  const access=S.user?.accessType||'lum';
-
-  // Demo-accessType student: must never see LUM question — redirect to demo view
-  if(access==='demo'){nav('stu-demo');return;}
-
-  // Diagnostic-only users: redirect wall
-  if(access==='diagnostic'){
-    set('<div class="ph"><div class="ph-title">Today\'s Question</div></div>'+
-      '<div class="banner banner-info"><span class="banner-ic">🔒</span><div><div class="banner-title">Access restricted</div>'+
-      '<div class="banner-sub">Your account is set to Diagnostic. Contact your trainer to enable practice.</div></div></div>');
-    return;
-  }
-
-  // Placement: show today's scheduled task
-  if(access==='placement'){
-    const task=getPlacementTask(S.user?.email);
-    if(task.mode==='empty'){
-      set('<div class="ph"><div class="ph-title">Today\'s Task</div></div>'+
-        '<div class="banner banner-info"><span class="banner-ic">⏳</span><div><div class="banner-title">No questions yet</div>'+
-        '<div class="banner-sub">Your trainer is adding questions. Check back shortly.</div></div></div>');
-      return;
-    }
-    if(task.mode==='lum'){
-      // Fall through to LUM rendering below
-    } else {
-      // PI or GD placement task
-      const q=task.q;
-      const today=new Date().toISOString().split('T')[0];
-      const subKey='placement_'+task.bank+'_'+today;
-      const existing=getSubs(S.user.email)[subKey];
-      S.currentQ=q; S.currentBank=task.bank;
-      S.recorded=false;S.recording=false;S.recSecs=0;S.recLimit=q.limit||60;S.audioBlob=null;S.audioEl=null;
-      const typeLabel=task.type==='PI'?'PI':'GD';
-      set(
-        '<div class="ph"><div class="ph-title">Today\'s Task</div>'+
-        '<div class="ph-sub">'+task.dayLabel+' · Scheduled for today</div></div>'+
-        '<div class="q-hero">'+
-          '<span class="q-badge '+(task.type==='PI'?'q-pi':'q-gd')+'">'+typeLabel+'</span>'+
-          '<div class="q-text">'+q.text+'</div>'+
-          '<div class="q-inst"><div class="q-inst-lbl">Instructions</div>'+
-            (q.instructions||[]).map(function(i){return '<div class="q-inst-item">'+i+'</div>';}).join('')+
-          '</div>'+
-          '<div class="q-meta"><span>⏱ '+q.limit+'s max</span><span>🔄 Unlimited attempts</span><span>🤖 AI scored</span></div>'+
-        '</div>'+
-        (existing ? renderScoreHTML(existing,true) : renderRecorderHTML().replace("doSubmitDaily()","submitPlacementDaily()"))+
-        '<div id="proc-area"></div>'
-      );
-      return;
-    }
-  }
-
-  // LUM / Daily Practice (lum access, or placement on weekend)
-  const info = getTodayQuestion(S.user?.email);
-  const q    = info.q;
-  const today = new Date().toISOString().split('T')[0];
-  const subKey = 'daily_'+today;
-  const existing = getSubs(S.user.email)[subKey];
-  const dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const dayName = dayNames[new Date().getDay()];
-
-  S.currentQ = q;
-  S.recorded=false;S.recording=false;S.recSecs=0;S.recLimit=60;S.audioBlob=null;S.audioEl=null;
-
-  set(
-    '<div class="ph"><div class="ph-title">Managerial Communication</div>'+
-    '<div class="ph-sub">'+(access==='placement'?'Weekend · LUM Practice · ':'')+''+dayName+' · '+info.type+' · Session '+(info.idx+1)+' of '+info.bankLen+'</div></div>'+
-    '<div class="q-hero">'+
-      '<span class="q-badge '+(info.type==='PI'?'q-pi':'q-gd')+'">'+info.type+' · TELW '+q.telw+'</span>'+
-      '<div class="q-text">'+q.q+'</div>'+
-      '<div class="q-inst">'+
-        '<div class="q-inst-lbl">Instructions</div>'+
-        q.inst.split('.').filter(function(s){return s.trim();}).map(function(s){return '<div class="q-inst-item">'+s.trim()+'</div>';}).join('')+
-      '</div>'+
-      '<div class="q-meta"><span>⏱ 35–45s ideal · 60s max</span><span>🔒 One attempt</span><span>🤖 AI scored</span></div>'+
-    '</div>'+
-    (existing ? renderScoreHTML(existing, true) : renderRecorderHTML())+
-    '<div id="proc-area"></div>'
-  );
+  if((S.user?.accessType||'')==='demo'){nav('stu-demo');return;}
+  nav('stu-bank');
 }
 
 // ── submitPlacementDaily: scores placement PI/GD task from home page ─────────
@@ -4898,24 +4783,7 @@ async function checkAiHealth(){
 let pbFilter = 'all';
 function renderBank(){
   if(S.role==='admin'){nav('adm-dash');return;}
-  const access=S.user?.accessType||'lum';
-  // LUM students: today's question only — full bank is not part of their workflow
-  if(access==='lum'){
-    nav('stu-home');
-    return;
-  }
-  if(access==='placement'){
-    set('<div class="ph"><div class="ph-title">Practice Bank</div></div>'+
-      '<div class="banner banner-info"><span class="banner-ic">🔒</span><div><div class="banner-title">Access restricted</div>'+
-      '<div class="banner-sub">Your daily PI and GD tasks are scheduled. Check Today\'s Task for your assigned question.</div></div></div>');
-    return;
-  }
-  if(access==='diagnostic'){
-    set('<div class="ph"><div class="ph-title">Practice Bank</div></div>'+
-      '<div class="banner banner-info"><span class="banner-ic">🔒</span><div><div class="banner-title">Access restricted</div>'+
-      '<div class="banner-sub">Your account is set to Diagnostic. Contact your trainer to enable practice.</div></div></div>');
-    return;
-  }
+  if((S.user?.accessType||'')==='demo'){nav('stu-demo');return;}
   _renderBankInner();
 }
 function _renderBankInner(){
@@ -4923,7 +4791,7 @@ function _renderBankInner(){
   const filtered = pbFilter==='all' ? QUESTION_BANK : QUESTION_BANK.filter(q=>q.telw===pbFilter||q.type===pbFilter||q.tag===pbFilter);
   const subs = getSubs(S.user.email);
 
-  set('<div class="ph"><div class="ph-title">Practice Bank</div><div class="ph-sub">'+QUESTION_BANK.length+' questions · Attempt any question anytime</div></div>'+
+  set('<div class="ph"><div class="ph-title">Managerial Communication</div><div class="ph-sub">'+QUESTION_BANK.length+' questions · Choose any question · Unlimited practice</div></div>'+
     '<div class="pb-filters">'+filters.map(f=>'<button class="pb-filter'+(pbFilter===f.k?' on':'')+'" data-k="'+f.k+'" onclick="setPBFilter(this.dataset.k)">'+f.lbl+'</button>').join('')+'</div>'+
     '<div>'+filtered.map(q=>{
       const subKey='practice_q'+q.no;
@@ -6362,18 +6230,6 @@ function renderSetup(){
   const ACCESS_OPTIONS=['lum','placement','diagnostic','demo'];
   const accessColor=function(a){return a==='placement'?'var(--blue)':a==='diagnostic'?'var(--gold)':a==='demo'?'var(--green)':a==='trainer'||a==='admin'?'var(--red)':'var(--muted)';};
 
-  // Trigger a non-blocking cloud config refresh on every Setup page open.
-  // Only runs if AutoOps URL is set; silently no-ops otherwise.
-  // Uses setTimeout so the page renders immediately and the status line
-  // updates in place once the fetch completes.
-  if(!window._cloudConfigRefreshPending){
-    window._cloudConfigRefreshPending = true;
-    setTimeout(function(){
-      window._cloudConfigRefreshPending = false;
-      _refreshCloudConfigOnSetup();
-    }, 60);
-  }
-
   set(
     // ── BOOTSTRAP WARNING — shown only during first-time setup ────────────────
     (S._bootstrapMode ?
@@ -7336,10 +7192,9 @@ function clearAutoOpsUrl(){
 }
 
 function saveAutoOpsInterval(val){
-  localStorage.setItem('clarion_autoops_interval', val);
-  autoOpsStartTimer();
-  toast(val==='0' ? 'Auto-sync off.' : 'Auto-sync every '+val+' min.','ok');
-  renderSetup();
+  localStorage.setItem('clarion_autoops_interval','0');
+  autoOpsStopTimer();
+  toast('Automatic sync is disabled. Use Sync Now when required.','ok');
 }
 
 // ── Search / filter state ─────────────────────────────────────────────────────
@@ -8474,14 +8329,7 @@ function renderDiagnosticReport(emailArg, studentNameArg){
 // PLACEMENT PI — STUDENT VIEW
 // ════════════════════════════════════════════════
 function renderPlacementPI(){
-  // Placement PI bank is only visible to admin/trainer — students always go through today's scheduled task
-  const access=S.user?.accessType||'lum';
-  if(access!=='trainer'&&access!=='admin'&&S.role!=='admin'){
-    set('<div class="ph"><div class="ph-title">Placement PI</div></div>'+
-      '<div class="banner banner-info"><span class="banner-ic">🔒</span><div><div class="banner-title">Access restricted</div>'+
-      '<div class="banner-sub">Placement PI tasks are scheduled through your daily task. Check Today\'s Task for your assigned question.</div></div></div>');
-    return;
-  }
+  if((S.user?.accessType||'')==='demo'){nav('stu-demo');return;}
   const subs=getPPISubs(S.user.email);
   if(PLACEMENT_PI_BANK.length===0){
     set('<div class="ph"><div class="ph-title">Placement PI</div><div class="ph-sub">Personal Interview preparation</div></div>'+
@@ -8510,13 +8358,7 @@ function renderPlacementPI(){
 // PLACEMENT GD — STUDENT VIEW
 // ════════════════════════════════════════════════
 function renderPlacementGD(){
-  const access=S.user?.accessType||'lum';
-  if(access!=='trainer'&&access!=='admin'&&S.role!=='admin'){
-    set('<div class="ph"><div class="ph-title">Placement GD</div></div>'+
-      '<div class="banner banner-info"><span class="banner-ic">🔒</span><div><div class="banner-title">Access restricted</div>'+
-      '<div class="banner-sub">Placement GD tasks are scheduled through your daily task. Check Today\'s Task for your assigned question.</div></div></div>');
-    return;
-  }
+  if((S.user?.accessType||'')==='demo'){nav('stu-demo');return;}
   const subs=getPGDSubs(S.user.email);
   if(PLACEMENT_GD_BANK.length===0){
     set('<div class="ph"><div class="ph-title">Placement GD</div><div class="ph-sub">Group Discussion preparation</div></div>'+
@@ -9175,11 +9017,8 @@ window.onload=()=>{
     try{ await _cloudConfigLoad(); }catch(e){ console.warn('[CLARION] Startup config load:', e.message); }
   }, 500);
 
-  // Background sync on page load — silently refreshes student list from sheet
-  // Does nothing if no sheet URL is configured.
-  setTimeout(function(){ triggerSheetSync(true); }, 2000);
-  // AutoOps background sync — silent, does nothing if URL not configured
-  setTimeout(function(){ autoOpsSyncNow(true); }, 3000);
+  // Student and registry syncs are manual only.
+  // The app never refreshes or re-renders the current page automatically.
   const savedPw=localStorage.getItem('clarion_trainer_pw');
   if(savedPw)window.__trainerPw=savedPw;
   // ── Credential restore on load ───────────────────────────────────────────
