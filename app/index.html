@@ -3489,34 +3489,125 @@ function fallbackCopy(text){
 }
 
 function renderScoreHTML(sub, showBanner){
-  const CRIT_DEFS=[
-    {k:'structure_clarity',    n:'Structure & Clarity'},
-    {k:'content_depth',        n:'Content Depth & Evidence'},
-    {k:'business_thinking',    n:'Business Thinking'},
-    {k:'comm_professionalism', n:'Communication & Professionalism'},
-    {k:'composure',            n:'Composure Under Pressure'},
-  ];
   const c=sub.criteria||{};
   const fb=sub.feedback||{};
   const totalScore=parseFloat(sub.score)||0;
   const isPass=totalScore>=6;
 
-  // Safe sub ID for onclick closures — store in window._lastFbSub
+  const rawType=String(
+    sub.moduleType||
+    sub._displayType||
+    sub.type||
+    ''
+  ).toLowerCase();
+
+  let defs;
+
+  if(
+    rawType.indexOf('diagnostic')!==-1||
+    rawType.indexOf('lum')!==-1||
+    rawType.indexOf('managerial')!==-1
+  ){
+    defs=[
+      {n:'Structure & Clarity',keys:['structure_clarity']},
+      {n:'Business Thinking',keys:['business_thinking']},
+      {n:'Language Control',keys:['language_control']},
+      {n:'Confidence & Delivery',keys:['confidence_delivery']},
+      {n:'Professionalism',keys:['professionalism']}
+    ];
+  }else if(
+    rawType==='gd'||
+    rawType.indexOf('group discussion')!==-1
+  ){
+    defs=[
+      {n:'Entry & Clarity',keys:['structure_clarity']},
+      {n:'Reasoning (Content + Logic)',keys:['content_depth_evidence','content_depth']},
+      {n:'Listening & Response',keys:['business_thinking']},
+      {n:'Leadership Moves',keys:['communication_professionalism','comm_professionalism']},
+      {n:'Composure Under Pressure',keys:['composure_under_pressure','composure']}
+    ];
+  }else{
+    defs=[
+      {n:'Structure & Clarity',keys:['structure_clarity']},
+      {n:'Content Depth & Evidence',keys:['content_depth_evidence','content_depth']},
+      {n:'Business Thinking',keys:['business_thinking']},
+      {n:'Communication & Professionalism',keys:['communication_professionalism','comm_professionalism']},
+      {n:'Composure Under Pressure',keys:['composure_under_pressure','composure']}
+    ];
+  }
+
+  function resolveCriterionKey(keys){
+    for(let i=0;i<keys.length;i++){
+      if(
+        Object.prototype.hasOwnProperty.call(c,keys[i])||
+        Object.prototype.hasOwnProperty.call(fb,keys[i])
+      ){
+        return keys[i];
+      }
+    }
+    return keys[0];
+  }
+
+  const CRIT_DEFS=defs.map(function(def){
+    return {
+      k:resolveCriterionKey(def.keys),
+      n:def.n
+    };
+  });
+
   window._lastFbSub=sub;
 
-  const criteriaRows=CRIT_DEFS.map(function(cr,i){
-    const pts=c[cr.k]||0;
+   const criteriaRows=CRIT_DEFS.map(function(cr,i){
+    const rawPts=c[cr.k];
+    const pts=(rawPts===undefined||rawPts===null||rawPts==='') ? null : Number(rawPts);
+    const hasScore=pts!==null && Number.isFinite(pts);
     const f=fb[cr.k]||{};
-    const pctBar=Math.round(pts/2*100);
+
+    const pctBar=hasScore
+      ? Math.max(0,Math.min(100,Math.round(pts/5*100)))
+      : 0;
+
+    const scoreColour=!hasScore
+      ? 'var(--muted)'
+      : pts>=4
+        ? 'var(--green)'
+        : pts>=3
+          ? 'var(--gold)'
+          : 'var(--red)';
+
+    const scoreText=hasScore
+      ? (Math.round(pts*10)/10)+'/5'
+      : '—';
+
+    const worked=
+      f.worked||
+      f.what_worked||
+      f.strength||
+      'Nothing to note';
+
+    const weak=
+      f.weak||
+      f.what_held_it_back||
+      f.gap||
+      f.weakness||
+      'Nothing to note';
+
+    const fix=
+      f.fix||
+      f.what_to_do_next||
+      f.improvement||
+      f.action||
+      '—';
+
     return '<div class="fb-crit-block">'+
       '<div class="fb-crit-header">'+
         '<span class="fb-crit-title">'+(i+1)+'. '+cr.n+'</span>'+
-        '<span class="fb-crit-score" style="color:'+(pts>=2?'var(--green)':pts===1?'var(--gold)':'var(--red)')+'">'+pts+'/2</span>'+
+        '<span class="fb-crit-score" style="color:'+scoreColour+'">'+scoreText+'</span>'+
       '</div>'+
-      '<div class="crit-bar" style="margin-bottom:8px"><div class="crit-fill" style="width:'+pctBar+'%;background:'+(pts>=2?'var(--green)':pts===1?'var(--gold)':'var(--red)')+'"></div></div>'+
-      '<div class="fb-crit-row"><span class="fb-ic" style="color:var(--green)">✓</span><span>'+(f.worked||'Nothing to note')+'</span></div>'+
-      '<div class="fb-crit-row"><span class="fb-ic" style="color:var(--red)">✗</span><span>'+(f.weak||'Nothing to note')+'</span></div>'+
-      '<div class="fb-crit-row"><span class="fb-ic" style="color:var(--blue)">→</span><span style="color:var(--blue);font-weight:500">'+(f.fix||'—')+'</span></div>'+
+      '<div class="crit-bar" style="margin-bottom:8px"><div class="crit-fill" style="width:'+pctBar+'%;background:'+scoreColour+'"></div></div>'+
+      '<div class="fb-crit-row"><span class="fb-ic" style="color:var(--green)">✓</span><span>'+(worked)+'</span></div>'+
+      '<div class="fb-crit-row"><span class="fb-ic" style="color:var(--red)">✗</span><span>'+(weak)+'</span></div>'+
+      '<div class="fb-crit-row"><span class="fb-ic" style="color:var(--blue)">→</span><span style="color:var(--blue);font-weight:500">'+(fix)+'</span></div>'+
     '</div>';
   }).join('');
 
