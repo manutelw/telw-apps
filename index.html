@@ -178,8 +178,37 @@
       margin-bottom: 30px;
     }
     .hero-copy strong { color: var(--ink); font-weight: 700; }
-    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
-    .hero-note { display: flex; align-items: flex-start; gap: 10px; color: var(--muted); font-size: .8rem; max-width: 530px; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+
+.hero-quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 26px;
+}
+
+.hero-quick-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 15px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: .82rem;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(21, 19, 38, .06);
+  transition: transform .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.hero-quick-links a:hover {
+  color: var(--violet);
+  border-color: rgba(109, 74, 255, .4);
+  transform: translateY(-1px);
+}
+
+.hero-note { display: flex; align-items: flex-start; gap: 10px; color: var(--muted); font-size: .8rem; max-width: 530px; }
     .hero-note strong { color: var(--ink); }
     .note-mark { width: 21px; height: 21px; border-radius: 50%; display: grid; place-items: center; background: var(--gold-soft); color: #9b6900; font-size: .75rem; flex: 0 0 auto; }
 
@@ -418,13 +447,9 @@
           <span class="brand-sub">Managerial Communication Performance</span>
         </span>
       </a>
-      <nav class="nav-links" aria-label="Primary navigation">
-  <a href="#how">How it works</a>
-  <a href="#students">For students</a>
-  <a href="./portal/">Student portal</a>
+     <nav class="nav-links" aria-label="Primary navigation">
+  <a href="./portal/">Students</a>
   <a href="./portal/trainer/">Trainer</a>
-  <a href="#institutions">For institutions</a>
-  <a href="#evidence">What it measures</a>
 </nav>
       <div class="nav-actions">
         <a class="button button-light" href="./app/">Try the demo</a>
@@ -441,8 +466,15 @@
           <h1>Communication readiness, <span class="gradient-word">made visible.</span></h1>
           <p class="hero-copy">CLARION turns a spoken response into a <strong>transcript, criterion-level scores, specific feedback, and one focused next task</strong>—so students know what to improve and trainers can see what has actually changed.</p>
           <div class="hero-actions">
-            <a class="button button-violet" href="./app/">Open CLARION <span aria-hidden="true">→</span></a>
-            <a class="button button-light" href="#how">See how it works</a>
+  <a class="button button-violet" href="./app/">Open CLARION <span aria-hidden="true">→</span></a>
+</div>
+
+<nav class="hero-quick-links" aria-label="Explore CLARION">
+  <a href="#how">How it works</a>
+  <a href="#students">For students</a>
+  <a href="#institutions">For institutions</a>
+  <a href="#evidence">What it measures</a>
+</nav>
           </div>
           <div class="hero-note">
             <span class="note-mark">✓</span>
