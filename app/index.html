@@ -4997,13 +4997,55 @@ function _mpNum(value){
   return Number.isFinite(n)?n:null;
 }
 
-const _MP_CRITERIA=[
-  {label:'Structure & Clarity',column:'structure_clarity',keys:['structure_clarity']},
-  {label:'Content Depth & Evidence',column:'content_depth_evidence',keys:['content_depth_evidence','content_depth']},
-  {label:'Business Thinking',column:'business_thinking',keys:['business_thinking']},
-  {label:'Communication & Professionalism',column:'communication_professionalism',keys:['communication_professionalism','comm_professionalism']},
-  {label:'Composure Under Pressure',column:'composure_under_pressure',keys:['composure_under_pressure','composure']}
-];
+const _MP_CRITERIA_BY_MODULE={
+  DIAGNOSTICS:[
+    {label:'Structure & Clarity',columns:['structure_clarity'],keys:['structure_clarity']},
+    {label:'Business Thinking',columns:['content_depth_evidence'],keys:['business_thinking']},
+    {label:'Language Control',columns:['business_thinking'],keys:['language_control']},
+    {label:'Confidence & Delivery',columns:['communication_professionalism'],keys:['confidence_delivery']},
+    {label:'Professionalism',columns:['composure_under_pressure'],keys:['professionalism']}
+  ],
+  LUM:[
+    {label:'Structure & Clarity',columns:['structure_clarity'],keys:['structure_clarity']},
+    {label:'Business Thinking',columns:['content_depth_evidence'],keys:['business_thinking']},
+    {label:'Language Control',columns:['business_thinking'],keys:['language_control']},
+    {label:'Confidence & Delivery',columns:['communication_professionalism'],keys:['confidence_delivery']},
+    {label:'Professionalism',columns:['composure_under_pressure'],keys:['professionalism']}
+  ],
+  PI:[
+    {label:'Structure & Clarity',columns:['structure_clarity'],keys:['structure_clarity']},
+    {label:'Content Depth & Evidence',columns:['content_depth_evidence'],keys:['content_depth_evidence','content_depth']},
+    {label:'Business Thinking',columns:['business_thinking'],keys:['business_thinking']},
+    {label:'Communication & Professionalism',columns:['communication_professionalism'],keys:['communication_professionalism','comm_professionalism']},
+    {label:'Composure Under Pressure',columns:['composure_under_pressure'],keys:['composure_under_pressure','composure']}
+  ],
+  GD:[
+    {label:'Entry & Clarity',columns:['structure_clarity'],keys:['structure_clarity']},
+    {label:'Reasoning (Content + Logic)',columns:['content_depth_evidence'],keys:['content_depth_evidence','content_depth']},
+    {label:'Listening & Response',columns:['business_thinking'],keys:['business_thinking']},
+    {label:'Leadership Moves',columns:['communication_professionalism'],keys:['communication_professionalism','comm_professionalism']},
+    {label:'Composure Under Pressure',columns:['composure_under_pressure'],keys:['composure_under_pressure','composure']}
+  ]
+};
+
+function _mpModuleCode(row){
+  const raw=_mpRaw(row);
+  const type=String(
+    (row&&(row.module_type||row.moduleType))||
+    raw.module_type||
+    raw.moduleType||
+    ''
+  ).toLowerCase();
+
+  if(type.includes('gd')||type.includes('group discussion')) return 'GD';
+  if(type.includes('pi')||type.includes('personal interview')||type.includes('interview')) return 'PI';
+  if(type.includes('diagnostic')) return 'DIAGNOSTICS';
+  return 'LUM';
+}
+
+function _mpCriteriaForRow(row){
+  return _MP_CRITERIA_BY_MODULE[_mpModuleCode(row)]||_MP_CRITERIA_BY_MODULE.LUM;
+}
 
 function _mpRaw(row){
   const raw=_mpJson(row&&row.raw_evaluation);
@@ -5011,13 +5053,21 @@ function _mpRaw(row){
 }
 
 function _mpCriterionScore(row,criterion){
-  const direct=_mpNum(row&&row[criterion.column]);
-  if(direct!==null) return direct;
   const criteria=_mpJson(row&&row.criteria)||_mpRaw(row).criteria||{};
+
+  // Prefer the module-specific JSON key. The five Supabase score columns are
+  // positional and use different meanings for Diagnostics/LUM, PI, and GD.
   for(const key of criterion.keys){
     const value=_mpNum(criteria&&criteria[key]);
     if(value!==null) return value;
   }
+
+  const columns=criterion.columns||[];
+  for(const column of columns){
+    const direct=_mpNum(row&&row[column]);
+    if(direct!==null) return direct;
+  }
+
   return null;
 }
 
@@ -5115,20 +5165,21 @@ function _mpAttemptHtml(row,previous){
   const attempt=row.attempt_number||'—';
   const overallFeedback=_mpOverallFeedback(row);
   const lowest=_mpField(row,'lowest_criterion','lowestCriterion');
-  const currentScores=_MP_CRITERIA.map(function(c){return _mpCriterionScore(row,c);});
-  const allCriteriaEqual=currentScores.length===_MP_CRITERIA.length&&currentScores.every(function(v){return v!==null&&v===currentScores[0];});
+  const criteriaDefs=_mpCriteriaForRow(row);
+  const currentScores=criteriaDefs.map(function(c){return _mpCriterionScore(row,c);});
+  const allCriteriaEqual=currentScores.length===criteriaDefs.length&&currentScores.every(function(v){return v!==null&&v===currentScores[0];});
   const nextAction=_mpField(row,'next_action','nextAction');
   const practiceTask=_mpField(row,'practice_task','practiceTask');
   const readiness=_mpField(row,'readiness_status','readinessStatus')||_mpRaw(row).readiness_status||'';
 
-  const criterionRows=_MP_CRITERIA.map(function(c){
+  const criterionRows=criteriaDefs.map(function(c){
     const current=_mpCriterionScore(row,c);
     const old=previous?_mpCriterionScore(previous,c):null;
     const delta=current!==null&&old!==null?current-old:null;
     return '<tr><td style="font-size:.82rem;font-weight:600">'+c.label+'</td><td style="font-family:var(--mono);font-weight:700">'+(current===null?'—':current.toFixed(1))+'</td><td>'+_mpDelta(delta,'No comparable score')+'</td></tr>';
   }).join('');
 
-  const feedbackCards=_MP_CRITERIA.map(function(c){
+  const feedbackCards=criteriaDefs.map(function(c){
     const body=_mpFeedbackHtml(row,c);
     if(!body) return '';
     return '<div style="border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-top:9px"><div style="font-size:.82rem;font-weight:700">'+c.label+'</div>'+body+'</div>';
@@ -5207,10 +5258,29 @@ async function renderStudentDash(){
     });
     const improved=deltas.filter(function(d){return d>0;}).length;
 
-    const criterionAverages=_MP_CRITERIA.map(function(c){
-      const values=rows.map(function(row){return _mpCriterionScore(row,c);}).filter(function(v){return v!==null;});
-      return {criterion:c,average:values.length?values.reduce(function(a,b){return a+b;},0)/values.length:null};
-    }).filter(function(x){return x.average!==null;});
+    const criterionBuckets={};
+    rows.forEach(function(row){
+      const moduleCode=_mpModuleCode(row);
+      _mpCriteriaForRow(row).forEach(function(c){
+        const value=_mpCriterionScore(row,c);
+        if(value===null) return;
+        const bucketKey=moduleCode+'|'+c.label;
+        if(!criterionBuckets[bucketKey]){
+          criterionBuckets[bucketKey]={
+            criterion:{label:c.label+' · '+moduleCode},
+            values:[]
+          };
+        }
+        criterionBuckets[bucketKey].values.push(value);
+      });
+    });
+
+    const criterionAverages=Object.values(criterionBuckets).map(function(bucket){
+      return {
+        criterion:bucket.criterion,
+        average:bucket.values.reduce(function(a,b){return a+b;},0)/bucket.values.length
+      };
+    });
     const strongest=criterionAverages.length?criterionAverages.reduce(function(a,b){return b.average>a.average?b:a;}):null;
     const weakest=criterionAverages.length?criterionAverages.reduce(function(a,b){return b.average<a.average?b:a;}):null;
 
