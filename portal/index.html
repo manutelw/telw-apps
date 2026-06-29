@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#17130f">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>CLARION · Student Progress</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --ink:#17130f;
+  --ink2:#292018;
+  --paper:#f8f4ed;
+  --card:#fffdf9;
+  --line:#e7ded1;
+  --muted:#6f675f;
+  --gold:#e5b94f;
+  --orange:#ef7c45;
+  --blue:#3b73c5;
+  --green:#2d8a68;
+  --red:#b84b45;
+  --violet:#7857a6;
+  --shadow:0 16px 44px rgba(48,36,24,.10);
+  --radius:18px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 8% 5%,rgba(229,185,79,.23),transparent 27rem),
+    radial-gradient(circle at 96% 14%,rgba(59,115,197,.14),transparent 28rem),
+    var(--paper);
+  min-height:100vh;
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+a{color:inherit}
+.hidden{display:none!important}
+.shell{min-height:100vh;display:flex;flex-direction:column}
+.topbar{
+  min-height:74px;
+  padding:14px clamp(18px,4vw,54px);
+  background:rgba(23,19,15,.96);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  position:sticky;
+  top:0;
+  z-index:20;
+  box-shadow:0 7px 24px rgba(0,0,0,.13);
+}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-mark{
+  width:44px;height:44px;border-radius:14px;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,var(--gold),#f7d98d);
+  color:var(--ink);font-weight:900;font-size:1.25rem;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.55);
+}
+.brand-title{font-weight:900;letter-spacing:.12em;font-size:1.05rem;text-transform:uppercase}
+.brand-sub{font-size:.75rem;color:rgba(255,255,255,.66);margin-top:2px}
+.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{
+  border:0;border-radius:12px;padding:10px 15px;font-weight:750;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  text-decoration:none;transition:.18s ease;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--gold);color:var(--ink)}
+.btn-dark{background:var(--ink);color:#fff}
+.btn-ghost{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.16)}
+.btn-soft{background:#f0e8dc;color:var(--ink)}
+.login-wrap{
+  min-height:calc(100vh - 74px);
+  display:grid;place-items:center;padding:38px 18px;
+}
+.login-card{
+  width:min(960px,100%);
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:28px;
+  box-shadow:var(--shadow);
+  display:grid;grid-template-columns:1.1fr .9fr;
+  overflow:hidden;
+}
+.login-intro{
+  padding:clamp(34px,6vw,74px);
+  background:
+    linear-gradient(135deg,rgba(229,185,79,.94),rgba(239,124,69,.88)),
+    var(--gold);
+  min-height:520px;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.login-kicker{font-size:.78rem;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
+.login-intro h1{font-size:clamp(2.25rem,6vw,4.7rem);line-height:.94;margin:24px 0 18px;letter-spacing:-.055em}
+.login-intro p{font-size:1.08rem;line-height:1.65;max-width:34rem}
+.login-points{display:grid;gap:12px;margin-top:34px}
+.login-point{display:flex;align-items:flex-start;gap:10px;font-weight:700}
+.dot{width:24px;height:24px;flex:0 0 24px;border-radius:50%;background:rgba(255,255,255,.7);display:grid;place-items:center;font-size:.78rem}
+.login-panel{padding:clamp(30px,5vw,58px);display:flex;flex-direction:column;justify-content:center}
+.login-panel h2{font-size:1.65rem;margin:0 0 8px}
+.login-panel .lead{color:var(--muted);line-height:1.55;margin:0 0 28px}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:.78rem;font-weight:850;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.field input{
+  width:100%;padding:14px 15px;border-radius:12px;border:1px solid #d9cec0;
+  background:#fff;font-size:1rem;outline:none;
+}
+.field input:focus{border-color:var(--orange);box-shadow:0 0 0 4px rgba(239,124,69,.12)}
+.password-wrap{position:relative}
+.password-wrap input{padding-right:48px}
+.eye{
+  position:absolute;right:8px;top:7px;width:36px;height:36px;border:0;background:transparent;border-radius:8px
+}
+.remember{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:.9rem;margin:3px 0 20px}
+.login-submit{width:100%;padding:14px 18px}
+.form-error{min-height:22px;color:var(--red);font-weight:700;font-size:.88rem;margin-top:12px}
+.security-note{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);font-size:.79rem;line-height:1.5;color:var(--muted)}
+.main{
+  width:min(1480px,100%);
+  margin:0 auto;
+  padding:30px clamp(16px,3vw,42px) 60px;
+}
+.hero{
+  display:grid;grid-template-columns:minmax(0,1.3fr) minmax(260px,.7fr);
+  gap:20px;margin-bottom:20px;
+}
+.hero-main,.hero-position,.panel,.module-card,.history-card{
+  background:rgba(255,253,249,.94);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:0 10px 30px rgba(48,36,24,.065);
+}
+.hero-main{
+  padding:clamp(24px,4vw,42px);
+  position:relative;overflow:hidden;
+  background:
+    linear-gradient(130deg,rgba(255,253,249,.97),rgba(255,247,229,.91));
+}
+.hero-main:after{
+  content:"";position:absolute;width:230px;height:230px;border-radius:50%;
+  background:rgba(229,185,79,.23);right:-70px;bottom:-110px;
+}
+.eyebrow{font-size:.74rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--orange)}
+.hero h1{font-size:clamp(2rem,4vw,3.75rem);line-height:1;margin:10px 0 13px;letter-spacing:-.045em;position:relative;z-index:1}
+.hero-meta{color:var(--muted);font-weight:650;position:relative;z-index:1}
+.hero-position{padding:26px;background:var(--ink);color:#fff;display:flex;flex-direction:column;justify-content:center}
+.position-label{font-size:.74rem;text-transform:uppercase;letter-spacing:.13em;color:rgba(255,255,255,.58);font-weight:850}
+.position-score{font-size:3.5rem;font-weight:900;line-height:1;margin:12px 0 9px;color:var(--gold)}
+.position-score small{font-size:1rem;color:rgba(255,255,255,.55)}
+.position-band{font-size:1.05rem;font-weight:800;line-height:1.35}
+.position-note{font-size:.82rem;color:rgba(255,255,255,.62);line-height:1.45;margin-top:8px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat{
+  background:var(--card);border:1px solid var(--line);border-radius:15px;padding:19px;
+}
+.stat-label{color:var(--muted);font-size:.74rem;font-weight:850;text-transform:uppercase;letter-spacing:.08em}
+.stat-value{font-size:1.75rem;font-weight:900;margin-top:7px}
+.stat-sub{font-size:.77rem;color:var(--muted);margin-top:3px}
+.section-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;margin:30px 0 14px}
+.section-head h2{margin:0;font-size:1.55rem}
+.section-head p{margin:5px 0 0;color:var(--muted);font-size:.9rem}
+.module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.module-card{padding:22px;position:relative;overflow:hidden}
+.module-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--module)}
+.module-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.module-name{font-size:1.1rem;font-weight:900}
+.module-attempts{font-size:.78rem;color:var(--muted);margin-top:3px}
+.score-pair{text-align:right;white-space:nowrap}
+.score-pair strong{font-size:1.55rem}
+.score-pair span{display:block;font-size:.72rem;color:var(--muted)}
+.criteria-list{display:grid;gap:9px;margin-top:19px}
+.criterion-row{display:grid;grid-template-columns:minmax(120px,1fr) minmax(90px,1.2fr) 38px;gap:9px;align-items:center;font-size:.77rem}
+.criterion-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#4f4841;font-weight:680}
+.track{height:8px;background:#eee6db;border-radius:99px;overflow:hidden}
+.fill{height:100%;border-radius:99px;background:var(--module)}
+.criterion-score{text-align:right;font-weight:850}
+.progress-note{margin-top:18px;padding-top:15px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:14px;align-items:center}
+.progress-note strong{font-size:.82rem}
+.progress-note span{font-size:.77rem;color:var(--muted);text-align:right}
+.insights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px}
+.panel{padding:22px}
+.insight-title{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;font-weight:900;color:var(--muted)}
+.insight-value{font-size:1.23rem;font-weight:900;margin:10px 0 6px}
+.insight-copy{color:var(--muted);line-height:1.55;font-size:.88rem}
+.filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.filters select,.filters input{
+  border:1px solid #d9cec0;border-radius:10px;background:#fff;padding:10px 12px;outline:none;
+}
+.filters input{min-width:240px}
+.history-list{display:grid;gap:12px}
+.history-card{overflow:hidden}
+.history-summary{
+  padding:17px 20px;display:grid;grid-template-columns:86px minmax(0,1fr) 100px 34px;
+  gap:14px;align-items:center;cursor:pointer;
+}
+.history-date{font-size:.76rem;color:var(--muted);font-weight:750}
+.history-module{font-size:.7rem;font-weight:900;text-transform:uppercase;letter-spacing:.09em;color:var(--module)}
+.history-question{font-weight:820;line-height:1.35;margin-top:4px}
+.history-meta{font-size:.76rem;color:var(--muted);margin-top:5px}
+.history-score{text-align:right;font-size:1.35rem;font-weight:900}
+.history-score small{font-size:.72rem;color:var(--muted)}
+.chev{font-size:1.35rem;transition:.2s}
+.history-card.open .chev{transform:rotate(180deg)}
+.history-detail{display:none;border-top:1px solid var(--line);padding:20px;background:#fffaf3}
+.history-card.open .history-detail{display:block}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.detail-block{background:#fff;border:1px solid var(--line);border-radius:13px;padding:16px}
+.detail-block.full{grid-column:1/-1}
+.detail-block h4{font-size:.76rem;text-transform:uppercase;letter-spacing:.09em;margin:0 0 10px;color:var(--muted)}
+.detail-block p{margin:0;line-height:1.65;white-space:pre-wrap}
+.criteria-detail{display:grid;gap:10px}
+.criterion-detail{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff}
+.criterion-detail-head{display:flex;justify-content:space-between;gap:12px;font-weight:850}
+.feedback-three{display:grid;gap:7px;margin-top:10px;font-size:.86rem;line-height:1.5}
+.fb-good{color:#22684f}.fb-gap{color:#8b413e}.fb-next{color:#315f9b}
+.audio-link{display:inline-flex;margin-top:12px;color:var(--blue);font-weight:800;text-decoration:none}
+.empty{
+  border:1px dashed #cfc2b2;border-radius:16px;padding:34px;text-align:center;color:var(--muted);background:rgba(255,255,255,.58)
+}
+.loading{display:grid;place-items:center;min-height:55vh;color:var(--muted);font-weight:750}
+.spinner{width:34px;height:34px;border:4px solid #eadfce;border-top-color:var(--orange);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.footer{margin-top:auto;background:var(--ink);color:rgba(255,255,255,.6);padding:18px;text-align:center;font-size:.76rem}
+.footer strong{color:var(--gold)}
+.toast{
+  position:fixed;right:20px;bottom:20px;max-width:360px;padding:13px 16px;border-radius:12px;
+  background:var(--ink);color:#fff;box-shadow:var(--shadow);z-index:50;font-weight:700;display:none;
+}
+@media(max-width:950px){
+  .login-card{grid-template-columns:1fr}
+  .login-intro{min-height:auto}
+  .hero{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .module-grid,.insights{grid-template-columns:1fr}
+}
+@media(max-width:650px){
+  .topbar{align-items:flex-start}
+  .brand-sub{display:none}
+  .top-actions .btn span{display:none}
+  .main{padding-top:18px}
+  .stats{grid-template-columns:1fr 1fr}
+  .stat{padding:15px}
+  .history-summary{grid-template-columns:72px minmax(0,1fr) 68px 22px;padding:14px}
+  .detail-grid{grid-template-columns:1fr}
+  .detail-block.full{grid-column:auto}
+  .criterion-row{grid-template-columns:minmax(105px,1fr) minmax(70px,1fr) 34px}
+  .filters{width:100%}
+  .filters select,.filters input{width:100%;min-width:0}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">C</div>
+    <div>
+      <div class="brand-title">Clarion</div>
+      <div class="brand-sub">Managerial Communication Performance</div>
+    </div>
+  </div>
+  <div class="top-actions">
+    <a class="btn btn-ghost" href="/app/" id="practiceTop"><span>Back to Practice</span> ↗</a>
+    <button class="btn btn-ghost hidden" id="logoutBtn">Sign out</button>
+  </div>
+</header>
+
+<section id="loginScreen" class="login-wrap">
+  <div class="login-card">
+    <div class="login-intro">
+      <div>
+        <div class="login-kicker">Student Progress Portal</div>
+        <h1>See what your practice is building.</h1>
+        <p>Your scores, criterion patterns, progress evidence and detailed feedback—all in one place.</p>
+        <div class="login-points">
+          <div class="login-point"><span class="dot">✓</span><span>Only your own records are loaded.</span></div>
+          <div class="login-point"><span class="dot">✓</span><span>Use the same Student ID and password as CLARION Practice.</span></div>
+          <div class="login-point"><span class="dot">✓</span><span>Return to any attempt and review the full feedback.</span></div>
+        </div>
+      </div>
+      <div class="login-kicker">TELW · The English Workshop</div>
+    </div>
+    <div class="login-panel">
+      <h2>Student sign in</h2>
+      <p class="lead">This portal reads your secure CLARION record. It does not change your scores or submissions.</p>
+      <form id="loginForm">
+        <div class="field">
+          <label for="studentId">Student ID</label>
+          <input id="studentId" autocomplete="username" placeholder="Enter your Student ID" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="password-wrap">
+            <input id="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+            <button type="button" class="eye" id="eyeBtn" aria-label="Show password">◉</button>
+          </div>
+        </div>
+        <label class="remember"><input type="checkbox" id="rememberId"> Remember my Student ID on this device</label>
+        <button class="btn btn-dark login-submit" id="loginBtn" type="submit">Sign in →</button>
+        <div class="form-error" id="loginError"></div>
+      </form>
+      <div class="security-note">Your password is sent directly to Supabase authentication. The portal stores no password and cannot download another student’s data.</div>
+    </div>
+  </div>
+</section>
+
+<section id="loadingScreen" class="loading hidden">
+  <div style="text-align:center"><div class="spinner"></div>Loading your CLARION record…</div>
+</section>
+
+<main id="dashboard" class="main hidden">
+  <section class="hero">
+    <div class="hero-main">
+      <div class="eyebrow">My progress</div>
+      <h1 id="studentName">Student</h1>
+      <div class="hero-meta" id="studentMeta"></div>
+    </div>
+    <div class="hero-position">
+      <div class="position-label">Overall position</div>
+      <div class="position-score" id="overallAvg">—<small>/10</small></div>
+      <div class="position-band" id="overallBand">No scored attempts yet</div>
+      <div class="position-note" id="overallNote">Complete a practice response to begin building your progress record.</div>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><div class="stat-label">Scored attempts</div><div class="stat-value" id="attemptCount">0</div><div class="stat-sub">across all modules</div></div>
+    <div class="stat"><div class="stat-label">Latest score</div><div class="stat-value" id="latestScore">—</div><div class="stat-sub" id="latestModule">No attempt yet</div></div>
+    <div class="stat"><div class="stat-label">Strongest area</div><div class="stat-value" id="strongestShort">—</div><div class="stat-sub" id="strongestFull">Not enough evidence</div></div>
+    <div class="stat"><div class="stat-label">Current focus</div><div class="stat-value" id="focusShort">—</div><div class="stat-sub" id="focusFull">Not enough evidence</div></div>
+  </section>
+
+  <div class="section-head">
+    <div><h2>Module position</h2><p>Average and latest scores, with the five criterion patterns inside each module.</p></div>
+  </div>
+  <section class="module-grid" id="moduleGrid"></section>
+
+  <section class="insights">
+    <div class="panel">
+      <div class="insight-title">What is working</div>
+      <div class="insight-value" id="strengthValue">Not enough evidence yet</div>
+      <div class="insight-copy" id="strengthCopy">Your strongest criterion will appear after scored attempts are available.</div>
+    </div>
+    <div class="panel">
+      <div class="insight-title">What to work on next</div>
+      <div class="insight-value" id="focusValue">Not enough evidence yet</div>
+      <div class="insight-copy" id="focusCopy">Your current focus area and latest prescribed action will appear here.</div>
+    </div>
+  </section>
+
+  <div class="section-head">
+    <div><h2>Attempt history</h2><p>Open any attempt to review its transcript, scores and detailed feedback.</p></div>
+    <div class="filters">
+      <select id="moduleFilter">
+        <option value="all">All modules</option>
+        <option value="Diagnostics">Diagnostics</option>
+        <option value="Managerial Communication">Managerial Communication</option>
+        <option value="PI">PI</option>
+        <option value="GD">GD</option>
+      </select>
+      <input id="historySearch" placeholder="Search question or transcript">
+    </div>
+  </div>
+  <section class="history-list" id="historyList"></section>
+</main>
+
+<footer class="footer">CLARION · Managerial Communication Performance · <strong>TELW</strong></footer>
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const CLARION_SUPABASE_URL = 'https://vtqatrhwfvzyodiftvkc.supabase.co';
+const CLARION_SUPABASE_KEY = 'sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
+const db = window.supabase.createClient(CLARION_SUPABASE_URL, CLARION_SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
+
+const MODULES = [
+  {key:'Diagnostics', color:'#ef7c45'},
+  {key:'Managerial Communication', color:'#7857a6'},
+  {key:'PI', color:'#3b73c5'},
+  {key:'GD', color:'#2d8a68'}
+];
+
+const CRITERIA = {
+  'Diagnostics':[
+    ['structure_clarity','Structure & Clarity'],
+    ['business_thinking','Business Thinking'],
+    ['language_control','Language Control'],
+    ['confidence_delivery','Confidence & Delivery'],
+    ['professionalism','Professionalism']
+  ],
+  'Managerial Communication':[
+    ['structure_clarity','Structure & Clarity'],
+    ['business_thinking','Business Thinking'],
+    ['language_control','Language Control'],
+    ['confidence_delivery','Confidence & Delivery'],
+    ['professionalism','Professionalism']
+  ],
+  'PI':[
+    ['structure_clarity','Structure & Clarity'],
+    ['content_depth','Content Depth & Evidence'],
+    ['business_thinking','Business Thinking'],
+    ['comm_professionalism','Communication & Professionalism'],
+    ['composure','Composure Under Pressure']
+  ],
+  'GD':[
+    ['structure_clarity','Entry & Clarity'],
+    ['content_depth','Reasoning (Content + Logic)'],
+    ['business_thinking','Listening & Response'],
+    ['comm_professionalism','Leadership Moves'],
+    ['composure','Composure Under Pressure']
+  ]
+};
+
+let state = {profile:null, submissions:[], evaluated:[]};
+
+function el(id){ return document.getElementById(id); }
+function esc(value){
+  return String(value ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function num(value){
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+function avg(values){
+  const clean = values.map(num).filter(v=>v!==null);
+  return clean.length ? clean.reduce((a,b)=>a+b,0)/clean.length : null;
+}
+function one(n){ return n===null || n===undefined ? '—' : Number(n).toFixed(1); }
+function showToast(text){
+  const t=el('toast'); t.textContent=text; t.style.display='block';
+  clearTimeout(showToast._t); showToast._t=setTimeout(()=>t.style.display='none',3000);
+}
+function safeObject(value){
+  if(value && typeof value==='object' && !Array.isArray(value)) return value;
+  if(typeof value==='string'){
+    try{ const p=JSON.parse(value); return p && typeof p==='object' && !Array.isArray(p) ? p : {}; }catch(e){}
+  }
+  return {};
+}
+function normalizeModule(value){
+  const raw=String(value||'').toLowerCase();
+  if(raw.includes('diagnostic')) return 'Diagnostics';
+  if(raw.includes('gd') || raw.includes('group discussion')) return 'GD';
+  if(raw.includes('advanced pi') || raw==='pi' || raw.includes('personal interview') || raw.includes('interview')) return 'PI';
+  if(raw.includes('lum') || raw.includes('managerial') || raw.includes('daily') || raw.includes('language')) return 'Managerial Communication';
+  return 'Managerial Communication';
+}
+function moduleColor(module){
+  return (MODULES.find(m=>m.key===module)||MODULES[1]).color;
+}
+function formatDate(value){
+  if(!value) return 'Date unavailable';
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+function formatTime(value){
+  if(!value) return '';
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+function readiness(score){
+  if(score===null) return {band:'No scored attempts yet',note:'Complete a practice response to begin building your progress record.'};
+  if(score>=8.5) return {band:'Strong professional performance',note:'Your responses are consistently clear, supported and professionally controlled.'};
+  if(score>=7) return {band:'Meets current readiness benchmark',note:'You are operating at a sound professional level. Continue strengthening the lowest criterion.'};
+  if(score>5) return {band:'Developing toward readiness',note:'Your main ideas are visible, but the evidence shows specific areas that still need control.'};
+  return {band:'Needs focused support',note:'Build one criterion at a time through repeated, guided practice.'};
+}
+async function studentAuthEmail(studentCode){
+  const canonical=String(studentCode||'').normalize('NFC').trim().toUpperCase();
+  const encoded=new TextEncoder().encode(canonical);
+  const hashBuffer=await crypto.subtle.digest('SHA-256',encoded);
+  const hashHex=Array.from(new Uint8Array(hashBuffer)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  return 'sid-'+hashHex.slice(0,24)+'@students.clarionprep.com';
+}
+function setScreen(name){
+  el('loginScreen').classList.toggle('hidden',name!=='login');
+  el('loadingScreen').classList.toggle('hidden',name!=='loading');
+  el('dashboard').classList.toggle('hidden',name!=='dashboard');
+  el('logoutBtn').classList.toggle('hidden',name!=='dashboard');
+}
+async function loadProfileAndData(user){
+  const profileRes=await db.from('profiles')
+    .select('id,student_code,full_name,email,role,batch_id,access_type,active')
+    .eq('id',user.id).single();
+  if(profileRes.error) throw profileRes.error;
+  const profile=profileRes.data;
+  if(!profile || profile.active===false) throw new Error('Account inactive. Contact your trainer.');
+  if(String(profile.role||'').toLowerCase()!=='student'){
+    await db.auth.signOut();
+    throw new Error('This page is for student accounts only.');
+  }
+
+  const subRes=await db.from('submissions').select(
+    'id,student_id,question_id,module_type,question,attempt_number,audio_url,transcript,duration_seconds,'+
+    'overall_score,structure_clarity,content_depth_evidence,business_thinking,communication_professionalism,'+
+    'composure_under_pressure,criteria,feedback,lowest_criterion,next_action,practice_task,communication_band,'+
+    'communication_reason,cando,flag,processing_status,evaluation_error,scoring_source,trainer_review_status,'+
+    'raw_evaluation,submitted_at'
+  ).eq('student_id',user.id).order('submitted_at',{ascending:false});
+  if(subRes.error) throw subRes.error;
+
+  state.profile=profile;
+  state.submissions=(subRes.data||[]).map(s=>({...s,_module:normalizeModule(s.module_type)}));
+  state.evaluated=state.submissions.filter(s=>num(s.overall_score)!==null && !s.evaluation_error);
+  renderDashboard();
+}
+function criteriaForSubmission(s){
+  const module=s._module;
+  const defs=CRITERIA[module];
+  const stored=safeObject(s.criteria);
+  const raw=safeObject(s.raw_evaluation);
+  const rawCriteria=safeObject(raw.criteria);
+  const source=Object.keys(stored).length?stored:rawCriteria;
+  const fallback=[
+    s.structure_clarity,
+    s.content_depth_evidence,
+    s.business_thinking,
+    s.communication_professionalism,
+    s.composure_under_pressure
+  ];
+  const aliases={
+    structure_clarity:['structure_clarity'],
+    content_depth:['content_depth','content_depth_evidence','reasoning'],
+    business_thinking:['business_thinking','listening_response'],
+    comm_professionalism:['comm_professionalism','communication_professionalism','leadership_moves'],
+    composure:['composure','composure_under_pressure'],
+    language_control:['language_control'],
+    confidence_delivery:['confidence_delivery'],
+    professionalism:['professionalism']
+  };
+  return defs.map((def,index)=>{
+    let value=null;
+    for(const key of (aliases[def[0]]||[def[0]])){
+      if(num(source[key])!==null){ value=num(source[key]); break; }
+    }
+    if(value===null) value=num(fallback[index]);
+    return {key:def[0],label:def[1],score:value};
+  });
+}
+function feedbackForSubmission(s){
+  const raw=safeObject(s.raw_evaluation);
+  const rawFb=safeObject(raw.feedback);
+  const fieldFb=safeObject(s.feedback);
+  return Object.keys(rawFb).length?rawFb:fieldFb;
+}
+function criterionFeedbackEntry(obj,key){
+  const aliases={
+    content_depth:['content_depth','content_depth_evidence'],
+    comm_professionalism:['comm_professionalism','communication_professionalism'],
+    composure:['composure','composure_under_pressure']
+  };
+  let item=obj[key];
+  if(!item){
+    for(const alt of (aliases[key]||[])){ if(obj[alt]){item=obj[alt];break;} }
+  }
+  if(!item || typeof item!=='object') return null;
+  return {
+    worked:item.worked||item.strength||item.what_worked||'',
+    weak:item.weak||item.gap||item.what_held_it_back||'',
+    fix:item.fix||item.action||item.what_to_do_next||''
+  };
+}
+function allCriterionAverages(records){
+  const buckets=[];
+  records.forEach(s=>{
+    criteriaForSubmission(s).forEach(c=>{
+      if(c.score===null) return;
+      buckets.push({module:s._module,label:c.label,score:c.score,key:c.key});
+    });
+  });
+  const grouped={};
+  buckets.forEach(x=>{
+    const k=x.module+'||'+x.label;
+    (grouped[k]||(grouped[k]={...x,values:[]})).values.push(x.score);
+  });
+  return Object.values(grouped).map(x=>({...x,average:avg(x.values),count:x.values.length}));
+}
+function comparableProgress(records){
+  const sorted=records.filter(s=>num(s.overall_score)!==null)
+    .slice().sort((a,b)=>new Date(a.submitted_at)-new Date(b.submitted_at));
+  if(sorted.length<3) return {kind:'insufficient',text:'Not enough comparable attempts'};
+  const first=sorted[0],last=sorted[sorted.length-1];
+  const dayGap=Math.abs(new Date(last.submitted_at)-new Date(first.submitted_at))/86400000;
+  if(dayGap<1) return {kind:'insufficient',text:'Attempts are too close together'};
+  const delta=num(last.overall_score)-num(first.overall_score);
+  if(delta>=.5) return {kind:'up',text:'Directional gain '+(delta>0?'+':'')+delta.toFixed(1)};
+  if(delta<=-.5) return {kind:'down',text:'Directional fall '+delta.toFixed(1)};
+  return {kind:'flat',text:' broadly stable ('+(delta>0?'+':'')+delta.toFixed(1)+')'};
+}
+function renderDashboard(){
+  const p=state.profile;
+  const ev=state.evaluated;
+  const overall=avg(ev.map(s=>s.overall_score));
+  const latest=ev[0]||null;
+  const allCrit=allCriterionAverages(ev).filter(x=>x.count>=1).sort((a,b)=>b.average-a.average);
+  const strongest=allCrit[0]||null;
+  const focus=allCrit.length?allCrit[allCrit.length-1]:null;
+  const band=readiness(overall);
+
+  el('studentName').textContent=p.full_name||'Student';
+  el('studentMeta').textContent=[p.student_code,p.batch_id?'Batch '+p.batch_id:'',p.access_type].filter(Boolean).join(' · ');
+  el('overallAvg').innerHTML=(overall===null?'—':one(overall))+'<small>/10</small>';
+  el('overallBand').textContent=band.band;
+  el('overallNote').textContent=band.note;
+  el('attemptCount').textContent=ev.length;
+  el('latestScore').textContent=latest?one(latest.overall_score)+'/10':'—';
+  el('latestModule').textContent=latest?latest._module+' · '+formatDate(latest.submitted_at):'No attempt yet';
+
+  el('strongestShort').textContent=strongest?one(strongest.average):'—';
+  el('strongestFull').textContent=strongest?strongest.module+' · '+strongest.label:'Not enough evidence';
+  el('focusShort').textContent=focus?one(focus.average):'—';
+  el('focusFull').textContent=focus?focus.module+' · '+focus.label:'Not enough evidence';
+
+  el('strengthValue').textContent=strongest?strongest.module+' · '+strongest.label:'Not enough evidence yet';
+  el('strengthCopy').textContent=strongest
+    ? 'Average '+one(strongest.average)+'/5 across '+strongest.count+' scored observation'+(strongest.count===1?'':'s')+'.'
+    : 'Your strongest criterion will appear after scored attempts are available.';
+  const latestAction=latest && (latest.next_action || safeObject(latest.raw_evaluation).next_action);
+  el('focusValue').textContent=focus?focus.module+' · '+focus.label:'Not enough evidence yet';
+  el('focusCopy').textContent=focus
+    ? 'Average '+one(focus.average)+'/5. '+(latestAction||'Use the detailed attempt feedback below to choose the next practice move.')
+    : 'Your current focus area and latest prescribed action will appear here.';
+
+  renderModules();
+  renderHistory();
+  setScreen('dashboard');
+}
+function renderModules(){
+  el('moduleGrid').innerHTML=MODULES.map(m=>{
+    const records=state.evaluated.filter(s=>s._module===m.key);
+    const moduleAvg=avg(records.map(s=>s.overall_score));
+    const latest=records[0]||null;
+    const criteria=CRITERIA[m.key].map(def=>{
+      const vals=[];
+      records.forEach(s=>{
+        const found=criteriaForSubmission(s).find(c=>c.key===def[0]);
+        if(found && found.score!==null) vals.push(found.score);
+      });
+      return {label:def[1],average:avg(vals)};
+    });
+    const progress=comparableProgress(records);
+    return `<article class="module-card" style="--module:${m.color}">
+      <div class="module-top">
+        <div><div class="module-name">${esc(m.key)}</div><div class="module-attempts">${records.length} scored attempt${records.length===1?'':'s'}</div></div>
+        <div class="score-pair"><strong>${moduleAvg===null?'—':one(moduleAvg)}</strong><span>average /10</span></div>
+      </div>
+      <div class="criteria-list">
+        ${criteria.map(c=>`<div class="criterion-row">
+          <div class="criterion-name" title="${esc(c.label)}">${esc(c.label)}</div>
+          <div class="track"><div class="fill" style="width:${c.average===null?0:Math.max(0,Math.min(100,c.average/5*100))}%"></div></div>
+          <div class="criterion-score">${c.average===null?'—':one(c.average)}</div>
+        </div>`).join('')}
+      </div>
+      <div class="progress-note">
+        <strong>${latest?'Latest '+one(latest.overall_score)+'/10':'No score yet'}</strong>
+        <span>${esc(progress.text)}</span>
+      </div>
+    </article>`;
+  }).join('');
+}
+function renderHistory(){
+  const filter=el('moduleFilter').value;
+  const term=el('historySearch').value.trim().toLowerCase();
+  let rows=state.submissions.slice();
+  if(filter!=='all') rows=rows.filter(s=>s._module===filter);
+  if(term) rows=rows.filter(s=>(String(s.question||'')+' '+String(s.transcript||'')).toLowerCase().includes(term));
+
+  if(!rows.length){
+    el('historyList').innerHTML='<div class="empty">No attempts match this view.</div>';
+    return;
+  }
+  el('historyList').innerHTML=rows.map((s,index)=>{
+    const score=num(s.overall_score);
+    const criteria=criteriaForSubmission(s);
+    const feedback=feedbackForSubmission(s);
+    const raw=safeObject(s.raw_evaluation);
+    const generalFeedback=typeof s.feedback==='string' && !Object.keys(safeObject(s.feedback)).length ? s.feedback : (raw.feedback_text||'');
+    const detailed=criteria.map(c=>{
+      const fb=criterionFeedbackEntry(feedback,c.key);
+      return `<div class="criterion-detail">
+        <div class="criterion-detail-head"><span>${esc(c.label)}</span><span>${c.score===null?'—':one(c.score)+'/5'}</span></div>
+        ${fb?`<div class="feedback-three">
+          ${fb.worked?`<div class="fb-good"><strong>What worked:</strong> ${esc(fb.worked)}</div>`:''}
+          ${fb.weak?`<div class="fb-gap"><strong>What held it back:</strong> ${esc(fb.weak)}</div>`:''}
+          ${fb.fix?`<div class="fb-next"><strong>What to do next:</strong> ${esc(fb.fix)}</div>`:''}
+        </div>`:''}
+      </div>`;
+    }).join('');
+    return `<article class="history-card" style="--module:${moduleColor(s._module)}" data-index="${index}">
+      <div class="history-summary" onclick="this.parentElement.classList.toggle('open')">
+        <div class="history-date">${esc(formatDate(s.submitted_at))}</div>
+        <div>
+          <div class="history-module">${esc(s._module)}</div>
+          <div class="history-question">${esc(s.question||'Question unavailable')}</div>
+          <div class="history-meta">Attempt ${esc(s.attempt_number||1)}${s.duration_seconds?' · '+esc(s.duration_seconds)+'s':''}${s.processing_status?' · '+esc(String(s.processing_status).replace(/_/g,' ')):''}</div>
+        </div>
+        <div class="history-score">${score===null?'—':one(score)}<small>/10</small></div>
+        <div class="chev">⌄</div>
+      </div>
+      <div class="history-detail">
+        <div class="detail-grid">
+          <div class="detail-block full"><h4>Transcript</h4><p>${esc(s.transcript||'Transcript unavailable.')}</p>${s.audio_url?`<a class="audio-link" href="${esc(s.audio_url)}" target="_blank" rel="noopener">▶ Open audio recording</a>`:''}</div>
+          <div class="detail-block full"><h4>Five criteria</h4><div class="criteria-detail">${detailed}</div></div>
+          ${generalFeedback?`<div class="detail-block full"><h4>Overall feedback</h4><p>${esc(generalFeedback)}</p></div>`:''}
+          <div class="detail-block"><h4>Current focus</h4><p>${esc(s.lowest_criterion||'Not specified')}</p></div>
+          <div class="detail-block"><h4>Can-do</h4><p>${esc(s.cando||'Not specified')}</p></div>
+          <div class="detail-block"><h4>Next action</h4><p>${esc(s.next_action||'Not specified')}</p></div>
+          <div class="detail-block"><h4>Practice task</h4><p>${esc(s.practice_task||'Not specified')}</p></div>
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+}
+async function login(event){
+  event.preventDefault();
+  const btn=el('loginBtn'), err=el('loginError');
+  err.textContent='';
+  const sid=el('studentId').value.trim();
+  const password=el('password').value;
+  if(!sid||!password){err.textContent='Enter your Student ID and password.';return;}
+  btn.disabled=true;btn.textContent='Signing in…';
+  try{
+    if(el('rememberId').checked) localStorage.setItem('clarion_portal_student_id',sid);
+    else localStorage.removeItem('clarion_portal_student_id');
+    const email=await studentAuthEmail(sid);
+    const auth=await db.auth.signInWithPassword({email,password});
+    if(auth.error) throw auth.error;
+    setScreen('loading');
+    await loadProfileAndData(auth.data.user);
+  }catch(e){
+    await db.auth.signOut().catch(()=>{});
+    setScreen('login');
+    err.textContent=(e && e.message && !String(e.message).toLowerCase().includes('invalid login'))
+      ? e.message : 'Incorrect Student ID or password.';
+  }finally{
+    btn.disabled=false;btn.textContent='Sign in →';
+  }
+}
+async function logout(){
+  await db.auth.signOut();
+  state={profile:null,submissions:[],evaluated:[]};
+  el('password').value='';
+  setScreen('login');
+}
+el('loginForm').addEventListener('submit',login);
+el('logoutBtn').addEventListener('click',logout);
+el('moduleFilter').addEventListener('change',renderHistory);
+el('historySearch').addEventListener('input',renderHistory);
+el('eyeBtn').addEventListener('click',()=>{
+  const p=el('password');p.type=p.type==='password'?'text':'password';
+  el('eyeBtn').textContent=p.type==='password'?'◉':'◎';
+});
+document.addEventListener('DOMContentLoaded',async()=>{
+  const saved=localStorage.getItem('clarion_portal_student_id');
+  if(saved){el('studentId').value=saved;el('rememberId').checked=true;}
+  const session=await db.auth.getSession();
+  const user=session.data && session.data.session && session.data.session.user;
+  if(user){
+    setScreen('loading');
+    try{await loadProfileAndData(user);}
+    catch(e){await db.auth.signOut();setScreen('login');el('loginError').textContent=e.message||'Could not load your record.';}
+  }else setScreen('login');
+});
+</script>
+</body>
+</html>
