@@ -3258,6 +3258,8 @@ function _safeDefaultPage(){
 }
 
 function nav(id){
+  S._questionVariantRequestToken = '';
+  S.currentVariantContext = null;
   // ── Role guard ──────────────────────────────────────────────────────────────
   if(!S.role || !S.user){
     // Not authenticated — abort and show login
@@ -4726,7 +4728,13 @@ async function _serverScore(opts){
   const body = {
     action:      'scoreResponse',
     studentId:   (S.user && (S.user.studentId || S.user.id)) || '',
-    taskId:      (S.currentQ && S.currentQ.id) || '',
+    taskId:
+      (
+        S.currentVariantContext &&
+        S.currentVariantContext.questionId
+      ) ||
+      (S.currentQ && S.currentQ.id) ||
+      '',
     moduleType:  opts.moduleType  || 'LUM',
     transcript:  opts.transcript  || '',
     audioBase64: opts.audioBase64 || '',
@@ -4868,6 +4876,292 @@ async function checkAiHealth(){
   }
 }
 
+
+// ════════════════════════════════════════════════
+// CONTROLLED QUESTION VARIANTS
+// Diagnostics do not call these helpers.
+// ════════════════════════════════════════════════
+function _canonicalQuestionText(q){
+  return String(
+    q && q.q !== undefined
+      ? q.q
+      : q && q.text !== undefined
+        ? q.text
+        : ''
+  ).trim();
+}
+
+function _questionRequirementsText(q){
+  const value =
+    q && q.instructions !== undefined
+      ? q.instructions
+      : q && q.inst !== undefined
+        ? q.inst
+        : '';
+
+  if(Array.isArray(value)){
+    return value.map(function(item){
+      return String(item || '').trim();
+    }).filter(Boolean).join('\n');
+  }
+
+  return String(value || '').trim();
+}
+
+function _controlledQuestionId(q, moduleType){
+  if(q && q.id) return String(q.id);
+
+  if(q && q.no !== undefined){
+    const prefix =
+      String(moduleType || '').toLowerCase().indexOf('managerial') !== -1 ||
+      String(moduleType || '').toLowerCase().indexOf('lum') !== -1
+        ? 'LUM'
+        : 'Q';
+
+    return prefix + String(q.no).padStart(3, '0');
+  }
+
+  return String(moduleType || 'QUESTION')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_') + '_UNNUMBERED';
+}
+
+function _variantStorageKey(questionId, moduleType){
+  const studentKey =
+    (S.user && (S.user.studentId || S.user.id || S.user.email)) ||
+    'anonymous';
+
+  return [
+    'clarion_recent_question_variants',
+    studentKey,
+    moduleType || 'module',
+    questionId || 'question'
+  ].join('::');
+}
+
+function _getRecentQuestionVariants(questionId, moduleType){
+  try{
+    const raw = localStorage.getItem(
+      _variantStorageKey(questionId, moduleType)
+    );
+
+    const parsed = raw ? JSON.parse(raw) : [];
+
+    return Array.isArray(parsed)
+      ? parsed.map(function(item){
+          return String(item || '').trim();
+        }).filter(Boolean).slice(0, 10)
+      : [];
+  }catch(e){
+    return [];
+  }
+}
+
+function _rememberQuestionVariant(questionId, moduleType, variant){
+  const cleanVariant = String(variant || '').trim();
+  if(!cleanVariant) return;
+
+  try{
+    const recent = _getRecentQuestionVariants(
+      questionId,
+      moduleType
+    ).filter(function(item){
+      return item !== cleanVariant;
+    });
+
+    recent.unshift(cleanVariant);
+
+    localStorage.setItem(
+      _variantStorageKey(questionId, moduleType),
+      JSON.stringify(recent.slice(0, 10))
+    );
+  }catch(e){}
+}
+
+function _fallbackQuestionContext(q, moduleType, questionId, requirements){
+  const canonicalQuestion = _canonicalQuestionText(q);
+
+  return {
+    questionId: questionId,
+    moduleType: moduleType,
+    canonicalQuestion: canonicalQuestion,
+    displayedQuestion: canonicalQuestion,
+    requirements: requirements,
+    variants: [],
+    usedFallback: true
+  };
+}
+
+async function _loadControlledQuestionVariant(q, moduleType){
+  const canonicalQuestion = _canonicalQuestionText(q);
+  const requirements = _questionRequirementsText(q);
+  const questionId = _controlledQuestionId(q, moduleType);
+
+  const fallback = _fallbackQuestionContext(
+    q,
+    moduleType,
+    questionId,
+    requirements
+  );
+
+  const scoringUrl =
+    localStorage.getItem(CLARION_SCORING_URL_KEY) ||
+    '';
+
+  if(!scoringUrl || !canonicalQuestion){
+    return fallback;
+  }
+
+  const body = {
+    action: 'questionVariant',
+    canonicalQuestion: canonicalQuestion,
+    question: canonicalQuestion,
+    questionId: questionId,
+    taskId: questionId,
+    moduleType: moduleType,
+    module: moduleType,
+    requirements: requirements,
+    instructions: requirements,
+    recentVariants: _getRecentQuestionVariants(
+      questionId,
+      moduleType
+    ),
+    count: 6
+  };
+
+  try{
+    const res = await withTimeout(
+      fetch(scoringUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify(body)
+      }),
+      20000,
+      'Question variation'
+    );
+
+    if(!res.ok){
+      throw new Error('Question variation HTTP ' + res.status);
+    }
+
+    const data = await res.json();
+    const displayedQuestion =
+      data && data.ok
+        ? String(data.variant || '').trim()
+        : '';
+
+    if(!displayedQuestion){
+      throw new Error(
+        data && (data.message || data.error)
+          ? data.message || data.error
+          : 'No question variant returned'
+      );
+    }
+
+    const context = {
+      questionId: String(data.questionId || questionId),
+      moduleType: String(data.moduleType || moduleType),
+      canonicalQuestion: String(
+        data.canonicalQuestion || canonicalQuestion
+      ).trim(),
+      displayedQuestion: displayedQuestion,
+      requirements: requirements,
+      variants: Array.isArray(data.variants)
+        ? data.variants.map(function(item){
+            return String(item || '').trim();
+          }).filter(Boolean)
+        : [displayedQuestion],
+      usedFallback: false
+    };
+
+    _rememberQuestionVariant(
+      context.questionId,
+      moduleType,
+      displayedQuestion
+    );
+
+    return context;
+
+  }catch(e){
+    console.warn(
+      '[CLARION] question variant unavailable — canonical question used:',
+      e && e.message ? e.message : e
+    );
+
+    return fallback;
+  }
+}
+
+function _activeQuestionContext(q, moduleType){
+  const canonicalQuestion = _canonicalQuestionText(q);
+  const current = S.currentVariantContext;
+
+  if(
+    current &&
+    current.canonicalQuestion === canonicalQuestion
+  ){
+    return current;
+  }
+
+  const requirements = _questionRequirementsText(q);
+  const questionId = _controlledQuestionId(q, moduleType);
+
+  return _fallbackQuestionContext(
+    q,
+    moduleType,
+    questionId,
+    requirements
+  );
+}
+
+function _questionScoringContext(context){
+  return [
+    'DISPLAYED QUESTION:',
+    context.displayedQuestion,
+    '',
+    'CANONICAL TASK CONTEXT:',
+    'Question ID: ' + context.questionId,
+    'Canonical question: ' + context.canonicalQuestion,
+    'Original requirements: ' +
+      (
+        context.requirements ||
+        'No additional requirements supplied.'
+      ),
+    '',
+    'Evaluate the response against the displayed question. ' +
+      'Use the canonical task context only to preserve the intended ' +
+      'competency, difficulty, constraints and evidence requirement.'
+  ].join('\n');
+}
+
+function _questionSubmissionFields(context){
+  return {
+    qid: context.questionId,
+    questionId: context.questionId,
+    qtext: context.displayedQuestion,
+    displayedQuestion: context.displayedQuestion,
+    canonicalQuestion: context.canonicalQuestion,
+    originalRequirements: context.requirements,
+    questionVariantUsed: !context.usedFallback
+  };
+}
+
+function _questionVariantLoading(backNav, title, subtitle){
+  set(
+    '<div class="ph">'+
+      '<button class="btn-secondary" style="margin-bottom:12px;font-size:.78rem" data-nav="'+backNav+'" onclick="nav(this.dataset.nav)">← Back</button>'+
+      '<div class="ph-title">'+title+'</div>'+
+      '<div class="ph-sub">'+subtitle+'</div>'+
+    '</div>'+
+    '<div class="loader">'+
+      '<div class="spinner"></div>'+
+      '<div class="loader-txt">Preparing your question…</div>'+
+    '</div>'
+  );
+}
+
 // ════════════════════════════════════════════════
 // PRACTICE BANK
 // ════════════════════════════════════════════════
@@ -4902,18 +5196,59 @@ function _renderBankInner(){
 }
 function setPBFilter(f){pbFilter=f;renderBank();}
 
-function startPractice(qno){
-  const q=QUESTION_BANK.find(x=>x.no===parseInt(qno));
+async function startPractice(qno){
+  const q=QUESTION_BANK.find(function(item){
+    return item.no===parseInt(qno);
+  });
   if(!q)return;
-  S.currentQ=q;S.recorded=false;S.recording=false;S.recSecs=0;S.recLimit=60;S.audioBlob=null;S.audioEl=null;
+
+  S.currentQ=q;
+  S.recorded=false;
+  S.recording=false;
+  S.recSecs=0;
+  S.recLimit=60;
+  S.audioBlob=null;
+  S.audioEl=null;
+
+  const requestToken =
+    Date.now() + '_' + Math.random().toString(36).slice(2);
+
+  S._questionVariantRequestToken=requestToken;
+  S.currentVariantContext=_fallbackQuestionContext(
+    q,
+    'Managerial Communication',
+    _controlledQuestionId(q, 'Managerial Communication'),
+    _questionRequirementsText(q)
+  );
+
+  _questionVariantLoading(
+    'stu-bank',
+    'Practice',
+    'Q'+q.no+' · '+q.type+' · TELW '+q.telw
+  );
+
+  const context=await _loadControlledQuestionVariant(
+    q,
+    'Managerial Communication'
+  );
+
+  if(
+    S._questionVariantRequestToken!==requestToken ||
+    S.currentQ!==q
+  ){
+    return;
+  }
+
+  S.currentVariantContext=context;
+
   set('<div class="ph">'+
     '<button class="btn-secondary" style="margin-bottom:12px;font-size:.78rem" data-nav="stu-bank" onclick="nav(this.dataset.nav)">← Back to Practice Bank</button>'+
     '<div class="ph-title">Practice</div><div class="ph-sub">Q'+q.no+' · '+q.type+' · TELW '+q.telw+'</div></div>'+
     '<div class="q-hero">'+
       '<span class="q-badge '+(q.type==='PI'?'q-pi':'q-gd')+'">'+q.type+' · '+q.tag+'</span>'+
-      '<div class="q-text">'+q.q+'</div>'+
+      '<div class="q-text">'+_mpEsc(context.displayedQuestion)+'</div>'+
       '<div class="q-inst"><div class="q-inst-lbl">Instructions</div>'+
-        q.inst.split('.').filter(s=>s.trim()).map(s=>'<div class="q-inst-item">'+s.trim()+'</div>').join('')+
+        q.inst.split('.').filter(function(item){return item.trim();}).map(function(item){return '<div class="q-inst-item">'+_mpEsc(item.trim())+'</div>';}).join('')+
       '</div>'+
       '<div class="q-meta"><span>⏱ 35–45s ideal · 60s max</span><span>🤖 AI scored</span></div>'+
     '</div>'+
@@ -4930,14 +5265,30 @@ async function doSubmit(subKey){
   const q=S.currentQ;if(!q)return;
   const btn=document.getElementById('btn-submit');if(btn)btn.disabled=true;
   const proc=document.getElementById('proc-area');
+  const questionContext=_activeQuestionContext(
+    q,
+    'Managerial Communication'
+  );
 
   await _runSubmit({
     proc,
     driveLabel: 'practice_'+subKey,
-    rubricPrompt: RUBRIC_PROMPT.replace('{COACH}',q.coach).replace('{CANDO}',q.cando).replace('{Q}',q.q).replace('{T}','{T}'),
+    rubricPrompt: RUBRIC_PROMPT.replace('{COACH}',q.coach).replace('{CANDO}',q.cando).replace('{Q}',_questionScoringContext(questionContext)).replace('{T}','{T}'),
     backBtn: '<div style="margin-top:14px"><button class="btn-secondary" data-nav="stu-bank" onclick="nav(this.dataset.nav)">← Back to Practice Bank</button></div>',
     buildSub: function(result, transcript, driveLink){
-      return {date:new Date().toISOString().split('T')[0],type:q.type,qno:q.no,qtext:q.q,score:result.score||0,criteria:result.criteria||{},feedback:result.feedback||{},cando:result.cando||'',flag:result.flag||'needs_improvement',transcript,duration:S.recSecs||30,driveLink:driveLink||''};
+      return Object.assign({
+        date:new Date().toISOString().split('T')[0],
+        type:q.type,
+        qno:q.no,
+        score:result.score||0,
+        criteria:result.criteria||{},
+        feedback:result.feedback||{},
+        cando:result.cando||'',
+        flag:result.flag||'needs_improvement',
+        transcript:transcript,
+        duration:S.recSecs||30,
+        driveLink:driveLink||''
+      }, _questionSubmissionFields(questionContext));
     },
     storeFn: function(sub){ putSub(S.user.email, subKey, sub); },
     renderFn: function(sub){ return renderScoreHTML(sub, true); }
@@ -8534,20 +8885,61 @@ function renderAdvancedPI(){
   set(html);
 }
 
-function startAdvancedPI(qid){
-  const q=ADVANCED_PI_BANK.find(function(x){return x.id===qid;});
+async function startAdvancedPI(qid){
+  const q=ADVANCED_PI_BANK.find(function(item){
+    return item.id===qid;
+  });
   if(!q)return;
-  S.currentQ=q; S.currentBank='advpi';
-  S.recorded=false;S.recording=false;S.recSecs=0;S.recLimit=q.limit;S.audioBlob=null;S.audioEl=null;
+
+  S.currentQ=q;
+  S.currentBank='advpi';
+  S.recorded=false;
+  S.recording=false;
+  S.recSecs=0;
+  S.recLimit=q.limit;
+  S.audioBlob=null;
+  S.audioEl=null;
+
+  const requestToken =
+    Date.now() + '_' + Math.random().toString(36).slice(2);
+
+  S._questionVariantRequestToken=requestToken;
+  S.currentVariantContext=_fallbackQuestionContext(
+    q,
+    'Advanced PI',
+    _controlledQuestionId(q, 'Advanced PI'),
+    _questionRequirementsText(q)
+  );
+
+  _questionVariantLoading(
+    'stu-advpi',
+    'Advanced PI Challenge Rounds',
+    q.cat+' · Unlimited attempts · TELW PI Rubric'
+  );
+
+  const context=await _loadControlledQuestionVariant(
+    q,
+    'Advanced PI'
+  );
+
+  if(
+    S._questionVariantRequestToken!==requestToken ||
+    S.currentQ!==q
+  ){
+    return;
+  }
+
+  S.currentVariantContext=context;
+
   set('<div class="ph">'+
     '<button class="btn-secondary" style="margin-bottom:12px;font-size:.78rem" onclick="nav(\'stu-advpi\')">← Back to Advanced PI</button>'+
     '<div class="ph-title">Advanced PI Challenge Rounds</div>'+
     '<div class="ph-sub">'+q.cat+' · Unlimited attempts · TELW PI Rubric</div></div>'+
     '<div class="q-hero">'+
       '<span class="q-badge q-pi">Advanced PI · '+q.cat+'</span>'+
-      '<div class="q-text">'+q.text+'</div>'+
+      '<div class="q-text">'+_mpEsc(context.displayedQuestion)+'</div>'+
       '<div class="q-inst"><div class="q-inst-lbl">Instructions</div>'+
-        (q.instructions||[]).map(function(i){return '<div class="q-inst-item">'+i+'</div>';}).join('')+
+        (q.instructions||[]).map(function(item){return '<div class="q-inst-item">'+_mpEsc(item)+'</div>';}).join('')+
       '</div>'+
       '<div class="q-meta"><span>⏱ '+q.limit+'s max</span><span>🔄 Unlimited attempts</span><span>🤖 AI scored · TELW PI Rubric</span></div>'+
     '</div>'+
@@ -8560,36 +8952,95 @@ async function submitAdvancedPI(){
   const q=S.currentQ;if(!q)return;
   const btn=document.getElementById('btn-submit');if(btn)btn.disabled=true;
   const proc=document.getElementById('proc-area');
+  const questionContext=_activeQuestionContext(
+    q,
+    'Advanced PI'
+  );
 
   await _runSubmit({
     proc,
     driveLabel: 'advPI_q'+q.num+'_'+new Date().toISOString().split('T')[0],
-    rubricPrompt: RUBRIC_PROMPT.replace('{COACH}','').replace('{CANDO}','').replace('{Q}',q.text).replace('{T}','{T}'),
+    rubricPrompt: RUBRIC_PROMPT.replace('{COACH}','').replace('{CANDO}','').replace('{Q}',_questionScoringContext(questionContext)).replace('{T}','{T}'),
     backBtn: '<div style="margin-top:14px"><button class="btn-secondary" onclick="nav(\'stu-advpi\')">← Back to Advanced PI</button></div>',
     buildSub: function(result, transcript, driveLink){
-      return {qid:q.id,qnum:q.num,qtext:q.text,cat:q.cat,type:'PI',score:result.score||0,criteria:result.criteria||{},feedback:result.feedback||{},cando:result.cando||'',flag:result.flag||'needs_improvement',transcript,duration:S.recSecs,date:new Date().toISOString().split('T')[0],driveLink:driveLink||''};
+      return Object.assign({
+        qnum:q.num,
+        cat:q.cat,
+        type:'PI',
+        score:result.score||0,
+        criteria:result.criteria||{},
+        feedback:result.feedback||{},
+        cando:result.cando||'',
+        flag:result.flag||'needs_improvement',
+        transcript:transcript,
+        duration:S.recSecs,
+        date:new Date().toISOString().split('T')[0],
+        driveLink:driveLink||''
+      }, _questionSubmissionFields(questionContext));
     },
     storeFn: function(sub){ putAdvPISub(S.user.email,q.id,sub); },
     renderFn: function(sub){ return renderScoreHTML(sub, true); }
   });
 }
 
-function startPlacement(qid,bank){
-  const q=(bank==='ppi'?PLACEMENT_PI_BANK:PLACEMENT_GD_BANK).find(x=>x.id===qid);
+async function startPlacement(qid,bank){
+  const q=(bank==='ppi'?PLACEMENT_PI_BANK:PLACEMENT_GD_BANK).find(function(item){
+    return item.id===qid;
+  });
   if(!q)return;
-  S.currentQ=q; S.currentBank=bank;
-  S.recorded=false;S.recording=false;S.recSecs=0;S.recLimit=q.limit;S.audioBlob=null;S.audioEl=null;
+
+  S.currentQ=q;
+  S.currentBank=bank;
+  S.recorded=false;
+  S.recording=false;
+  S.recSecs=0;
+  S.recLimit=q.limit;
+  S.audioBlob=null;
+  S.audioEl=null;
+
   const backNav=bank==='ppi'?'stu-ppi':'stu-pgd';
   const typeLabel=bank==='ppi'?'Placement PI':'Placement GD';
+  const variantModule=bank==='ppi'?'PI':'GD';
+  const requestToken =
+    Date.now() + '_' + Math.random().toString(36).slice(2);
+
+  S._questionVariantRequestToken=requestToken;
+  S.currentVariantContext=_fallbackQuestionContext(
+    q,
+    variantModule,
+    _controlledQuestionId(q, variantModule),
+    _questionRequirementsText(q)
+  );
+
+  _questionVariantLoading(
+    backNav,
+    typeLabel,
+    'Unlimited attempts — each attempt is scored'
+  );
+
+  const context=await _loadControlledQuestionVariant(
+    q,
+    variantModule
+  );
+
+  if(
+    S._questionVariantRequestToken!==requestToken ||
+    S.currentQ!==q
+  ){
+    return;
+  }
+
+  S.currentVariantContext=context;
+
   set('<div class="ph">'+
     '<button class="btn-secondary" style="margin-bottom:12px;font-size:.78rem" data-nav="'+backNav+'" onclick="nav(this.dataset.nav)">← Back to '+typeLabel+'</button>'+
     '<div class="ph-title">'+typeLabel+'</div>'+
     '<div class="ph-sub">Unlimited attempts — each attempt is scored</div></div>'+
     '<div class="q-hero">'+
       '<span class="q-badge '+(bank==='ppi'?'q-pi':'q-gd')+'">'+typeLabel+' · Q'+q.num+'</span>'+
-      '<div class="q-text">'+q.text+'</div>'+
+      '<div class="q-text">'+_mpEsc(context.displayedQuestion)+'</div>'+
       '<div class="q-inst"><div class="q-inst-lbl">Instructions</div>'+
-        (q.instructions||[]).map(function(i){return '<div class="q-inst-item">'+i+'</div>';}).join('')+
+        (q.instructions||[]).map(function(item){return '<div class="q-inst-item">'+_mpEsc(item)+'</div>';}).join('')+
       '</div>'+
       '<div class="q-meta"><span>⏱ '+q.limit+'s max</span><span>🔄 Unlimited attempts</span><span>🤖 AI scored</span></div>'+
     '</div>'+
@@ -8605,15 +9056,32 @@ async function submitPlacement(){
   const plcBank=bank==='ppi'?'PlacementPI':'PlacementGD';
   const backNav=bank==='ppi'?'stu-ppi':'stu-pgd';
   const typeLabel=bank==='ppi'?'Placement PI':'Placement GD';
+  const variantModule=bank==='ppi'?'PI':'GD';
+  const questionContext=_activeQuestionContext(
+    q,
+    variantModule
+  );
 
-    await _runSubmit({
+  await _runSubmit({
     proc,
     moduleType: bank==='ppi' ? 'PI' : 'GD',
     driveLabel: plcBank+'_q'+q.num+'_'+new Date().toISOString().split('T')[0],
-    rubricPrompt: RUBRIC_PROMPT.replace('{COACH}','').replace('{CANDO}','').replace('{Q}',q.text).replace('{T}','{T}'),
+    rubricPrompt: RUBRIC_PROMPT.replace('{COACH}','').replace('{CANDO}','').replace('{Q}',_questionScoringContext(questionContext)).replace('{T}','{T}'),
     backBtn: '<div style="margin-top:14px"><button class="btn-secondary" data-nav="'+backNav+'" onclick="nav(this.dataset.nav)">← Back to '+typeLabel+'</button></div>',
     buildSub: function(result, transcript, driveLink){
-      return {qid:q.id,qnum:q.num,qtext:q.text,type:bank==='ppi'?'PI':'GD',score:result.score||0,criteria:result.criteria||{},feedback:result.feedback||{},cando:result.cando||'',flag:result.flag||'needs_improvement',transcript,duration:S.recSecs,date:new Date().toISOString().split('T')[0],driveLink:driveLink||''};
+      return Object.assign({
+        qnum:q.num,
+        type:bank==='ppi'?'PI':'GD',
+        score:result.score||0,
+        criteria:result.criteria||{},
+        feedback:result.feedback||{},
+        cando:result.cando||'',
+        flag:result.flag||'needs_improvement',
+        transcript:transcript,
+        duration:S.recSecs,
+        date:new Date().toISOString().split('T')[0],
+        driveLink:driveLink||''
+      }, _questionSubmissionFields(questionContext));
     },
     storeFn: function(sub){
       if(bank==='ppi') putPPISub(S.user.email,q.id,sub);
