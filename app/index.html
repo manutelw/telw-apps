@@ -3192,12 +3192,9 @@ function buildSidebar(){
     }
 
     // Every normal student can choose the four core CLARION modules.
-    // Advanced PI remains separately controlled for selected students.
+    // Advanced PI is available in the normal student menu.
     // Legacy accessType values remain stored for reporting only.
-    const allowedIds=['stu-diag','stu-bank','stu-ppi','stu-pgd','stu-dash'];
-    if(getAdvPIAccess(S.user.email)){
-      allowedIds.splice(4,0,'stu-advpi');
-    }
+    const allowedIds=['stu-diag','stu-bank','stu-ppi','stu-pgd','stu-advpi','stu-dash'];
     const visibleItems=items.filter(function(i){return allowedIds.includes(i.id);});
     visibleItems.forEach(function(i){
       if(i.grp!==lastGrp){
@@ -8841,17 +8838,9 @@ function renderPlacementGD(){
 
 // ════════════════════════════════════════════════
 // ADVANCED PI — STUDENT VIEW
-// Visible only when: accessType=placement AND advancedPIAccess=ON
+// Visible to normal students with the other practice modules
 // ════════════════════════════════════════════════
 function renderAdvancedPI(){
-  const access=S.user?.accessType||'lum';
-  const advOn=getAdvPIAccess(S.user.email);
-  if(access!=='placement'||!advOn){
-    set('<div class="ph"><div class="ph-title">Advanced PI Challenge Rounds</div></div>'+
-      '<div class="banner banner-info"><span class="banner-ic">🔒</span><div><div class="banner-title">Not yet unlocked</div>'+
-      '<div class="banner-sub">Advanced PI access is controlled by your trainer. Check with your trainer when you are ready for this round.</div></div></div>');
-    return;
-  }
   const subs=getAdvPISubs(S.user.email);
   const totalDone=Object.keys(subs).length;
   const bycat={};
