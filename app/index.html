@@ -5995,9 +5995,10 @@ function viewStudent(email){
 // Fetch all centrally-stored submissions and normalise them into the same shape
 // the Review table/openReview already expect (criteria/feedback parsed to objects).
 function _fetchReviewSubmissions(){
-  const url = localStorage.getItem(CLARION_SUBMISSIONS_URL_KEY) || '';
+    const url =
+    localStorage.getItem(CLARION_SUBMISSIONS_URL_KEY) ||
+    'https://script.google.com/macros/s/AKfycbzQTMkK80MexLseHbEEaothUbi9gAjJDZzHuGWU9XsxbP6iSMsFbcJd38k_YY7gbLPKhQ/exec';
   console.log('[CLARION] review fetch started; central URL configured:', !!url);
-  if(!url) return Promise.resolve([]);
   return fetch(url, {
     method: 'POST',
     headers: {'Content-Type':'text/plain;charset=utf-8'},
