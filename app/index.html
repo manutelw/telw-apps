@@ -3488,249 +3488,60 @@ function fallbackCopy(text){
   document.body.removeChild(ta);
 }
 
-```javascript
 function renderScoreHTML(sub, showBanner){
-  function parseObject(value){
-    if(!value) return {};
-    if(typeof value==='object') return value;
-    try{
-      const parsed=JSON.parse(String(value));
-      return parsed&&typeof parsed==='object'?parsed:{};
-    }catch(e){
-      return {};
-    }
-  }
+  const CRIT_DEFS=[
+    {k:'structure_clarity',    n:'Structure & Clarity'},
+    {k:'content_depth',        n:'Content Depth & Evidence'},
+    {k:'business_thinking',    n:'Business Thinking'},
+    {k:'comm_professionalism', n:'Communication & Professionalism'},
+    {k:'composure',            n:'Composure Under Pressure'},
+  ];
+  const c=sub.criteria||{};
+  const fb=sub.feedback||{};
+  const totalScore=parseFloat(sub.score)||0;
+  const isPass=totalScore>=6;
 
-  function escapeHtml(value){
-    return String(value===null||value===undefined?'':value)
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;')
-      .replace(/'/g,'&#039;')
-      .replace(/\r?\n/g,'<br>');
-  }
-
-  function getNumber(obj,keys){
-    for(let i=0;i<keys.length;i++){
-      const value=obj[keys[i]];
-      if(value!==undefined&&value!==null&&String(value).trim()!==''){
-        const numberValue=Number(value);
-        if(Number.isFinite(numberValue)) return numberValue;
-      }
-    }
-    return null;
-  }
-
-  function getFeedbackItem(feedback,keys){
-    for(let i=0;i<keys.length;i++){
-      if(feedback[keys[i]]!==undefined){
-        const item=feedback[keys[i]];
-        if(item&&typeof item==='object') return item;
-        if(typeof item==='string'&&item.trim()) return {worked:item};
-      }
-    }
-    return {};
-  }
-
-  const rawType=String(
-    sub.moduleType||
-    sub.module_type||
-    sub._displayType||
-    sub.type||
-    'LUM'
-  ).toLowerCase();
-
-  let moduleCode='LUM';
-
-  if(rawType.indexOf('diagnostic')!==-1){
-    moduleCode='DIAGNOSTICS';
-  }else if(
-    rawType==='gd'||
-    rawType.indexOf('group discussion')!==-1
-  ){
-    moduleCode='GD';
-  }else if(
-    rawType.indexOf('pi')!==-1||
-    rawType.indexOf('interview')!==-1||
-    rawType.indexOf('advanced')!==-1
-  ){
-    moduleCode='PI';
-  }
-
-  const MODULE_LABELS={
-    DIAGNOSTICS:'Diagnostic',
-    LUM:'Managerial Communication',
-    PI:'PI',
-    GD:'GD'
-  };
-
-  const CRITERIA_BY_MODULE={
-    DIAGNOSTICS:[
-      {n:'Structure & Clarity',keys:['structure_clarity']},
-      {n:'Business Thinking',keys:['business_thinking']},
-      {n:'Language Control',keys:['language_control']},
-      {n:'Confidence & Delivery',keys:['confidence_delivery']},
-      {n:'Professionalism',keys:['professionalism']}
-    ],
-
-    LUM:[
-      {n:'Structure & Clarity',keys:['structure_clarity']},
-      {n:'Business Thinking',keys:['business_thinking']},
-      {n:'Language Control',keys:['language_control']},
-      {n:'Confidence & Delivery',keys:['confidence_delivery']},
-      {n:'Professionalism',keys:['professionalism']}
-    ],
-
-    PI:[
-      {n:'Structure & Clarity',keys:['structure_clarity']},
-      {n:'Content Depth & Evidence',keys:['content_depth_evidence','content_depth']},
-      {n:'Business Thinking',keys:['business_thinking']},
-      {n:'Communication & Professionalism',keys:['communication_professionalism','comm_professionalism']},
-      {n:'Composure Under Pressure',keys:['composure_under_pressure','composure']}
-    ],
-
-    GD:[
-      {n:'Entry & Clarity',keys:['entry_clarity','structure_clarity']},
-      {n:'Reasoning (Content + Logic)',keys:['reasoning','content_depth_evidence','content_depth']},
-      {n:'Listening & Response',keys:['listening_response','business_thinking']},
-      {n:'Leadership Moves',keys:['leadership_moves','communication_professionalism','comm_professionalism']},
-      {n:'Composure Under Pressure',keys:['composure_under_pressure','composure']}
-    ]
-  };
-
-  const criteriaDefinitions=CRITERIA_BY_MODULE[moduleCode]||CRITERIA_BY_MODULE.LUM;
-  const moduleLabel=MODULE_LABELS[moduleCode]||'Managerial Communication';
-
-  const criteria=parseObject(sub.criteria);
-  const feedback=parseObject(sub.feedback);
-  const totalScore=Number(sub.score);
-  const safeTotal=Number.isFinite(totalScore)?totalScore:0;
-  const isPass=safeTotal>=6;
-
+  // Safe sub ID for onclick closures — store in window._lastFbSub
   window._lastFbSub=sub;
 
-  const criteriaRows=criteriaDefinitions.map(function(criterion,index){
-    const points=getNumber(criteria,criterion.keys);
-    const hasScore=points!==null;
-
-    const scoreColour=!hasScore
-      ? 'var(--muted)'
-      : points>=4
-        ? 'var(--green)'
-        : points>=3
-          ? 'var(--gold)'
-          : 'var(--red)';
-
-    const percentage=hasScore
-      ? Math.max(0,Math.min(100,Math.round(points/5*100)))
-      : 0;
-
-    const scoreText=hasScore
-      ? String(Math.round(points*10)/10)+'/5'
-      : '—';
-
-    const item=getFeedbackItem(feedback,criterion.keys);
-
-    const worked=
-      item.worked||
-      item.what_worked||
-      item.strength||
-      'Not available in this saved record.';
-
-    const weak=
-      item.weak||
-      item.what_held_it_back||
-      item.what_was_weak||
-      item.gap||
-      item.weakness||
-      'Not available in this saved record.';
-
-    const fix=
-      item.fix||
-      item.what_to_do_next||
-      item.how_to_fix||
-      item.improvement||
-      item.action||
-      'Not available in this saved record.';
-
+  const criteriaRows=CRIT_DEFS.map(function(cr,i){
+    const pts=c[cr.k]||0;
+    const f=fb[cr.k]||{};
+    const pctBar=Math.round(pts/2*100);
     return '<div class="fb-crit-block">'+
       '<div class="fb-crit-header">'+
-        '<span class="fb-crit-title">'+(index+1)+'. '+criterion.n+'</span>'+
-        '<span class="fb-crit-score" style="color:'+scoreColour+'">'+scoreText+'</span>'+
+        '<span class="fb-crit-title">'+(i+1)+'. '+cr.n+'</span>'+
+        '<span class="fb-crit-score" style="color:'+(pts>=2?'var(--green)':pts===1?'var(--gold)':'var(--red)')+'">'+pts+'/2</span>'+
       '</div>'+
-      '<div class="crit-bar" style="margin-bottom:8px">'+
-        '<div class="crit-fill" style="width:'+percentage+'%;background:'+scoreColour+'"></div>'+
-      '</div>'+
-      '<div class="fb-crit-row">'+
-        '<span class="fb-ic" style="color:var(--green)">✓</span>'+
-        '<span><strong>What worked:</strong> '+escapeHtml(worked)+'</span>'+
-      '</div>'+
-      '<div class="fb-crit-row">'+
-        '<span class="fb-ic" style="color:var(--red)">✗</span>'+
-        '<span><strong>What held it back:</strong> '+escapeHtml(weak)+'</span>'+
-      '</div>'+
-      '<div class="fb-crit-row">'+
-        '<span class="fb-ic" style="color:var(--blue)">→</span>'+
-        '<span style="color:var(--blue);font-weight:500"><strong>What to do next:</strong> '+escapeHtml(fix)+'</span>'+
-      '</div>'+
+      '<div class="crit-bar" style="margin-bottom:8px"><div class="crit-fill" style="width:'+pctBar+'%;background:'+(pts>=2?'var(--green)':pts===1?'var(--gold)':'var(--red)')+'"></div></div>'+
+      '<div class="fb-crit-row"><span class="fb-ic" style="color:var(--green)">✓</span><span>'+(f.worked||'Nothing to note')+'</span></div>'+
+      '<div class="fb-crit-row"><span class="fb-ic" style="color:var(--red)">✗</span><span>'+(f.weak||'Nothing to note')+'</span></div>'+
+      '<div class="fb-crit-row"><span class="fb-ic" style="color:var(--blue)">→</span><span style="color:var(--blue);font-weight:500">'+(f.fix||'—')+'</span></div>'+
     '</div>';
   }).join('');
 
-  const scoreDisplay=Number.isFinite(totalScore)
-    ? String(Math.round(totalScore*10)/10)
-    : '—';
-
-  return (
-    showBanner
-      ? '<div class="banner banner-ok">'+
-          '<span class="banner-ic">✅</span>'+
-          '<div>'+
-            '<div class="banner-title" style="color:var(--green)">Submitted & scored</div>'+
-            '<div class="banner-sub">'+
-              escapeHtml(sub.duration||'')+'s · '+
-              escapeHtml(moduleLabel)+' Evaluation · '+
-              escapeHtml(sub.date||'')+
-            '</div>'+
-          '</div>'+
-        '</div>'
-      : ''
-  )+
+  return (showBanner?'<div class="banner banner-ok"><span class="banner-ic">✅</span><div><div class="banner-title" style="color:var(--green)">Submitted & scored</div><div class="banner-sub">'+(sub.duration||'')+'s · TELW PI Evaluation · '+(sub.date||'')+'</div></div></div>':'')+
   '<div class="score-box">'+
     '<div class="sc-head">'+
       '<div>'+
-        '<div style="font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:3px">'+
-          'Total '+escapeHtml(moduleLabel)+' Score'+
-        '</div>'+
-        '<div class="sc-num">'+scoreDisplay+'</div>'+
+        '<div style="font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:3px">Total PI Score</div>'+
+        '<div class="sc-num">'+sub.score+'</div>'+
         '<div class="sc-denom">out of 10</div>'+
-        '<span class="sc-flag '+(isPass?'flag-pass':'flag-needs')+'">'+
-          (isPass?'Pass':'Developing')+
-        '</span>'+
+        '<span class="sc-flag '+(isPass?'flag-pass':'flag-needs')+'">'+(isPass?'Pass':'Developing')+'</span>'+
       '</div>'+
-      '<div style="text-align:right;font-family:var(--mono);font-size:.68rem;color:rgba(255,255,255,.3)">'+
-        escapeHtml(moduleLabel)+'<br>'+
-        escapeHtml(sub.duration||'')+'s'+
-      '</div>'+
+      '<div style="text-align:right;font-family:var(--mono);font-size:.68rem;color:rgba(255,255,255,.3)">'+(sub.type||'')+'<br>'+(sub.duration||'')+'s</div>'+
     '</div>'+
     '<div class="sc-body">'+
       '<div class="fb-structured">'+criteriaRows+'</div>'+
-      (
-        sub.cando
-          ? '<div class="fb-cando-block">'+
-              '<div class="fb-cando-lbl">Can-do</div>'+
-              '<div class="fb-cando-txt">'+escapeHtml(sub.cando)+'</div>'+
-            '</div>'
-          : ''
-      )+
+      (sub.cando?'<div class="fb-cando-block"><div class="fb-cando-lbl">Can-do</div><div class="fb-cando-txt">'+sub.cando+'</div></div>':'')+
       '<div class="fb-actions">'+
         '<button class="btn-dl" onclick="downloadFeedback(window._lastFbSub)">⬇ Download Feedback</button>'+
         '<button class="btn-cp" onclick="copyFeedback(window._lastFbSub)">Copy Feedback</button>'+
       '</div>'+
+      '<div class="fb-notice">Feedback is temporary and will not be stored permanently. Please download or copy it now.</div>'+
     '</div>'+
   '</div>';
 }
-```
 
 // ════════════════════════════════════════════════
 // RECORDING
