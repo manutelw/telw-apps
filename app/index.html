@@ -4756,7 +4756,7 @@ async function _serverScore(opts){
       headers: {'Content-Type': 'text/plain;charset=utf-8'},
       body:    JSON.stringify(body),
     }),
-    120000, 'Server scoring'
+    180000, 'Server scoring'
   );
 
   if(!res.ok){
