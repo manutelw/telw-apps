@@ -4279,18 +4279,31 @@ toast(errLabel + ' — no demo score used', 'err');
 }
 
   // ── Normalise overall score from criteria ────────────────────────────────
-  // The backend returns five criterion scores (0–2 each); the overall score must
-  // be their SUM (0–10), not a single criterion value. Recompute when all five
-  // criterion scores are present (skipped for diagnostics, which score differently).
+  // The current scoring backend returns five criterion scores on a 1–5 scale.
+  // The overall /10 score is therefore: average criterion score × 2.
+  // This replaces the old legacy rule that summed 0–2 scores and incorrectly
+  // turned strong PI/GD answers into 10/10.
   try{
     if(result && result.criteria && typeof result.criteria === 'object' && !opts.diagMode){
-      const CRIT_KEYS=['structure_clarity','content_depth','business_thinking','comm_professionalism','composure'];
-      const vals=CRIT_KEYS.map(function(k){ return parseFloat(result.criteria[k]); }).filter(function(n){ return !isNaN(n); });
+      const keySets=[
+        ['structure_clarity','content_depth','business_thinking','comm_professionalism','composure'],
+        ['structure_clarity','business_thinking','language_control','confidence_delivery','professionalism']
+      ];
+
+      let vals=[];
+      for(const keys of keySets){
+        const candidate=keys.map(function(k){ return parseFloat(result.criteria[k]); });
+        if(candidate.length===5 && candidate.every(function(n){ return !isNaN(n); })){
+          vals=candidate;
+          break;
+        }
+      }
+
       if(vals.length===5){
-        let totalScore=vals.reduce(function(a,b){ return a+b; },0);
+        let totalScore=Math.round(((vals.reduce(function(a,b){ return a+b; },0)/5)*2)*10)/10;
         totalScore=Math.max(0,Math.min(10,totalScore));
         if(parseFloat(result.score)!==totalScore){
-          console.log('[CLARION] overall score recomputed from criteria:', vals.join('+'), '=', totalScore, '(backend sent', result.score+')');
+          console.log('[CLARION] overall score corrected from 1–5 criteria:', vals.join('+'), '=>', totalScore, '(backend sent', result.score+')');
         }
         result.score=totalScore;
       }
@@ -5138,6 +5151,19 @@ function _mpDelta(delta,emptyText){
   return '<span style="font-family:var(--mono);font-size:.68rem;color:var(--muted);font-weight:700">● No change</span>';
 }
 
+function _mpOverallScore(row){
+  const criteriaDefs=_mpCriteriaForRow(row);
+  const vals=criteriaDefs
+    .map(function(c){return _mpCriterionScore(row,c);})
+    .filter(function(v){return v!==null;});
+
+  if(vals.length===5){
+    return Math.round(((vals.reduce(function(a,b){return a+b;},0)/5)*2)*10)/10;
+  }
+
+  return _mpNum(row&&row.overall_score);
+}
+
 function _mpFeedbackHtml(row,criterion){
   const item=_mpCriterionFeedback(row,criterion);
   if(!item) return '';
@@ -5154,8 +5180,8 @@ function _mpFeedbackHtml(row,criterion){
 }
 
 function _mpAttemptHtml(row,previous){
-  const score=_mpNum(row.overall_score);
-  const previousScore=previous?_mpNum(previous.overall_score):null;
+  const score=_mpOverallScore(row);
+  const previousScore=previous?_mpOverallScore(previous):null;
   const overallDelta=score!==null&&previousScore!==null?score-previousScore:null;
   const type=String(row.module_type||'Submission');
   const tagClass=type==='PI'?'tag-pi':type==='GD'?'tag-gd':type==='Diagnostics'?'tag-diag':'tag-lum';
@@ -5245,15 +5271,15 @@ async function renderStudentDash(){
       for(let i=0;i<group.length-1;i++) previousMap.set(group[i],group[i+1]);
     });
 
-    const scored=rows.filter(function(row){return _mpNum(row.overall_score)!==null;});
-    const scores=scored.map(function(row){return _mpNum(row.overall_score);});
+    const scored=rows.filter(function(row){return _mpOverallScore(row)!==null;});
+    const scores=scored.map(function(row){return _mpOverallScore(row);});
     const average=scores.length?scores.reduce(function(a,b){return a+b;},0)/scores.length:null;
-    const latestScore=scored.length?_mpNum(scored[0].overall_score):null;
+    const latestScore=scored.length?_mpOverallScore(scored[0]):null;
     const deltas=[];
     rows.forEach(function(row){
       const previous=previousMap.get(row);
       if(!previous) return;
-      const a=_mpNum(row.overall_score),b=_mpNum(previous.overall_score);
+      const a=_mpOverallScore(row),b=_mpOverallScore(previous);
       if(a!==null&&b!==null) deltas.push(a-b);
     });
     const improved=deltas.filter(function(d){return d>0;}).length;
