@@ -306,7 +306,7 @@ a{color:inherit}
         <button class="btn btn-dark login-submit" id="loginBtn" type="submit">Sign in →</button>
         <div class="form-error" id="loginError"></div>
       </form>
-      <div class="security-note">Your password is sent directly to Supabase authentication. The portal stores no password and cannot download another student’s data.</div>
+      <div class="security-note">Your password is sent directly to Supabase authentication. The portal stores no password, requires a fresh sign-in whenever the page is opened or refreshed, and can load only the records allowed for the authenticated student.</div>
     </div>
   </div>
 </section>
@@ -379,7 +379,11 @@ a{color:inherit}
 const CLARION_SUPABASE_URL = 'https://vtqatrhwfvzyodiftvkc.supabase.co';
 const CLARION_SUPABASE_KEY = 'sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
 const db = window.supabase.createClient(CLARION_SUPABASE_URL, CLARION_SUPABASE_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false
+  }
 });
 
 const MODULES = [
@@ -491,13 +495,20 @@ function setScreen(name){
   el('dashboard').classList.toggle('hidden',name!=='dashboard');
   el('logoutBtn').classList.toggle('hidden',name!=='dashboard');
 }
-async function loadProfileAndData(user){
+function canonicalStudentCode(value){
+  return String(value||'').normalize('NFC').trim().toUpperCase();
+}
+async function loadProfileAndData(user, expectedStudentCode){
   const profileRes=await db.from('profiles')
     .select('id,student_code,full_name,email,role,batch_id,access_type,active')
     .eq('id',user.id).single();
   if(profileRes.error) throw profileRes.error;
   const profile=profileRes.data;
   if(!profile || profile.active===false) throw new Error('Account inactive. Contact your trainer.');
+  if(expectedStudentCode && canonicalStudentCode(profile.student_code)!==canonicalStudentCode(expectedStudentCode)){
+    await db.auth.signOut();
+    throw new Error('This Student ID does not match the authenticated account.');
+  }
   if(String(profile.role||'').toLowerCase()!=='student'){
     await db.auth.signOut();
     throw new Error('This page is for student accounts only.');
@@ -739,7 +750,7 @@ async function login(event){
     const auth=await db.auth.signInWithPassword({email,password});
     if(auth.error) throw auth.error;
     setScreen('loading');
-    await loadProfileAndData(auth.data.user);
+    await loadProfileAndData(auth.data.user, sid);
   }catch(e){
     await db.auth.signOut().catch(()=>{});
     setScreen('login');
@@ -763,16 +774,12 @@ el('eyeBtn').addEventListener('click',()=>{
   const p=el('password');p.type=p.type==='password'?'text':'password';
   el('eyeBtn').textContent=p.type==='password'?'◉':'◎';
 });
-document.addEventListener('DOMContentLoaded',async()=>{
+document.addEventListener('DOMContentLoaded',()=>{
   const saved=localStorage.getItem('clarion_portal_student_id');
   if(saved){el('studentId').value=saved;el('rememberId').checked=true;}
-  const session=await db.auth.getSession();
-  const user=session.data && session.data.session && session.data.session.user;
-  if(user){
-    setScreen('loading');
-    try{await loadProfileAndData(user);}
-    catch(e){await db.auth.signOut();setScreen('login');el('loginError').textContent=e.message||'Could not load your record.';}
-  }else setScreen('login');
+  el('password').value='';
+  state={profile:null,submissions:[],evaluated:[]};
+  setScreen('login');
 });
 </script>
 </body>
