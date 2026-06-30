@@ -84,7 +84,61 @@
     .nav-links { display: flex; align-items: center; gap: 26px; font-size: .88rem; font-weight: 600; color: var(--ink-soft); }
     .nav-links a:hover { color: var(--violet); }
     .nav-actions { display: flex; gap: 10px; }
-    .menu-button { display: none; border: 0; background: transparent; font-size: 1.45rem; cursor: pointer; }
+    .menu-button {
+      display: none;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      box-shadow: var(--shadow-small);
+    }
+    .menu-button span {
+      width: 20px;
+      height: 2px;
+      border-radius: 999px;
+      background: var(--ink);
+      transition: transform .18s ease, opacity .18s ease;
+    }
+    .menu-button[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .menu-button[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+    .menu-button[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .mobile-menu {
+      display: none;
+      border-top: 1px solid var(--line);
+      background: rgba(251, 250, 247, .98);
+      box-shadow: 0 16px 30px rgba(31, 25, 65, .08);
+    }
+    .mobile-menu.open { display: block; }
+    .mobile-menu-inner {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 10px 0 16px;
+      display: grid;
+      gap: 6px;
+    }
+    .mobile-menu a {
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      border-radius: 11px;
+      color: var(--ink-soft);
+      font-weight: 700;
+      font-size: .92rem;
+    }
+    .mobile-menu a:hover,
+    .mobile-menu a:focus-visible {
+      color: var(--violet);
+      background: var(--violet-soft);
+      outline: none;
+    }
 
     .button {
       min-height: 44px;
@@ -401,6 +455,7 @@
       .module:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
       .data-grid { grid-template-columns: 1fr 1fr; }
       .nav-links { display: none; }
+      .menu-button { display: inline-flex; }
     }
 
     @media (max-width: 720px) {
@@ -452,11 +507,23 @@
   <a href="./portal/trainer/">Trainer</a>
   <a href="./portal/ceo/">Admin</a>
 </nav>
+      <button class="menu-button" id="menuButton" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
       <div class="nav-actions">
         <a class="button button-light" href="./app/">Try the demo</a>
         <a class="button button-dark" href="./app/">Login <span aria-hidden="true">→</span></a>
       </div>
     </div>
+    <nav class="mobile-menu" id="mobileMenu" aria-label="Mobile navigation">
+      <div class="mobile-menu-inner">
+        <a href="./portal/">Students</a>
+        <a href="./portal/trainer/">Trainer</a>
+        <a href="./portal/ceo/">Admin</a>
+      </div>
+    </nav>
   </header>
 
   <main id="top">
@@ -644,5 +711,42 @@
       <div class="footer-links"><a href="#how">How it works</a><a href="./app/">Login</a><a href="./app/">Try demo</a></div>
     </div>
   </footer>
+
+  <script>
+    (function () {
+      const button = document.getElementById('menuButton');
+      const menu = document.getElementById('mobileMenu');
+
+      if (!button || !menu) return;
+
+      function closeMenu() {
+        menu.classList.remove('open');
+        button.setAttribute('aria-expanded', 'false');
+        button.setAttribute('aria-label', 'Open navigation menu');
+      }
+
+      button.addEventListener('click', function () {
+        const willOpen = !menu.classList.contains('open');
+        menu.classList.toggle('open', willOpen);
+        button.setAttribute('aria-expanded', String(willOpen));
+        button.setAttribute(
+          'aria-label',
+          willOpen ? 'Close navigation menu' : 'Open navigation menu'
+        );
+      });
+
+      menu.querySelectorAll('a').forEach(function (link) {
+        link.addEventListener('click', closeMenu);
+      });
+
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closeMenu();
+      });
+
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 980) closeMenu();
+      });
+    }());
+  </script>
 </body>
 </html>
