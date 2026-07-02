@@ -724,6 +724,10 @@
         loginButton.textContent =
           "Login successful";
 
+        setTimeout(function () {
+  window.location.href = "./practice.html";
+}, 600);
+
       } catch (error) {
         console.error(
           "ASCENT login error:",
