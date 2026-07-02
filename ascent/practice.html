@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>ASCENT · Record Response</title>
+
+  <meta
+    name="description"
+    content="Record and submit your ASCENT speaking response"
+  >
+
+  <style>
+    :root {
+      --navy: #143a60;
+      --navy-dark: #102b47;
+      --blue: #27679d;
+      --blue-soft: #edf4fb;
+      --gold: #c67b00;
+      --gold-light: #f4c96b;
+      --text: #24364a;
+      --muted: #6c7b8d;
+      --border: #d7e1eb;
+      --white: #ffffff;
+      --danger: #b42318;
+      --danger-soft: #fff0ee;
+      --success: #18794e;
+      --success-soft: #eaf8f1;
+      --shadow: 0 22px 65px rgba(0, 0, 0, 0.24);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(
+          circle at top right,
+          rgba(244, 201, 107, 0.9) 0,
+          rgba(244, 201, 107, 0.25) 18%,
+          transparent 40%
+        ),
+        linear-gradient(
+          145deg,
+          #102a46,
+          #214d79
+        );
+      color: var(--text);
+      padding: 22px;
+    }
+
+    button,
+    audio {
+      font-family: inherit;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 18px;
+      padding: 18px 22px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.97);
+      box-shadow: var(--shadow);
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-mark {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background:
+        linear-gradient(
+          145deg,
+          var(--navy),
+          var(--blue)
+        );
+      color: var(--white);
+      font-size: 23px;
+      font-weight: 800;
+    }
+
+    .brand-text h1 {
+      color: var(--navy);
+      font-size: 25px;
+      letter-spacing: 1.5px;
+      line-height: 1;
+      margin-bottom: 5px;
+    }
+
+    .brand-text p {
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .logout-button {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 15px;
+      background: var(--white);
+      color: var(--navy);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .logout-button:hover {
+      background: var(--blue-soft);
+    }
+
+    .main-card {
+      display: grid;
+      grid-template-columns: 310px 1fr;
+      overflow: hidden;
+      border-radius: 24px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .student-panel {
+      min-height: 610px;
+      padding: 38px 30px;
+      color: var(--white);
+      background:
+        linear-gradient(
+          160deg,
+          rgba(14, 43, 72, 0.99),
+          rgba(32, 83, 128, 0.97)
+        );
+    }
+
+    .student-label {
+      display: inline-block;
+      margin-bottom: 28px;
+      padding: 7px 13px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+    }
+
+    .student-avatar {
+      width: 82px;
+      height: 82px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 20px;
+      border-radius: 50%;
+      background: rgba(244, 201, 107, 0.18);
+      color: var(--gold-light);
+      font-size: 31px;
+      font-weight: 800;
+    }
+
+    .student-name {
+      font-size: 25px;
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+
+    .student-id {
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+
+    .student-details {
+      display: grid;
+      gap: 15px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .detail-label {
+      color: rgba(255, 255, 255, 0.58);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .detail-value {
+      color: rgba(255, 255, 255, 0.94);
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .practice-panel {
+      min-height: 610px;
+      padding: 42px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .practice-panel h2 {
+      color: var(--navy);
+      font-size: 31px;
+      margin-bottom: 10px;
+    }
+
+    .intro-text {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.55;
+      margin-bottom: 28px;
+    }
+
+    .instruction-box {
+      margin-bottom: 25px;
+      padding: 16px 18px;
+      border: 1px solid #d5e3ef;
+      border-radius: 14px;
+      background: var(--blue-soft);
+      color: #49647d;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .recorder-box {
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: #fbfdff;
+    }
+
+    .recording-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 13px;
+      margin-bottom: 24px;
+    }
+
+    .recording-dot {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #aab7c4;
+    }
+
+    .recording-dot.active {
+      background: #d92d20;
+      animation: pulse 1.15s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(217, 45, 32, 0.45);
+      }
+
+      70% {
+        box-shadow: 0 0 0 11px rgba(217, 45, 32, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(217, 45, 32, 0);
+      }
+    }
+
+    .recording-state {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .recording-state.active {
+      color: var(--danger);
+    }
+
+    .timer {
+      min-width: 68px;
+      color: var(--navy);
+      font-size: 25px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .action-button {
+      min-height: 52px;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        opacity 0.15s ease;
+    }
+
+    .action-button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(20, 58, 96, 0.18);
+    }
+
+    .action-button:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+
+    .start-button {
+      background:
+        linear-gradient(
+          135deg,
+          var(--navy),
+          var(--blue)
+        );
+      color: var(--white);
+    }
+
+    .stop-button {
+      background: var(--danger);
+      color: var(--white);
+    }
+
+    .secondary-button {
+      border: 1px solid var(--border);
+      background: var(--white);
+      color: var(--navy);
+    }
+
+    .submit-button {
+      background:
+        linear-gradient(
+          135deg,
+          #b66f00,
+          #d98c10
+        );
+      color: var(--white);
+    }
+
+    .playback-section {
+      display: none;
+      margin-top: 22px;
+      padding-top: 22px;
+      border-top: 1px solid var(--border);
+    }
+
+    .playback-section.visible {
+      display: block;
+    }
+
+    .playback-title {
+      color: var(--navy);
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 11px;
+    }
+
+    audio {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+
+    .status-message {
+      min-height: 24px;
+      margin-top: 18px;
+      font-size: 14px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .status-message.error {
+      padding: 11px;
+      border-radius: 10px;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .status-message.success {
+      padding: 11px;
+      border-radius: 10px;
+      background: var(--success-soft);
+      color: var(--success);
+    }
+
+    .footer {
+      margin-top: 22px;
+      color: #8a97a6;
+      font-size: 12px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    @media (max-width: 780px) {
+      body {
+        padding: 12px;
+      }
+
+      .topbar {
+        padding: 14px 15px;
+        border-radius: 15px;
+      }
+
+      .brand-mark {
+        width: 42px;
+        height: 42px;
+      }
+
+      .brand-text h1 {
+        font-size: 21px;
+      }
+
+      .brand-text p {
+        font-size: 11px;
+      }
+
+      .main-card {
+        display: block;
+        border-radius: 20px;
+      }
+
+      .student-panel {
+        min-height: auto;
+        padding: 25px 23px;
+      }
+
+      .student-label {
+        margin-bottom: 18px;
+      }
+
+      .student-avatar {
+        width: 62px;
+        height: 62px;
+        margin-bottom: 14px;
+        font-size: 24px;
+      }
+
+      .student-name {
+        font-size: 22px;
+      }
+
+      .student-details {
+        grid-template-columns: 1fr 1fr;
+        margin-top: 18px;
+        padding-top: 18px;
+      }
+
+      .practice-panel {
+        min-height: auto;
+        padding: 30px 22px;
+      }
+
+      .practice-panel h2 {
+        font-size: 27px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .logout-button {
+        padding: 9px 11px;
+        font-size: 12px;
+      }
+
+      .brand-text p {
+        display: none;
+      }
+
+      .student-details {
+        grid-template-columns: 1fr;
+      }
+
+      .recorder-box {
+        padding: 21px 16px;
+      }
+
+      .recording-display {
+        flex-wrap: wrap;
+      }
+
+      .button-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+
+    <header class="topbar">
+      <div class="brand-wrap">
+        <div class="brand-mark">A</div>
+
+        <div class="brand-text">
+          <h1>ASCENT</h1>
+          <p>Speak. Improve. Move Forward.</p>
+        </div>
+      </div>
+
+      <button
+        id="logoutButton"
+        class="logout-button"
+        type="button"
+      >
+        Log Out
+      </button>
+    </header>
+
+    <main class="main-card">
+
+      <aside class="student-panel">
+        <div class="student-label">
+          ASCENT STUDENT
+        </div>
+
+        <div
+          id="studentAvatar"
+          class="student-avatar"
+        >
+          A
+        </div>
+
+        <h2
+          id="studentName"
+          class="student-name"
+        >
+          Student
+        </h2>
+
+        <div
+          id="studentId"
+          class="student-id"
+        >
+          Student ID
+        </div>
+
+        <div class="student-details">
+          <div>
+            <div class="detail-label">Batch</div>
+            <div
+              id="studentBatch"
+              class="detail-value"
+            >
+              —
+            </div>
+          </div>
+
+          <div>
+            <div class="detail-label">Email</div>
+            <div
+              id="studentEmail"
+              class="detail-value"
+            >
+              —
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="practice-panel">
+        <h2>Record Your Response</h2>
+
+        <p class="intro-text">
+          Record the response to the question assigned by your trainer.
+          You can listen to the recording and record it again before
+          submitting.
+        </p>
+
+        <div class="instruction-box">
+          Find a quiet place, keep the microphone close enough for a clear
+          recording, and speak naturally. The question itself does not need
+          to be entered into the app.
+        </div>
+
+        <div class="recorder-box">
+
+          <div class="recording-display">
+            <div
+              id="recordingDot"
+              class="recording-dot"
+            ></div>
+
+            <div
+              id="recordingState"
+              class="recording-state"
+            >
+              Ready to record
+            </div>
+
+            <div
+              id="timer"
+              class="timer"
+            >
+              00:00
+            </div>
+          </div>
+
+          <div class="button-grid">
+            <button
+              id="startButton"
+              class="action-button start-button"
+              type="button"
+            >
+              Start Recording
+            </button>
+
+            <button
+              id="stopButton"
+              class="action-button stop-button"
+              type="button"
+              disabled
+            >
+              Stop Recording
+            </button>
+          </div>
+
+          <div
+            id="playbackSection"
+            class="playback-section"
+          >
+            <div class="playback-title">
+              Listen to your recording
+            </div>
+
+            <audio
+              id="audioPlayback"
+              controls
+            ></audio>
+
+            <div class="button-grid">
+              <button
+                id="recordAgainButton"
+                class="action-button secondary-button"
+                type="button"
+              >
+                Record Again
+              </button>
+
+              <button
+                id="submitButton"
+                class="action-button submit-button"
+                type="button"
+              >
+                Submit Response
+              </button>
+            </div>
+          </div>
+
+          <div
+            id="statusMessage"
+            class="status-message"
+            role="status"
+            aria-live="polite"
+          ></div>
+
+        </div>
+
+        <div class="footer">
+          Created by Manu Vikraman<br>
+          A separate application within ClarionPrep
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    const SESSION_STORAGE_KEY =
+      "ascent_student_session";
+
+    const studentName =
+      document.getElementById("studentName");
+
+    const studentId =
+      document.getElementById("studentId");
+
+    const studentBatch =
+      document.getElementById("studentBatch");
+
+    const studentEmail =
+      document.getElementById("studentEmail");
+
+    const studentAvatar =
+      document.getElementById("studentAvatar");
+
+    const logoutButton =
+      document.getElementById("logoutButton");
+
+    const startButton =
+      document.getElementById("startButton");
+
+    const stopButton =
+      document.getElementById("stopButton");
+
+    const recordAgainButton =
+      document.getElementById("recordAgainButton");
+
+    const submitButton =
+      document.getElementById("submitButton");
+
+    const recordingDot =
+      document.getElementById("recordingDot");
+
+    const recordingState =
+      document.getElementById("recordingState");
+
+    const timer =
+      document.getElementById("timer");
+
+    const playbackSection =
+      document.getElementById("playbackSection");
+
+    const audioPlayback =
+      document.getElementById("audioPlayback");
+
+    const statusMessage =
+      document.getElementById("statusMessage");
+
+
+    let mediaRecorder = null;
+    let mediaStream = null;
+    let audioChunks = [];
+    let audioBlob = null;
+    let audioObjectUrl = null;
+    let timerInterval = null;
+    let recordingStartedAt = null;
+
+
+    function loadStudentSession() {
+      const storedSession =
+        localStorage.getItem(SESSION_STORAGE_KEY);
+
+      if (!storedSession) {
+        window.location.href = "./index.html";
+        return null;
+      }
+
+      try {
+        const session =
+          JSON.parse(storedSession);
+
+        if (
+          !session.sessionToken ||
+          !session.studentUuid ||
+          !session.studentId
+        ) {
+          throw new Error("Incomplete ASCENT session");
+        }
+
+        const expiryTime =
+          new Date(session.expiresAt).getTime();
+
+        if (
+          !Number.isFinite(expiryTime) ||
+          expiryTime <= Date.now()
+        ) {
+          localStorage.removeItem(
+            SESSION_STORAGE_KEY
+          );
+
+          window.location.href = "./index.html";
+          return null;
+        }
+
+        return session;
+
+      } catch (error) {
+        console.error(
+          "Invalid ASCENT session:",
+          error
+        );
+
+        localStorage.removeItem(
+          SESSION_STORAGE_KEY
+        );
+
+        window.location.href = "./index.html";
+        return null;
+      }
+    }
+
+
+    function displayStudent(session) {
+      const fullName =
+        session.fullName || "ASCENT Student";
+
+      studentName.textContent =
+        fullName;
+
+      studentId.textContent =
+        session.studentId || "—";
+
+      studentBatch.textContent =
+        session.batch || "—";
+
+      studentEmail.textContent =
+        session.email || "Not provided";
+
+      const firstCharacter =
+        fullName.trim().charAt(0).toUpperCase();
+
+      studentAvatar.textContent =
+        firstCharacter || "A";
+    }
+
+
+    function showStatus(message, type) {
+      statusMessage.className =
+        "status-message" +
+        (type ? " " + type : "");
+
+      statusMessage.textContent =
+        message;
+    }
+
+
+    function formatTime(totalSeconds) {
+      const minutes =
+        Math.floor(totalSeconds / 60);
+
+      const seconds =
+        totalSeconds % 60;
+
+      return (
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(seconds).padStart(2, "0")
+      );
+    }
+
+
+    function startTimer() {
+      recordingStartedAt = Date.now();
+
+      timer.textContent = "00:00";
+
+      timerInterval = setInterval(
+        function () {
+          const elapsedSeconds =
+            Math.floor(
+              (
+                Date.now() -
+                recordingStartedAt
+              ) / 1000
+            );
+
+          timer.textContent =
+            formatTime(elapsedSeconds);
+        },
+        250
+      );
+    }
+
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+
+    function stopMicrophoneTracks() {
+      if (mediaStream) {
+        mediaStream
+          .getTracks()
+          .forEach(function (track) {
+            track.stop();
+          });
+
+        mediaStream = null;
+      }
+    }
+
+
+    function getSupportedMimeType() {
+      const possibleTypes = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/mp4",
+        "audio/ogg;codecs=opus"
+      ];
+
+      if (
+        typeof MediaRecorder === "undefined"
+      ) {
+        return "";
+      }
+
+      return (
+        possibleTypes.find(
+          function (type) {
+            return MediaRecorder.isTypeSupported(
+              type
+            );
+          }
+        ) || ""
+      );
+    }
+
+
+    async function startRecording() {
+      showStatus("", "");
+
+      if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia ||
+        typeof MediaRecorder === "undefined"
+      ) {
+        showStatus(
+          "Audio recording is not supported in this browser. Please use an updated version of Chrome, Edge or Safari.",
+          "error"
+        );
+        return;
+      }
+
+      try {
+        mediaStream =
+          await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true
+            }
+          });
+
+        audioChunks = [];
+        audioBlob = null;
+
+        if (audioObjectUrl) {
+          URL.revokeObjectURL(audioObjectUrl);
+          audioObjectUrl = null;
+        }
+
+        audioPlayback.removeAttribute("src");
+        playbackSection.classList.remove(
+          "visible"
+        );
+
+        const supportedMimeType =
+          getSupportedMimeType();
+
+        mediaRecorder =
+          supportedMimeType
+            ? new MediaRecorder(
+                mediaStream,
+                {
+                  mimeType: supportedMimeType
+                }
+              )
+            : new MediaRecorder(mediaStream);
+
+        mediaRecorder.addEventListener(
+          "dataavailable",
+          function (event) {
+            if (
+              event.data &&
+              event.data.size > 0
+            ) {
+              audioChunks.push(event.data);
+            }
+          }
+        );
+
+        mediaRecorder.addEventListener(
+          "stop",
+          function () {
+            const recordedType =
+              mediaRecorder.mimeType ||
+              supportedMimeType ||
+              "audio/webm";
+
+            audioBlob =
+              new Blob(
+                audioChunks,
+                {
+                  type: recordedType
+                }
+              );
+
+            audioObjectUrl =
+              URL.createObjectURL(audioBlob);
+
+            audioPlayback.src =
+              audioObjectUrl;
+
+            playbackSection.classList.add(
+              "visible"
+            );
+
+            recordingState.textContent =
+              "Recording ready";
+
+            recordingState.classList.remove(
+              "active"
+            );
+
+            recordingDot.classList.remove(
+              "active"
+            );
+
+            startButton.disabled = false;
+            stopButton.disabled = true;
+
+            showStatus(
+              "Your recording is ready. Listen to it before submitting.",
+              "success"
+            );
+
+            stopMicrophoneTracks();
+          }
+        );
+
+        mediaRecorder.start(250);
+
+        startButton.disabled = true;
+        stopButton.disabled = false;
+
+        recordingDot.classList.add("active");
+        recordingState.classList.add("active");
+
+        recordingState.textContent =
+          "Recording now";
+
+        startTimer();
+
+      } catch (error) {
+        console.error(
+          "Microphone error:",
+          error
+        );
+
+        stopMicrophoneTracks();
+
+        showStatus(
+          "ASCENT could not access the microphone. Please allow microphone permission and try again.",
+          "error"
+        );
+      }
+    }
+
+
+    function stopRecording() {
+      if (
+        !mediaRecorder ||
+        mediaRecorder.state !== "recording"
+      ) {
+        return;
+      }
+
+      stopButton.disabled = true;
+      recordingState.textContent =
+        "Preparing recording…";
+
+      stopTimer();
+      mediaRecorder.stop();
+    }
+
+
+    function resetRecording() {
+      if (
+        mediaRecorder &&
+        mediaRecorder.state === "recording"
+      ) {
+        mediaRecorder.stop();
+      }
+
+      stopTimer();
+      stopMicrophoneTracks();
+
+      audioChunks = [];
+      audioBlob = null;
+
+      if (audioObjectUrl) {
+        URL.revokeObjectURL(audioObjectUrl);
+        audioObjectUrl = null;
+      }
+
+      audioPlayback.removeAttribute("src");
+
+      playbackSection.classList.remove(
+        "visible"
+      );
+
+      recordingDot.classList.remove(
+        "active"
+      );
+
+      recordingState.classList.remove(
+        "active"
+      );
+
+      recordingState.textContent =
+        "Ready to record";
+
+      timer.textContent = "00:00";
+
+      startButton.disabled = false;
+      stopButton.disabled = true;
+
+      showStatus(
+        "The earlier recording has been cleared. You can record again.",
+        ""
+      );
+    }
+
+
+    function submitRecording() {
+      if (
+        !audioBlob ||
+        audioBlob.size === 0
+      ) {
+        showStatus(
+          "Please record your response before submitting.",
+          "error"
+        );
+        return;
+      }
+
+      showStatus(
+        "The recorder is working correctly. Audio submission and evaluation will be connected in the next step.",
+        "success"
+      );
+    }
+
+
+    function logOut() {
+      stopTimer();
+      stopMicrophoneTracks();
+
+      if (audioObjectUrl) {
+        URL.revokeObjectURL(audioObjectUrl);
+      }
+
+      localStorage.removeItem(
+        SESSION_STORAGE_KEY
+      );
+
+      window.location.href =
+        "./index.html";
+    }
+
+
+    const currentSession =
+      loadStudentSession();
+
+    if (currentSession) {
+      displayStudent(currentSession);
+    }
+
+
+    startButton.addEventListener(
+      "click",
+      startRecording
+    );
+
+    stopButton.addEventListener(
+      "click",
+      stopRecording
+    );
+
+    recordAgainButton.addEventListener(
+      "click",
+      resetRecording
+    );
+
+    submitButton.addEventListener(
+      "click",
+      submitRecording
+    );
+
+    logoutButton.addEventListener(
+      "click",
+      logOut
+    );
+
+
+    window.addEventListener(
+      "beforeunload",
+      function () {
+        stopTimer();
+        stopMicrophoneTracks();
+
+        if (audioObjectUrl) {
+          URL.revokeObjectURL(
+            audioObjectUrl
+          );
+        }
+      }
+    );
+  </script>
+</body>
+</html>
