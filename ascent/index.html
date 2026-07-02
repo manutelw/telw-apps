@@ -524,64 +524,230 @@
   </main>
 
   <script>
-    const loginForm = document.getElementById("loginForm");
-    const identityInput = document.getElementById("studentIdentity");
-    const passwordInput = document.getElementById("studentPassword");
-    const loginButton = document.getElementById("loginButton");
-    const statusMessage = document.getElementById("statusMessage");
-    const showPasswordButton =
-      document.getElementById("showPasswordButton");
+  const SUPABASE_URL =
+    "https://vtqatrhwfvzyodiftvkc.supabase.co";
 
-    showPasswordButton.addEventListener("click", function () {
-      const passwordIsHidden = passwordInput.type === "password";
+  const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
 
-      passwordInput.type = passwordIsHidden ? "text" : "password";
+  const LOGIN_RPC_URL =
+    SUPABASE_URL + "/rest/v1/rpc/ascent_login";
+
+  const loginForm =
+    document.getElementById("loginForm");
+
+  const identityInput =
+    document.getElementById("studentIdentity");
+
+  const passwordInput =
+    document.getElementById("studentPassword");
+
+  const loginButton =
+    document.getElementById("loginButton");
+
+  const statusMessage =
+    document.getElementById("statusMessage");
+
+  const showPasswordButton =
+    document.getElementById("showPasswordButton");
+
+
+  showPasswordButton.addEventListener(
+    "click",
+    function () {
+      const passwordIsHidden =
+        passwordInput.type === "password";
+
+      passwordInput.type =
+        passwordIsHidden ? "text" : "password";
+
       showPasswordButton.textContent =
         passwordIsHidden ? "Hide" : "Show";
 
       showPasswordButton.setAttribute(
         "aria-label",
-        passwordIsHidden ? "Hide password" : "Show password"
+        passwordIsHidden
+          ? "Hide password"
+          : "Show password"
       );
-    });
+    }
+  );
 
-    loginForm.addEventListener("submit", function (event) {
+
+  function showStatus(message, type) {
+    statusMessage.className =
+      "status-message" +
+      (type ? " " + type : "");
+
+    statusMessage.textContent = message;
+  }
+
+
+  loginForm.addEventListener(
+    "submit",
+    async function (event) {
       event.preventDefault();
 
-      const identity = identityInput.value.trim();
-      const password = passwordInput.value;
+      const identity =
+        identityInput.value.trim();
 
-      statusMessage.className = "status-message";
-      statusMessage.textContent = "";
+      const password =
+        passwordInput.value;
+
+      showStatus("", "");
 
       if (!identity) {
-        statusMessage.className = "status-message error";
-        statusMessage.textContent =
-          "Please enter your email address or student ID.";
+        showStatus(
+          "Please enter your email address or student ID.",
+          "error"
+        );
+
         identityInput.focus();
         return;
       }
 
       if (!password) {
-        statusMessage.className = "status-message error";
-        statusMessage.textContent =
-          "Please enter your password.";
+        showStatus(
+          "Please enter your password.",
+          "error"
+        );
+
         passwordInput.focus();
+        return;
+      }
+
+      if (
+        SUPABASE_URL.includes("PASTE_") ||
+        SUPABASE_PUBLISHABLE_KEY.includes("PASTE_")
+      ) {
+        showStatus(
+          "ASCENT connection details have not been added.",
+          "error"
+        );
         return;
       }
 
       loginButton.disabled = true;
       loginButton.textContent = "Checking login…";
 
-      setTimeout(function () {
-        loginButton.disabled = false;
-        loginButton.textContent = "Log in to ASCENT";
+      try {
+        const response = await fetch(
+          LOGIN_RPC_URL,
+          {
+            method: "POST",
 
-        statusMessage.className = "status-message";
-        statusMessage.textContent =
-          "The secure ASCENT login connection is being configured.";
-      }, 700);
-    });
-  </script>
+            headers: {
+              "apikey":
+                SUPABASE_PUBLISHABLE_KEY,
+
+              "Authorization":
+                "Bearer " +
+                SUPABASE_PUBLISHABLE_KEY,
+
+              "Content-Type":
+                "application/json"
+            },
+
+            body: JSON.stringify({
+              p_identity: identity,
+              p_password: password
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const errorText =
+            await response.text();
+
+          throw new Error(
+            "Login request failed: " +
+            response.status +
+            " " +
+            errorText
+          );
+        }
+
+        const loginResult =
+          await response.json();
+
+        if (
+          !Array.isArray(loginResult) ||
+          loginResult.length === 0
+        ) {
+          showStatus(
+            "Incorrect student ID, email address or password.",
+            "error"
+          );
+
+          passwordInput.value = "";
+          passwordInput.focus();
+          return;
+        }
+
+        const student = loginResult[0];
+
+        const sessionData = {
+          sessionToken:
+            student.session_token,
+
+          studentUuid:
+            student.student_uuid,
+
+          studentId:
+            student.student_id,
+
+          fullName:
+            student.full_name,
+
+          email:
+            student.email,
+
+          batch:
+            student.batch,
+
+          expiresAt:
+            student.expires_at
+        };
+
+        localStorage.setItem(
+          "ascent_student_session",
+          JSON.stringify(sessionData)
+        );
+
+        showStatus(
+          "Login successful. Welcome, " +
+          student.full_name +
+          ".",
+          "success"
+        );
+
+        loginButton.textContent =
+          "Login successful";
+
+      } catch (error) {
+        console.error(
+          "ASCENT login error:",
+          error
+        );
+
+        showStatus(
+          "ASCENT could not connect. Please try again.",
+          "error"
+        );
+
+      } finally {
+        loginButton.disabled = false;
+
+        if (
+          loginButton.textContent !==
+          "Login successful"
+        ) {
+          loginButton.textContent =
+            "Log in to ASCENT";
+        }
+      }
+    }
+  );
+</script>
 </body>
 </html>
