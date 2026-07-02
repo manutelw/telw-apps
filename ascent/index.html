@@ -8,130 +8,580 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>ASCENT · Speaking Practice</title>
+  <title>ASCENT · Student Login</title>
 
   <meta
     name="description"
-    content="ASCENT speaking practice and feedback platform"
+    content="ASCENT speaking-practice platform for LUM, PI and GD responses"
   >
 
   <style>
+    :root {
+      --navy: #143a60;
+      --navy-dark: #102b47;
+      --blue-soft: #edf4fb;
+      --gold: #c67b00;
+      --gold-light: #f4c96b;
+      --text: #24364a;
+      --muted: #6c7b8d;
+      --border: #d7e1eb;
+      --white: #ffffff;
+      --danger: #b42318;
+      --success: #18794e;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
+    html,
+    body {
+      min-height: 100%;
+    }
+
     body {
       min-height: 100vh;
       font-family: Arial, Helvetica, sans-serif;
       background:
-        radial-gradient(circle at top right, #f4c96b 0, transparent 35%),
-        linear-gradient(145deg, #12243a, #20466e);
-      color: #ffffff;
+        radial-gradient(
+          circle at top right,
+          rgba(244, 201, 107, 0.95) 0,
+          rgba(244, 201, 107, 0.3) 18%,
+          transparent 40%
+        ),
+        linear-gradient(
+          145deg,
+          #102a46,
+          #214d79
+        );
+      color: var(--text);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 24px;
     }
 
-    .card {
+    .page-shell {
       width: 100%;
-      max-width: 520px;
-      background: rgba(255, 255, 255, 0.97);
-      color: #17263a;
-      border-radius: 24px;
-      padding: 42px 32px;
-      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
-      text-align: center;
+      max-width: 980px;
+      display: grid;
+      grid-template-columns: 1fr 430px;
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 26px;
+      overflow: hidden;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
     }
 
-    .brand {
+    .intro-panel {
+      position: relative;
+      min-height: 620px;
+      padding: 62px 54px;
+      color: var(--white);
+      background:
+        linear-gradient(
+          160deg,
+          rgba(14, 43, 72, 0.98),
+          rgba(30, 78, 121, 0.96)
+        );
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .intro-panel::before,
+    .intro-panel::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .intro-panel::before {
+      width: 280px;
+      height: 280px;
+      right: -120px;
+      top: -80px;
+    }
+
+    .intro-panel::after {
+      width: 190px;
+      height: 190px;
+      left: -80px;
+      bottom: -70px;
+    }
+
+    .brand-chip {
+      position: relative;
+      z-index: 1;
+      align-self: flex-start;
       display: inline-block;
-      padding: 7px 15px;
-      margin-bottom: 22px;
+      padding: 8px 14px;
+      margin-bottom: 28px;
       border-radius: 999px;
-      background: #e9f0f8;
-      color: #1b4a75;
-      font-size: 13px;
+      background: rgba(255, 255, 255, 0.13);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 12px;
       font-weight: 700;
-      letter-spacing: 1.5px;
+      letter-spacing: 1.6px;
     }
 
-    h1 {
-      font-size: clamp(38px, 9vw, 58px);
-      line-height: 1;
-      letter-spacing: 2px;
-      color: #173d62;
-      margin-bottom: 12px;
+    .intro-panel h1 {
+      position: relative;
+      z-index: 1;
+      font-size: clamp(48px, 7vw, 72px);
+      line-height: 0.95;
+      letter-spacing: 3px;
+      margin-bottom: 18px;
     }
 
-    .subtitle {
-      font-size: 19px;
+    .tagline {
+      position: relative;
+      z-index: 1;
+      color: var(--gold-light);
+      font-size: 22px;
       font-weight: 700;
-      color: #bf7a12;
-      margin-bottom: 24px;
+      margin-bottom: 28px;
     }
 
-    .description {
-      font-size: 16px;
-      line-height: 1.65;
-      color: #536174;
+    .intro-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 500px;
+      font-size: 17px;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.88);
+      margin-bottom: 34px;
+    }
+
+    .feature-list {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 16px;
+    }
+
+    .feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .feature-mark {
+      flex: 0 0 auto;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(244, 201, 107, 0.18);
+      color: var(--gold-light);
+      font-weight: 700;
+    }
+
+    .login-panel {
+      padding: 54px 42px 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: var(--white);
+    }
+
+    .mobile-brand {
+      display: none;
+    }
+
+    .login-panel h2 {
+      color: var(--navy);
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+
+    .login-intro {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
       margin-bottom: 30px;
     }
 
-    .status {
-      border: 1px solid #d6e2ee;
-      background: #f4f8fc;
-      border-radius: 14px;
-      padding: 16px;
-      font-size: 15px;
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      color: var(--text);
+      font-size: 14px;
       font-weight: 700;
-      color: #244e73;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      min-height: 50px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0 14px;
+      font-size: 16px;
+      color: var(--text);
+      background: #fbfdff;
+      outline: none;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    input:focus {
+      border-color: #4d83b5;
+      box-shadow: 0 0 0 4px rgba(77, 131, 181, 0.13);
+      background: var(--white);
+    }
+
+    .password-wrap {
+      position: relative;
+    }
+
+    .password-wrap input {
+      padding-right: 82px;
+    }
+
+    .show-password {
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      transform: translateY(-50%);
+      border: 0;
+      background: transparent;
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .login-button {
+      width: 100%;
+      min-height: 52px;
+      border: 0;
+      border-radius: 12px;
+      background: linear-gradient(
+        135deg,
+        var(--navy),
+        #246096
+      );
+      color: var(--white);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+    }
+
+    .login-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(20, 58, 96, 0.24);
+    }
+
+    .login-button:active {
+      transform: translateY(0);
+    }
+
+    .login-button:disabled {
+      opacity: 0.65;
+      cursor: wait;
+      transform: none;
+    }
+
+    .status-message {
+      min-height: 22px;
+      margin-top: 14px;
+      font-size: 14px;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .status-message.error {
+      color: var(--danger);
+    }
+
+    .status-message.success {
+      color: var(--success);
+    }
+
+    .help-note {
+      margin-top: 24px;
+      padding: 14px;
+      border-radius: 12px;
+      background: var(--blue-soft);
+      color: #51677c;
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
     }
 
     .footer {
       margin-top: 28px;
+      color: #8996a5;
       font-size: 12px;
-      color: #8190a1;
+      line-height: 1.5;
+      text-align: center;
     }
 
-    @media (max-width: 520px) {
+    @media (max-width: 820px) {
       body {
         padding: 16px;
       }
 
-      .card {
-        padding: 34px 22px;
-        border-radius: 20px;
+      .page-shell {
+        max-width: 480px;
+        display: block;
+        border-radius: 22px;
+      }
+
+      .intro-panel {
+        display: none;
+      }
+
+      .login-panel {
+        min-height: 620px;
+        padding: 38px 26px 28px;
+      }
+
+      .mobile-brand {
+        display: block;
+        text-align: center;
+        margin-bottom: 32px;
+      }
+
+      .mobile-brand .small-brand {
+        display: inline-block;
+        padding: 7px 13px;
+        margin-bottom: 15px;
+        border-radius: 999px;
+        background: var(--blue-soft);
+        color: var(--navy);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+      }
+
+      .mobile-brand h1 {
+        color: var(--navy);
+        font-size: 46px;
+        letter-spacing: 2px;
+        line-height: 1;
+        margin-bottom: 10px;
+      }
+
+      .mobile-brand p {
+        color: var(--gold);
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .login-panel h2 {
+        font-size: 26px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      body {
+        padding: 10px;
+      }
+
+      .login-panel {
+        padding: 30px 20px 24px;
       }
     }
   </style>
 </head>
 
 <body>
-  <main class="card">
-    <div class="brand">CLARIONPREP.COM</div>
+  <main class="page-shell">
 
-    <h1>ASCENT</h1>
+    <section class="intro-panel">
+      <div class="brand-chip">CLARIONPREP.COM</div>
 
-    <div class="subtitle">
-      Speak. Improve. Move Forward.
-    </div>
+      <h1>ASCENT</h1>
 
-    <p class="description">
-      ASCENT is the speaking-practice platform for LUM,
-      Personal Interview and Group Discussion responses.
-    </p>
+      <div class="tagline">
+        Speak. Improve. Move Forward.
+      </div>
 
-    <div class="status">
-      The ASCENT student application is being prepared.
-    </div>
+      <p class="intro-copy">
+        Record your response, receive an immediate score and detailed
+        feedback, and steadily improve your LUM, personal interview and
+        group discussion performance.
+      </p>
 
-    <div class="footer">
+      <div class="feature-list">
+        <div class="feature">
+          <span class="feature-mark">1</span>
+          <span>Record your response directly on your phone or laptop.</span>
+        </div>
+
+        <div class="feature">
+          <span class="feature-mark">2</span>
+          <span>Receive rubric-based evaluation and a score out of 10.</span>
+        </div>
+
+        <div class="feature">
+          <span class="feature-mark">3</span>
+          <span>Review detailed feedback immediately after submission.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="login-panel">
+
+      <div class="mobile-brand">
+        <div class="small-brand">CLARIONPREP.COM</div>
+        <h1>ASCENT</h1>
+        <p>Speak. Improve. Move Forward.</p>
+      </div>
+
+      <h2>Student Login</h2>
+
+      <p class="login-intro">
+        Enter your registered email address or student ID and password.
+      </p>
+
+      <form id="loginForm" novalidate>
+
+        <div class="form-group">
+          <label for="studentIdentity">
+            Email address or Student ID
+          </label>
+
+          <input
+            id="studentIdentity"
+            name="studentIdentity"
+            type="text"
+            autocomplete="username"
+            placeholder="Enter email or student ID"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="studentPassword">
+            Password
+          </label>
+
+          <div class="password-wrap">
+            <input
+              id="studentPassword"
+              name="studentPassword"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Enter password"
+              required
+            >
+
+            <button
+              id="showPasswordButton"
+              class="show-password"
+              type="button"
+              aria-label="Show password"
+            >
+              Show
+            </button>
+          </div>
+        </div>
+
+        <button
+          id="loginButton"
+          class="login-button"
+          type="submit"
+        >
+          Log in to ASCENT
+        </button>
+
+        <div
+          id="statusMessage"
+          class="status-message"
+          role="status"
+          aria-live="polite"
+        ></div>
+      </form>
+
+      <div class="help-note">
+        Use the login details provided by your trainer.
+      </div>
+
+      <div class="footer">
         Created by Manu Vikraman<br>
-      A separate application within ClarionPrep
-    </div>
+        A separate application within ClarionPrep
+      </div>
+
+    </section>
   </main>
+
+  <script>
+    const loginForm = document.getElementById("loginForm");
+    const identityInput = document.getElementById("studentIdentity");
+    const passwordInput = document.getElementById("studentPassword");
+    const loginButton = document.getElementById("loginButton");
+    const statusMessage = document.getElementById("statusMessage");
+    const showPasswordButton =
+      document.getElementById("showPasswordButton");
+
+    showPasswordButton.addEventListener("click", function () {
+      const passwordIsHidden = passwordInput.type === "password";
+
+      passwordInput.type = passwordIsHidden ? "text" : "password";
+      showPasswordButton.textContent =
+        passwordIsHidden ? "Hide" : "Show";
+
+      showPasswordButton.setAttribute(
+        "aria-label",
+        passwordIsHidden ? "Hide password" : "Show password"
+      );
+    });
+
+    loginForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      const identity = identityInput.value.trim();
+      const password = passwordInput.value;
+
+      statusMessage.className = "status-message";
+      statusMessage.textContent = "";
+
+      if (!identity) {
+        statusMessage.className = "status-message error";
+        statusMessage.textContent =
+          "Please enter your email address or student ID.";
+        identityInput.focus();
+        return;
+      }
+
+      if (!password) {
+        statusMessage.className = "status-message error";
+        statusMessage.textContent =
+          "Please enter your password.";
+        passwordInput.focus();
+        return;
+      }
+
+      loginButton.disabled = true;
+      loginButton.textContent = "Checking login…";
+
+      setTimeout(function () {
+        loginButton.disabled = false;
+        loginButton.textContent = "Log in to ASCENT";
+
+        statusMessage.className = "status-message";
+        statusMessage.textContent =
+          "The secure ASCENT login connection is being configured.";
+      }, 700);
+    });
+  </script>
 </body>
 </html>
