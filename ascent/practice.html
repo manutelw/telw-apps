@@ -417,6 +417,203 @@
       color: var(--success);
     }
 
+    .result-panel {
+      display: none;
+      margin-top: 26px;
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--white);
+    }
+
+    .result-panel.visible {
+      display: block;
+    }
+
+    .result-panel.not-evaluable {
+      border-color: #e6b8b3;
+      background: #fffafa;
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .result-heading {
+      color: var(--navy);
+      font-size: 24px;
+      margin-bottom: 7px;
+    }
+
+    .result-verdict {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .result-summary {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: stretch;
+      gap: 10px;
+    }
+
+    .score-box,
+    .category-box {
+      min-width: 116px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      text-align: center;
+    }
+
+    .score-box {
+      background: linear-gradient(
+        145deg,
+        var(--navy),
+        var(--blue)
+      );
+      color: var(--white);
+    }
+
+    .category-box {
+      border: 1px solid #ead7af;
+      background: #fff8e8;
+      color: #845000;
+    }
+
+    .summary-label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      opacity: 0.78;
+    }
+
+    .score-value {
+      display: block;
+      font-size: 29px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .category-value {
+      display: block;
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .criteria-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .criterion-card {
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: #fbfdff;
+    }
+
+    .criterion-topline {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 9px;
+    }
+
+    .criterion-name {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .criterion-score {
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .criterion-track {
+      height: 7px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e5edf5;
+    }
+
+    .criterion-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(
+        90deg,
+        var(--navy),
+        var(--blue)
+      );
+    }
+
+    .feedback-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .feedback-card,
+    .result-text-card {
+      padding: 17px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #fbfdff;
+    }
+
+    .feedback-title,
+    .result-text-title {
+      color: var(--navy);
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .feedback-list {
+      padding-left: 19px;
+      color: #465d73;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .feedback-list li + li {
+      margin-top: 7px;
+    }
+
+    .result-text-card + .result-text-card {
+      margin-top: 14px;
+    }
+
+    .result-text {
+      color: #465d73;
+      font-size: 14px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .result-action-row {
+      margin-top: 18px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .result-action-row .action-button {
+      min-width: 210px;
+    }
+
     .footer {
       margin-top: 22px;
       color: #8a97a6;
@@ -513,6 +710,26 @@
 
       .button-grid {
         grid-template-columns: 1fr;
+      }
+
+      .result-header,
+      .result-summary {
+        display: block;
+      }
+
+      .score-box,
+      .category-box {
+        margin-top: 10px;
+      }
+
+      .criteria-grid,
+      .feedback-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .result-action-row .action-button {
+        width: 100%;
+        min-width: 0;
       }
     }
   </style>
@@ -689,6 +906,126 @@
 
         </div>
 
+        <section
+          id="resultPanel"
+          class="result-panel"
+          aria-live="polite"
+        >
+          <div class="result-header">
+            <div>
+              <h3
+                id="resultHeading"
+                class="result-heading"
+              >
+                Your Evaluation
+              </h3>
+
+              <p
+                id="resultVerdict"
+                class="result-verdict"
+              ></p>
+            </div>
+
+            <div
+              id="resultSummary"
+              class="result-summary"
+            >
+              <div class="score-box">
+                <span class="summary-label">Score</span>
+                <span
+                  id="resultScore"
+                  class="score-value"
+                >
+                  —
+                </span>
+              </div>
+
+              <div class="category-box">
+                <span class="summary-label">Category</span>
+                <span
+                  id="resultCategory"
+                  class="category-value"
+                >
+                  —
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div
+            id="criteriaGrid"
+            class="criteria-grid"
+          ></div>
+
+          <div
+            id="feedbackGrid"
+            class="feedback-grid"
+          >
+            <div
+              id="strengthsCard"
+              class="feedback-card"
+            >
+              <div class="feedback-title">
+                What Worked
+              </div>
+
+              <ul
+                id="strengthsList"
+                class="feedback-list"
+              ></ul>
+            </div>
+
+            <div
+              id="improvementsCard"
+              class="feedback-card"
+            >
+              <div class="feedback-title">
+                What to Improve
+              </div>
+
+              <ul
+                id="improvementsList"
+                class="feedback-list"
+              ></ul>
+            </div>
+          </div>
+
+          <div class="result-text-card">
+            <div class="result-text-title">
+              Transcript
+            </div>
+
+            <div
+              id="resultTranscript"
+              class="result-text"
+            ></div>
+          </div>
+
+          <div
+            id="improvedVersionCard"
+            class="result-text-card"
+          >
+            <div class="result-text-title">
+              A Stronger Version
+            </div>
+
+            <div
+              id="resultImprovedVersion"
+              class="result-text"
+            ></div>
+          </div>
+
+          <div class="result-action-row">
+            <button
+              id="newResponseButton"
+              class="action-button secondary-button"
+              type="button"
+            >
+              Record Another Response
+            </button>
+          </div>
+        </section>
+
         <div class="footer">
           Created by Manu Vikraman<br>
           A separate application within ClarionPrep
@@ -759,6 +1096,54 @@
 
     const statusMessage =
       document.getElementById("statusMessage");
+
+    const resultPanel =
+      document.getElementById("resultPanel");
+
+    const resultHeading =
+      document.getElementById("resultHeading");
+
+    const resultVerdict =
+      document.getElementById("resultVerdict");
+
+    const resultSummary =
+      document.getElementById("resultSummary");
+
+    const resultScore =
+      document.getElementById("resultScore");
+
+    const resultCategory =
+      document.getElementById("resultCategory");
+
+    const criteriaGrid =
+      document.getElementById("criteriaGrid");
+
+    const feedbackGrid =
+      document.getElementById("feedbackGrid");
+
+    const strengthsCard =
+      document.getElementById("strengthsCard");
+
+    const strengthsList =
+      document.getElementById("strengthsList");
+
+    const improvementsCard =
+      document.getElementById("improvementsCard");
+
+    const improvementsList =
+      document.getElementById("improvementsList");
+
+    const resultTranscript =
+      document.getElementById("resultTranscript");
+
+    const improvedVersionCard =
+      document.getElementById("improvedVersionCard");
+
+    const resultImprovedVersion =
+      document.getElementById("resultImprovedVersion");
+
+    const newResponseButton =
+      document.getElementById("newResponseButton");
 
 
     let mediaStream = null;
@@ -859,6 +1244,352 @@
 
       statusMessage.textContent =
         message;
+    }
+
+
+    function clearElement(element) {
+      while (element.firstChild) {
+        element.removeChild(
+          element.firstChild
+        );
+      }
+    }
+
+
+    function hideEvaluationResult() {
+      resultPanel.classList.remove(
+        "visible",
+        "not-evaluable"
+      );
+
+      resultHeading.textContent =
+        "Your Evaluation";
+
+      resultVerdict.textContent = "";
+      resultScore.textContent = "—";
+      resultCategory.textContent = "—";
+      resultTranscript.textContent = "";
+      resultImprovedVersion.textContent = "";
+
+      clearElement(criteriaGrid);
+      clearElement(strengthsList);
+      clearElement(improvementsList);
+
+      resultSummary.style.display = "";
+      criteriaGrid.style.display = "";
+      feedbackGrid.style.display = "";
+      strengthsCard.style.display = "";
+      improvementsCard.style.display = "";
+      improvedVersionCard.style.display = "";
+    }
+
+
+    function addFeedbackItems(
+      listElement,
+      items
+    ) {
+      clearElement(listElement);
+
+      (
+        Array.isArray(items)
+          ? items
+          : []
+      ).forEach(
+        function (item) {
+          const text =
+            String(item || "").trim();
+
+          if (!text) {
+            return;
+          }
+
+          const listItem =
+            document.createElement("li");
+
+          listItem.textContent =
+            text;
+
+          listElement.appendChild(
+            listItem
+          );
+        }
+      );
+    }
+
+
+    function addCriterionCard(
+      label,
+      value
+    ) {
+      const numericValue =
+        Number(value);
+
+      const safeValue =
+        Number.isFinite(numericValue)
+          ? Math.max(
+              0,
+              Math.min(
+                2.5,
+                numericValue
+              )
+            )
+          : 0;
+
+      const card =
+        document.createElement("div");
+
+      card.className =
+        "criterion-card";
+
+      const topLine =
+        document.createElement("div");
+
+      topLine.className =
+        "criterion-topline";
+
+      const nameElement =
+        document.createElement("span");
+
+      nameElement.className =
+        "criterion-name";
+
+      nameElement.textContent =
+        label;
+
+      const scoreElement =
+        document.createElement("span");
+
+      scoreElement.className =
+        "criterion-score";
+
+      scoreElement.textContent =
+        safeValue.toFixed(2) +
+        " / 2.50";
+
+      const track =
+        document.createElement("div");
+
+      track.className =
+        "criterion-track";
+
+      const fill =
+        document.createElement("div");
+
+      fill.className =
+        "criterion-fill";
+
+      fill.style.width =
+        (
+          safeValue /
+          2.5 *
+          100
+        ).toFixed(1) +
+        "%";
+
+      topLine.appendChild(
+        nameElement
+      );
+
+      topLine.appendChild(
+        scoreElement
+      );
+
+      track.appendChild(fill);
+      card.appendChild(topLine);
+      card.appendChild(track);
+      criteriaGrid.appendChild(card);
+    }
+
+
+    function renderEvaluationResult(
+      result
+    ) {
+      hideEvaluationResult();
+
+      const evaluable =
+        result.evaluable !== false &&
+        result.status !==
+          "not_evaluable";
+
+      resultTranscript.textContent =
+        String(
+          result.transcript ||
+          "No transcript was returned."
+        );
+
+      if (!evaluable) {
+        resultPanel.classList.add(
+          "visible",
+          "not-evaluable"
+        );
+
+        resultHeading.textContent =
+          "Recording Not Evaluable";
+
+        resultVerdict.textContent =
+          String(
+            result.nonEvaluableReason ||
+            (
+              result.feedback &&
+              result.feedback
+                .oneLineVerdict
+            ) ||
+            result.message ||
+            "This recording does not contain a substantive response."
+          );
+
+        resultSummary.style.display =
+          "none";
+
+        criteriaGrid.style.display =
+          "none";
+
+        strengthsCard.style.display =
+          "none";
+
+        improvementsCard.style.display =
+          "";
+
+        addFeedbackItems(
+          improvementsList,
+          (
+            result.feedback &&
+            result.feedback
+              .improvements
+          ) || [
+            "Record a complete response to the assigned question."
+          ]
+        );
+
+        improvedVersionCard
+          .style.display =
+          "none";
+
+      } else {
+        resultPanel.classList.add(
+          "visible"
+        );
+
+        resultHeading.textContent =
+          "Your Evaluation";
+
+        resultVerdict.textContent =
+          String(
+            (
+              result.feedback &&
+              result.feedback
+                .oneLineVerdict
+            ) ||
+            "Your response has been evaluated."
+          );
+
+        const numericScore =
+          Number(result.score);
+
+        resultScore.textContent =
+          (
+            Number.isFinite(
+              numericScore
+            )
+              ? numericScore.toFixed(2)
+              : "—"
+          ) +
+          " / 10";
+
+        resultCategory.textContent =
+          String(
+            result.detectedCategory ||
+            "—"
+          );
+
+        const scores =
+          result.criterionScores || {};
+
+        addCriterionCard(
+          "Structure and Clarity",
+          scores
+            .structure_and_clarity
+        );
+
+        addCriterionCard(
+          "Content and Evidence",
+          scores
+            .content_and_evidence
+        );
+
+        addCriterionCard(
+          "Managerial Thinking",
+          scores
+            .managerial_thinking
+        );
+
+        addCriterionCard(
+          "Language and Delivery",
+          scores
+            .language_and_delivery
+        );
+
+        addFeedbackItems(
+          strengthsList,
+          (
+            result.feedback &&
+            result.feedback
+              .strengths
+          ) || []
+        );
+
+        addFeedbackItems(
+          improvementsList,
+          (
+            result.feedback &&
+            result.feedback
+              .improvements
+          ) || []
+        );
+
+        strengthsCard.style.display =
+          strengthsList.children.length
+            ? ""
+            : "none";
+
+        improvementsCard.style.display =
+          improvementsList.children.length
+            ? ""
+            : "none";
+
+        const improvedVersion =
+          String(
+            (
+              result.feedback &&
+              result.feedback
+                .improvedVersion
+            ) || ""
+          ).trim();
+
+        resultImprovedVersion
+          .textContent =
+          improvedVersion;
+
+        improvedVersionCard
+          .style.display =
+          improvedVersion
+            ? ""
+            : "none";
+      }
+
+      recordAgainButton.disabled =
+        false;
+
+      recordAgainButton.textContent =
+        "Record Another Response";
+
+      newResponseButton.disabled =
+        false;
+
+      resultPanel.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
     }
 
 
@@ -1517,6 +2248,16 @@
 
       startButton.disabled = false;
       stopButton.disabled = true;
+      recordAgainButton.disabled = false;
+      submitButton.disabled = false;
+
+      recordAgainButton.textContent =
+        "Record Again";
+
+      submitButton.textContent =
+        "Submit Response";
+
+      hideEvaluationResult();
 
       showStatus(
         "The earlier recording has been cleared. You can record again.",
@@ -1663,6 +2404,10 @@
         submitButton.textContent =
           "Submitted";
 
+        renderEvaluationResult(
+          result
+        );
+
         showStatus(
           result.message ||
           "Your response has been submitted successfully.",
@@ -1737,6 +2482,11 @@
     submitButton.addEventListener(
       "click",
       submitRecording
+    );
+
+    newResponseButton.addEventListener(
+      "click",
+      resetRecording
     );
 
     logoutButton.addEventListener(
