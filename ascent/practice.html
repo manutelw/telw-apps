@@ -761,9 +761,13 @@
       document.getElementById("statusMessage");
 
 
-    let mediaRecorder = null;
     let mediaStream = null;
-    let audioChunks = [];
+    let audioContext = null;
+    let audioSourceNode = null;
+    let audioProcessorNode = null;
+    let recordedAudioBuffers = [];
+    let inputSampleRate = 48000;
+    let isRecording = false;
     let audioBlob = null;
     let audioObjectUrl = null;
     let timerInterval = null;
@@ -917,39 +921,325 @@
     }
 
 
-    function getSupportedMimeType() {
-      const possibleTypes = [
-        "audio/webm;codecs=opus",
-        "audio/webm",
-        "audio/mp4",
-        "audio/ogg;codecs=opus"
-      ];
+    function getAudioContextConstructor() {
+      return (
+        window.AudioContext ||
+        window.webkitAudioContext ||
+        null
+      );
+    }
 
+
+    function mergeAudioBuffers(buffers) {
+      const totalLength =
+        buffers.reduce(
+          function (total, buffer) {
+            return total + buffer.length;
+          },
+          0
+        );
+
+      const merged =
+        new Float32Array(totalLength);
+
+      let offset = 0;
+
+      buffers.forEach(
+        function (buffer) {
+          merged.set(buffer, offset);
+          offset += buffer.length;
+        }
+      );
+
+      return merged;
+    }
+
+
+    function downsampleAudioBuffer(
+      inputBuffer,
+      sourceSampleRate,
+      targetSampleRate
+    ) {
       if (
-        typeof MediaRecorder === "undefined"
+        targetSampleRate >=
+        sourceSampleRate
       ) {
-        return "";
+        return inputBuffer;
       }
 
-      return (
-        possibleTypes.find(
-          function (type) {
-            return MediaRecorder.isTypeSupported(
-              type
-            );
-          }
-        ) || ""
+      const sampleRateRatio =
+        sourceSampleRate /
+        targetSampleRate;
+
+      const outputLength =
+        Math.round(
+          inputBuffer.length /
+          sampleRateRatio
+        );
+
+      const outputBuffer =
+        new Float32Array(
+          outputLength
+        );
+
+      let inputOffset = 0;
+
+      for (
+        let outputOffset = 0;
+        outputOffset < outputLength;
+        outputOffset += 1
+      ) {
+        const nextInputOffset =
+          Math.round(
+            (
+              outputOffset + 1
+            ) *
+            sampleRateRatio
+          );
+
+        let total = 0;
+        let count = 0;
+
+        for (
+          let index = inputOffset;
+          index < nextInputOffset &&
+          index < inputBuffer.length;
+          index += 1
+        ) {
+          total += inputBuffer[index];
+          count += 1;
+        }
+
+        outputBuffer[outputOffset] =
+          count > 0
+            ? total / count
+            : 0;
+
+        inputOffset =
+          nextInputOffset;
+      }
+
+      return outputBuffer;
+    }
+
+
+    function writeAscii(
+      dataView,
+      offset,
+      value
+    ) {
+      for (
+        let index = 0;
+        index < value.length;
+        index += 1
+      ) {
+        dataView.setUint8(
+          offset + index,
+          value.charCodeAt(index)
+        );
+      }
+    }
+
+
+    function createWavBlob(
+      samples,
+      sampleRate
+    ) {
+      const bytesPerSample = 2;
+      const channelCount = 1;
+
+      const dataLength =
+        samples.length *
+        bytesPerSample;
+
+      const arrayBuffer =
+        new ArrayBuffer(
+          44 + dataLength
+        );
+
+      const dataView =
+        new DataView(
+          arrayBuffer
+        );
+
+      writeAscii(
+        dataView,
+        0,
+        "RIFF"
       );
+
+      dataView.setUint32(
+        4,
+        36 + dataLength,
+        true
+      );
+
+      writeAscii(
+        dataView,
+        8,
+        "WAVE"
+      );
+
+      writeAscii(
+        dataView,
+        12,
+        "fmt "
+      );
+
+      dataView.setUint32(
+        16,
+        16,
+        true
+      );
+
+      dataView.setUint16(
+        20,
+        1,
+        true
+      );
+
+      dataView.setUint16(
+        22,
+        channelCount,
+        true
+      );
+
+      dataView.setUint32(
+        24,
+        sampleRate,
+        true
+      );
+
+      dataView.setUint32(
+        28,
+        sampleRate *
+        channelCount *
+        bytesPerSample,
+        true
+      );
+
+      dataView.setUint16(
+        32,
+        channelCount *
+        bytesPerSample,
+        true
+      );
+
+      dataView.setUint16(
+        34,
+        16,
+        true
+      );
+
+      writeAscii(
+        dataView,
+        36,
+        "data"
+      );
+
+      dataView.setUint32(
+        40,
+        dataLength,
+        true
+      );
+
+      let byteOffset = 44;
+
+      for (
+        let index = 0;
+        index < samples.length;
+        index += 1
+      ) {
+        const sample =
+          Math.max(
+            -1,
+            Math.min(
+              1,
+              samples[index]
+            )
+          );
+
+        const integerSample =
+          sample < 0
+            ? sample * 0x8000
+            : sample * 0x7fff;
+
+        dataView.setInt16(
+          byteOffset,
+          integerSample,
+          true
+        );
+
+        byteOffset +=
+          bytesPerSample;
+      }
+
+      return new Blob(
+        [arrayBuffer],
+        {
+          type: "audio/wav"
+        }
+      );
+    }
+
+
+    function stopAudioCapture() {
+      isRecording = false;
+
+      if (audioProcessorNode) {
+        audioProcessorNode
+          .onaudioprocess = null;
+
+        try {
+          audioProcessorNode
+            .disconnect();
+        } catch {
+          // The node may already be disconnected.
+        }
+
+        audioProcessorNode = null;
+      }
+
+      if (audioSourceNode) {
+        try {
+          audioSourceNode
+            .disconnect();
+        } catch {
+          // The node may already be disconnected.
+        }
+
+        audioSourceNode = null;
+      }
+
+      if (
+        audioContext &&
+        audioContext.state !== "closed"
+      ) {
+        audioContext
+          .close()
+          .catch(function (error) {
+            console.error(
+              "Audio context close failed:",
+              error
+            );
+          });
+      }
+
+      audioContext = null;
+      stopMicrophoneTracks();
     }
 
 
     async function startRecording() {
       showStatus("", "");
 
+      const AudioContextConstructor =
+        getAudioContextConstructor();
+
       if (
         !navigator.mediaDevices ||
         !navigator.mediaDevices.getUserMedia ||
-        typeof MediaRecorder === "undefined"
+        !AudioContextConstructor
       ) {
         showStatus(
           "Audio recording is not supported in this browser. Please use an updated version of Chrome, Edge or Safari.",
@@ -964,104 +1254,95 @@
             audio: {
               echoCancellation: true,
               noiseSuppression: true,
-              autoGainControl: true
+              autoGainControl: true,
+              channelCount: 1
             }
           });
 
-        audioChunks = [];
+        recordedAudioBuffers = [];
         audioBlob = null;
 
         if (audioObjectUrl) {
-          URL.revokeObjectURL(audioObjectUrl);
+          URL.revokeObjectURL(
+            audioObjectUrl
+          );
+
           audioObjectUrl = null;
         }
 
-        audioPlayback.removeAttribute("src");
+        audioPlayback.removeAttribute(
+          "src"
+        );
+
         playbackSection.classList.remove(
           "visible"
         );
 
-        const supportedMimeType =
-          getSupportedMimeType();
+        audioContext =
+          new AudioContextConstructor();
 
-        mediaRecorder =
-          supportedMimeType
-            ? new MediaRecorder(
-                mediaStream,
-                {
-                  mimeType: supportedMimeType
-                }
-              )
-            : new MediaRecorder(mediaStream);
+        if (
+          audioContext.state ===
+          "suspended"
+        ) {
+          await audioContext.resume();
+        }
 
-        mediaRecorder.addEventListener(
-          "dataavailable",
+        inputSampleRate =
+          audioContext.sampleRate;
+
+        audioSourceNode =
+          audioContext
+            .createMediaStreamSource(
+              mediaStream
+            );
+
+        audioProcessorNode =
+          audioContext
+            .createScriptProcessor(
+              4096,
+              1,
+              1
+            );
+
+        audioProcessorNode
+          .onaudioprocess =
           function (event) {
-            if (
-              event.data &&
-              event.data.size > 0
-            ) {
-              audioChunks.push(event.data);
+            if (!isRecording) {
+              return;
             }
-          }
+
+            const inputSamples =
+              event.inputBuffer
+                .getChannelData(0);
+
+            recordedAudioBuffers.push(
+              new Float32Array(
+                inputSamples
+              )
+            );
+          };
+
+        audioSourceNode.connect(
+          audioProcessorNode
         );
 
-        mediaRecorder.addEventListener(
-          "stop",
-          function () {
-            const recordedType =
-              mediaRecorder.mimeType ||
-              supportedMimeType ||
-              "audio/webm";
-
-            audioBlob =
-              new Blob(
-                audioChunks,
-                {
-                  type: recordedType
-                }
-              );
-
-            audioObjectUrl =
-              URL.createObjectURL(audioBlob);
-
-            audioPlayback.src =
-              audioObjectUrl;
-
-            playbackSection.classList.add(
-              "visible"
-            );
-
-            recordingState.textContent =
-              "Recording ready";
-
-            recordingState.classList.remove(
-              "active"
-            );
-
-            recordingDot.classList.remove(
-              "active"
-            );
-
-            startButton.disabled = false;
-            stopButton.disabled = true;
-
-            showStatus(
-              "Your recording is ready. Listen to it before submitting.",
-              "success"
-            );
-
-            stopMicrophoneTracks();
-          }
+        audioProcessorNode.connect(
+          audioContext.destination
         );
 
-        mediaRecorder.start(250);
+        isRecording = true;
 
         startButton.disabled = true;
         stopButton.disabled = false;
 
-        recordingDot.classList.add("active");
-        recordingState.classList.add("active");
+        recordingDot.classList.add(
+          "active"
+        );
+
+        recordingState.classList.add(
+          "active"
+        );
 
         recordingState.textContent =
           "Recording now";
@@ -1074,7 +1355,7 @@
           error
         );
 
-        stopMicrophoneTracks();
+        stopAudioCapture();
 
         showStatus(
           "ASCENT could not access the microphone. Please allow microphone permission and try again.",
@@ -1084,43 +1365,137 @@
     }
 
 
-    function stopRecording() {
-      if (
-        !mediaRecorder ||
-        mediaRecorder.state !== "recording"
-      ) {
+    async function stopRecording() {
+      if (!isRecording) {
         return;
       }
 
       stopButton.disabled = true;
+
       recordingState.textContent =
         "Preparing recording…";
 
       stopTimer();
-      mediaRecorder.stop();
+      isRecording = false;
+
+      const capturedBuffers =
+        recordedAudioBuffers.slice();
+
+      const capturedSampleRate =
+        inputSampleRate;
+
+      stopAudioCapture();
+
+      try {
+        const mergedAudio =
+          mergeAudioBuffers(
+            capturedBuffers
+          );
+
+        if (
+          mergedAudio.length === 0
+        ) {
+          throw new Error(
+            "No audio samples were captured."
+          );
+        }
+
+        const targetSampleRate =
+          16000;
+
+        const speechAudio =
+          downsampleAudioBuffer(
+            mergedAudio,
+            capturedSampleRate,
+            targetSampleRate
+          );
+
+        audioBlob =
+          createWavBlob(
+            speechAudio,
+            targetSampleRate
+          );
+
+        audioObjectUrl =
+          URL.createObjectURL(
+            audioBlob
+          );
+
+        audioPlayback.src =
+          audioObjectUrl;
+
+        playbackSection.classList.add(
+          "visible"
+        );
+
+        recordingState.textContent =
+          "Recording ready";
+
+        recordingState.classList.remove(
+          "active"
+        );
+
+        recordingDot.classList.remove(
+          "active"
+        );
+
+        startButton.disabled = false;
+        stopButton.disabled = true;
+
+        showStatus(
+          "Your recording is ready. Listen to it before submitting.",
+          "success"
+        );
+
+      } catch (error) {
+        console.error(
+          "Recording preparation failed:",
+          error
+        );
+
+        recordedAudioBuffers = [];
+        audioBlob = null;
+
+        recordingState.textContent =
+          "Ready to record";
+
+        recordingState.classList.remove(
+          "active"
+        );
+
+        recordingDot.classList.remove(
+          "active"
+        );
+
+        startButton.disabled = false;
+        stopButton.disabled = true;
+
+        showStatus(
+          "ASCENT could not prepare the recording. Please record it again.",
+          "error"
+        );
+      }
     }
 
 
     function resetRecording() {
-      if (
-        mediaRecorder &&
-        mediaRecorder.state === "recording"
-      ) {
-        mediaRecorder.stop();
-      }
-
       stopTimer();
-      stopMicrophoneTracks();
+      stopAudioCapture();
 
-      audioChunks = [];
+      recordedAudioBuffers = [];
       audioBlob = null;
 
       if (audioObjectUrl) {
-        URL.revokeObjectURL(audioObjectUrl);
+        URL.revokeObjectURL(
+          audioObjectUrl
+        );
+
         audioObjectUrl = null;
       }
 
-      audioPlayback.removeAttribute("src");
+      audioPlayback.removeAttribute(
+        "src"
+      );
 
       playbackSection.classList.remove(
         "visible"
@@ -1137,7 +1512,8 @@
       recordingState.textContent =
         "Ready to record";
 
-      timer.textContent = "00:00";
+      timer.textContent =
+        "00:00";
 
       startButton.disabled = false;
       stopButton.disabled = true;
@@ -1187,7 +1563,7 @@
       const audioMimeType =
         String(
           audioBlob.type ||
-          "audio/webm"
+          "audio/wav"
         )
           .toLowerCase()
           .split(";")[0]
@@ -1206,7 +1582,7 @@
       const audioExtension =
         extensionByMimeType[
           audioMimeType
-        ] || "webm";
+        ] || "wav";
 
       const audioFileName =
         "ascent-response-" +
@@ -1320,7 +1696,7 @@
 
     function logOut() {
       stopTimer();
-      stopMicrophoneTracks();
+      stopAudioCapture();
 
       if (audioObjectUrl) {
         URL.revokeObjectURL(audioObjectUrl);
@@ -1373,7 +1749,7 @@
       "beforeunload",
       function () {
         stopTimer();
-        stopMicrophoneTracks();
+        stopAudioCapture();
 
         if (audioObjectUrl) {
           URL.revokeObjectURL(
