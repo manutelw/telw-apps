@@ -702,6 +702,16 @@
     const SESSION_STORAGE_KEY =
       "ascent_student_session";
 
+    const SUPABASE_URL =
+      "https://vtqatrhwfvzyodiftvkc.supabase.co";
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
+
+    const SUBMIT_RESPONSE_URL =
+      SUPABASE_URL +
+      "/functions/v1/ascent-submit-response";
+
     const studentName =
       document.getElementById("studentName");
 
@@ -1139,7 +1149,7 @@
     }
 
 
-    function submitRecording() {
+    async function submitRecording() {
       if (
         !audioBlob ||
         audioBlob.size === 0
@@ -1151,10 +1161,160 @@
         return;
       }
 
+      if (
+        !currentSession ||
+        !currentSession.sessionToken
+      ) {
+        showStatus(
+          "Your ASCENT login session is unavailable. Please log in again.",
+          "error"
+        );
+        return;
+      }
+
+      submitButton.disabled = true;
+      recordAgainButton.disabled = true;
+      startButton.disabled = true;
+
+      submitButton.textContent =
+        "Submitting…";
+
       showStatus(
-        "The recorder is working correctly. Audio submission and evaluation will be connected in the next step.",
-        "success"
+        "Uploading your recording securely…",
+        ""
       );
+
+      const audioMimeType =
+        String(
+          audioBlob.type ||
+          "audio/webm"
+        )
+          .toLowerCase()
+          .split(";")[0]
+          .trim();
+
+      const extensionByMimeType = {
+        "audio/mp4": "m4a",
+        "audio/m4a": "m4a",
+        "audio/x-m4a": "m4a",
+        "audio/ogg": "ogg",
+        "audio/mpeg": "mp3",
+        "audio/wav": "wav",
+        "audio/webm": "webm"
+      };
+
+      const audioExtension =
+        extensionByMimeType[
+          audioMimeType
+        ] || "webm";
+
+      const audioFileName =
+        "ascent-response-" +
+        Date.now() +
+        "." +
+        audioExtension;
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        "session_token",
+        currentSession.sessionToken
+      );
+
+      formData.append(
+        "audio",
+        audioBlob,
+        audioFileName
+      );
+
+      let submissionSucceeded = false;
+
+      try {
+        const response =
+          await fetch(
+            SUBMIT_RESPONSE_URL,
+            {
+              method: "POST",
+
+              headers: {
+                "apikey":
+                  SUPABASE_PUBLISHABLE_KEY,
+
+                "Authorization":
+                  "Bearer " +
+                  SUPABASE_PUBLISHABLE_KEY
+              },
+
+              body: formData
+            }
+          );
+
+        const responseText =
+          await response.text();
+
+        let result = null;
+
+        try {
+          result =
+            responseText
+              ? JSON.parse(responseText)
+              : null;
+
+        } catch (parseError) {
+          console.error(
+            "Invalid ASCENT submission response:",
+            responseText,
+            parseError
+          );
+        }
+
+        if (
+          !response.ok ||
+          !result ||
+          result.ok !== true
+        ) {
+          throw new Error(
+            result &&
+            result.message
+              ? result.message
+              : "ASCENT could not submit the recording."
+          );
+        }
+
+        submissionSucceeded = true;
+
+        submitButton.textContent =
+          "Submitted";
+
+        showStatus(
+          result.message ||
+          "Your response has been submitted successfully.",
+          "success"
+        );
+
+      } catch (error) {
+        console.error(
+          "ASCENT submission error:",
+          error
+        );
+
+        showStatus(
+          error.message ||
+          "ASCENT could not submit the recording. Please try again.",
+          "error"
+        );
+
+      } finally {
+        if (!submissionSucceeded) {
+          submitButton.disabled = false;
+          recordAgainButton.disabled = false;
+          startButton.disabled = false;
+
+          submitButton.textContent =
+            "Submit Response";
+        }
+      }
     }
 
 
