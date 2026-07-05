@@ -675,17 +675,25 @@
       opacity: 0.82;
     }
 
-    .other-issues-note {
-      margin-top: 6px;
-      padding: 13px 15px;
-      border: 1px solid #ead7af;
-      border-radius: 12px;
-      background: #fff8e8;
-      color: #704500;
-      font-size: 14px;
-      font-weight: 700;
-      line-height: 1.5;
-    }
+    .other-issues-title {
+  margin-bottom: 7px;
+  color: #704500;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.other-issues-list {
+  margin: 0;
+  padding-left: 20px;
+  color: #704500;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.other-issues-list li + li {
+  margin-top: 4px;
+}
 
     .feedback-grid {
       display: grid;
@@ -1147,10 +1155,20 @@
             class="criteria-grid"
           ></div>
 
-          <div
-            id="otherIssuesNote"
-            class="other-issues-note"
-          ></div>
+          <section
+  id="otherIssuesSection"
+  class="other-issues-note"
+  hidden
+>
+  <div class="other-issues-title">
+    Other issues noticed
+  </div>
+
+  <ul
+    id="otherIssuesList"
+    class="other-issues-list"
+  ></ul>
+</section>
 
           <div class="result-action-row">
             <button
@@ -1279,8 +1297,11 @@
     const criteriaGrid =
       document.getElementById("criteriaGrid");
 
-    const otherIssuesNote =
-      document.getElementById("otherIssuesNote");
+    const otherIssuesSection =
+  document.getElementById("otherIssuesSection");
+
+const otherIssuesList =
+  document.getElementById("otherIssuesList");
 
     const newResponseButton =
       document.getElementById("newResponseButton");
@@ -1416,13 +1437,13 @@
       resultScore.textContent = "—";
       scoreSubtext.textContent = "";
       resultRubric.textContent = "—";
-      otherIssuesNote.textContent = "";
 
-      clearElement(criteriaGrid);
+clearElement(criteriaGrid);
+clearElement(otherIssuesList);
 
-      resultSummary.style.display = "";
-      criteriaGrid.style.display = "";
-      otherIssuesNote.style.display = "";
+resultSummary.style.display = "";
+criteriaGrid.style.display = "";
+otherIssuesSection.hidden = true;
     }
 
 
@@ -1671,8 +1692,7 @@
         criteriaGrid.style.display =
           "none";
 
-        otherIssuesNote.style.display =
-          "none";
+        otherIssuesSection.hidden = true;
 
       } else {
         resultPanel.classList.add(
@@ -1758,15 +1778,38 @@
           addCriterionCard
         );
 
-        otherIssuesNote.textContent =
-          String(
-            (
-              result.feedback &&
-              result.feedback
-                .otherIssuesNote
-            ) ||
-            "Other issues can be corrected in later attempts."
-          );
+        const otherIssues =
+  result.feedback &&
+  Array.isArray(
+    result.feedback.otherIssues
+  )
+    ? result.feedback.otherIssues
+        .map(function (issue) {
+          return String(
+            issue || ""
+          ).trim();
+        })
+        .filter(Boolean)
+    : [];
+
+clearElement(otherIssuesList);
+
+otherIssues.forEach(
+  function (issue) {
+    const item =
+      document.createElement("li");
+
+    item.textContent =
+      issue;
+
+    otherIssuesList.appendChild(
+      item
+    );
+  }
+);
+
+otherIssuesSection.hidden =
+  otherIssues.length === 0;
       }
 
       recordAgainButton.disabled =
