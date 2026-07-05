@@ -417,6 +417,79 @@
       color: var(--success);
     }
 
+    .pressure-panel {
+      display: none;
+      margin-bottom: 22px;
+      padding: 22px;
+      border: 2px solid #d98c10;
+      border-radius: 18px;
+      background: #fff8e8;
+    }
+
+    .pressure-panel.visible {
+      display: block;
+    }
+
+    .pressure-kicker {
+      margin-bottom: 8px;
+      color: #9a5c00;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .pressure-heading {
+      margin-bottom: 10px;
+      color: var(--navy);
+      font-size: 22px;
+    }
+
+    .pressure-prompt {
+      margin-bottom: 16px;
+      color: #354d64;
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.55;
+    }
+
+    .pressure-timing {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .pressure-time-box {
+      padding: 12px;
+      border: 1px solid #ead7af;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.78);
+      text-align: center;
+    }
+
+    .pressure-time-label {
+      display: block;
+      margin-bottom: 4px;
+      color: #7b6647;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .pressure-time-value {
+      color: var(--navy);
+      font-size: 21px;
+      font-weight: 800;
+    }
+
+    .pressure-instruction {
+      color: #6d5430;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
     .result-panel {
       display: none;
       margin-top: 26px;
@@ -878,6 +951,54 @@
           to be entered into the app.
         </div>
 
+        <section
+          id="pressurePanel"
+          class="pressure-panel"
+          aria-live="assertive"
+        >
+          <div class="pressure-kicker">
+            Pressure Follow-up
+          </div>
+
+          <h3 class="pressure-heading">
+            Respond to the challenge
+          </h3>
+
+          <p
+            id="pressurePromptText"
+            class="pressure-prompt"
+          ></p>
+
+          <div class="pressure-timing">
+            <div class="pressure-time-box">
+              <span class="pressure-time-label">Preparation</span>
+              <span
+                id="pressureCountdownValue"
+                class="pressure-time-value"
+              >
+                —
+              </span>
+            </div>
+
+            <div class="pressure-time-box">
+              <span class="pressure-time-label">Response limit</span>
+              <span
+                id="pressureResponseValue"
+                class="pressure-time-value"
+              >
+                —
+              </span>
+            </div>
+          </div>
+
+          <p
+            id="pressureInstruction"
+            class="pressure-instruction"
+          >
+            Read the follow-up. Recording will begin when the preparation time ends.
+          </p>
+        </section>
+
         <div class="recorder-box">
 
           <div class="recording-display">
@@ -924,7 +1045,10 @@
             id="playbackSection"
             class="playback-section"
           >
-            <div class="playback-title">
+            <div
+              id="playbackTitle"
+              class="playback-title"
+            >
               Listen to your recording
             </div>
 
@@ -1110,6 +1234,24 @@
     const statusMessage =
       document.getElementById("statusMessage");
 
+    const pressurePanel =
+      document.getElementById("pressurePanel");
+
+    const pressurePromptText =
+      document.getElementById("pressurePromptText");
+
+    const pressureCountdownValue =
+      document.getElementById("pressureCountdownValue");
+
+    const pressureResponseValue =
+      document.getElementById("pressureResponseValue");
+
+    const pressureInstruction =
+      document.getElementById("pressureInstruction");
+
+    const playbackTitle =
+      document.getElementById("playbackTitle");
+
     const resultPanel =
       document.getElementById("resultPanel");
 
@@ -1155,6 +1297,12 @@
     let audioObjectUrl = null;
     let timerInterval = null;
     let recordingStartedAt = null;
+    let responsePhase = "main";
+    let pressureSubmissionId = "";
+    let pressureData = null;
+    let pressurePrepInterval = null;
+    let recordingLimitSeconds = null;
+    let recordingAutoStopTriggered = false;
 
 
     function loadStudentSession() {
@@ -1637,6 +1785,225 @@
     }
 
 
+    function clearPressureCountdown() {
+      if (pressurePrepInterval) {
+        clearInterval(pressurePrepInterval);
+        pressurePrepInterval = null;
+      }
+    }
+
+
+    function hidePressureFollowUp() {
+      clearPressureCountdown();
+
+      pressurePanel.classList.remove(
+        "visible"
+      );
+
+      pressurePromptText.textContent = "";
+      pressureCountdownValue.textContent = "—";
+      pressureResponseValue.textContent = "—";
+      pressureInstruction.textContent =
+        "Read the follow-up. Recording will begin when the preparation time ends.";
+    }
+
+
+    function clearRecordedAudio() {
+      stopTimer();
+      stopAudioCapture();
+
+      recordedAudioBuffers = [];
+      audioBlob = null;
+
+      if (audioObjectUrl) {
+        URL.revokeObjectURL(
+          audioObjectUrl
+        );
+
+        audioObjectUrl = null;
+      }
+
+      audioPlayback.removeAttribute(
+        "src"
+      );
+
+      playbackSection.classList.remove(
+        "visible"
+      );
+    }
+
+
+    async function startPressureRecording() {
+      if (
+        responsePhase !== "pressure" ||
+        isRecording
+      ) {
+        return;
+      }
+
+      recordingLimitSeconds = Math.max(
+        1,
+        Number(
+          pressureData &&
+          pressureData.responseSeconds
+        ) || 45
+      );
+
+      recordingAutoStopTriggered = false;
+      pressureCountdownValue.textContent =
+        "Now";
+
+      pressureInstruction.textContent =
+        "Answer now. Recording stops automatically when the response time ends.";
+
+      startButton.textContent =
+        "Start Pressure Response";
+
+      await startRecording();
+
+      if (!isRecording) {
+        startButton.disabled = false;
+        pressureInstruction.textContent =
+          "Automatic recording could not begin. Click Start Pressure Response now.";
+      }
+    }
+
+
+    function beginPressureFollowUp(result) {
+      responsePhase = "pressure";
+      pressureSubmissionId = String(
+        result.submissionId || ""
+      );
+      pressureData = result.pressure || {};
+
+      clearRecordedAudio();
+      hideEvaluationResult();
+
+      recordAgainButton.style.display =
+        "none";
+      audioPlayback.style.display =
+        "none";
+      playbackTitle.textContent =
+        "Pressure response ready";
+      submitButton.textContent =
+        "Submit Pressure Response";
+
+      startButton.disabled = true;
+      stopButton.disabled = true;
+      recordAgainButton.disabled = true;
+      submitButton.disabled = true;
+
+      recordingDot.classList.remove(
+        "active"
+      );
+      recordingState.classList.remove(
+        "active"
+      );
+      recordingState.textContent =
+        "Read the pressure follow-up";
+      timer.textContent = "00:00";
+
+      pressurePromptText.textContent =
+        String(
+          pressureData.prompt ||
+          "Respond to the follow-up question."
+        );
+
+      const prepSeconds = Math.max(
+        0,
+        Number(pressureData.prepSeconds) || 0
+      );
+
+      const responseSeconds = Math.max(
+        1,
+        Number(pressureData.responseSeconds) || 45
+      );
+
+      pressureResponseValue.textContent =
+        String(responseSeconds) + " sec";
+
+      pressurePanel.classList.add(
+        "visible"
+      );
+
+      pressurePanel.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+
+      const serverStartedAt =
+        Date.parse(
+          String(pressureData.startedAt || "")
+        );
+
+      const preparationEndsAt =
+        (
+          Number.isFinite(serverStartedAt)
+            ? serverStartedAt
+            : Date.now()
+        ) +
+        prepSeconds * 1000;
+
+      const deadlineAt =
+        Date.parse(
+          String(pressureData.deadlineAt || "")
+        );
+
+      function updatePreparationCountdown() {
+        const now = Date.now();
+
+        if (
+          Number.isFinite(deadlineAt) &&
+          now >= deadlineAt
+        ) {
+          clearPressureCountdown();
+          pressureCountdownValue.textContent =
+            "Ended";
+          pressureInstruction.textContent =
+            "The time allowed for this pressure follow-up has ended.";
+          showStatus(
+            "The pressure follow-up has expired. Record the main response again to begin a new attempt.",
+            "error"
+          );
+          return;
+        }
+
+        const remainingSeconds =
+          Math.max(
+            0,
+            Math.ceil(
+              (
+                preparationEndsAt - now
+              ) / 1000
+            )
+          );
+
+        pressureCountdownValue.textContent =
+          remainingSeconds > 0
+            ? String(remainingSeconds) + " sec"
+            : "Now";
+
+        if (remainingSeconds <= 0) {
+          clearPressureCountdown();
+          void startPressureRecording();
+        }
+      }
+
+      showStatus(
+        result.message ||
+        "Your first response was received. Complete the pressure follow-up now.",
+        "success"
+      );
+
+      pressurePrepInterval = setInterval(
+        updatePreparationCountdown,
+        250
+      );
+
+      updatePreparationCountdown();
+    }
+
+
     function formatTime(totalSeconds) {
       const minutes =
         Math.floor(totalSeconds / 60);
@@ -1654,6 +2021,7 @@
 
     function startTimer() {
       recordingStartedAt = Date.now();
+      recordingAutoStopTriggered = false;
 
       timer.textContent = "00:00";
 
@@ -1669,6 +2037,23 @@
 
           timer.textContent =
             formatTime(elapsedSeconds);
+
+          if (
+            responsePhase === "pressure" &&
+            Number.isFinite(
+              Number(recordingLimitSeconds)
+            ) &&
+            elapsedSeconds >=
+              Number(recordingLimitSeconds) &&
+            !recordingAutoStopTriggered
+          ) {
+            recordingAutoStopTriggered = true;
+            timer.textContent =
+              formatTime(
+                Number(recordingLimitSeconds)
+              );
+            void stopRecording();
+          }
         },
         250
       );
@@ -2120,7 +2505,9 @@
         );
 
         recordingState.textContent =
-          "Recording now";
+          responsePhase === "pressure"
+            ? "Pressure response recording"
+            : "Recording now";
 
         startTimer();
 
@@ -2131,6 +2518,9 @@
         );
 
         stopAudioCapture();
+
+        startButton.disabled = false;
+        stopButton.disabled = true;
 
         showStatus(
           "ASCENT could not access the microphone. Please allow microphone permission and try again.",
@@ -2199,13 +2589,6 @@
         audioPlayback.src =
           audioObjectUrl;
 
-        playbackSection.classList.add(
-          "visible"
-        );
-
-        recordingState.textContent =
-          "Recording ready";
-
         recordingState.classList.remove(
           "active"
         );
@@ -2216,6 +2599,42 @@
 
         startButton.disabled = false;
         stopButton.disabled = true;
+
+        if (responsePhase === "pressure") {
+          playbackSection.classList.add(
+            "visible"
+          );
+
+          audioPlayback.style.display =
+            "none";
+          recordAgainButton.style.display =
+            "none";
+          playbackTitle.textContent =
+            "Pressure response recorded";
+
+          recordingState.textContent =
+            "Submitting pressure response…";
+
+          startButton.disabled = true;
+          submitButton.disabled = true;
+          submitButton.textContent =
+            "Submitting Pressure Response…";
+
+          showStatus(
+            "Submitting your pressure response automatically…",
+            ""
+          );
+
+          await submitRecording();
+          return;
+        }
+
+        playbackSection.classList.add(
+          "visible"
+        );
+
+        recordingState.textContent =
+          "Recording ready";
 
         showStatus(
           "Your recording is ready. Listen to it before submitting.",
@@ -2232,7 +2651,9 @@
         audioBlob = null;
 
         recordingState.textContent =
-          "Ready to record";
+          responsePhase === "pressure"
+            ? "Pressure response not captured"
+            : "Ready to record";
 
         recordingState.classList.remove(
           "active"
@@ -2254,27 +2675,21 @@
 
 
     function resetRecording() {
-      stopTimer();
-      stopAudioCapture();
+      clearPressureCountdown();
+      clearRecordedAudio();
 
-      recordedAudioBuffers = [];
-      audioBlob = null;
+      responsePhase = "main";
+      pressureSubmissionId = "";
+      pressureData = null;
+      recordingLimitSeconds = null;
+      recordingAutoStopTriggered = false;
 
-      if (audioObjectUrl) {
-        URL.revokeObjectURL(
-          audioObjectUrl
-        );
+      hidePressureFollowUp();
 
-        audioObjectUrl = null;
-      }
-
-      audioPlayback.removeAttribute(
-        "src"
-      );
-
-      playbackSection.classList.remove(
-        "visible"
-      );
+      audioPlayback.style.display = "";
+      recordAgainButton.style.display = "";
+      playbackTitle.textContent =
+        "Listen to your recording";
 
       recordingDot.classList.remove(
         "active"
@@ -2295,9 +2710,10 @@
       recordAgainButton.disabled = false;
       submitButton.disabled = false;
 
+      startButton.textContent =
+        "Start Recording";
       recordAgainButton.textContent =
         "Record Again";
-
       submitButton.textContent =
         "Submit Response";
 
@@ -2338,10 +2754,14 @@
       startButton.disabled = true;
 
       submitButton.textContent =
-        "Submitting…";
+        responsePhase === "pressure"
+          ? "Submitting Pressure Response…"
+          : "Submitting…";
 
       showStatus(
-        "Uploading your recording securely…",
+        responsePhase === "pressure"
+          ? "Uploading your pressure response securely…"
+          : "Uploading your recording securely…",
         ""
       );
 
@@ -2370,7 +2790,11 @@
         ] || "wav";
 
       const audioFileName =
-        "ascent-response-" +
+        (
+          responsePhase === "pressure"
+            ? "ascent-pressure-"
+            : "ascent-response-"
+        ) +
         Date.now() +
         "." +
         audioExtension;
@@ -2382,6 +2806,18 @@
         "session_token",
         currentSession.sessionToken
       );
+
+      formData.append(
+        "response_phase",
+        responsePhase
+      );
+
+      if (responsePhase === "pressure") {
+        formData.append(
+          "submission_id",
+          pressureSubmissionId
+        );
+      }
 
       formData.append(
         "audio",
@@ -2448,6 +2884,25 @@
         submitButton.textContent =
           "Submitted";
 
+        if (
+          responsePhase === "main" &&
+          result.pressureRequired === true
+        ) {
+          beginPressureFollowUp(
+            result
+          );
+          return;
+        }
+
+        if (responsePhase === "pressure") {
+          clearPressureCountdown();
+          pressurePanel.classList.remove(
+            "visible"
+          );
+          responsePhase = "complete";
+          recordingLimitSeconds = null;
+        }
+
         renderEvaluationResult(
           result
         );
@@ -2472,18 +2927,31 @@
 
       } finally {
         if (!submissionSucceeded) {
-          submitButton.disabled = false;
-          recordAgainButton.disabled = false;
-          startButton.disabled = false;
+          if (responsePhase === "pressure") {
+            startButton.disabled = true;
+            stopButton.disabled = true;
+            recordAgainButton.disabled = true;
+            submitButton.disabled = false;
+            submitButton.textContent =
+              "Retry Pressure Submission";
+            playbackSection.classList.add(
+              "visible"
+            );
+          } else {
+            submitButton.disabled = false;
+            recordAgainButton.disabled = false;
+            startButton.disabled = false;
 
-          submitButton.textContent =
-            "Submit Response";
+            submitButton.textContent =
+              "Submit Response";
+          }
         }
       }
     }
 
 
     function logOut() {
+      clearPressureCountdown();
       stopTimer();
       stopAudioCapture();
 
@@ -2542,6 +3010,7 @@
     window.addEventListener(
       "beforeunload",
       function () {
+        clearPressureCountdown();
         stopTimer();
         stopAudioCapture();
 
