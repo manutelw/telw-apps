@@ -332,6 +332,17 @@
       line-height: 1.5;
       text-align: center;
     }
+    .forgot-password-link {
+  display: block;
+  margin-top: 8px;
+  color: var(--navy);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+}
 
     @media (max-width: 820px) {
       body {
@@ -511,8 +522,15 @@
       </form>
 
       <div class="help-note">
-        This login is for authorised ASCENT trainers and administrators only.
-      </div>
+  This login is for authorised ASCENT trainers and administrators only.
+
+  <a
+    class="forgot-password-link"
+    href="./forgot-password.html?type=TRAINER"
+  >
+    Forgot password?
+  </a>
+</div>
 
       <div class="footer">
         Created by Manu Vikraman<br>
