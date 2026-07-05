@@ -324,6 +324,17 @@
       line-height: 1.5;
       text-align: center;
     }
+    .forgot-password-link {
+  display: block;
+  margin-top: 8px;
+  color: var(--navy);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+}
 
     .footer {
       margin-top: 28px;
@@ -512,8 +523,15 @@
       </form>
 
       <div class="help-note">
-        Use the login details provided by your trainer.
-      </div>
+  Use the login details provided by your trainer.
+
+  <a
+    class="forgot-password-link"
+    href="./forgot-password.html?type=STUDENT"
+  >
+    Forgot password?
+  </a>
+</div>
 
       <div class="footer">
         Created by Manu Vikraman<br>
