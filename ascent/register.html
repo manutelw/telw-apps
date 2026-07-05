@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>ASCENT · Student Registration</title>
+
+  <meta
+    name="description"
+    content="Create an ASCENT student account"
+  >
+
+  <style>
+    :root {
+      --navy: #143a60;
+      --blue: #27679d;
+      --blue-soft: #edf4fb;
+      --gold: #c67b00;
+      --gold-light: #f4c96b;
+      --text: #24364a;
+      --muted: #6c7b8d;
+      --border: #d7e1eb;
+      --white: #ffffff;
+      --danger: #b42318;
+      --danger-soft: #fff0ee;
+      --success: #18794e;
+      --success-soft: #eaf8f1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(
+          circle at top right,
+          rgba(244, 201, 107, 0.95) 0,
+          rgba(244, 201, 107, 0.3) 18%,
+          transparent 40%
+        ),
+        linear-gradient(
+          145deg,
+          #102a46,
+          #214d79
+        );
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    button,
+    input {
+      font-family: inherit;
+    }
+
+    .page-shell {
+      width: 100%;
+      max-width: 980px;
+      display: grid;
+      grid-template-columns: 1fr 460px;
+      overflow: hidden;
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
+    }
+
+    .intro-panel {
+      position: relative;
+      min-height: 700px;
+      padding: 62px 54px;
+      color: var(--white);
+      background:
+        linear-gradient(
+          160deg,
+          rgba(14, 43, 72, 0.98),
+          rgba(30, 78, 121, 0.96)
+        );
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .intro-panel::before,
+    .intro-panel::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .intro-panel::before {
+      width: 280px;
+      height: 280px;
+      right: -120px;
+      top: -80px;
+    }
+
+    .intro-panel::after {
+      width: 190px;
+      height: 190px;
+      left: -80px;
+      bottom: -70px;
+    }
+
+    .brand-chip {
+      position: relative;
+      z-index: 1;
+      align-self: flex-start;
+      display: inline-block;
+      margin-bottom: 28px;
+      padding: 8px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.13);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.6px;
+    }
+
+    .intro-panel h1 {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 18px;
+      font-size: clamp(48px, 7vw, 72px);
+      line-height: 0.95;
+      letter-spacing: 3px;
+    }
+
+    .tagline {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 28px;
+      color: var(--gold-light);
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .intro-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 500px;
+      margin-bottom: 34px;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .feature-list {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 16px;
+    }
+
+    .feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .feature-mark {
+      flex: 0 0 auto;
+      width: 25px;
+      height: 25px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(244, 201, 107, 0.18);
+      color: var(--gold-light);
+      font-weight: 700;
+    }
+
+    .form-panel {
+      padding: 42px 40px 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: var(--white);
+    }
+
+    .mobile-brand {
+      display: none;
+    }
+
+    .form-panel h2 {
+      margin-bottom: 9px;
+      color: var(--navy);
+      font-size: 29px;
+    }
+
+    .form-intro {
+      margin-bottom: 24px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input {
+      width: 100%;
+      min-height: 48px;
+      padding: 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      outline: none;
+      background: #fbfdff;
+      color: var(--text);
+      font-size: 15px;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    input:focus {
+      border-color: #4d83b5;
+      box-shadow: 0 0 0 4px rgba(77, 131, 181, 0.13);
+      background: var(--white);
+    }
+
+    .password-wrap {
+      position: relative;
+    }
+
+    .password-wrap input {
+      padding-right: 80px;
+    }
+
+    .show-password {
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      transform: translateY(-50%);
+      border: 0;
+      background: transparent;
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .field-note {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .register-button {
+      width: 100%;
+      min-height: 50px;
+      margin-top: 4px;
+      border: 0;
+      border-radius: 11px;
+      background:
+        linear-gradient(
+          135deg,
+          var(--navy),
+          var(--blue)
+        );
+      color: var(--white);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .register-button:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    .status-message {
+      min-height: 22px;
+      margin-top: 14px;
+      font-size: 14px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .status-message.error,
+    .status-message.success {
+      padding: 11px 12px;
+      border-radius: 10px;
+    }
+
+    .status-message.error {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .status-message.success {
+      background: var(--success-soft);
+      color: var(--success);
+    }
+
+    .login-link {
+      display: block;
+      margin-top: 16px;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--white);
+      color: var(--navy);
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .success-panel {
+      display: none;
+      padding: 22px;
+      border-radius: 14px;
+      background: var(--success-soft);
+      color: var(--success);
+      text-align: center;
+    }
+
+    .success-panel.visible {
+      display: block;
+    }
+
+    .success-panel h3 {
+      margin-bottom: 9px;
+      color: var(--navy);
+      font-size: 20px;
+    }
+
+    .success-panel p {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .footer {
+      margin-top: 24px;
+      color: #8996a5;
+      font-size: 12px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    @media (max-width: 840px) {
+      body {
+        padding: 16px;
+      }
+
+      .page-shell {
+        max-width: 500px;
+        display: block;
+        border-radius: 22px;
+      }
+
+      .intro-panel {
+        display: none;
+      }
+
+      .form-panel {
+        min-height: 700px;
+        padding: 34px 26px 26px;
+      }
+
+      .mobile-brand {
+        display: block;
+        margin-bottom: 28px;
+        text-align: center;
+      }
+
+      .mobile-brand .small-brand {
+        display: inline-block;
+        margin-bottom: 14px;
+        padding: 7px 13px;
+        border-radius: 999px;
+        background: var(--blue-soft);
+        color: var(--navy);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+      }
+
+      .mobile-brand h1 {
+        margin-bottom: 9px;
+        color: var(--navy);
+        font-size: 44px;
+        line-height: 1;
+        letter-spacing: 2px;
+      }
+
+      .mobile-brand p {
+        color: var(--gold);
+        font-size: 16px;
+        font-weight: 700;
+      }
+    }
+
+    @media (max-width: 380px) {
+      body {
+        padding: 10px;
+      }
+
+      .form-panel {
+        padding: 28px 20px 22px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page-shell">
+
+    <section class="intro-panel">
+      <div class="brand-chip">CLARIONPREP.COM</div>
+
+      <h1>ASCENT</h1>
+
+      <div class="tagline">
+        Create Your Student Account
+      </div>
+
+      <p class="intro-copy">
+        Register once, then use your student ID or email address to log in
+        and complete the speaking tasks assigned by your trainer.
+      </p>
+
+      <div class="feature-list">
+        <div class="feature">
+          <span class="feature-mark">1</span>
+          <span>Use your real student ID and registered email address.</span>
+        </div>
+
+        <div class="feature">
+          <span class="feature-mark">2</span>
+          <span>Create a password with at least eight characters.</span>
+        </div>
+
+        <div class="feature">
+          <span class="feature-mark">3</span>
+          <span>Each student ID and email address can be registered only once.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-panel">
+
+      <div class="mobile-brand">
+        <div class="small-brand">CLARIONPREP.COM</div>
+        <h1>ASCENT</h1>
+        <p>Student Registration</p>
+      </div>
+
+      <div id="registrationPanel">
+        <h2>Student Registration</h2>
+
+        <p class="form-intro">
+          Enter your details exactly as they should appear in ASCENT.
+        </p>
+
+        <form id="registrationForm" novalidate>
+
+          <div class="form-group">
+            <label for="studentId">
+              Student ID
+            </label>
+
+            <input
+              id="studentId"
+              name="studentId"
+              type="text"
+              autocomplete="username"
+              placeholder="Enter your student ID"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="fullName">
+              Full name
+            </label>
+
+            <input
+              id="fullName"
+              name="fullName"
+              type="text"
+              autocomplete="name"
+              placeholder="Enter your full name"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="emailAddress">
+              Email address
+            </label>
+
+            <input
+              id="emailAddress"
+              name="emailAddress"
+              type="email"
+              autocomplete="email"
+              placeholder="Enter your email address"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="batch">
+              Batch
+            </label>
+
+            <input
+              id="batch"
+              name="batch"
+              type="text"
+              placeholder="Example: MBA 2026–28"
+            >
+
+            <div class="field-note">
+              Enter the batch name given by your institute or trainer.
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">
+              Password
+            </label>
+
+            <div class="password-wrap">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="new-password"
+                placeholder="Use at least 8 characters"
+                minlength="8"
+                required
+              >
+
+              <button
+                class="show-password"
+                type="button"
+                data-target="password"
+              >
+                Show
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPassword">
+              Confirm password
+            </label>
+
+            <div class="password-wrap">
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                autocomplete="new-password"
+                placeholder="Enter the password again"
+                minlength="8"
+                required
+              >
+
+              <button
+                class="show-password"
+                type="button"
+                data-target="confirmPassword"
+              >
+                Show
+              </button>
+            </div>
+          </div>
+
+          <button
+            id="registerButton"
+            class="register-button"
+            type="submit"
+          >
+            Create Student Account
+          </button>
+
+          <div
+            id="statusMessage"
+            class="status-message"
+            role="status"
+            aria-live="polite"
+          ></div>
+        </form>
+
+        <a
+          class="login-link"
+          href="./index.html"
+        >
+          Already registered? Student Login
+        </a>
+      </div>
+
+      <div
+        id="successPanel"
+        class="success-panel"
+      >
+        <h3>Registration complete</h3>
+
+        <p>
+          Your ASCENT student account has been created.
+          You can now log in using your student ID or email address.
+        </p>
+
+        <a
+          class="login-link"
+          href="./index.html"
+        >
+          Go to Student Login
+        </a>
+      </div>
+
+      <div class="footer">
+        Created by Manu Vikraman<br>
+        A separate application within ClarionPrep
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    const SUPABASE_URL =
+      "https://vtqatrhwfvzyodiftvkc.supabase.co";
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
+
+    const REGISTER_RPC_URL =
+      SUPABASE_URL +
+      "/rest/v1/rpc/ascent_student_register";
+
+    const registrationPanel =
+      document.getElementById(
+        "registrationPanel"
+      );
+
+    const registrationForm =
+      document.getElementById(
+        "registrationForm"
+      );
+
+    const studentIdInput =
+      document.getElementById(
+        "studentId"
+      );
+
+    const fullNameInput =
+      document.getElementById(
+        "fullName"
+      );
+
+    const emailInput =
+      document.getElementById(
+        "emailAddress"
+      );
+
+    const batchInput =
+      document.getElementById(
+        "batch"
+      );
+
+    const passwordInput =
+      document.getElementById(
+        "password"
+      );
+
+    const confirmPasswordInput =
+      document.getElementById(
+        "confirmPassword"
+      );
+
+    const registerButton =
+      document.getElementById(
+        "registerButton"
+      );
+
+    const statusMessage =
+      document.getElementById(
+        "statusMessage"
+      );
+
+    const successPanel =
+      document.getElementById(
+        "successPanel"
+      );
+
+
+    function showStatus(message, type) {
+      statusMessage.className =
+        "status-message" +
+        (type ? " " + type : "");
+
+      statusMessage.textContent =
+        message;
+    }
+
+
+    document
+      .querySelectorAll(
+        ".show-password"
+      )
+      .forEach(
+        function (button) {
+          button.addEventListener(
+            "click",
+            function () {
+              const target =
+                document.getElementById(
+                  button.dataset.target
+                );
+
+              const isHidden =
+                target.type ===
+                  "password";
+
+              target.type =
+                isHidden
+                  ? "text"
+                  : "password";
+
+              button.textContent =
+                isHidden
+                  ? "Hide"
+                  : "Show";
+            }
+          );
+        }
+      );
+
+
+    registrationForm.addEventListener(
+      "submit",
+      async function (event) {
+        event.preventDefault();
+
+        const studentId =
+          studentIdInput.value.trim();
+
+        const fullName =
+          fullNameInput.value.trim();
+
+        const email =
+          emailInput.value
+            .trim()
+            .toLowerCase();
+
+        const batch =
+          batchInput.value.trim();
+
+        const password =
+          passwordInput.value;
+
+        const confirmPassword =
+          confirmPasswordInput.value;
+
+        showStatus("", "");
+
+        if (!studentId) {
+          showStatus(
+            "Enter your student ID.",
+            "error"
+          );
+
+          studentIdInput.focus();
+          return;
+        }
+
+        if (!fullName) {
+          showStatus(
+            "Enter your full name.",
+            "error"
+          );
+
+          fullNameInput.focus();
+          return;
+        }
+
+        if (!email) {
+          showStatus(
+            "Enter a valid email address.",
+            "error"
+          );
+
+          emailInput.focus();
+          return;
+        }
+
+        if (password.length < 8) {
+          showStatus(
+            "Use a password with at least eight characters.",
+            "error"
+          );
+
+          passwordInput.focus();
+          return;
+        }
+
+        if (
+          password !==
+          confirmPassword
+        ) {
+          showStatus(
+            "The two passwords do not match.",
+            "error"
+          );
+
+          confirmPasswordInput.focus();
+          return;
+        }
+
+        registerButton.disabled = true;
+        registerButton.textContent =
+          "Creating Account…";
+
+        try {
+          const response =
+            await fetch(
+              REGISTER_RPC_URL,
+              {
+                method: "POST",
+
+                headers: {
+                  "apikey":
+                    SUPABASE_PUBLISHABLE_KEY,
+
+                  "Authorization":
+                    "Bearer " +
+                    SUPABASE_PUBLISHABLE_KEY,
+
+                  "Content-Type":
+                    "application/json"
+                },
+
+                body:
+                  JSON.stringify({
+                    p_student_id:
+                      studentId,
+
+                    p_full_name:
+                      fullName,
+
+                    p_email:
+                      email,
+
+                    p_password:
+                      password,
+
+                    p_batch:
+                      batch || null
+                  })
+              }
+            );
+
+          if (!response.ok) {
+            const responseText =
+              await response.text();
+
+            throw new Error(
+              "Registration failed: " +
+              response.status +
+              " " +
+              responseText
+            );
+          }
+
+          const result =
+            await response.json();
+
+          const outcome =
+            Array.isArray(result)
+              ? result[0]
+              : null;
+
+          if (
+            !outcome ||
+            outcome.ok !== true
+          ) {
+            showStatus(
+              outcome &&
+              outcome.message
+                ? outcome.message
+                : "Your account could not be created.",
+              "error"
+            );
+
+            return;
+          }
+
+          registrationForm.reset();
+          registrationPanel.style.display =
+            "none";
+
+          successPanel.classList.add(
+            "visible"
+          );
+
+        } catch (error) {
+          console.error(
+            "ASCENT student registration error:",
+            error
+          );
+
+          showStatus(
+            "ASCENT could not create the account. Please try again.",
+            "error"
+          );
+
+        } finally {
+          registerButton.disabled = false;
+          registerButton.textContent =
+            "Create Student Account";
+        }
+      }
+    );
+  </script>
+</body>
+</html>
