@@ -1820,28 +1820,94 @@ otherIssuesSection.hidden = true;
   )
     ? result.feedback.otherIssues
         .map(function (issue) {
-          return String(
-            issue || ""
-          ).trim();
+          if (
+            !issue ||
+            typeof issue !== "object"
+          ) {
+            return null;
+          }
+
+          const label =
+            String(
+              issue.label || ""
+            ).trim();
+
+          const evidenceQuote =
+            String(
+              issue.evidenceQuote ||
+              issue.evidence_quote ||
+              ""
+            ).trim();
+
+          const explanation =
+            String(
+              issue.explanation || ""
+            ).trim();
+
+          if (!label) {
+            return null;
+          }
+
+          return {
+            label,
+            evidenceQuote,
+            explanation
+          };
         })
         .filter(Boolean)
     : [];
 
 clearElement(otherIssuesList);
 
-otherIssues.forEach(
-  function (issue) {
-    const item =
-      document.createElement("li");
+otherIssues.forEach(function (issue) {
+  const item = document.createElement("li");
 
-    item.textContent =
-      issue;
+  if (typeof issue === "string") {
+    item.textContent = issue;
+  } else {
+    const label =
+      String(issue.label || "Other issue").trim();
 
-    otherIssuesList.appendChild(
-      item
-    );
+    const evidenceQuote =
+      String(
+        issue.evidenceQuote ||
+        issue.evidence_quote ||
+        ""
+      ).trim();
+
+    const explanation =
+      String(issue.explanation || "").trim();
+
+    const title =
+      document.createElement("strong");
+
+    title.textContent = label;
+    item.appendChild(title);
+
+    if (evidenceQuote) {
+      const example =
+        document.createElement("div");
+
+      example.textContent =
+        "Example: “" + evidenceQuote + "”";
+
+      item.appendChild(example);
+    }
+
+    if (explanation) {
+      const reason =
+        document.createElement("div");
+
+      reason.textContent =
+        "Why this is a problem: " +
+        explanation;
+
+      item.appendChild(reason);
+    }
   }
-);
+
+  otherIssuesList.appendChild(item);
+});
 
 otherIssuesSection.hidden =
   otherIssues.length === 0;
