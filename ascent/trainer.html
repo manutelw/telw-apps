@@ -386,6 +386,7 @@
     const escapeHtml = value => String(value ?? "").replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
     const formatNumber = value => value === null || value === undefined || value === "" ? "—" : Number(value).toFixed(Number(value) % 1 ? 2 : 0);
     const formatDate = value => value ? new Date(value).toLocaleString() : "—";
+    const attemptLimitLabel = row => String(row && row.attemptLimitMode || "").toUpperCase() === "UNLIMITED" ? "Unlimited" : (row && row.maxAttempts !== null && row.maxAttempts !== undefined ? row.maxAttempts : "—");
     const normaliseRpc = value => Array.isArray(value) && value.length === 1 ? value[0] : value;
     const setStatus = (element,message,type="") => { element.className = "form-status" + (type ? " " + type : ""); element.textContent = message || ""; };
     const showLoading = (message="Loading ASCENT…") => { byId("loadingText").textContent = message; byId("loadingOverlay").classList.add("active"); };
@@ -621,14 +622,14 @@
       visibleAssignmentRows = resultFilter(reportData.results || [],"assignment");
       byId("assignmentCountLabel").textContent = `${visibleAssignmentRows.length} assignments shown`;
       if (!visibleAssignmentRows.length) { byId("assignmentsTableWrap").innerHTML = `<div class="empty-state">No assignments match these filters.</div>`; return; }
-      byId("assignmentsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Available</th><th>Due</th><th>Attempts</th><th>Status</th></tr></thead><tbody>${visibleAssignmentRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td>${escapeHtml(formatDate(row.availableAt))}</td><td>${escapeHtml(formatDate(row.dueAt))}</td><td>${escapeHtml(row.attemptCount)} / ${escapeHtml(row.maxAttempts)}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td></tr>`).join("")}</tbody></table>`;
+      byId("assignmentsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Available</th><th>Due</th><th>Attempts Made</th><th>Attempt Limit</th><th>Status</th></tr></thead><tbody>${visibleAssignmentRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td>${escapeHtml(formatDate(row.availableAt))}</td><td>${escapeHtml(formatDate(row.dueAt))}</td><td>${escapeHtml(row.attemptCount)}</td><td>${escapeHtml(attemptLimitLabel(row))}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td></tr>`).join("")}</tbody></table>`;
     }
 
     function renderResultsTable() {
       visibleResultRows = resultFilter(reportData.results || [],"result");
       byId("resultCountLabel").textContent = `${visibleResultRows.length} result rows shown`;
       if (!visibleResultRows.length) { byId("resultsTableWrap").innerHTML = `<div class="empty-state">No results match these filters.</div>`; return; }
-      byId("resultsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Status</th><th>Attempts</th><th>First</th><th>Latest</th><th>Improvement</th><th>Latest Submission</th></tr></thead><tbody>${visibleResultRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}<br>${escapeHtml(row.email || "")}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td><td>${escapeHtml(row.attemptCount)} / ${escapeHtml(row.maxAttempts)}</td><td>${escapeHtml(formatNumber(row.firstScore))}</td><td>${escapeHtml(formatNumber(row.latestScore))}</td><td>${row.improvement === null || row.improvement === undefined ? "—" : escapeHtml((Number(row.improvement)>0?"+":"")+formatNumber(row.improvement))}</td><td>${escapeHtml(formatDate(row.latestSubmittedAt))}</td></tr>`).join("")}</tbody></table>`;
+      byId("resultsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Status</th><th>Attempts Made</th><th>Attempt Limit</th><th>First</th><th>Latest</th><th>Improvement</th><th>Latest Submission</th></tr></thead><tbody>${visibleResultRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}<br>${escapeHtml(row.email || "")}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td><td>${escapeHtml(row.attemptCount)}</td><td>${escapeHtml(attemptLimitLabel(row))}</td><td>${escapeHtml(formatNumber(row.firstScore))}</td><td>${escapeHtml(formatNumber(row.latestScore))}</td><td>${row.improvement === null || row.improvement === undefined ? "—" : escapeHtml((Number(row.improvement)>0?"+":"")+formatNumber(row.improvement))}</td><td>${escapeHtml(formatDate(row.latestSubmittedAt))}</td></tr>`).join("")}</tbody></table>`;
     }
 
     function bankCategoriesForType(bankType="") {
@@ -945,7 +946,7 @@
       const resultRows = chosenRows.map(row => ({
         "Student ID":row.studentId,"Student Name":row.fullName,"Email":row.email,"Batch":row.batch,"Task Title":row.taskTitle,
         "Question":row.question,"Rubric":row.rubricType,"Status":row.status,"Available At":formatDate(row.availableAt),"Due At":formatDate(row.dueAt),
-        "Attempts":row.attemptCount,"Maximum Attempts":row.maxAttempts,"First Score":row.firstScore,"Latest Score":row.latestScore,
+        "Attempts Made":row.attemptCount,"Attempt Limit":attemptLimitLabel(row),"First Score":row.firstScore,"Latest Score":row.latestScore,
         "Improvement":row.improvement,"Latest Submission":formatDate(row.latestSubmittedAt),...flattenCriterionScores(row.criterionScores)
       }));
       const pendingRows = chosenRows.filter(row => Number(row.attemptCount || 0) === 0 && !["SCHEDULED","WITHDRAWN"].includes(row.status)).map(row => ({"Student ID":row.studentId,"Student Name":row.fullName,"Email":row.email,"Batch":row.batch,"Task Title":row.taskTitle,"Question":row.question,"Status":row.status,"Available At":formatDate(row.availableAt),"Due At":formatDate(row.dueAt)}));
