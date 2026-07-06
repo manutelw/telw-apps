@@ -136,6 +136,7 @@
     }
 
     .home-button,
+    .performance-button,
     .logout-button {
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -148,6 +149,7 @@
     }
 
     .home-button:hover,
+    .performance-button:hover,
     .logout-button:hover {
       background: var(--blue-soft);
     }
@@ -837,6 +839,7 @@
 
     @media (max-width: 480px) {
       .home-button,
+      .performance-button,
       .logout-button {
         padding: 9px 11px;
         font-size: 12px;
@@ -905,6 +908,14 @@
           aria-label="Go to ClarionPrep home"
         >
           Home
+        </a>
+
+        <a
+          class="performance-button"
+          href="./dashboard.html"
+          aria-label="Open My ASCENT Performance"
+        >
+          My Performance
         </a>
 
         <button
