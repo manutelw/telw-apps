@@ -326,7 +326,7 @@
             <div id="clearTestRegisterStatus" class="form-status" role="status" aria-live="polite"></div>
           </div>
 
-          <div class="panel"><div class="panel-title-row"><div><h3>Assignment Register</h3><div id="assignmentCountLabel" class="panel-subtitle"></div></div></div><div id="assignmentsTableWrap" class="table-wrap"></div></div>
+          <div class="panel"><div class="panel-title-row"><div><h3>Assignment Register</h3><div id="assignmentCountLabel" class="panel-subtitle"></div></div></div><div id="assignmentsTableWrap" class="table-wrap"></div><div id="assignmentActionStatus" class="form-status" role="status" aria-live="polite"></div></div>
         </section>
 
         <section id="resultsSection" class="section-panel">
@@ -372,7 +372,8 @@
       assignQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_assign_question_bank_tasks",
       upsertQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_upsert_question_bank",
       questionBankActive: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_set_question_bank_active",
-      clearTestRegister: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_clear_test_student_register"
+      clearTestRegister: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_clear_test_student_register",
+      updateAttemptLimit: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_update_assignment_attempt_limit"
     };
     let currentSession = null;
     let reportData = { summary:{}, batches:[], students:[], tasks:[], results:[] };
@@ -622,7 +623,8 @@
       visibleAssignmentRows = resultFilter(reportData.results || [],"assignment");
       byId("assignmentCountLabel").textContent = `${visibleAssignmentRows.length} assignments shown`;
       if (!visibleAssignmentRows.length) { byId("assignmentsTableWrap").innerHTML = `<div class="empty-state">No assignments match these filters.</div>`; return; }
-      byId("assignmentsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Available</th><th>Due</th><th>Attempts Made</th><th>Attempt Limit</th><th>Status</th></tr></thead><tbody>${visibleAssignmentRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td>${escapeHtml(formatDate(row.availableAt))}</td><td>${escapeHtml(formatDate(row.dueAt))}</td><td>${escapeHtml(row.attemptCount)}</td><td>${escapeHtml(attemptLimitLabel(row))}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td></tr>`).join("")}</tbody></table>`;
+      byId("assignmentsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Available</th><th>Due</th><th>Attempts Made</th><th>Attempt Limit</th><th>Status</th><th>Action</th></tr></thead><tbody>${visibleAssignmentRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td>${escapeHtml(formatDate(row.availableAt))}</td><td>${escapeHtml(formatDate(row.dueAt))}</td><td>${escapeHtml(row.attemptCount)}</td><td>${escapeHtml(attemptLimitLabel(row))}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td><td>${isCeo() ? "—" : `<button class="small-button attempt-limit-edit" type="button" data-assignment="${escapeHtml(row.assignmentUuid)}" data-attempts="${escapeHtml(row.attemptCount)}" data-limit="${escapeHtml(row.maxAttempts)}">Edit Limit</button>`}</td></tr>`).join("")}</tbody></table>`;
+      document.querySelectorAll(".attempt-limit-edit").forEach(button => button.addEventListener("click",() => editAssignmentAttemptLimit(button.dataset.assignment,Number(button.dataset.attempts || 0),Number(button.dataset.limit || 1))));
     }
 
     function renderResultsTable() {
@@ -1019,6 +1021,55 @@
       } finally {
         button.disabled = false;
         button.textContent = "Clear Selected Test Register";
+      }
+    }
+
+    async function editAssignmentAttemptLimit(assignmentUuid,attemptsMade,currentLimit) {
+      if (isCeo()) return;
+
+      const minimum = Math.max(Number(attemptsMade || 0),1);
+      const suggested = Math.max(Number(currentLimit || 1),minimum);
+      const answer = window.prompt(
+        `Attempts Made: ${attemptsMade}\nCurrent Attempt Limit: ${currentLimit}\n\nEnter the new Attempt Limit. It cannot be lower than ${minimum}.`,
+        String(suggested)
+      );
+
+      if (answer === null) return;
+
+      const newLimit = Number(answer.trim());
+      if (!Number.isInteger(newLimit) || newLimit < 1) {
+        setStatus(byId("assignmentActionStatus"),"Enter a whole-number Attempt Limit of at least 1.","error");
+        return;
+      }
+
+      if (newLimit < minimum) {
+        setStatus(byId("assignmentActionStatus"),`The Attempt Limit cannot be lower than Attempts Made (${attemptsMade}).`,"error");
+        return;
+      }
+
+      showLoading("Updating Attempt Limit…");
+      setStatus(byId("assignmentActionStatus"),"","");
+
+      try {
+        const result = await callRpc(RPC.updateAttemptLimit,{
+          p_session_token:currentSession.sessionToken,
+          p_assignment_uuid:assignmentUuid,
+          p_attempt_limit_mode:"LIMITED",
+          p_max_attempts:newLimit
+        });
+
+        if (!result || result.ok !== true) {
+          throw new Error(result && result.message ? result.message : "The Attempt Limit could not be updated.");
+        }
+
+        await loadReport("Refreshing assignments…");
+        setStatus(byId("assignmentActionStatus"),`Attempt Limit updated to ${newLimit}.`,"success");
+        showSection("assignments");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("assignmentActionStatus"),error.message || "ASCENT could not update the Attempt Limit.","error");
+      } finally {
+        hideLoading();
       }
     }
 
