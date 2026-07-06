@@ -2,769 +2,603 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ASCENT · Trainer Portal</title>
-
-  <meta
-    name="description"
-    content="ASCENT trainer and administrator portal"
-  >
-
+  <meta name="description" content="ASCENT trainer and administrator portal">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <style>
     :root {
-      --navy: #143a60;
-      --navy-dark: #102b47;
-      --blue: #27679d;
-      --blue-soft: #edf4fb;
-      --gold: #c67b00;
-      --gold-light: #f4c96b;
-      --text: #24364a;
-      --muted: #6c7b8d;
-      --border: #d7e1eb;
-      --white: #ffffff;
-      --danger: #b42318;
-      --danger-soft: #fff0ee;
-      --success: #18794e;
-      --success-soft: #eaf8f1;
-      --shadow: 0 22px 65px rgba(0, 0, 0, 0.2);
+      --navy:#143a60; --navy-dark:#102b47; --blue:#27679d; --blue-soft:#edf4fb;
+      --gold:#c67b00; --gold-light:#f4c96b; --text:#24364a; --muted:#6c7b8d;
+      --border:#d7e1eb; --white:#fff; --danger:#b42318; --danger-soft:#fff0ee;
+      --success:#18794e; --success-soft:#eaf8f1; --warning:#9a6700; --warning-soft:#fff7db;
+      --shadow:0 22px 65px rgba(0,0,0,.2);
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html,
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html, body { min-height:100%; }
     body {
-      min-height: 100%;
+      min-height:100vh; font-family:Arial,Helvetica,sans-serif; color:var(--text); padding:20px;
+      background:radial-gradient(circle at top right,rgba(244,201,107,.75) 0,rgba(244,201,107,.18) 18%,transparent 40%),linear-gradient(145deg,#102a46,#214d79);
     }
-
-    body {
-      min-height: 100vh;
-      font-family: Arial, Helvetica, sans-serif;
-      background:
-        radial-gradient(
-          circle at top right,
-          rgba(244, 201, 107, 0.75) 0,
-          rgba(244, 201, 107, 0.18) 18%,
-          transparent 40%
-        ),
-        linear-gradient(
-          145deg,
-          #102a46,
-          #214d79
-        );
-      color: var(--text);
-      padding: 20px;
-    }
-
-    button {
-      font-family: inherit;
-    }
-
-    .app-shell {
-      width: 100%;
-      max-width: 1240px;
-      margin: 0 auto;
-    }
-
+    button,input,select,textarea { font:inherit; }
+    button { cursor:pointer; }
+    .app-shell { width:100%; max-width:1480px; margin:0 auto; }
     .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 18px;
-      margin-bottom: 18px;
-      padding: 16px 20px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.98);
-      box-shadow: var(--shadow);
+      display:flex; justify-content:space-between; align-items:center; gap:18px; margin-bottom:18px;
+      padding:16px 20px; border-radius:18px; background:rgba(255,255,255,.98); box-shadow:var(--shadow);
     }
-
-    .brand-wrap {
-      display: flex;
-      align-items: center;
-      gap: 14px;
+    .brand-wrap { display:flex; align-items:center; gap:14px; }
+    .brand-mark { width:46px; height:46px; display:grid; place-items:center; border-radius:13px; background:linear-gradient(145deg,var(--navy),var(--blue)); color:#fff; font-size:22px; font-weight:800; }
+    .brand-text h1 { color:var(--navy); font-size:24px; letter-spacing:1.3px; line-height:1; margin-bottom:5px; }
+    .brand-text p { color:var(--gold); font-size:13px; font-weight:700; }
+    .topbar-actions { display:flex; align-items:center; gap:12px; }
+    .user-summary { text-align:right; }
+    .user-name { color:var(--navy); font-size:14px; font-weight:800; }
+    .user-role { margin-top:3px; color:var(--muted); font-size:11px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; }
+    .secondary-button,.logout-button,.small-button {
+      border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--navy); font-weight:700;
     }
-
-    .brand-mark {
-      width: 46px;
-      height: 46px;
-      display: grid;
-      place-items: center;
-      border-radius: 13px;
-      background:
-        linear-gradient(
-          145deg,
-          var(--navy),
-          var(--blue)
-        );
-      color: var(--white);
-      font-size: 22px;
-      font-weight: 800;
+    .logout-button { padding:10px 14px; font-size:14px; }
+    .secondary-button { min-height:44px; padding:0 16px; font-size:14px; }
+    .small-button { padding:7px 10px; font-size:12px; }
+    .secondary-button:hover,.logout-button:hover,.small-button:hover { background:var(--blue-soft); }
+    .danger-button { border-color:#efb6b0; color:var(--danger); }
+    .main-layout { display:grid; grid-template-columns:240px minmax(0,1fr); gap:18px; }
+    .sidebar,.workspace { border-radius:20px; background:rgba(255,255,255,.98); box-shadow:var(--shadow); }
+    .sidebar { padding:22px 16px; height:max-content; position:sticky; top:16px; }
+    .sidebar-title { margin:0 10px 14px; color:var(--muted); font-size:11px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; }
+    .nav-list { display:grid; gap:8px; }
+    .nav-item { width:100%; border:0; border-radius:11px; padding:12px 14px; background:transparent; color:#4a6075; font-size:14px; font-weight:700; text-align:left; }
+    .nav-item.active { background:linear-gradient(135deg,var(--navy),var(--blue)); color:#fff; }
+    .nav-item:not(.active):hover { background:var(--blue-soft); color:var(--navy); }
+    .workspace { min-height:700px; padding:28px; overflow:hidden; }
+    .section-panel { display:none; }
+    .section-panel.active { display:block; }
+    .workspace-header { display:flex; justify-content:space-between; align-items:flex-start; gap:18px; margin-bottom:24px; }
+    .workspace-header h2 { color:var(--navy); font-size:28px; margin-bottom:8px; }
+    .workspace-header p { color:var(--muted); font-size:14px; line-height:1.55; }
+    .header-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .status-pill { flex:0 0 auto; padding:8px 12px; border-radius:999px; background:var(--success-soft); color:var(--success); font-size:12px; font-weight:800; }
+    .card-grid { display:grid; grid-template-columns:repeat(6,minmax(130px,1fr)); gap:14px; margin-bottom:20px; }
+    .summary-card { padding:17px; border:1px solid var(--border); border-radius:15px; background:#fbfdff; }
+    .summary-label { color:var(--muted); font-size:10px; font-weight:800; letter-spacing:.7px; text-transform:uppercase; margin-bottom:9px; }
+    .summary-value { color:var(--navy); font-size:27px; font-weight:800; line-height:1; }
+    .panel { padding:20px; border:1px solid var(--border); border-radius:16px; background:#fbfdff; margin-bottom:18px; }
+    .panel-title-row { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:16px; }
+    .panel h3 { color:var(--navy); font-size:18px; margin-bottom:5px; }
+    .panel-subtitle { color:var(--muted); font-size:12px; line-height:1.5; }
+    .dashboard-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .chart-box { min-height:270px; }
+    .completion-bar { height:34px; display:flex; overflow:hidden; border-radius:10px; background:#e9eef3; margin:28px 0 18px; }
+    .completion-segment { min-width:0; transition:width .2s ease; }
+    .completion-segment.completed { background:#2e8b68; }
+    .completion-segment.not-attempted { background:#d48c24; }
+    .completion-segment.other { background:#9eafbd; }
+    .chart-legend { display:flex; gap:14px; flex-wrap:wrap; color:#4a6075; font-size:12px; }
+    .legend-dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px; }
+    .legend-dot.completed { background:#2e8b68; } .legend-dot.not-attempted { background:#d48c24; } .legend-dot.other { background:#9eafbd; }
+    .criterion-chart { display:grid; gap:10px; margin-top:15px; }
+    .criterion-row { display:grid; grid-template-columns:minmax(120px,1.4fr) 3fr 44px; gap:10px; align-items:center; font-size:12px; }
+    .criterion-name { color:#40586e; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .criterion-track { height:12px; border-radius:999px; background:#e6edf4; overflow:hidden; }
+    .criterion-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--navy),var(--blue)); }
+    .criterion-value { text-align:right; color:var(--navy); font-weight:800; }
+    .line-chart { width:100%; height:230px; display:block; }
+    .line-empty { height:220px; display:grid; place-items:center; color:var(--muted); font-size:13px; }
+    .filter-grid,.form-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+    .form-group { margin-bottom:15px; }
+    .form-group.full-width { grid-column:1/-1; }
+    .form-group.two-wide { grid-column:span 2; }
+    .form-group label { display:block; margin-bottom:7px; color:var(--text); font-size:12px; font-weight:800; }
+    .form-group input,.form-group select,.form-group textarea {
+      width:100%; border:1px solid var(--border); border-radius:10px; outline:none; background:#fff; color:var(--text); font-size:14px;
     }
-
-    .brand-text h1 {
-      color: var(--navy);
-      font-size: 24px;
-      letter-spacing: 1.3px;
-      line-height: 1;
-      margin-bottom: 5px;
+    .form-group input,.form-group select { min-height:44px; padding:0 12px; }
+    .form-group textarea { min-height:210px; padding:12px; resize:vertical; line-height:1.5; }
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus { border-color:#4d83b5; box-shadow:0 0 0 4px rgba(77,131,181,.13); }
+    .form-note { color:var(--muted); font-size:11px; line-height:1.5; margin-top:6px; }
+    .inline-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .primary-button { min-height:46px; border:0; border-radius:11px; padding:0 18px; background:linear-gradient(135deg,var(--navy),var(--blue)); color:#fff; font-size:14px; font-weight:800; }
+    .primary-button:disabled { opacity:.6; cursor:wait; }
+    .form-status { min-height:22px; margin-top:12px; font-size:13px; line-height:1.5; }
+    .form-status.error,.form-status.success,.form-status.warning { padding:11px 12px; border-radius:10px; }
+    .form-status.error { background:var(--danger-soft); color:var(--danger); }
+    .form-status.success { background:var(--success-soft); color:var(--success); }
+    .form-status.warning { background:var(--warning-soft); color:var(--warning); }
+    .student-picker { border:1px solid var(--border); border-radius:10px; background:#fff; overflow:hidden; }
+    .student-picker input { border:0; border-bottom:1px solid var(--border); border-radius:0; }
+    .student-options { max-height:220px; overflow:auto; padding:8px; }
+    .student-option { display:flex; align-items:flex-start; gap:8px; padding:8px; border-radius:8px; }
+    .student-option:hover { background:var(--blue-soft); }
+    .student-option input { width:auto; min-height:auto; margin-top:2px; }
+    .student-option span { font-size:12px; line-height:1.35; color:#40586e; }
+    .question-count { display:inline-block; padding:6px 9px; border-radius:999px; background:var(--blue-soft); color:var(--navy); font-size:11px; font-weight:800; }
+    .table-wrap { width:100%; overflow:auto; border:1px solid var(--border); border-radius:12px; background:#fff; }
+    table { width:100%; border-collapse:collapse; min-width:900px; }
+    th,td { padding:11px 12px; border-bottom:1px solid #e7edf3; text-align:left; vertical-align:top; font-size:12px; }
+    th { position:sticky; top:0; z-index:1; background:#edf4fb; color:var(--navy); font-size:10px; letter-spacing:.5px; text-transform:uppercase; }
+    td { color:#40586e; line-height:1.4; }
+    tr:last-child td { border-bottom:0; }
+    .question-cell { max-width:360px; min-width:250px; }
+    .status-badge { display:inline-block; padding:5px 8px; border-radius:999px; font-size:10px; font-weight:800; white-space:nowrap; }
+    .status-completed { background:var(--success-soft); color:var(--success); }
+    .status-not-started,.status-not-attempted { background:var(--warning-soft); color:var(--warning); }
+    .status-scheduled { background:var(--blue-soft); color:var(--blue); }
+    .status-withdrawn { background:var(--danger-soft); color:var(--danger); }
+    .empty-state { padding:28px; text-align:center; color:var(--muted); font-size:13px; }
+    .loading-overlay { display:none; position:fixed; inset:0; z-index:999; background:rgba(11,35,58,.35); place-items:center; }
+    .loading-overlay.active { display:grid; }
+    .loading-card { padding:20px 24px; border-radius:14px; background:#fff; color:var(--navy); font-weight:800; box-shadow:var(--shadow); }
+    .footer { margin-top:18px; color:rgba(255,255,255,.72); font-size:12px; line-height:1.5; text-align:center; }
+    [hidden] { display:none !important; }
+    @media (max-width:1200px) { .card-grid { grid-template-columns:repeat(3,1fr); } .form-grid,.filter-grid { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:860px) {
+      body { padding:12px; } .main-layout { grid-template-columns:1fr; } .sidebar { position:static; padding:12px; }
+      .nav-list { grid-template-columns:repeat(3,1fr); } .nav-item { text-align:center; } .workspace { padding:20px; }
+      .dashboard-grid { grid-template-columns:1fr; } .form-group.two-wide { grid-column:1/-1; }
     }
-
-    .brand-text p {
-      color: var(--gold);
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .topbar-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .user-summary {
-      text-align: right;
-    }
-
-    .user-name {
-      color: var(--navy);
-      font-size: 14px;
-      font-weight: 800;
-    }
-
-    .user-role {
-      margin-top: 3px;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-    }
-
-    .logout-button {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 14px;
-      background: var(--white);
-      color: var(--navy);
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .logout-button:hover {
-      background: var(--blue-soft);
-    }
-
-    .main-layout {
-      display: grid;
-      grid-template-columns: 250px 1fr;
-      gap: 18px;
-    }
-
-    .sidebar,
-    .workspace {
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.98);
-      box-shadow: var(--shadow);
-    }
-
-    .sidebar {
-      padding: 22px 16px;
-    }
-
-    .sidebar-title {
-      margin: 0 10px 14px;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-    }
-
-    .nav-list {
-      display: grid;
-      gap: 8px;
-    }
-
-    .nav-item {
-      width: 100%;
-      border: 0;
-      border-radius: 11px;
-      padding: 12px 14px;
-      background: transparent;
-      color: #4a6075;
-      font-size: 14px;
-      font-weight: 700;
-      text-align: left;
-      cursor: pointer;
-    }
-
-    .nav-item.active {
-      background: linear-gradient(
-        135deg,
-        var(--navy),
-        var(--blue)
-      );
-      color: var(--white);
-    }
-
-    .nav-item:not(.active):hover {
-      background: var(--blue-soft);
-      color: var(--navy);
-    }
-
-    .workspace {
-      min-height: 620px;
-      padding: 30px;
-    }
-
-    .workspace-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 18px;
-      margin-bottom: 26px;
-    }
-
-    .workspace-header h2 {
-      color: var(--navy);
-      font-size: 28px;
-      margin-bottom: 8px;
-    }
-
-    .workspace-header p {
-      color: var(--muted);
-      font-size: 15px;
-      line-height: 1.55;
-    }
-
-    .status-pill {
-      flex: 0 0 auto;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: var(--success-soft);
-      color: var(--success);
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 22px;
-    }
-
-    .summary-card {
-      padding: 20px;
-      border: 1px solid var(--border);
-      border-radius: 15px;
-      background: #fbfdff;
-    }
-
-    .summary-label {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
-
-    .summary-value {
-      color: var(--navy);
-      font-size: 30px;
-      font-weight: 800;
-      line-height: 1;
-    }
-
-    .portal-note {
-      padding: 22px;
-      border: 1px solid #d5e3ef;
-      border-radius: 15px;
-      background: var(--blue-soft);
-    }
-
-    .portal-note h3 {
-      color: var(--navy);
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-
-    .portal-note p {
-      color: #4a647c;
-      font-size: 14px;
-      line-height: 1.65;
-    }
-
-    .section-panel {
-      display: none;
-    }
-
-    .section-panel.active {
-      display: block;
-    }
-
-    .coming-soon {
-      padding: 28px;
-      border: 1px dashed #b8c9d9;
-      border-radius: 15px;
-      background: #fbfdff;
-      color: #52687c;
-      font-size: 15px;
-      line-height: 1.65;
-      text-align: center;
-    }
-
-    .footer {
-      margin-top: 18px;
-      color: rgba(255, 255, 255, 0.72);
-      font-size: 12px;
-      line-height: 1.5;
-      text-align: center;
-    }
-
-    @media (max-width: 860px) {
-      body {
-        padding: 12px;
-      }
-
-      .topbar {
-        padding: 14px;
-      }
-
-      .main-layout {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        padding: 12px;
-      }
-
-      .nav-list {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .nav-item {
-        text-align: center;
-      }
-
-      .workspace {
-        min-height: 520px;
-        padding: 22px;
-      }
-
-      .card-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 520px) {
-      .brand-text p,
-      .user-role {
-        display: none;
-      }
-
-      .user-summary {
-        display: none;
-      }
-
-      .workspace-header {
-        display: block;
-      }
-
-      .status-pill {
-        display: inline-block;
-        margin-top: 12px;
-      }
-
-      .nav-list {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width:560px) {
+      .brand-text p,.user-summary { display:none; } .topbar { padding:13px; } .workspace-header { display:block; }
+      .header-actions { justify-content:flex-start; margin-top:12px; } .nav-list { grid-template-columns:1fr 1fr; }
+      .card-grid,.form-grid,.filter-grid { grid-template-columns:1fr; } .form-group.two-wide,.form-group.full-width { grid-column:auto; }
+      .criterion-row { grid-template-columns:100px 1fr 38px; } .workspace { padding:15px; }
     }
   </style>
 </head>
-
 <body>
+  <div id="loadingOverlay" class="loading-overlay"><div id="loadingText" class="loading-card">Loading ASCENT…</div></div>
   <div class="app-shell">
-
     <header class="topbar">
-      <div class="brand-wrap">
-        <div class="brand-mark">A</div>
-
-        <div class="brand-text">
-          <h1>ASCENT</h1>
-          <p>Trainer &amp; Admin Portal</p>
-        </div>
-      </div>
-
-      <div class="topbar-actions">
-        <div class="user-summary">
-          <div
-            id="trainerName"
-            class="user-name"
-          >
-            Trainer
-          </div>
-
-          <div
-            id="trainerRole"
-            class="user-role"
-          >
-            Trainer
-          </div>
-        </div>
-
-        <button
-          id="logoutButton"
-          class="logout-button"
-          type="button"
-        >
-          Log Out
-        </button>
-      </div>
+      <div class="brand-wrap"><div class="brand-mark">A</div><div class="brand-text"><h1>ASCENT</h1><p>Trainer &amp; Admin Portal</p></div></div>
+      <div class="topbar-actions"><div class="user-summary"><div id="trainerName" class="user-name">Trainer</div><div id="trainerRole" class="user-role">Trainer</div></div><button id="logoutButton" class="logout-button" type="button">Log Out</button></div>
     </header>
 
     <main class="main-layout">
-
       <aside class="sidebar">
-        <div class="sidebar-title">
-          Trainer Workspace
-        </div>
-
+        <div class="sidebar-title">Trainer Workspace</div>
         <div class="nav-list">
-          <button
-            class="nav-item active"
-            type="button"
-            data-section="dashboard"
-          >
-            Dashboard
-          </button>
-
-          <button
-            class="nav-item"
-            type="button"
-            data-section="tasks"
-          >
-            Tasks
-          </button>
-
-          <button
-            class="nav-item"
-            type="button"
-            data-section="assignments"
-          >
-            Assignments
-          </button>
-
-          <button
-            class="nav-item"
-            type="button"
-            data-section="results"
-          >
-            Results
-          </button>
+          <button class="nav-item active" type="button" data-section="dashboard">Dashboard</button>
+          <button class="nav-item" type="button" data-section="tasks">Bulk Questions</button>
+          <button class="nav-item" type="button" data-section="assignments">Assignments</button>
+          <button class="nav-item" type="button" data-section="results">Results</button>
+          <button id="trainersNavItem" class="nav-item" type="button" data-section="trainers" hidden>Trainers</button>
         </div>
       </aside>
 
       <section class="workspace">
-
-        <section
-          id="dashboardSection"
-          class="section-panel active"
-        >
+        <section id="dashboardSection" class="section-panel active">
           <div class="workspace-header">
-            <div>
-              <h2>Trainer Dashboard</h2>
-
-              <p>
-                Your secure ASCENT trainer session is active.
-              </p>
-            </div>
-
-            <div class="status-pill">
-              Login verified
-            </div>
+            <div><h2>Dashboard</h2><p>Live participation, performance and progress across ASCENT.</p></div>
+            <div class="header-actions"><button id="refreshDashboardButton" class="secondary-button" type="button">Refresh</button><button id="dashboardExportButton" class="primary-button" type="button">Download Excel</button></div>
           </div>
-
           <div class="card-grid">
-            <div class="summary-card">
-              <div class="summary-label">
-                Active Tasks
-              </div>
-
-              <div class="summary-value">
-                —
-              </div>
-            </div>
-
-            <div class="summary-card">
-              <div class="summary-label">
-                Assigned Students
-              </div>
-
-              <div class="summary-value">
-                —
-              </div>
-            </div>
-
-            <div class="summary-card">
-              <div class="summary-label">
-                Completed
-              </div>
-
-              <div class="summary-value">
-                —
-              </div>
-            </div>
+            <div class="summary-card"><div class="summary-label">Active Tasks</div><div id="activeTasksValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label">Assigned Students</div><div id="assignedStudentsValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label">Completed</div><div id="completedValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label">Not Attempted</div><div id="notAttemptedValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label">Average Score</div><div id="averageScoreValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label">Average Improvement</div><div id="averageImprovementValue" class="summary-value">—</div></div>
           </div>
-
-          <div class="portal-note">
-            <h3>Trainer portal foundation is ready</h3>
-
-            <p>
-              The next connection will add task creation, rubric selection,
-              follow-up controls, assignment settings, attempt limits and dates.
-            </p>
+          <div class="dashboard-grid">
+            <div class="panel chart-box"><div class="panel-title-row"><div><h3>Completion</h3><div class="panel-subtitle">Completed, pending and other assignments.</div></div></div><div id="completionChart"></div></div>
+            <div class="panel chart-box"><div class="panel-title-row"><div><h3>Criterion Performance</h3><div class="panel-subtitle">Average of the latest criterion scores.</div></div></div><div id="criterionChart"></div></div>
+            <div class="panel chart-box"><div class="panel-title-row"><div><h3>Score Progress</h3><div class="panel-subtitle">Average latest score by submission date.</div></div></div><div id="progressChart"></div></div>
+            <div class="panel chart-box"><div class="panel-title-row"><div><h3>Student Improvement</h3><div class="panel-subtitle">Students ranked by first-to-latest score change.</div></div></div><div id="studentImprovementChart"></div></div>
           </div>
+          <div id="dashboardStatus" class="form-status" role="status" aria-live="polite"></div>
         </section>
 
-        <section
-          id="tasksSection"
-          class="section-panel"
-        >
-          <div class="workspace-header">
-            <div>
-              <h2>Tasks</h2>
-
-              <p>
-                Create and manage ASCENT speaking tasks.
-              </p>
+        <section id="tasksSection" class="section-panel">
+          <div class="workspace-header"><div><h2>Bulk Questions</h2><p>Paste a complete batch of questions, choose the release pace, and assign them in one action.</p></div></div>
+          <form id="bulkTaskForm" class="panel" novalidate>
+            <div class="form-grid">
+              <div class="form-group two-wide"><label for="titlePrefix">Task title prefix</label><input id="titlePrefix" type="text" value="ASCENT Task" maxlength="100"><div class="form-note">ASCENT adds 01, 02, 03… when the batch contains several questions.</div></div>
+              <div class="form-group"><label for="rubricType">Rubric</label><select id="rubricType"><option value="MANAGERIAL_COMMUNICATION">Managerial Communication</option><option value="PI">Personal Interview</option><option value="GD">Group Discussion</option></select></div>
+              <div class="form-group"><label for="responseSeconds">Main response time</label><select id="responseSeconds"><option value="45">45 seconds</option><option value="60" selected>60 seconds</option><option value="90">90 seconds</option><option value="120">120 seconds</option></select></div>
+              <div class="form-group full-width"><div class="inline-row" style="justify-content:space-between"><label for="questionsText" style="margin:0">Questions — one per line</label><span id="questionCount" class="question-count">0 questions</span></div><textarea id="questionsText" placeholder="Paste all questions here. Put each new question on a separate line."></textarea><div class="form-note">Blank lines are ignored. Leading numbers such as “1.” or “2)” are removed automatically.</div></div>
+              <div class="form-group"><label for="targetType">Assign to</label><select id="targetType"><option value="ALL">All active students</option><option value="BATCH">One batch</option><option value="STUDENTS">Selected students</option></select></div>
+              <div id="targetBatchGroup" class="form-group" hidden><label for="targetBatch">Student batch</label><select id="targetBatch"><option value="">Choose batch</option></select></div>
+              <div id="targetStudentsGroup" class="form-group two-wide" hidden><label>Selected students</label><div class="student-picker"><input id="studentSearch" type="search" placeholder="Search by name, ID, email or batch"><div id="studentOptions" class="student-options"></div></div><div id="selectedStudentCount" class="form-note">0 students selected</div></div>
+              <div class="form-group"><label for="startAt">First release</label><input id="startAt" type="datetime-local"></div>
+              <div class="form-group"><label for="intervalDays">Release pace</label><select id="intervalDays"><option value="0">All at once</option><option value="1" selected>One question daily</option><option value="2">One every 2 days</option><option value="3">One every 3 days</option><option value="7">One every week</option></select></div>
+              <div class="form-group"><label for="dueDays">Days allowed per question</label><input id="dueDays" type="number" min="0" max="365" value="7"><div class="form-note">Leave blank for no deadline.</div></div>
+              <div class="form-group"><label for="maxAttempts">Maximum attempts</label><input id="maxAttempts" type="number" min="1" max="10" value="1"></div>
+              <div class="form-group"><label for="pressureMode">Follow-up</label><select id="pressureMode"><option value="NONE">No follow-up</option><option value="FIXED_FOLLOW_UP">Use one fixed follow-up</option></select></div>
+              <div id="pressurePromptGroup" class="form-group two-wide" hidden><label for="pressurePrompt">Follow-up question</label><input id="pressurePrompt" type="text" placeholder="Paste the follow-up question"><div class="form-note">This same follow-up is attached to every question in this batch.</div></div>
+              <div id="pressurePrepGroup" class="form-group" hidden><label for="pressurePrepSeconds">Follow-up preparation</label><input id="pressurePrepSeconds" type="number" min="0" max="120" value="5"></div>
+              <div id="pressureResponseGroup" class="form-group" hidden><label for="pressureResponseSeconds">Follow-up response</label><input id="pressureResponseSeconds" type="number" min="10" max="300" value="45"></div>
             </div>
-          </div>
-
-          <div class="coming-soon">
-            Task creation controls will be connected next.
-          </div>
+            <div class="inline-row"><button id="createBatchButton" class="primary-button" type="submit">Create and Assign Batch</button><span id="assignmentEstimate" class="form-note"></span></div>
+            <div id="bulkTaskStatus" class="form-status" role="status" aria-live="polite"></div>
+          </form>
+          <div class="panel"><div class="panel-title-row"><div><h3>Existing Tasks</h3><div class="panel-subtitle">Withdraw or reactivate an individual task.</div></div><button id="refreshTasksButton" class="secondary-button" type="button">Refresh</button></div><div id="tasksTableWrap" class="table-wrap"></div></div>
         </section>
 
-        <section
-          id="assignmentsSection"
-          class="section-panel"
-        >
-          <div class="workspace-header">
-            <div>
-              <h2>Assignments</h2>
-
-              <p>
-                Assign tasks to students, selected groups or batches.
-              </p>
-            </div>
-          </div>
-
-          <div class="coming-soon">
-            Assignment controls will be connected after task creation.
-          </div>
+        <section id="assignmentsSection" class="section-panel">
+          <div class="workspace-header"><div><h2>Assignments</h2><p>See who received each question, its release time, attempts and current status.</p></div></div>
+          <div class="panel"><div class="filter-grid">
+            <div class="form-group"><label for="assignmentBatchFilter">Batch</label><select id="assignmentBatchFilter"><option value="">All batches</option></select></div>
+            <div class="form-group"><label for="assignmentStudentFilter">Student</label><select id="assignmentStudentFilter"><option value="">All students</option></select></div>
+            <div class="form-group"><label for="assignmentTaskFilter">Task</label><select id="assignmentTaskFilter"><option value="">All tasks</option></select></div>
+            <div class="form-group"><label for="assignmentStatusFilter">Status</label><select id="assignmentStatusFilter"><option value="">All statuses</option><option value="COMPLETED">Completed</option><option value="NOT_STARTED">Not started</option><option value="NOT_ATTEMPTED">Not attempted</option><option value="SCHEDULED">Scheduled</option><option value="WITHDRAWN">Withdrawn</option></select></div>
+          </div><div class="inline-row"><button id="applyAssignmentFiltersButton" class="primary-button" type="button">Apply Filters</button><button id="clearAssignmentFiltersButton" class="secondary-button" type="button">Clear</button></div></div>
+          <div class="panel"><div class="panel-title-row"><div><h3>Assignment Register</h3><div id="assignmentCountLabel" class="panel-subtitle"></div></div></div><div id="assignmentsTableWrap" class="table-wrap"></div></div>
         </section>
 
-        <section
-          id="resultsSection"
-          class="section-panel"
-        >
-          <div class="workspace-header">
-            <div>
-              <h2>Results</h2>
-
-              <p>
-                Review student submissions and criterion-level performance.
-              </p>
-            </div>
-          </div>
-
-          <div class="coming-soon">
-            Results and progress reporting will be connected later.
-          </div>
+        <section id="resultsSection" class="section-panel">
+          <div class="workspace-header"><div><h2>Results</h2><p>Filter results, compare first and latest scores, and download the complete Excel report.</p></div><div class="header-actions"><button id="resultsExportButton" class="primary-button" type="button">Download Excel</button></div></div>
+          <div class="panel"><div class="filter-grid">
+            <div class="form-group"><label for="resultBatchFilter">Batch</label><select id="resultBatchFilter"><option value="">All batches</option></select></div>
+            <div class="form-group"><label for="resultStudentFilter">Student</label><select id="resultStudentFilter"><option value="">All students</option></select></div>
+            <div class="form-group"><label for="resultTaskFilter">Task</label><select id="resultTaskFilter"><option value="">All tasks</option></select></div>
+            <div class="form-group"><label for="resultStatusFilter">Status</label><select id="resultStatusFilter"><option value="">All statuses</option><option value="COMPLETED">Completed</option><option value="NOT_STARTED">Not started</option><option value="NOT_ATTEMPTED">Not attempted</option><option value="SCHEDULED">Scheduled</option><option value="WITHDRAWN">Withdrawn</option></select></div>
+            <div class="form-group"><label for="resultDateFrom">From date</label><input id="resultDateFrom" type="date"></div>
+            <div class="form-group"><label for="resultDateTo">To date</label><input id="resultDateTo" type="date"></div>
+          </div><div class="inline-row"><button id="applyResultFiltersButton" class="primary-button" type="button">Apply Filters</button><button id="clearResultFiltersButton" class="secondary-button" type="button">Clear</button></div></div>
+          <div class="panel"><div class="panel-title-row"><div><h3>Student Results</h3><div id="resultCountLabel" class="panel-subtitle"></div></div></div><div id="resultsTableWrap" class="table-wrap"></div><div id="resultsStatus" class="form-status"></div></div>
         </section>
 
+        <section id="trainersSection" class="section-panel">
+          <div class="workspace-header"><div><h2>Add Trainer</h2><p>Create a trainer or administrator login without using SQL.</p></div></div>
+          <form id="addTrainerForm" class="panel" novalidate>
+            <div class="form-grid">
+              <div class="form-group"><label for="newTrainerName">Full name</label><input id="newTrainerName" type="text" autocomplete="name" required></div>
+              <div class="form-group"><label for="newTrainerEmail">Email address</label><input id="newTrainerEmail" type="email" autocomplete="email" required></div>
+              <div class="form-group"><label for="newTrainerPassword">Temporary password</label><input id="newTrainerPassword" type="password" autocomplete="new-password" minlength="8" required></div>
+              <div class="form-group"><label for="newTrainerRole">Access role</label><select id="newTrainerRole"><option value="TRAINER">Trainer</option><option value="ADMIN">Administrator</option></select></div>
+            </div>
+            <button id="addTrainerButton" class="primary-button" type="submit">Add Trainer</button><div id="addTrainerStatus" class="form-status" role="status" aria-live="polite"></div>
+          </form>
+        </section>
       </section>
     </main>
-
-    <div class="footer">
-      Created by Manu Vikraman<br>
-      A separate application within ClarionPrep
-    </div>
-
+    <div class="footer">Created by Manu Vikraman<br>A separate application within ClarionPrep</div>
   </div>
 
   <script>
-    const SESSION_STORAGE_KEY =
-      "ascent_trainer_session";
-
-    const trainerName =
-      document.getElementById("trainerName");
-
-    const trainerRole =
-      document.getElementById("trainerRole");
-
-    const logoutButton =
-      document.getElementById("logoutButton");
-
-    const navItems =
-      Array.from(
-        document.querySelectorAll(".nav-item")
-      );
-
-    const sections = {
-      dashboard:
-        document.getElementById("dashboardSection"),
-      tasks:
-        document.getElementById("tasksSection"),
-      assignments:
-        document.getElementById("assignmentsSection"),
-      results:
-        document.getElementById("resultsSection")
+    const SESSION_STORAGE_KEY = "ascent_trainer_session";
+    const SUPABASE_URL = "https://vtqatrhwfvzyodiftvkc.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
+    const RPC = {
+      report: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_report_data",
+      bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
+      taskActive: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_task_active",
+      createTrainer: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_create_trainer"
     };
+    let currentSession = null;
+    let reportData = { summary:{}, batches:[], students:[], tasks:[], results:[] };
+    let visibleAssignmentRows = [];
+    let visibleResultRows = [];
 
+    const byId = id => document.getElementById(id);
+    const escapeHtml = value => String(value ?? "").replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
+    const formatNumber = value => value === null || value === undefined || value === "" ? "—" : Number(value).toFixed(Number(value) % 1 ? 2 : 0);
+    const formatDate = value => value ? new Date(value).toLocaleString() : "—";
+    const normaliseRpc = value => Array.isArray(value) && value.length === 1 ? value[0] : value;
+    const setStatus = (element,message,type="") => { element.className = "form-status" + (type ? " " + type : ""); element.textContent = message || ""; };
+    const showLoading = (message="Loading ASCENT…") => { byId("loadingText").textContent = message; byId("loadingOverlay").classList.add("active"); };
+    const hideLoading = () => byId("loadingOverlay").classList.remove("active");
+    const rpcHeaders = () => ({ "apikey":SUPABASE_PUBLISHABLE_KEY, "Authorization":"Bearer " + SUPABASE_PUBLISHABLE_KEY, "Content-Type":"application/json" });
+
+    async function callRpc(url, body) {
+      const response = await fetch(url,{ method:"POST", headers:rpcHeaders(), body:JSON.stringify(body) });
+      const text = await response.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+      if (!response.ok) throw new Error("Request failed " + response.status + ": " + (typeof data === "string" ? data : JSON.stringify(data)));
+      return normaliseRpc(data);
+    }
 
     function loadTrainerSession() {
-      const storedSession =
-        localStorage.getItem(
-          SESSION_STORAGE_KEY
-        );
-
-      if (!storedSession) {
-        window.location.href =
-          "./trainer-login.html";
-
-        return null;
-      }
-
+      const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+      if (!raw) { window.location.href = "./trainer-login.html"; return null; }
       try {
-        const session =
-          JSON.parse(storedSession);
-
-        if (
-          !session.sessionToken ||
-          !session.trainerUuid ||
-          !session.email ||
-          !session.expiresAt
-        ) {
-          throw new Error(
-            "Incomplete trainer session"
-          );
-        }
-
-        const expiryTime =
-          new Date(
-            session.expiresAt
-          ).getTime();
-
-        if (
-          !Number.isFinite(expiryTime) ||
-          expiryTime <= Date.now()
-        ) {
-          localStorage.removeItem(
-            SESSION_STORAGE_KEY
-          );
-
-          window.location.href =
-            "./trainer-login.html";
-
-          return null;
-        }
-
+        const session = JSON.parse(raw);
+        if (!session.sessionToken || !session.trainerUuid || !session.email || !session.expiresAt) throw new Error("Incomplete trainer session");
+        if (new Date(session.expiresAt).getTime() <= Date.now()) throw new Error("Expired trainer session");
         return session;
-
       } catch (error) {
-        console.error(
-          "Invalid ASCENT trainer session:",
-          error
-        );
-
-        localStorage.removeItem(
-          SESSION_STORAGE_KEY
-        );
-
-        window.location.href =
-          "./trainer-login.html";
-
-        return null;
+        console.error(error); localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./trainer-login.html"; return null;
       }
     }
 
+    function showSection(name) {
+      document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active",item.dataset.section === name));
+      document.querySelectorAll(".section-panel").forEach(section => section.classList.toggle("active",section.id === name + "Section"));
+    }
 
-    function showSection(sectionName) {
-      navItems.forEach(
-        function (item) {
-          item.classList.toggle(
-            "active",
-            item.dataset.section ===
-              sectionName
-          );
+    function cleanQuestions() {
+      return byId("questionsText").value.split(/\r?\n/).map(line => line.trim().replace(/^\s*(?:\d+[.)]|[-•*])\s*/,"")).filter(Boolean);
+    }
+
+    function setDefaultStartTime() {
+      const d = new Date(Date.now() + 5 * 60000); d.setSeconds(0,0);
+      const pad = n => String(n).padStart(2,"0");
+      byId("startAt").value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function toIsoOrNull(value) { if (!value) return null; const d = new Date(value); return Number.isNaN(d.getTime()) ? null : d.toISOString(); }
+
+    function updateQuestionCount() {
+      const count = cleanQuestions().length;
+      byId("questionCount").textContent = count + (count === 1 ? " question" : " questions");
+      updateAssignmentEstimate();
+    }
+
+    function selectedStudentUuids() { return Array.from(document.querySelectorAll(".student-check:checked")).map(box => box.value); }
+
+    function updateSelectedStudentCount() {
+      const count = selectedStudentUuids().length;
+      byId("selectedStudentCount").textContent = count + (count === 1 ? " student selected" : " students selected");
+      updateAssignmentEstimate();
+    }
+
+    function estimatedTargetCount() {
+      const targetType = byId("targetType").value;
+      if (targetType === "ALL") return reportData.students.length;
+      if (targetType === "BATCH") return reportData.students.filter(student => String(student.batch || "").trim().toLowerCase() === String(byId("targetBatch").value || "").trim().toLowerCase()).length;
+      return selectedStudentUuids().length;
+    }
+
+    function updateAssignmentEstimate() {
+      const questions = cleanQuestions().length;
+      const students = estimatedTargetCount();
+      byId("assignmentEstimate").textContent = questions && students ? `${questions} questions × ${students} students = ${questions * students} assignments` : "";
+    }
+
+    function renderStudentPicker(filter="") {
+      const term = filter.trim().toLowerCase();
+      const selected = new Set(selectedStudentUuids());
+      const list = reportData.students.filter(student => [student.fullName,student.studentId,student.email,student.batch].some(value => String(value || "").toLowerCase().includes(term)));
+      byId("studentOptions").innerHTML = list.length ? list.map(student => `<label class="student-option"><input class="student-check" type="checkbox" value="${escapeHtml(student.studentUuid)}" ${selected.has(student.studentUuid) ? "checked" : ""}><span><strong>${escapeHtml(student.fullName)}</strong><br>${escapeHtml(student.studentId)} · ${escapeHtml(student.batch || "No batch")} · ${escapeHtml(student.email || "")}</span></label>`).join("") : `<div class="empty-state">No matching students.</div>`;
+      document.querySelectorAll(".student-check").forEach(box => box.addEventListener("change",updateSelectedStudentCount));
+      updateSelectedStudentCount();
+    }
+
+    function fillSelect(selectId, items, valueKey, labelBuilder, firstLabel) {
+      const select = byId(selectId); const current = select.value;
+      select.innerHTML = `<option value="">${escapeHtml(firstLabel)}</option>` + items.map(item => `<option value="${escapeHtml(item[valueKey])}">${escapeHtml(labelBuilder(item))}</option>`).join("");
+      if (Array.from(select.options).some(option => option.value === current)) select.value = current;
+    }
+
+    function populateControls() {
+      const batches = reportData.batches.map(batch => ({value:batch,label:batch}));
+      ["targetBatch","assignmentBatchFilter","resultBatchFilter"].forEach(id => fillSelect(id,batches,"value",item => item.label,id === "targetBatch" ? "Choose batch" : "All batches"));
+      ["assignmentStudentFilter","resultStudentFilter"].forEach(id => fillSelect(id,reportData.students,"studentUuid",student => `${student.fullName} (${student.studentId})`,"All students"));
+      ["assignmentTaskFilter","resultTaskFilter"].forEach(id => fillSelect(id,reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks"));
+      renderStudentPicker(byId("studentSearch").value);
+    }
+
+    function summaryValue(id,value,suffix="") { byId(id).textContent = value === null || value === undefined ? "—" : formatNumber(value) + suffix; }
+
+    function renderSummary() {
+      const s = reportData.summary || {};
+      summaryValue("activeTasksValue",s.activeTasks || 0); summaryValue("assignedStudentsValue",s.assignedStudents || 0);
+      summaryValue("completedValue",s.completed || 0); summaryValue("notAttemptedValue",s.notAttempted || 0);
+      summaryValue("averageScoreValue",s.averageScore); summaryValue("averageImprovementValue",s.averageImprovement);
+    }
+
+    function renderCompletionChart() {
+      const s = reportData.summary || {}; const total = Number(s.totalAssignments || 0); const completed = Number(s.completed || 0); const pending = Number(s.notAttempted || 0); const other = Math.max(total-completed-pending,0);
+      if (!total) { byId("completionChart").innerHTML = `<div class="line-empty">No assignments yet.</div>`; return; }
+      const pct = value => (value / total * 100).toFixed(2);
+      byId("completionChart").innerHTML = `<div class="completion-bar"><div class="completion-segment completed" style="width:${pct(completed)}%" title="Completed: ${completed}"></div><div class="completion-segment not-attempted" style="width:${pct(pending)}%" title="Not attempted: ${pending}"></div><div class="completion-segment other" style="width:${pct(other)}%" title="Scheduled/withdrawn: ${other}"></div></div><div class="chart-legend"><span><i class="legend-dot completed"></i>Completed: <strong>${completed}</strong></span><span><i class="legend-dot not-attempted"></i>Not attempted: <strong>${pending}</strong></span><span><i class="legend-dot other"></i>Scheduled/withdrawn: <strong>${other}</strong></span></div>`;
+    }
+
+    function collectNumericCriteria(object,prefix="",output={}) {
+      if (!object || typeof object !== "object") return output;
+      Object.entries(object).forEach(([key,value]) => {
+        const name = prefix ? `${prefix} · ${key}` : key;
+        if (typeof value === "number" && Number.isFinite(value)) output[name] = value;
+        else if (value && typeof value === "object" && !Array.isArray(value)) collectNumericCriteria(value,name,output);
+      });
+      return output;
+    }
+
+    function humaniseKey(key) { return key.replace(/_/g," ").replace(/\b\w/g,char => char.toUpperCase()); }
+
+    function criterionAverages(rows) {
+      const totals = {};
+      rows.forEach(row => {
+        const criteria = collectNumericCriteria(row.criterionScores || {});
+        Object.entries(criteria).forEach(([key,value]) => { if (!totals[key]) totals[key] = {sum:0,count:0}; totals[key].sum += Number(value); totals[key].count += 1; });
+      });
+      return Object.entries(totals).map(([key,item]) => ({name:humaniseKey(key),average:item.sum/item.count})).sort((a,b) => b.average-a.average).slice(0,10);
+    }
+
+    function renderCriterionChart() {
+      const data = criterionAverages(reportData.results.filter(row => row.attemptCount > 0));
+      if (!data.length) { byId("criterionChart").innerHTML = `<div class="line-empty">Criterion scores will appear after submissions.</div>`; return; }
+      const max = Math.max(...data.map(item => item.average),1);
+      byId("criterionChart").innerHTML = `<div class="criterion-chart">${data.map(item => `<div class="criterion-row"><div class="criterion-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div><div class="criterion-track"><div class="criterion-fill" style="width:${Math.min(item.average/max*100,100)}%"></div></div><div class="criterion-value">${item.average.toFixed(2)}</div></div>`).join("")}</div>`;
+    }
+
+    function renderLineSvg(containerId,points,emptyMessage) {
+      const container = byId(containerId);
+      if (!points.length) { container.innerHTML = `<div class="line-empty">${escapeHtml(emptyMessage)}</div>`; return; }
+      const width = 600,height = 220,padX = 44,padY = 24; const values = points.map(point => point.value); const max = Math.max(...values,10); const min = Math.min(...values,0); const range = Math.max(max-min,1);
+      const coords = points.map((point,index) => ({x:padX + (points.length === 1 ? (width-2*padX)/2 : index*(width-2*padX)/(points.length-1)), y:height-padY-(point.value-min)*(height-2*padY)/range, ...point}));
+      const polyline = coords.map(point => `${point.x},${point.y}`).join(" ");
+      const dots = coords.map(point => `<circle cx="${point.x}" cy="${point.y}" r="4"><title>${escapeHtml(point.label)}: ${point.value.toFixed(2)}</title></circle>`).join("");
+      const labels = coords.filter((_,index) => points.length <= 6 || index % Math.ceil(points.length/6) === 0 || index === points.length-1).map(point => `<text x="${point.x}" y="${height-4}" text-anchor="middle">${escapeHtml(point.shortLabel || point.label)}</text>`).join("");
+      container.innerHTML = `<svg class="line-chart" viewBox="0 0 ${width} ${height}" role="img"><line x1="${padX}" y1="${height-padY}" x2="${width-padX}" y2="${height-padY}" stroke="#cbd8e4"/><line x1="${padX}" y1="${padY}" x2="${padX}" y2="${height-padY}" stroke="#cbd8e4"/><polyline fill="none" stroke="#27679d" stroke-width="3" points="${polyline}"/><g fill="#143a60">${dots}</g><g font-size="10" fill="#6c7b8d">${labels}</g></svg>`;
+    }
+
+    function renderProgressChart() {
+      const groups = {};
+      reportData.results.filter(row => row.latestSubmittedAt && row.latestScore !== null).forEach(row => { const key = new Date(row.latestSubmittedAt).toISOString().slice(0,10); if (!groups[key]) groups[key] = []; groups[key].push(Number(row.latestScore)); });
+      const points = Object.keys(groups).sort().map(key => ({label:new Date(key+"T00:00:00").toLocaleDateString(),shortLabel:new Date(key+"T00:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}),value:groups[key].reduce((a,b)=>a+b,0)/groups[key].length}));
+      renderLineSvg("progressChart",points,"Scores will appear after submissions.");
+    }
+
+    function renderStudentImprovementChart() {
+      const map = {};
+      reportData.results.forEach(row => { if (row.improvement === null || row.improvement === undefined) return; const key = row.studentUuid; if (!map[key]) map[key] = {name:row.fullName,values:[]}; map[key].values.push(Number(row.improvement)); });
+      const data = Object.values(map).map(item => ({name:item.name,value:item.values.reduce((a,b)=>a+b,0)/item.values.length})).sort((a,b)=>b.value-a.value).slice(0,8);
+      if (!data.length) { byId("studentImprovementChart").innerHTML = `<div class="line-empty">Improvement appears after students have more than one scored attempt.</div>`; return; }
+      const max = Math.max(...data.map(item => Math.abs(item.value)),1);
+      byId("studentImprovementChart").innerHTML = `<div class="criterion-chart">${data.map(item => `<div class="criterion-row"><div class="criterion-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div><div class="criterion-track"><div class="criterion-fill" style="width:${Math.min(Math.abs(item.value)/max*100,100)}%"></div></div><div class="criterion-value">${item.value > 0 ? "+" : ""}${item.value.toFixed(2)}</div></div>`).join("")}</div>`;
+    }
+
+    function statusClass(status) { return "status-" + String(status || "").toLowerCase().replace(/_/g,"-"); }
+
+    function renderTasksTable() {
+      const tasks = reportData.tasks || [];
+      if (!tasks.length) { byId("tasksTableWrap").innerHTML = `<div class="empty-state">No tasks have been created.</div>`; return; }
+      byId("tasksTableWrap").innerHTML = `<table><thead><tr><th>Title</th><th>Question</th><th>Rubric</th><th>Sequence</th><th>Status</th><th>Action</th></tr></thead><tbody>${tasks.map(task => `<tr><td>${escapeHtml(task.title || "—")}</td><td class="question-cell">${escapeHtml(task.question || "—")}</td><td>${escapeHtml(task.rubricType || "—")}</td><td>${escapeHtml(task.sequenceNo || "—")}</td><td><span class="status-badge ${task.isActive ? "status-completed" : "status-withdrawn"}">${task.isActive ? "ACTIVE" : "WITHDRAWN"}</span></td><td><button class="small-button ${task.isActive ? "danger-button" : ""} task-toggle" type="button" data-task="${escapeHtml(task.taskUuid)}" data-active="${task.isActive ? "false" : "true"}">${task.isActive ? "Withdraw" : "Reactivate"}</button></td></tr>`).join("")}</tbody></table>`;
+      document.querySelectorAll(".task-toggle").forEach(button => button.addEventListener("click",() => setTaskActive(button.dataset.task,button.dataset.active === "true")));
+    }
+
+    function resultFilter(rows,prefix) {
+      const batch = byId(prefix+"BatchFilter").value; const student = byId(prefix+"StudentFilter").value; const task = byId(prefix+"TaskFilter").value; const status = byId(prefix+"StatusFilter").value;
+      const from = prefix === "result" ? byId("resultDateFrom").value : ""; const to = prefix === "result" ? byId("resultDateTo").value : "";
+      return rows.filter(row => {
+        if (batch && String(row.batch || "") !== batch) return false;
+        if (student && row.studentUuid !== student) return false;
+        if (task && row.taskUuid !== task) return false;
+        if (status && row.status !== status) return false;
+        const dateValue = row.latestSubmittedAt || row.availableAt;
+        if (from && dateValue && new Date(dateValue) < new Date(from+"T00:00:00")) return false;
+        if (to && dateValue && new Date(dateValue) > new Date(to+"T23:59:59")) return false;
+        return true;
+      });
+    }
+
+    function renderAssignmentsTable() {
+      visibleAssignmentRows = resultFilter(reportData.results || [],"assignment");
+      byId("assignmentCountLabel").textContent = `${visibleAssignmentRows.length} assignments shown`;
+      if (!visibleAssignmentRows.length) { byId("assignmentsTableWrap").innerHTML = `<div class="empty-state">No assignments match these filters.</div>`; return; }
+      byId("assignmentsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Available</th><th>Due</th><th>Attempts</th><th>Status</th></tr></thead><tbody>${visibleAssignmentRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td>${escapeHtml(formatDate(row.availableAt))}</td><td>${escapeHtml(formatDate(row.dueAt))}</td><td>${escapeHtml(row.attemptCount)} / ${escapeHtml(row.maxAttempts)}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td></tr>`).join("")}</tbody></table>`;
+    }
+
+    function renderResultsTable() {
+      visibleResultRows = resultFilter(reportData.results || [],"result");
+      byId("resultCountLabel").textContent = `${visibleResultRows.length} result rows shown`;
+      if (!visibleResultRows.length) { byId("resultsTableWrap").innerHTML = `<div class="empty-state">No results match these filters.</div>`; return; }
+      byId("resultsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Status</th><th>Attempts</th><th>First</th><th>Latest</th><th>Improvement</th><th>Latest Submission</th></tr></thead><tbody>${visibleResultRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}<br>${escapeHtml(row.email || "")}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td><td>${escapeHtml(row.attemptCount)} / ${escapeHtml(row.maxAttempts)}</td><td>${escapeHtml(formatNumber(row.firstScore))}</td><td>${escapeHtml(formatNumber(row.latestScore))}</td><td>${row.improvement === null || row.improvement === undefined ? "—" : escapeHtml((Number(row.improvement)>0?"+":"")+formatNumber(row.improvement))}</td><td>${escapeHtml(formatDate(row.latestSubmittedAt))}</td></tr>`).join("")}</tbody></table>`;
+    }
+
+    function renderAll() {
+      renderSummary(); renderCompletionChart(); renderCriterionChart(); renderProgressChart(); renderStudentImprovementChart(); renderTasksTable(); populateControls(); renderAssignmentsTable(); renderResultsTable(); updateAssignmentEstimate();
+    }
+
+    async function loadReport(message="Loading dashboard…") {
+      showLoading(message);
+      try {
+        const data = await callRpc(RPC.report,{ p_session_token:currentSession.sessionToken, p_batch:null, p_student_uuid:null, p_task_uuid:null });
+        if (!data || data.ok !== true) {
+          if (data && data.error === "invalid_trainer_session") { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./trainer-login.html"; return; }
+          throw new Error(data && data.message ? data.message : "Report data could not be loaded.");
         }
-      );
-
-      Object.keys(sections).forEach(
-        function (key) {
-          sections[key].classList.toggle(
-            "active",
-            key === sectionName
-          );
-        }
-      );
+        reportData = data; renderAll(); setStatus(byId("dashboardStatus"),"Dashboard updated " + new Date().toLocaleTimeString(),"success");
+      } catch (error) { console.error(error); setStatus(byId("dashboardStatus"),"ASCENT could not load the dashboard. " + error.message,"error"); }
+      finally { hideLoading(); }
     }
 
-
-    function logOut() {
-      localStorage.removeItem(
-        SESSION_STORAGE_KEY
-      );
-
-      window.location.href =
-        "./trainer-login.html";
+    async function createQuestionBatch(event) {
+      event.preventDefault();
+      const questions = cleanQuestions(); const targetType = byId("targetType").value; const pressureMode = byId("pressureMode").value;
+      if (!questions.length) { setStatus(byId("bulkTaskStatus"),"Paste at least one question, with each question on a separate line.","error"); return; }
+      if (targetType === "BATCH" && !byId("targetBatch").value) { setStatus(byId("bulkTaskStatus"),"Choose the student batch.","error"); return; }
+      if (targetType === "STUDENTS" && !selectedStudentUuids().length) { setStatus(byId("bulkTaskStatus"),"Choose at least one student.","error"); return; }
+      if (pressureMode === "FIXED_FOLLOW_UP" && !byId("pressurePrompt").value.trim()) { setStatus(byId("bulkTaskStatus"),"Enter the follow-up question.","error"); return; }
+      const button = byId("createBatchButton"); button.disabled = true; button.textContent = "Creating Batch…"; setStatus(byId("bulkTaskStatus"),"","");
+      try {
+        const dueText = byId("dueDays").value.trim();
+        const result = await callRpc(RPC.bulk,{
+          p_session_token:currentSession.sessionToken, p_questions:questions, p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
+          p_rubric_type:byId("rubricType").value, p_target_type:targetType, p_target_batch:targetType === "BATCH" ? byId("targetBatch").value : null,
+          p_student_uuids:targetType === "STUDENTS" ? selectedStudentUuids() : null, p_start_at:toIsoOrNull(byId("startAt").value),
+          p_interval_days:Number(byId("intervalDays").value || 0), p_due_days:dueText === "" ? null : Number(dueText), p_max_attempts:Number(byId("maxAttempts").value || 1),
+          p_response_seconds:Number(byId("responseSeconds").value || 60), p_pressure_mode:pressureMode,
+          p_pressure_prompt:pressureMode === "FIXED_FOLLOW_UP" ? byId("pressurePrompt").value.trim() : null,
+          p_pressure_prep_seconds:Number(byId("pressurePrepSeconds").value || 5), p_pressure_response_seconds:Number(byId("pressureResponseSeconds").value || 45)
+        });
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "The batch could not be created.");
+        setStatus(byId("bulkTaskStatus"),`${result.message} ${result.assignmentsCreated} student assignments were added.`,"success");
+        byId("questionsText").value = ""; updateQuestionCount(); await loadReport("Refreshing tasks and assignments…");
+      } catch (error) { console.error(error); setStatus(byId("bulkTaskStatus"),error.message || "ASCENT could not create the question batch.","error"); }
+      finally { button.disabled = false; button.textContent = "Create and Assign Batch"; }
     }
 
-
-    const currentSession =
-      loadTrainerSession();
-
-    if (currentSession) {
-      trainerName.textContent =
-        currentSession.fullName ||
-        currentSession.email;
-
-      trainerRole.textContent =
-        currentSession.role ||
-        "TRAINER";
+    async function setTaskActive(taskUuid,isActive) {
+      showLoading(isActive ? "Reactivating task…" : "Withdrawing task…");
+      try { const result = await callRpc(RPC.taskActive,{p_session_token:currentSession.sessionToken,p_task_uuid:taskUuid,p_is_active:isActive}); if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Task update failed."); await loadReport("Refreshing tasks…"); }
+      catch (error) { console.error(error); alert(error.message); }
+      finally { hideLoading(); }
     }
 
+    function flattenCriterionScores(scores) {
+      const flat = collectNumericCriteria(scores || {}); return Object.fromEntries(Object.entries(flat).map(([key,value]) => [humaniseKey(key),value]));
+    }
 
-    navItems.forEach(
-      function (item) {
-        item.addEventListener(
-          "click",
-          function () {
-            showSection(
-              item.dataset.section
-            );
-          }
-        );
-      }
-    );
+    function exportExcel(rows) {
+      if (!window.XLSX) { setStatus(byId("resultsStatus"),"The Excel library did not load. Check the internet connection and try again.","error"); return; }
+      const chosenRows = rows && rows.length ? rows : reportData.results || [];
+      const summary = reportData.summary || {};
+      const summaryRows = [
+        {Metric:"Active Tasks",Value:summary.activeTasks || 0},{Metric:"Total Assignments",Value:summary.totalAssignments || 0},
+        {Metric:"Assigned Students",Value:summary.assignedStudents || 0},{Metric:"Completed",Value:summary.completed || 0},
+        {Metric:"Not Attempted",Value:summary.notAttempted || 0},{Metric:"Average Score",Value:summary.averageScore ?? ""},
+        {Metric:"Average Improvement",Value:summary.averageImprovement ?? ""},{Metric:"Exported At",Value:new Date().toLocaleString()}
+      ];
+      const resultRows = chosenRows.map(row => ({
+        "Student ID":row.studentId,"Student Name":row.fullName,"Email":row.email,"Batch":row.batch,"Task Title":row.taskTitle,
+        "Question":row.question,"Rubric":row.rubricType,"Status":row.status,"Available At":formatDate(row.availableAt),"Due At":formatDate(row.dueAt),
+        "Attempts":row.attemptCount,"Maximum Attempts":row.maxAttempts,"First Score":row.firstScore,"Latest Score":row.latestScore,
+        "Improvement":row.improvement,"Latest Submission":formatDate(row.latestSubmittedAt),...flattenCriterionScores(row.criterionScores)
+      }));
+      const pendingRows = chosenRows.filter(row => Number(row.attemptCount || 0) === 0 && !["SCHEDULED","WITHDRAWN"].includes(row.status)).map(row => ({"Student ID":row.studentId,"Student Name":row.fullName,"Email":row.email,"Batch":row.batch,"Task Title":row.taskTitle,"Question":row.question,"Status":row.status,"Available At":formatDate(row.availableAt),"Due At":formatDate(row.dueAt)}));
+      const workbook = XLSX.utils.book_new();
+      const addSheet = (name,data) => { const sheet = XLSX.utils.json_to_sheet(data.length ? data : [{Message:"No data"}]); sheet["!cols"] = Object.keys(data[0] || {Message:""}).map(key => ({wch:Math.min(Math.max(key.length+2,14),45)})); XLSX.utils.book_append_sheet(workbook,sheet,name); };
+      addSheet("Summary",summaryRows); addSheet("Results",resultRows); addSheet("Not Attempted",pendingRows);
+      XLSX.writeFile(workbook,`ASCENT_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
+      setStatus(byId("resultsStatus"),"Excel report downloaded.","success");
+    }
 
+    async function createTrainer(event) {
+      event.preventDefault();
+      const name = byId("newTrainerName").value.trim(), email = byId("newTrainerEmail").value.trim().toLowerCase(), password = byId("newTrainerPassword").value, role = byId("newTrainerRole").value;
+      if (!name || !email || password.length < 8) { setStatus(byId("addTrainerStatus"),"Enter the name, email and a password of at least eight characters.","error"); return; }
+      const button = byId("addTrainerButton"); button.disabled = true; button.textContent = "Adding Trainer…";
+      try { const result = await callRpc(RPC.createTrainer,{p_session_token:currentSession.sessionToken,p_full_name:name,p_email:email,p_password:password,p_role:role}); const outcome = normaliseRpc(result); if (!outcome || outcome.ok !== true) throw new Error(outcome && outcome.message ? outcome.message : "Trainer could not be created."); setStatus(byId("addTrainerStatus"),outcome.message,"success"); byId("addTrainerForm").reset(); byId("newTrainerRole").value="TRAINER"; }
+      catch (error) { console.error(error); setStatus(byId("addTrainerStatus"),error.message,"error"); }
+      finally { button.disabled=false; button.textContent="Add Trainer"; }
+    }
 
-    logoutButton.addEventListener(
-      "click",
-      logOut
-    );
+    function clearFilters(prefix) {
+      ["BatchFilter","StudentFilter","TaskFilter","StatusFilter"].forEach(suffix => { const element = byId(prefix+suffix); if (element) element.value=""; });
+      if (prefix === "result") { byId("resultDateFrom").value=""; byId("resultDateTo").value=""; renderResultsTable(); } else renderAssignmentsTable();
+    }
+
+    function wireEvents() {
+      document.querySelectorAll(".nav-item").forEach(item => item.addEventListener("click",() => showSection(item.dataset.section)));
+      byId("logoutButton").addEventListener("click",() => { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href="./trainer-login.html"; });
+      byId("refreshDashboardButton").addEventListener("click",() => loadReport("Refreshing dashboard…"));
+      byId("refreshTasksButton").addEventListener("click",() => loadReport("Refreshing tasks…"));
+      byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results));
+      byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows));
+      byId("questionsText").addEventListener("input",updateQuestionCount);
+      byId("targetType").addEventListener("change",() => { const value=byId("targetType").value; byId("targetBatchGroup").hidden=value!=="BATCH"; byId("targetStudentsGroup").hidden=value!=="STUDENTS"; updateAssignmentEstimate(); });
+      byId("targetBatch").addEventListener("change",updateAssignmentEstimate);
+      byId("studentSearch").addEventListener("input",event => renderStudentPicker(event.target.value));
+      byId("pressureMode").addEventListener("change",() => { const show=byId("pressureMode").value==="FIXED_FOLLOW_UP"; byId("pressurePromptGroup").hidden=!show; byId("pressurePrepGroup").hidden=!show; byId("pressureResponseGroup").hidden=!show; });
+      byId("bulkTaskForm").addEventListener("submit",createQuestionBatch);
+      byId("applyAssignmentFiltersButton").addEventListener("click",renderAssignmentsTable);
+      byId("clearAssignmentFiltersButton").addEventListener("click",() => clearFilters("assignment"));
+      byId("applyResultFiltersButton").addEventListener("click",renderResultsTable);
+      byId("clearResultFiltersButton").addEventListener("click",() => clearFilters("result"));
+      byId("addTrainerForm").addEventListener("submit",createTrainer);
+    }
+
+    async function initialise() {
+      currentSession = loadTrainerSession(); if (!currentSession) return;
+      byId("trainerName").textContent = currentSession.fullName || currentSession.email;
+      byId("trainerRole").textContent = currentSession.role || "TRAINER";
+      byId("trainersNavItem").hidden = !["ADMIN","CEO"].includes(String(currentSession.role || "").toUpperCase());
+      setDefaultStartTime(); wireEvents(); updateQuestionCount(); await loadReport();
+    }
+    initialise();
   </script>
 </body>
 </html>
