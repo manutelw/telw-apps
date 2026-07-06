@@ -336,6 +336,53 @@
   text-decoration: underline;
 }
 
+    .resolved-access-name {
+  margin-bottom: 18px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--blue-soft);
+  color: var(--navy);
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.role-choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.role-button {
+  min-height: 50px;
+  border: 1px solid var(--navy);
+  border-radius: 12px;
+  background: var(--white);
+  color: var(--navy);
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.role-button:hover,
+.role-button.active {
+  background: var(--navy);
+  color: var(--white);
+}
+
+.change-access-button {
+  width: 100%;
+  margin-top: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
     .footer {
       margin-top: 28px;
       color: #8996a5;
@@ -493,70 +540,159 @@
         <p>Speak. Improve. Move Forward.</p>
       </div>
 
-      <h2>Student Login</h2>
+<h2 id="panelTitle">
+  Find your ASCENT access
+</h2>
 
-      <p class="login-intro">
-        Enter your registered email address or student ID and password.
-      </p>
+<p
+  id="panelIntro"
+  class="login-intro"
+>
+  Enter your institution, learning group, or access code.
+</p>
 
-      <form id="loginForm" novalidate>
+<form
+  id="accessForm"
+  novalidate
+>
+  <div class="form-group">
+    <label for="accessSearch">
+      Institution, group, or access code
+    </label>
 
-        <div class="form-group">
-          <label for="studentIdentity">
-            Email address or Student ID
-          </label>
+    <input
+      id="accessSearch"
+      name="accessSearch"
+      type="text"
+      autocomplete="organization"
+      placeholder="Enter the exact name or access code"
+      required
+    >
+  </div>
 
-          <input
-            id="studentIdentity"
-            name="studentIdentity"
-            type="text"
-            autocomplete="username"
-            placeholder="Enter email or student ID"
-            required
-          >
-        </div>
+  <button
+    id="findAccessButton"
+    class="login-button"
+    type="submit"
+  >
+    Find my access
+  </button>
 
-        <div class="form-group">
-          <label for="studentPassword">
-            Password
-          </label>
+  <div
+    id="accessStatusMessage"
+    class="status-message"
+    role="status"
+    aria-live="polite"
+  ></div>
+</form>
 
-          <div class="password-wrap">
-            <input
-              id="studentPassword"
-              name="studentPassword"
-              type="password"
-              autocomplete="current-password"
-              placeholder="Enter password"
-              required
-            >
+<section
+  id="resolvedAccessPanel"
+  hidden
+>
+  <div
+    id="resolvedAccessName"
+    class="resolved-access-name"
+  ></div>
 
-            <button
-              id="showPasswordButton"
-              class="show-password"
-              type="button"
-              aria-label="Show password"
-            >
-              Show
-            </button>
-          </div>
-        </div>
+  <p class="login-intro">
+    Choose how you want to enter.
+  </p>
+
+  <div
+    id="roleChoice"
+    class="role-choice"
+  >
+    <button
+      id="studentRoleButton"
+      class="role-button"
+      type="button"
+    >
+      Student Login
+    </button>
+
+    <button
+      id="trainerRoleButton"
+      class="role-button"
+      type="button"
+    >
+      Trainer Login
+    </button>
+  </div>
+
+  <form
+    id="loginForm"
+    novalidate
+    hidden
+  >
+    <div class="form-group">
+      <label
+        id="identityLabel"
+        for="studentIdentity"
+      >
+        Email address or Student ID
+      </label>
+
+      <input
+        id="studentIdentity"
+        name="studentIdentity"
+        type="text"
+        autocomplete="username"
+        placeholder="Enter email or student ID"
+        required
+      >
+    </div>
+
+    <div class="form-group">
+      <label for="studentPassword">
+        Password
+      </label>
+
+      <div class="password-wrap">
+        <input
+          id="studentPassword"
+          name="studentPassword"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Enter password"
+          required
+        >
 
         <button
-          id="loginButton"
-          class="login-button"
-          type="submit"
+          id="showPasswordButton"
+          class="show-password"
+          type="button"
+          aria-label="Show password"
         >
-          Log in to ASCENT
+          Show
         </button>
+      </div>
+    </div>
 
-        <div
-          id="statusMessage"
-          class="status-message"
-          role="status"
-          aria-live="polite"
-        ></div>
-      </form>
+    <button
+      id="loginButton"
+      class="login-button"
+      type="submit"
+    >
+      Log in to ASCENT
+    </button>
+
+    <button
+      id="changeAccessButton"
+      class="change-access-button"
+      type="button"
+    >
+      Use a different institution or group
+    </button>
+
+    <div
+      id="statusMessage"
+      class="status-message"
+      role="status"
+      aria-live="polite"
+    ></div>
+  </form>
+</section>
 
       <div class="help-note">
   Use the login details provided by your trainer.
@@ -591,29 +727,288 @@
   const SUPABASE_PUBLISHABLE_KEY =
     "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
 
-  const LOGIN_RPC_URL =
-    SUPABASE_URL + "/rest/v1/rpc/ascent_login";
+  const ACCESS_RESOLVER_RPC_URL =
+  SUPABASE_URL +
+  "/rest/v1/rpc/ascent_resolve_access_point";
 
-  const loginForm =
-    document.getElementById("loginForm");
+const STUDENT_LOGIN_RPC_URL =
+  SUPABASE_URL +
+  "/rest/v1/rpc/ascent_student_login_for_access_point";
 
-  const identityInput =
-    document.getElementById("studentIdentity");
+const TRAINER_LOGIN_RPC_URL =
+  SUPABASE_URL +
+  "/rest/v1/rpc/ascent_trainer_login_for_access_point";
 
-  const passwordInput =
-    document.getElementById("studentPassword");
+  const accessForm =
+  document.getElementById("accessForm");
 
-  const loginButton =
-    document.getElementById("loginButton");
+const accessSearchInput =
+  document.getElementById("accessSearch");
 
-  const statusMessage =
-    document.getElementById("statusMessage");
+const findAccessButton =
+  document.getElementById("findAccessButton");
 
-  const showPasswordButton =
-    document.getElementById("showPasswordButton");
+const accessStatusMessage =
+  document.getElementById("accessStatusMessage");
+
+const resolvedAccessPanel =
+  document.getElementById("resolvedAccessPanel");
+
+const resolvedAccessName =
+  document.getElementById("resolvedAccessName");
+
+const roleChoice =
+  document.getElementById("roleChoice");
+
+const studentRoleButton =
+  document.getElementById("studentRoleButton");
+
+const trainerRoleButton =
+  document.getElementById("trainerRoleButton");
+
+const loginForm =
+  document.getElementById("loginForm");
+
+const identityLabel =
+  document.getElementById("identityLabel");
+
+const identityInput =
+  document.getElementById("studentIdentity");
+
+const passwordInput =
+  document.getElementById("studentPassword");
+
+const loginButton =
+  document.getElementById("loginButton");
+
+const changeAccessButton =
+  document.getElementById("changeAccessButton");
+
+const statusMessage =
+  document.getElementById("statusMessage");
+
+const showPasswordButton =
+  document.getElementById("showPasswordButton");
+
+let selectedAccessPoint = null;
+let selectedLoginRole = "";
+
+function showAccessStatus(message, type) {
+  accessStatusMessage.className =
+    "status-message" +
+    (type ? " " + type : "");
+
+  accessStatusMessage.textContent = message;
+}
 
 
-  showPasswordButton.addEventListener(
+function rpcHeaders() {
+  return {
+    "apikey":
+      SUPABASE_PUBLISHABLE_KEY,
+
+    "Authorization":
+      "Bearer " +
+      SUPABASE_PUBLISHABLE_KEY,
+
+    "Content-Type":
+      "application/json"
+  };
+}
+
+
+accessForm.addEventListener(
+  "submit",
+  async function (event) {
+    event.preventDefault();
+
+    const searchValue =
+      accessSearchInput.value.trim();
+
+    showAccessStatus("", "");
+
+    if (!searchValue) {
+      showAccessStatus(
+        "Please enter your institution, learning group, or access code.",
+        "error"
+      );
+
+      accessSearchInput.focus();
+      return;
+    }
+
+    findAccessButton.disabled = true;
+    findAccessButton.textContent =
+      "Finding access…";
+
+    try {
+      const response = await fetch(
+        ACCESS_RESOLVER_RPC_URL,
+        {
+          method: "POST",
+          headers: rpcHeaders(),
+          body: JSON.stringify({
+            p_search_value: searchValue
+          })
+        }
+      );
+
+      if (!response.ok) {
+        const errorText =
+          await response.text();
+
+        throw new Error(
+          "Access search failed: " +
+          response.status +
+          " " +
+          errorText
+        );
+      }
+
+      const result =
+        await response.json();
+
+      if (
+        !Array.isArray(result) ||
+        result.length === 0
+      ) {
+        showAccessStatus(
+          "No active ASCENT access was found. Check the exact name or access code provided by your trainer.",
+          "error"
+        );
+
+        return;
+      }
+
+      selectedAccessPoint =
+        result[0];
+
+      selectedLoginRole = "";
+
+      resolvedAccessName.textContent =
+        selectedAccessPoint.display_name;
+
+      accessForm.hidden = true;
+      resolvedAccessPanel.hidden = false;
+      roleChoice.hidden = false;
+      loginForm.hidden = true;
+
+      studentRoleButton.classList.remove(
+        "active"
+      );
+
+      trainerRoleButton.classList.remove(
+        "active"
+      );
+
+      showAccessStatus("", "");
+
+    } catch (error) {
+      console.error(
+        "ASCENT access search error:",
+        error
+      );
+
+      showAccessStatus(
+        "ASCENT could not check this access point. Please try again.",
+        "error"
+      );
+
+    } finally {
+      findAccessButton.disabled = false;
+      findAccessButton.textContent =
+        "Find my access";
+    }
+  }
+);
+  function openLoginForRole(role) {
+  selectedLoginRole = role;
+
+  loginForm.hidden = false;
+
+  studentRoleButton.classList.toggle(
+    "active",
+    role === "STUDENT"
+  );
+
+  trainerRoleButton.classList.toggle(
+    "active",
+    role === "TRAINER"
+  );
+
+  if (role === "TRAINER") {
+    identityLabel.textContent =
+      "Trainer email address";
+
+    identityInput.placeholder =
+      "Enter trainer email address";
+
+    loginButton.textContent =
+      "Log in as Trainer";
+  } else {
+    identityLabel.textContent =
+      "Email address or Student ID";
+
+    identityInput.placeholder =
+      "Enter email or student ID";
+
+    loginButton.textContent =
+      "Log in as Student";
+  }
+
+  identityInput.value = "";
+  passwordInput.value = "";
+
+  showStatus("", "");
+
+  identityInput.focus();
+}
+
+
+studentRoleButton.addEventListener(
+  "click",
+  function () {
+    openLoginForRole("STUDENT");
+  }
+);
+
+
+trainerRoleButton.addEventListener(
+  "click",
+  function () {
+    openLoginForRole("TRAINER");
+  }
+);
+    changeAccessButton.addEventListener(
+  "click",
+  function () {
+    selectedAccessPoint = null;
+    selectedLoginRole = "";
+
+    resolvedAccessPanel.hidden = true;
+    loginForm.hidden = true;
+    roleChoice.hidden = false;
+    accessForm.hidden = false;
+
+    accessSearchInput.value = "";
+    identityInput.value = "";
+    passwordInput.value = "";
+
+    studentRoleButton.classList.remove(
+      "active"
+    );
+
+    trainerRoleButton.classList.remove(
+      "active"
+    );
+
+    showStatus("", "");
+    showAccessStatus("", "");
+
+    accessSearchInput.focus();
+  }
+);
+    showPasswordButton.addEventListener(
     "click",
     function () {
       const passwordIsHidden =
@@ -644,175 +1039,259 @@
   }
 
 
-  loginForm.addEventListener(
-    "submit",
-    async function (event) {
-      event.preventDefault();
+loginForm.addEventListener(
+  "submit",
+  async function (event) {
+    event.preventDefault();
 
-      const identity =
-        identityInput.value.trim();
+    const identity =
+      identityInput.value.trim();
 
-      const password =
-        passwordInput.value;
+    const password =
+      passwordInput.value;
 
-      showStatus("", "");
+    showStatus("", "");
 
-      if (!identity) {
-        showStatus(
-          "Please enter your email address or student ID.",
-          "error"
+    if (
+      !selectedAccessPoint ||
+      !selectedAccessPoint.access_point_uuid
+    ) {
+      showStatus(
+        "Please find your institution or learning group again.",
+        "error"
+      );
+      return;
+    }
+
+    if (
+      selectedLoginRole !== "STUDENT" &&
+      selectedLoginRole !== "TRAINER"
+    ) {
+      showStatus(
+        "Please choose Student Login or Trainer Login.",
+        "error"
+      );
+      return;
+    }
+
+    if (!identity) {
+      showStatus(
+        selectedLoginRole === "TRAINER"
+          ? "Please enter your trainer email address."
+          : "Please enter your email address or student ID.",
+        "error"
+      );
+
+      identityInput.focus();
+      return;
+    }
+
+    if (!password) {
+      showStatus(
+        "Please enter your password.",
+        "error"
+      );
+
+      passwordInput.focus();
+      return;
+    }
+
+    loginButton.disabled = true;
+    loginButton.textContent =
+      "Checking login…";
+
+    const loginUrl =
+      selectedLoginRole === "TRAINER"
+        ? TRAINER_LOGIN_RPC_URL
+        : STUDENT_LOGIN_RPC_URL;
+
+    try {
+      const response = await fetch(
+        loginUrl,
+        {
+          method: "POST",
+
+          headers: rpcHeaders(),
+
+          body: JSON.stringify({
+            p_access_point_uuid:
+              selectedAccessPoint.access_point_uuid,
+
+            p_identity:
+              identity,
+
+            p_password:
+              password
+          })
+        }
+      );
+
+      if (!response.ok) {
+        const errorText =
+          await response.text();
+
+        throw new Error(
+          "Login request failed: " +
+          response.status +
+          " " +
+          errorText
         );
-
-        identityInput.focus();
-        return;
       }
 
-      if (!password) {
+      const loginResult =
+        await response.json();
+
+      if (
+        !Array.isArray(loginResult) ||
+        loginResult.length === 0
+      ) {
         showStatus(
-          "Please enter your password.",
+          selectedLoginRole === "TRAINER"
+            ? "Incorrect trainer email address or password for this access point."
+            : "Incorrect student ID, email address or password for this access point.",
           "error"
         );
 
+        passwordInput.value = "";
         passwordInput.focus();
         return;
       }
 
-      if (
-        SUPABASE_URL.includes("PASTE_") ||
-        SUPABASE_PUBLISHABLE_KEY.includes("PASTE_")
-      ) {
-        showStatus(
-          "ASCENT connection details have not been added.",
-          "error"
-        );
-        return;
-      }
+      const account =
+        loginResult[0];
 
-      loginButton.disabled = true;
-      loginButton.textContent = "Checking login…";
+      let destination = "";
 
-      try {
-        const response = await fetch(
-          LOGIN_RPC_URL,
-          {
-            method: "POST",
-
-            headers: {
-              "apikey":
-                SUPABASE_PUBLISHABLE_KEY,
-
-              "Authorization":
-                "Bearer " +
-                SUPABASE_PUBLISHABLE_KEY,
-
-              "Content-Type":
-                "application/json"
-            },
-
-            body: JSON.stringify({
-              p_identity: identity,
-              p_password: password
-            })
-          }
-        );
-
-        if (!response.ok) {
-          const errorText =
-            await response.text();
-
-          throw new Error(
-            "Login request failed: " +
-            response.status +
-            " " +
-            errorText
-          );
-        }
-
-        const loginResult =
-          await response.json();
-
-        if (
-          !Array.isArray(loginResult) ||
-          loginResult.length === 0
-        ) {
-          showStatus(
-            "Incorrect student ID, email address or password.",
-            "error"
-          );
-
-          passwordInput.value = "";
-          passwordInput.focus();
-          return;
-        }
-
-        const student = loginResult[0];
-
-        const sessionData = {
+      if (selectedLoginRole === "TRAINER") {
+        const trainerSession = {
           sessionToken:
-            student.session_token,
+            account.session_token,
 
-          studentUuid:
-            student.student_uuid,
-
-          studentId:
-            student.student_id,
+          trainerUuid:
+            account.trainer_uuid,
 
           fullName:
-            student.full_name,
+            account.full_name,
 
           email:
-            student.email,
+            account.email,
 
-          batch:
-            student.batch,
+          role:
+            account.global_role,
+
+          accessRole:
+            account.access_role,
+
+          accessPointUuid:
+            account.access_point_uuid,
+
+          accessPointName:
+            account.access_point_name,
+
+          accessPointSlug:
+            account.access_point_slug,
 
           expiresAt:
-            student.expires_at
+            account.expires_at
+        };
+
+        localStorage.setItem(
+          "ascent_trainer_session",
+          JSON.stringify(trainerSession)
+        );
+
+        destination =
+          "./trainer.html";
+
+      } else {
+        const studentSession = {
+          sessionToken:
+            account.session_token,
+
+          studentUuid:
+            account.student_uuid,
+
+          studentId:
+            account.student_id,
+
+          fullName:
+            account.full_name,
+
+          email:
+            account.email,
+
+          batch:
+            account.batch_name,
+
+          batchUuid:
+            account.batch_uuid,
+
+          accessPointUuid:
+            account.access_point_uuid,
+
+          accessPointName:
+            account.access_point_name,
+
+          accessPointSlug:
+            account.access_point_slug,
+
+          expiresAt:
+            account.expires_at
         };
 
         localStorage.setItem(
           "ascent_student_session",
-          JSON.stringify(sessionData)
+          JSON.stringify(studentSession)
         );
 
-        showStatus(
-          "Login successful. Welcome, " +
-          student.full_name +
-          ".",
-          "success"
-        );
+        destination =
+          "./dashboard.html";
+      }
 
+      showStatus(
+        "Login successful. Welcome, " +
+        account.full_name +
+        ".",
+        "success"
+      );
+
+      loginButton.textContent =
+        "Login successful";
+
+      setTimeout(
+        function () {
+          window.location.href =
+            destination;
+        },
+        600
+      );
+
+    } catch (error) {
+      console.error(
+        "ASCENT login error:",
+        error
+      );
+
+      showStatus(
+        "ASCENT could not connect. Please try again.",
+        "error"
+      );
+
+    } finally {
+      loginButton.disabled = false;
+
+      if (
+        loginButton.textContent !==
+        "Login successful"
+      ) {
         loginButton.textContent =
-          "Login successful";
-
-        setTimeout(function () {
-  window.location.href = "./dashboard.html";
-}, 600);
-
-      } catch (error) {
-        console.error(
-          "ASCENT login error:",
-          error
-        );
-
-        showStatus(
-          "ASCENT could not connect. Please try again.",
-          "error"
-        );
-
-      } finally {
-        loginButton.disabled = false;
-
-        if (
-          loginButton.textContent !==
-          "Login successful"
-        ) {
-          loginButton.textContent =
-            "Log in to ASCENT";
-        }
+          selectedLoginRole === "TRAINER"
+            ? "Log in as Trainer"
+            : "Log in as Student";
       }
     }
-  );
+  }
+);
 </script>
 </body>
 </html>
