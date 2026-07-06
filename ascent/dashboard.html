@@ -372,6 +372,128 @@
       text-align:center;
     }
 
+
+    .score-button {
+      width:100%;
+      min-width:48px;
+      padding:7px 8px;
+      border:1px solid #bfd0e1;
+      border-radius:8px;
+      background:#f3f8fd;
+      color:var(--navy);
+      font:inherit;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .score-button:hover,
+    .score-button:focus {
+      border-color:var(--blue);
+      background:var(--blue-soft);
+      outline:none;
+    }
+
+    .score-empty {
+      display:inline-block;
+      padding:7px 8px;
+      color:#9aa6b2;
+      font-weight:700;
+    }
+
+    .modal-backdrop {
+      position:fixed;
+      inset:0;
+      z-index:1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:rgba(8,28,47,.72);
+    }
+
+    .feedback-modal {
+      width:min(760px,100%);
+      max-height:88vh;
+      overflow:auto;
+      border-radius:18px;
+      background:#fff;
+      box-shadow:0 26px 80px rgba(0,0,0,.35);
+    }
+
+    .feedback-modal-head {
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      padding:20px 22px;
+      border-bottom:1px solid var(--border);
+      background:var(--blue-soft);
+    }
+
+    .feedback-modal-head h3 {
+      margin:0 0 6px;
+      color:var(--navy);
+      font-size:21px;
+    }
+
+    .feedback-modal-head p {
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .modal-close {
+      flex:0 0 auto;
+      width:38px;
+      height:38px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#fff;
+      color:var(--navy);
+      font-size:22px;
+      line-height:1;
+      cursor:pointer;
+    }
+
+    .feedback-modal-body {
+      padding:22px;
+    }
+
+    .feedback-section {
+      margin-bottom:18px;
+      padding:15px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fbfdff;
+    }
+
+    .feedback-section:last-child {
+      margin-bottom:0;
+    }
+
+    .feedback-section h4 {
+      margin:0 0 9px;
+      color:var(--navy);
+      font-size:14px;
+    }
+
+    .feedback-section p {
+      margin:0;
+      color:#40596f;
+      font-size:14px;
+      line-height:1.65;
+      white-space:pre-wrap;
+    }
+
+    .criterion-list {
+      margin:0;
+      padding-left:18px;
+      color:#40596f;
+      font-size:14px;
+      line-height:1.65;
+    }
+
     [hidden] { display:none !important; }
 
     @media (max-width:900px) {
@@ -471,6 +593,32 @@
         </div>
       </section>
 
+
+      <div id="feedbackModalBackdrop" class="modal-backdrop" hidden>
+        <section
+          class="feedback-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="feedbackModalTitle"
+        >
+          <div class="feedback-modal-head">
+            <div>
+              <h3 id="feedbackModalTitle">Attempt Feedback</h3>
+              <p id="feedbackModalMeta">—</p>
+            </div>
+            <button
+              id="feedbackModalClose"
+              class="modal-close"
+              type="button"
+              aria-label="Close feedback"
+            >
+              ×
+            </button>
+          </div>
+          <div id="feedbackModalBody" class="feedback-modal-body"></div>
+        </section>
+      </div>
+
       <div class="footer">
         Created by Manu Vikraman<br>
         A separate application within ClarionPrep
@@ -492,6 +640,13 @@
     const studentName = document.getElementById("studentName");
     const studentMeta = document.getElementById("studentMeta");
     const logoutButton = document.getElementById("logoutButton");
+    const feedbackModalBackdrop = document.getElementById("feedbackModalBackdrop");
+    const feedbackModalClose = document.getElementById("feedbackModalClose");
+    const feedbackModalTitle = document.getElementById("feedbackModalTitle");
+    const feedbackModalMeta = document.getElementById("feedbackModalMeta");
+    const feedbackModalBody = document.getElementById("feedbackModalBody");
+
+    let currentTableRows = [];
 
     let categoryChart = null;
     let overallChart = null;
@@ -564,6 +719,168 @@
         : String(value || "LUM").toUpperCase();
     }
 
+    function normaliseFeedback(feedback) {
+      if (!feedback) {
+        return {
+          summary:"No detailed feedback was saved for this attempt.",
+          sections:[]
+        };
+      }
+
+      if (typeof feedback === "string") {
+        return {
+          summary:feedback,
+          sections:[]
+        };
+      }
+
+      const summary =
+        feedback.overallComment ||
+        feedback.summary ||
+        feedback.feedback ||
+        feedback.nextAction ||
+        feedback.overall_feedback ||
+        feedback.message ||
+        "";
+
+      const sections = [];
+      const usedKeys = new Set([
+        "overallComment",
+        "summary",
+        "feedback",
+        "nextAction",
+        "overall_feedback",
+        "message"
+      ]);
+
+      Object.entries(feedback).forEach(([key,value]) => {
+        if (usedKeys.has(key) || value === null || value === undefined || value === "") {
+          return;
+        }
+
+        let text = "";
+
+        if (typeof value === "string" || typeof value === "number") {
+          text = String(value);
+        } else if (Array.isArray(value)) {
+          text = value.map(item => {
+            if (typeof item === "string" || typeof item === "number") {
+              return String(item);
+            }
+            return JSON.stringify(item);
+          }).join("\n");
+        } else {
+          text = Object.entries(value).map(([subKey,subValue]) => {
+            const label = subKey
+              .replace(/([a-z])([A-Z])/g,"$1 $2")
+              .replaceAll("_"," ");
+            return label + ": " + (
+              typeof subValue === "object"
+                ? JSON.stringify(subValue)
+                : String(subValue)
+            );
+          }).join("\n");
+        }
+
+        if (text) {
+          sections.push({
+            title:key
+              .replace(/([a-z])([A-Z])/g,"$1 $2")
+              .replaceAll("_"," ")
+              .replace(/\b\w/g,char => char.toUpperCase()),
+            text
+          });
+        }
+      });
+
+      return {
+        summary:summary || "Detailed feedback is shown below.",
+        sections
+      };
+    }
+
+    function formatCriterionScores(scores) {
+      if (!scores || typeof scores !== "object") return "";
+
+      const items = Object.entries(scores).map(([key,value]) => {
+        const label = key
+          .replace(/([a-z])([A-Z])/g,"$1 $2")
+          .replaceAll("_"," ")
+          .replace(/\b\w/g,char => char.toUpperCase());
+
+        const shownValue =
+          value && typeof value === "object"
+            ? JSON.stringify(value)
+            : String(value);
+
+        return `<li><strong>${escapeHtml(label)}:</strong> ${escapeHtml(shownValue)}</li>`;
+      });
+
+      return items.length
+        ? `<ul class="criterion-list">${items.join("")}</ul>`
+        : "";
+    }
+
+    function openAttemptFeedback(rowIndex,attemptIndex) {
+      const row = currentTableRows[rowIndex];
+      const details =
+        row &&
+        Array.isArray(row.attemptDetails)
+          ? row.attemptDetails[attemptIndex]
+          : null;
+
+      if (!row || !details) return;
+
+      const feedback = normaliseFeedback(details.feedback);
+      const criterionHtml = formatCriterionScores(details.criterionScores);
+
+      feedbackModalTitle.textContent =
+        categoryLabel(row.category) + " · Attempt " + (attemptIndex + 1);
+
+      feedbackModalMeta.textContent =
+        formatDate(details.submittedAt || row.date) +
+        " · Score " +
+        formatScore(details.score) +
+        " / 10";
+
+      const sectionsHtml = feedback.sections.map(section => `
+        <section class="feedback-section">
+          <h4>${escapeHtml(section.title)}</h4>
+          <p>${escapeHtml(section.text)}</p>
+        </section>
+      `).join("");
+
+      feedbackModalBody.innerHTML = `
+        <section class="feedback-section">
+          <h4>Question</h4>
+          <p>${escapeHtml(row.question || "—")}</p>
+        </section>
+
+        <section class="feedback-section">
+          <h4>Feedback</h4>
+          <p>${escapeHtml(feedback.summary)}</p>
+        </section>
+
+        ${criterionHtml ? `
+          <section class="feedback-section">
+            <h4>Score Details</h4>
+            ${criterionHtml}
+          </section>
+        ` : ""}
+
+        ${sectionsHtml}
+      `;
+
+      feedbackModalBackdrop.hidden = false;
+      document.body.style.overflow = "hidden";
+      feedbackModalClose.focus();
+    }
+
+    function closeAttemptFeedback() {
+      feedbackModalBackdrop.hidden = true;
+      document.body.style.overflow = "";
+    }
+
     function highestAttemptColumn(rows) {
       let highest = 1;
 
@@ -592,23 +909,57 @@
     }
 
     function renderTable(rows) {
-      if (!Array.isArray(rows) || rows.length === 0) {
+      currentTableRows = Array.isArray(rows) ? rows : [];
+
+      if (currentTableRows.length === 0) {
         tableArea.innerHTML =
           '<div class="empty-state">No scored attempts are available yet. Complete your first response to begin this record.</div>';
         return;
       }
 
-      const attemptColumns = highestAttemptColumn(rows);
+      const attemptColumns = highestAttemptColumn(currentTableRows);
       const attemptHeaders = Array.from(
         {length:attemptColumns},
         (_,index) => `<th>Attempt ${index + 1}</th>`
       ).join("");
 
-      const body = rows.map(row => {
+      const body = currentTableRows.map((row,rowIndex) => {
         const scores = Array.isArray(row.scores) ? row.scores : [];
+        const details = Array.isArray(row.attemptDetails) ? row.attemptDetails : [];
+
         const scoreCells = Array.from(
           {length:attemptColumns},
-          (_,index) => `<td class="score-cell">${escapeHtml(formatScore(scores[index]))}</td>`
+          (_,attemptIndex) => {
+            const score = scores[attemptIndex];
+            const hasScore =
+              score !== null &&
+              score !== undefined &&
+              score !== "";
+
+            const hasDetails = Boolean(details[attemptIndex]);
+
+            if (!hasScore) {
+              return '<td class="score-cell"><span class="score-empty">—</span></td>';
+            }
+
+            if (!hasDetails) {
+              return `<td class="score-cell">${escapeHtml(formatScore(score))}</td>`;
+            }
+
+            return `
+              <td class="score-cell">
+                <button
+                  class="score-button"
+                  type="button"
+                  data-row-index="${rowIndex}"
+                  data-attempt-index="${attemptIndex}"
+                  aria-label="Open feedback for attempt ${attemptIndex + 1}, score ${escapeHtml(formatScore(score))}"
+                >
+                  ${escapeHtml(formatScore(score))}
+                </button>
+              </td>
+            `;
+          }
         ).join("");
 
         const feedback = String(row.overallFeedback || "").trim();
@@ -642,6 +993,15 @@
           </table>
         </div>
       `;
+
+      tableArea.querySelectorAll(".score-button").forEach(button => {
+        button.addEventListener("click",() => {
+          openAttemptFeedback(
+            Number(button.dataset.rowIndex),
+            Number(button.dataset.attemptIndex)
+          );
+        });
+      });
     }
 
     function renderCategoryChart(averages) {
@@ -823,6 +1183,20 @@
     if (currentSession) {
       loadDashboard(currentSession);
     }
+
+    feedbackModalClose.addEventListener("click",closeAttemptFeedback);
+
+    feedbackModalBackdrop.addEventListener("click",event => {
+      if (event.target === feedbackModalBackdrop) {
+        closeAttemptFeedback();
+      }
+    });
+
+    document.addEventListener("keydown",event => {
+      if (event.key === "Escape" && !feedbackModalBackdrop.hidden) {
+        closeAttemptFeedback();
+      }
+    });
 
     logoutButton.addEventListener("click",logOut);
   </script>
