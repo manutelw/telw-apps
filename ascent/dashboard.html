@@ -719,85 +719,115 @@
         : String(value || "LUM").toUpperCase();
     }
 
-    function normaliseFeedback(feedback) {
-      if (!feedback) {
-        return {
-          summary:"No detailed feedback was saved for this attempt.",
-          sections:[]
-        };
-      }
+function normaliseFeedback(feedback) {
+  if (!feedback) {
+    return {
+      summary:"No detailed feedback was saved for this attempt.",
+      sections:[]
+    };
+  }
 
-      if (typeof feedback === "string") {
-        return {
-          summary:feedback,
-          sections:[]
-        };
-      }
+  if (typeof feedback === "string") {
+    return {
+      summary:feedback,
+      sections:[]
+    };
+  }
 
-      const summary =
-        feedback.overallComment ||
-        feedback.summary ||
-        feedback.feedback ||
-        feedback.nextAction ||
-        feedback.overall_feedback ||
-        feedback.message ||
-        "";
+  const summary =
+    feedback.overallComment ||
+    feedback.overall_feedback ||
+    feedback.summary ||
+    feedback.feedback ||
+    "Review the points below before your next attempt.";
 
-      const sections = [];
-      const usedKeys = new Set([
-        "overallComment",
-        "summary",
-        "feedback",
-        "nextAction",
-        "overall_feedback",
-        "message"
-      ]);
+  const sections = [];
 
-      Object.entries(feedback).forEach(([key,value]) => {
-        if (usedKeys.has(key) || value === null || value === undefined || value === "") {
-          return;
-        }
+  const criteria = Array.isArray(feedback.criteria)
+    ? feedback.criteria
+    : [];
 
-        let text = "";
-
-        if (typeof value === "string" || typeof value === "number") {
-          text = String(value);
-        } else if (Array.isArray(value)) {
-          text = value.map(item => {
-            if (typeof item === "string" || typeof item === "number") {
-              return String(item);
-            }
-            return JSON.stringify(item);
-          }).join("\n");
-        } else {
-          text = Object.entries(value).map(([subKey,subValue]) => {
-            const label = subKey
-              .replace(/([a-z])([A-Z])/g,"$1 $2")
-              .replaceAll("_"," ");
-            return label + ": " + (
-              typeof subValue === "object"
-                ? JSON.stringify(subValue)
-                : String(subValue)
-            );
-          }).join("\n");
-        }
-
-        if (text) {
-          sections.push({
-            title:key
-              .replace(/([a-z])([A-Z])/g,"$1 $2")
-              .replaceAll("_"," ")
-              .replace(/\b\w/g,char => char.toUpperCase()),
-            text
-          });
-        }
-      });
-
-      return {
-        summary:summary || "Detailed feedback is shown below.",
-        sections
-      };
+  criteria.forEach(criterion => {
+    if (
+      !criterion ||
+      criterion.status === "not_assessed"
+    ) {
+      return;
     }
+
+    const parts = [];
+
+    if (criterion.praise) {
+      parts.push("What you did well:\n" + criterion.praise);
+    }
+
+    const weakLine =
+      criterion.weak_line ||
+      criterion.weakLine ||
+      "";
+
+    if (weakLine) {
+      parts.push("Line to improve:\n“" + weakLine + "”");
+    }
+
+    const explanation =
+      criterion.explanation ||
+      "";
+
+    if (explanation) {
+      parts.push("Why this needs work:\n" + explanation);
+    }
+
+    const correctedVersion =
+      criterion.corrected_version ||
+      criterion.correctedVersion ||
+      "";
+
+    if (correctedVersion) {
+      parts.push("A clearer version:\n“" + correctedVersion + "”");
+    }
+
+    if (parts.length) {
+      sections.push({
+        title:
+          criterion.name ||
+          "Feedback",
+        text:parts.join("\n\n")
+      });
+    }
+  });
+
+  const otherIssues =
+    feedback.otherIssues ||
+    feedback.other_issues ||
+    "";
+
+  if (otherIssues) {
+    sections.push({
+      title:"Main Issue",
+      text:Array.isArray(otherIssues)
+        ? otherIssues.join(", ")
+        : String(otherIssues)
+    });
+  }
+
+  const nextAction =
+    feedback.nextAction ||
+    feedback.next_action ||
+    "";
+
+  if (nextAction) {
+    sections.push({
+      title:"What to Do Next",
+      text:String(nextAction)
+    });
+  }
+
+  return {
+    summary,
+    sections
+  };
+}
 
     function formatCriterionScores(scores) {
       if (!scores || typeof scores !== "object") return "";
