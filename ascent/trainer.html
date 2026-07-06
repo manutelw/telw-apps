@@ -113,6 +113,22 @@
     .student-option input { width:auto; min-height:auto; margin-top:2px; }
     .student-option span { font-size:12px; line-height:1.35; color:#40586e; }
     .question-count { display:inline-block; padding:6px 9px; border-radius:999px; background:var(--blue-soft); color:var(--navy); font-size:11px; font-weight:800; }
+    .bank-selection-strip { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:13px 14px; margin-bottom:16px; border:1px solid #bfd3e6; border-radius:12px; background:var(--blue-soft); }
+    .bank-selection-text { color:var(--navy); font-size:13px; font-weight:800; }
+    .checkbox-line { display:flex; align-items:center; gap:8px; min-height:44px; padding:0 2px; color:#40586e; font-size:12px; font-weight:700; }
+    .checkbox-line input { width:auto; min-height:auto; }
+    .bank-editor { border-color:#b9cee2; background:#f7fbff; }
+    .compact-textarea { min-height:96px !important; }
+    .bank-question-check { width:17px; height:17px; }
+    .bank-actions { display:flex; gap:6px; flex-wrap:wrap; }
+    .bank-meta { margin-top:5px; color:var(--muted); font-size:10px; line-height:1.35; }
+    .difficulty-pill { display:inline-block; padding:5px 8px; border-radius:999px; background:#f1f4f7; color:#40586e; font-size:10px; font-weight:800; white-space:nowrap; }
+    .difficulty-1 { background:#eaf8f1; color:#18794e; }
+    .difficulty-2 { background:#edf4fb; color:#27679d; }
+    .difficulty-3 { background:#fff7db; color:#8a6200; }
+    .difficulty-4 { background:#fff0df; color:#a55200; }
+    .difficulty-5 { background:#fff0ee; color:#b42318; }
+    .read-only-note { padding:11px 12px; margin-bottom:14px; border-radius:10px; background:var(--blue-soft); color:var(--navy); font-size:12px; line-height:1.5; }
     .table-wrap { width:100%; overflow:auto; border:1px solid var(--border); border-radius:12px; background:#fff; }
     table { width:100%; border-collapse:collapse; min-width:900px; }
     th,td { padding:11px 12px; border-bottom:1px solid #e7edf3; text-align:left; vertical-align:top; font-size:12px; }
@@ -158,7 +174,8 @@
         <div class="sidebar-title">Trainer Workspace</div>
         <div class="nav-list">
           <button class="nav-item active" type="button" data-section="dashboard">Dashboard</button>
-          <button class="nav-item" type="button" data-section="tasks">Bulk Questions</button>
+          <button id="questionBankNavItem" class="nav-item" type="button" data-section="questionBank">Question Bank</button>
+          <button id="bulkQuestionsNavItem" class="nav-item" type="button" data-section="tasks">Bulk Questions</button>
           <button class="nav-item" type="button" data-section="assignments">Assignments</button>
           <button class="nav-item" type="button" data-section="results">Results</button>
           <button id="trainersNavItem" class="nav-item" type="button" data-section="trainers" hidden>Trainers</button>
@@ -186,6 +203,72 @@
             <div class="panel chart-box"><div class="panel-title-row"><div><h3>Student Improvement</h3><div class="panel-subtitle">Students ranked by first-to-latest score change.</div></div></div><div id="studentImprovementChart"></div></div>
           </div>
           <div id="dashboardStatus" class="form-status" role="status" aria-live="polite"></div>
+        </section>
+
+        <section id="questionBankSection" class="section-panel">
+          <div class="workspace-header">
+            <div><h2>Question Bank</h2><p>Browse the approved LUM, PI, GD and diagnostic banks. The rubric, category, level and difficulty stay attached when a bank question is assigned.</p></div>
+            <div class="header-actions"><button id="refreshQuestionBankButton" class="secondary-button" type="button">Refresh</button><button id="addBankQuestionButton" class="primary-button" type="button" hidden>Add Question</button></div>
+          </div>
+
+          <div id="questionBankReadOnlyNote" class="read-only-note" hidden>CEO access is read-only. You can review the full question bank, categories and difficulty levels, but you cannot add, edit, withdraw or assign questions.</div>
+
+          <div class="panel">
+            <div class="filter-grid">
+              <div class="form-group"><label for="bankTypeFilter">Question bank</label><select id="bankTypeFilter"><option value="">All banks</option><option value="LUM">LUM</option><option value="PI">PI</option><option value="GD">GD</option><option value="DIAGNOSTIC">Diagnostic</option></select></div>
+              <div class="form-group"><label for="bankCategoryFilter">Category / LUM unit</label><select id="bankCategoryFilter"><option value="">All categories</option></select></div>
+              <div class="form-group"><label for="bankDifficultyFilter">Difficulty</label><select id="bankDifficultyFilter"><option value="">All difficulty levels</option><option value="1">1 · Foundation</option><option value="2">2 · Developing</option><option value="3">3 · Applied</option><option value="4">4 · Advanced</option><option value="5">5 · Pressure</option></select></div>
+              <div class="form-group"><label for="bankSearchFilter">Search</label><input id="bankSearchFilter" type="search" placeholder="Question, title, coaching focus or ID"></div>
+              <div id="bankInactiveFilterGroup" class="form-group" hidden><label>Administrator view</label><label class="checkbox-line"><input id="bankIncludeInactive" type="checkbox"> Show withdrawn questions</label></div>
+            </div>
+            <div class="inline-row"><button id="applyBankFiltersButton" class="primary-button" type="button">Apply Filters</button><button id="clearBankFiltersButton" class="secondary-button" type="button">Clear</button></div>
+          </div>
+
+          <form id="bankQuestionEditor" class="panel bank-editor" hidden novalidate>
+            <div class="panel-title-row"><div><h3 id="bankEditorHeading">Add Question</h3><div class="panel-subtitle">Add a new approved question or update the selected record.</div></div><button id="cancelBankEditButton" class="secondary-button" type="button">Cancel</button></div>
+            <input id="bankEditQuestionUuid" type="hidden">
+            <div class="form-grid">
+              <div class="form-group"><label for="bankEditType">Question bank</label><select id="bankEditType"><option value="LUM">LUM</option><option value="PI">PI</option><option value="GD">GD</option><option value="DIAGNOSTIC">Diagnostic</option></select></div>
+              <div class="form-group two-wide"><label for="bankEditCategory">Category / LUM unit</label><select id="bankEditCategory"><option value="">Choose category</option></select></div>
+              <div class="form-group"><label for="bankEditDifficulty">Difficulty</label><select id="bankEditDifficulty"><option value="1">1 · Foundation</option><option value="2">2 · Developing</option><option value="3">3 · Applied</option><option value="4">4 · Advanced</option><option value="5">5 · Pressure</option></select></div>
+              <div class="form-group two-wide"><label for="bankEditTitle">Question title</label><input id="bankEditTitle" type="text" maxlength="180" placeholder="Optional short title"></div>
+              <div class="form-group"><label for="bankEditResponseSeconds">Response time</label><input id="bankEditResponseSeconds" type="number" min="10" max="600" value="60"></div>
+              <div class="form-group"><label for="bankEditPrepSeconds">Preparation time</label><input id="bankEditPrepSeconds" type="number" min="0" max="300" value="10"></div>
+              <div class="form-group full-width"><label for="bankEditQuestion">Question</label><textarea id="bankEditQuestion" class="compact-textarea" placeholder="Enter the complete student-facing question"></textarea></div>
+              <div class="form-group full-width"><label for="bankEditInstructions">Student instructions</label><textarea id="bankEditInstructions" class="compact-textarea" placeholder="Optional response instructions"></textarea></div>
+              <div class="form-group two-wide"><label for="bankEditCoachingFocus">Coaching focus</label><textarea id="bankEditCoachingFocus" class="compact-textarea" placeholder="What this question develops"></textarea></div>
+              <div class="form-group two-wide"><label for="bankEditCanDo">Can-do outcome</label><textarea id="bankEditCanDo" class="compact-textarea" placeholder="What a successful learner can do"></textarea></div>
+              <div class="form-group"><label for="bankEditFollowupMode">Approved follow-up mode</label><select id="bankEditFollowupMode"><option value="NONE">No follow-up</option><option value="FIXED_FOLLOW_UP">Same fixed follow-up</option><option value="SMART_FOLLOW_UP">Smart follow-up bank</option></select></div>
+              <div id="bankEditFixedFollowupGroup" class="form-group two-wide" hidden><label for="bankEditFixedFollowup">Fixed follow-up question</label><input id="bankEditFixedFollowup" type="text" placeholder="Enter the approved fixed follow-up"></div>
+              <div class="form-group"><label for="bankEditFollowupFocus">Smart follow-up weakness groups</label><input id="bankEditFollowupFocus" type="text" placeholder="evidence, ownership, risk"></div>
+              <div class="form-group"><label>Question status</label><label class="checkbox-line"><input id="bankEditActive" type="checkbox" checked> Active</label></div>
+              <div class="form-group"><label>Approval</label><label class="checkbox-line"><input id="bankEditApproved" type="checkbox" checked> Approved</label></div>
+            </div>
+            <button id="saveBankQuestionButton" class="primary-button" type="submit">Save Question</button><div id="bankEditorStatus" class="form-status" role="status" aria-live="polite"></div>
+          </form>
+
+          <form id="bankAssignmentForm" class="panel" novalidate>
+            <div class="panel-title-row"><div><h3>Assign Selected Bank Questions</h3><div class="panel-subtitle">The question bank fixes the rubric. Trainers cannot change PI, GD or Managerial Communication during assignment.</div></div></div>
+            <div class="bank-selection-strip"><div id="bankSelectedCount" class="bank-selection-text">0 questions selected</div><button id="clearBankSelectionButton" class="small-button" type="button">Clear Selection</button></div>
+            <div class="form-grid">
+              <div class="form-group two-wide"><label for="bankAssignmentTitle">Task title prefix</label><input id="bankAssignmentTitle" type="text" value="ASCENT Bank Task" maxlength="100"><div class="form-note">ASCENT adds 01, 02, 03… when several questions are assigned.</div></div>
+              <div class="form-group"><label for="bankTargetType">Assign to</label><select id="bankTargetType"><option value="ALL">All active students</option><option value="BATCH">One batch</option><option value="STUDENTS">Selected students</option></select></div>
+              <div id="bankTargetBatchGroup" class="form-group" hidden><label for="bankTargetBatch">Student batch</label><select id="bankTargetBatch"><option value="">Choose batch</option></select></div>
+              <div id="bankTargetStudentsGroup" class="form-group two-wide" hidden><label>Selected students</label><div class="student-picker"><input id="bankStudentSearch" type="search" placeholder="Search by name, ID, email or batch"><div id="bankStudentOptions" class="student-options"></div></div><div id="bankSelectedStudentCount" class="form-note">0 students selected</div></div>
+              <div class="form-group"><label for="bankStartAt">First release</label><input id="bankStartAt" type="datetime-local"></div>
+              <div class="form-group"><label for="bankIntervalDays">Release pace</label><select id="bankIntervalDays"><option value="0" selected>All at once</option><option value="1">One question daily</option><option value="2">One every 2 days</option><option value="3">One every 3 days</option><option value="7">One every week</option></select></div>
+              <div class="form-group"><label for="bankDueDays">Days allowed per question</label><input id="bankDueDays" type="number" min="0" max="365" value="7"><div class="form-note">Leave blank for no deadline.</div></div>
+              <div class="form-group"><label for="bankMaxAttempts">Attempt limit</label><input id="bankMaxAttempts" type="number" min="1" max="100" value="1"></div>
+              <div class="form-group"><label for="bankAssignmentFollowupMode">Assignment follow-up</label><select id="bankAssignmentFollowupMode"><option value="NONE">No follow-up</option><option value="FIXED_FOLLOW_UP">Same fixed follow-up</option></select></div>
+              <div id="bankAssignmentFixedFollowupGroup" class="form-group two-wide" hidden><label for="bankAssignmentFixedFollowup">Fixed follow-up question</label><input id="bankAssignmentFixedFollowup" type="text" placeholder="This follow-up is used for every selected question"></div>
+              <div id="bankAssignmentPrepGroup" class="form-group" hidden><label for="bankAssignmentPrepSeconds">Follow-up preparation</label><input id="bankAssignmentPrepSeconds" type="number" min="0" max="120" value="5"></div>
+              <div id="bankAssignmentResponseGroup" class="form-group" hidden><label for="bankAssignmentResponseSeconds">Follow-up response</label><input id="bankAssignmentResponseSeconds" type="number" min="10" max="300" value="45"></div>
+            </div>
+            <div class="inline-row"><button id="assignBankQuestionsButton" class="primary-button" type="submit">Create and Assign Selected Questions</button><span id="bankAssignmentEstimate" class="form-note"></span></div>
+            <div id="bankAssignmentStatus" class="form-status" role="status" aria-live="polite"></div>
+          </form>
+
+          <div class="panel"><div class="panel-title-row"><div><h3>Approved Question Records</h3><div id="questionBankCountLabel" class="panel-subtitle"></div></div></div><div id="questionBankTableWrap" class="table-wrap"></div><div id="questionBankStatus" class="form-status" role="status" aria-live="polite"></div></div>
         </section>
 
         <section id="tasksSection" class="section-panel">
@@ -263,10 +346,17 @@
       report: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_report_data",
       bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
       taskActive: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_task_active",
-      createTrainer: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_create_trainer"
+      createTrainer: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_create_trainer",
+      questionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_question_bank_get",
+      assignQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_assign_question_bank_tasks",
+      upsertQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_upsert_question_bank",
+      questionBankActive: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_set_question_bank_active"
     };
     let currentSession = null;
     let reportData = { summary:{}, batches:[], students:[], tasks:[], results:[] };
+    let questionBankData = { questions:[], categories:[], difficultyScale:[], totalMatching:0 };
+    let selectedBankQuestions = new Set();
+    let visibleBankQuestions = [];
     let visibleAssignmentRows = [];
     let visibleResultRows = [];
 
@@ -307,14 +397,33 @@
       document.querySelectorAll(".section-panel").forEach(section => section.classList.toggle("active",section.id === name + "Section"));
     }
 
+    const currentRole = () => String(currentSession && currentSession.role || "TRAINER").toUpperCase();
+    const isAdmin = () => currentRole() === "ADMIN";
+    const isCeo = () => currentRole() === "CEO";
+
+    function applyRoleAccess() {
+      byId("trainersNavItem").hidden = !isAdmin();
+      byId("addBankQuestionButton").hidden = !isAdmin();
+      byId("bankInactiveFilterGroup").hidden = !isAdmin();
+      byId("questionBankReadOnlyNote").hidden = !isCeo();
+      byId("bankAssignmentForm").hidden = isCeo();
+      byId("bulkQuestionsNavItem").hidden = isCeo();
+    }
+
     function cleanQuestions() {
       return byId("questionsText").value.split(/\r?\n/).map(line => line.trim().replace(/^\s*(?:\d+[.)]|[-•*])\s*/,"")).filter(Boolean);
     }
 
+    function localDateTimeValue(date) {
+      const pad = n => String(n).padStart(2,"0");
+      return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
     function setDefaultStartTime() {
       const d = new Date(Date.now() + 5 * 60000); d.setSeconds(0,0);
-      const pad = n => String(n).padStart(2,"0");
-      byId("startAt").value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      const value = localDateTimeValue(d);
+      byId("startAt").value = value;
+      byId("bankStartAt").value = value;
     }
 
     function toIsoOrNull(value) { if (!value) return null; const d = new Date(value); return Number.isNaN(d.getTime()) ? null : d.toISOString(); }
@@ -355,6 +464,23 @@
       updateSelectedStudentCount();
     }
 
+    function selectedBankStudentUuids() { return Array.from(document.querySelectorAll(".bank-student-check:checked")).map(box => box.value); }
+
+    function updateBankSelectedStudentCount() {
+      const count = selectedBankStudentUuids().length;
+      byId("bankSelectedStudentCount").textContent = count + (count === 1 ? " student selected" : " students selected");
+      updateBankAssignmentEstimate();
+    }
+
+    function renderBankStudentPicker(filter="") {
+      const term = filter.trim().toLowerCase();
+      const selected = new Set(selectedBankStudentUuids());
+      const list = reportData.students.filter(student => [student.fullName,student.studentId,student.email,student.batch].some(value => String(value || "").toLowerCase().includes(term)));
+      byId("bankStudentOptions").innerHTML = list.length ? list.map(student => `<label class="student-option"><input class="bank-student-check" type="checkbox" value="${escapeHtml(student.studentUuid)}" ${selected.has(student.studentUuid) ? "checked" : ""}><span><strong>${escapeHtml(student.fullName)}</strong><br>${escapeHtml(student.studentId)} · ${escapeHtml(student.batch || "No batch")} · ${escapeHtml(student.email || "")}</span></label>`).join("") : `<div class="empty-state">No matching students.</div>`;
+      document.querySelectorAll(".bank-student-check").forEach(box => box.addEventListener("change",updateBankSelectedStudentCount));
+      updateBankSelectedStudentCount();
+    }
+
     function fillSelect(selectId, items, valueKey, labelBuilder, firstLabel) {
       const select = byId(selectId); const current = select.value;
       select.innerHTML = `<option value="">${escapeHtml(firstLabel)}</option>` + items.map(item => `<option value="${escapeHtml(item[valueKey])}">${escapeHtml(labelBuilder(item))}</option>`).join("");
@@ -363,10 +489,11 @@
 
     function populateControls() {
       const batches = reportData.batches.map(batch => ({value:batch,label:batch}));
-      ["targetBatch","assignmentBatchFilter","resultBatchFilter"].forEach(id => fillSelect(id,batches,"value",item => item.label,id === "targetBatch" ? "Choose batch" : "All batches"));
+      ["targetBatch","bankTargetBatch","assignmentBatchFilter","resultBatchFilter"].forEach(id => fillSelect(id,batches,"value",item => item.label,["targetBatch","bankTargetBatch"].includes(id) ? "Choose batch" : "All batches"));
       ["assignmentStudentFilter","resultStudentFilter"].forEach(id => fillSelect(id,reportData.students,"studentUuid",student => `${student.fullName} (${student.studentId})`,"All students"));
       ["assignmentTaskFilter","resultTaskFilter"].forEach(id => fillSelect(id,reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks"));
       renderStudentPicker(byId("studentSearch").value);
+      renderBankStudentPicker(byId("bankStudentSearch").value);
     }
 
     function summaryValue(id,value,suffix="") { byId(id).textContent = value === null || value === undefined ? "—" : formatNumber(value) + suffix; }
@@ -445,7 +572,7 @@
     function renderTasksTable() {
       const tasks = reportData.tasks || [];
       if (!tasks.length) { byId("tasksTableWrap").innerHTML = `<div class="empty-state">No tasks have been created.</div>`; return; }
-      byId("tasksTableWrap").innerHTML = `<table><thead><tr><th>Title</th><th>Question</th><th>Rubric</th><th>Sequence</th><th>Status</th><th>Action</th></tr></thead><tbody>${tasks.map(task => `<tr><td>${escapeHtml(task.title || "—")}</td><td class="question-cell">${escapeHtml(task.question || "—")}</td><td>${escapeHtml(task.rubricType || "—")}</td><td>${escapeHtml(task.sequenceNo || "—")}</td><td><span class="status-badge ${task.isActive ? "status-completed" : "status-withdrawn"}">${task.isActive ? "ACTIVE" : "WITHDRAWN"}</span></td><td><button class="small-button ${task.isActive ? "danger-button" : ""} task-toggle" type="button" data-task="${escapeHtml(task.taskUuid)}" data-active="${task.isActive ? "false" : "true"}">${task.isActive ? "Withdraw" : "Reactivate"}</button></td></tr>`).join("")}</tbody></table>`;
+      byId("tasksTableWrap").innerHTML = `<table><thead><tr><th>Title</th><th>Question</th><th>Rubric</th><th>Sequence</th><th>Status</th><th>Action</th></tr></thead><tbody>${tasks.map(task => `<tr><td>${escapeHtml(task.title || "—")}</td><td class="question-cell">${escapeHtml(task.question || "—")}</td><td>${escapeHtml(task.rubricType || "—")}</td><td>${escapeHtml(task.sequenceNo || "—")}</td><td><span class="status-badge ${task.isActive ? "status-completed" : "status-withdrawn"}">${task.isActive ? "ACTIVE" : "WITHDRAWN"}</span></td><td>${isCeo() ? "—" : `<button class="small-button ${task.isActive ? "danger-button" : ""} task-toggle" type="button" data-task="${escapeHtml(task.taskUuid)}" data-active="${task.isActive ? "false" : "true"}">${task.isActive ? "Withdraw" : "Reactivate"}</button>`}</td></tr>`).join("")}</tbody></table>`;
       document.querySelectorAll(".task-toggle").forEach(button => button.addEventListener("click",() => setTaskActive(button.dataset.task,button.dataset.active === "true")));
     }
 
@@ -476,6 +603,253 @@
       byId("resultCountLabel").textContent = `${visibleResultRows.length} result rows shown`;
       if (!visibleResultRows.length) { byId("resultsTableWrap").innerHTML = `<div class="empty-state">No results match these filters.</div>`; return; }
       byId("resultsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Status</th><th>Attempts</th><th>First</th><th>Latest</th><th>Improvement</th><th>Latest Submission</th></tr></thead><tbody>${visibleResultRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}<br>${escapeHtml(row.email || "")}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td><td>${escapeHtml(row.attemptCount)} / ${escapeHtml(row.maxAttempts)}</td><td>${escapeHtml(formatNumber(row.firstScore))}</td><td>${escapeHtml(formatNumber(row.latestScore))}</td><td>${row.improvement === null || row.improvement === undefined ? "—" : escapeHtml((Number(row.improvement)>0?"+":"")+formatNumber(row.improvement))}</td><td>${escapeHtml(formatDate(row.latestSubmittedAt))}</td></tr>`).join("")}</tbody></table>`;
+    }
+
+    function bankCategoriesForType(bankType="") {
+      return (questionBankData.categories || []).filter(category => !bankType || category.bankType === bankType);
+    }
+
+    function fillBankCategorySelect(selectId,bankType,firstLabel="All categories",preferredValue=null) {
+      const select = byId(selectId);
+      const current = preferredValue !== null ? preferredValue : select.value;
+      const categories = bankCategoriesForType(bankType);
+      select.innerHTML = `<option value="">${escapeHtml(firstLabel)}</option>` + categories.map(category => `<option value="${escapeHtml(category.categoryCode)}">${escapeHtml(category.categoryCode + " · " + category.categoryName)}</option>`).join("");
+      if (Array.from(select.options).some(option => option.value === current)) select.value = current;
+    }
+
+    function updateBankCategoryControls() {
+      fillBankCategorySelect("bankCategoryFilter",byId("bankTypeFilter").value,"All categories");
+      fillBankCategorySelect("bankEditCategory",byId("bankEditType").value,"Choose category");
+    }
+
+    function filteredQuestionBankRows() {
+      const bankType = byId("bankTypeFilter").value;
+      const categoryCode = byId("bankCategoryFilter").value;
+      const difficulty = byId("bankDifficultyFilter").value;
+      const term = byId("bankSearchFilter").value.trim().toLowerCase();
+      return (questionBankData.questions || []).filter(question => {
+        if (bankType && question.bankType !== bankType) return false;
+        if (categoryCode && question.categoryCode !== categoryCode) return false;
+        if (difficulty && Number(question.difficultyRank) !== Number(difficulty)) return false;
+        if (term) {
+          const haystack = [question.question,question.title,question.coachingFocus,question.sourceIdentifier,question.categoryName].join(" ").toLowerCase();
+          if (!haystack.includes(term)) return false;
+        }
+        return true;
+      });
+    }
+
+    function updateBankSelectedCount() {
+      const count = selectedBankQuestions.size;
+      byId("bankSelectedCount").textContent = count + (count === 1 ? " question selected" : " questions selected");
+      updateBankAssignmentEstimate();
+    }
+
+    function estimatedBankTargetCount() {
+      const targetType = byId("bankTargetType").value;
+      if (targetType === "ALL") return reportData.students.length;
+      if (targetType === "BATCH") return reportData.students.filter(student => String(student.batch || "").trim().toLowerCase() === String(byId("bankTargetBatch").value || "").trim().toLowerCase()).length;
+      return selectedBankStudentUuids().length;
+    }
+
+    function updateBankAssignmentEstimate() {
+      const questions = selectedBankQuestions.size;
+      const students = estimatedBankTargetCount();
+      byId("bankAssignmentEstimate").textContent = questions && students ? `${questions} questions × ${students} students = ${questions * students} assignments` : "";
+    }
+
+    function renderQuestionBankTable() {
+      visibleBankQuestions = filteredQuestionBankRows();
+      byId("questionBankCountLabel").textContent = `${visibleBankQuestions.length} questions shown · ${questionBankData.questions.length} loaded`;
+      if (!visibleBankQuestions.length) {
+        byId("questionBankTableWrap").innerHTML = `<div class="empty-state">No question-bank records match these filters.</div>`;
+        return;
+      }
+      const canSelect = !isCeo();
+      const canEdit = isAdmin();
+      byId("questionBankTableWrap").innerHTML = `<table><thead><tr><th>${canSelect ? "Select" : ""}</th><th>Identifier</th><th>Bank / Category</th><th>Question</th><th>Difficulty</th><th>Rubric</th><th>Time</th><th>Follow-up</th><th>Status</th><th>Action</th></tr></thead><tbody>${visibleBankQuestions.map(question => {
+        const selectable = question.isActive && question.isApproved && question.isSelectable;
+        const checked = selectedBankQuestions.has(question.questionUuid);
+        const actions = canEdit ? `<div class="bank-actions"><button class="small-button bank-edit-button" type="button" data-question="${escapeHtml(question.questionUuid)}">Edit</button><button class="small-button ${question.isActive ? "danger-button" : ""} bank-active-button" type="button" data-question="${escapeHtml(question.questionUuid)}" data-active="${question.isActive ? "false" : "true"}">${question.isActive ? "Withdraw" : "Reactivate"}</button></div>` : "—";
+        return `<tr><td>${canSelect && selectable ? `<input class="bank-question-check" type="checkbox" value="${escapeHtml(question.questionUuid)}" ${checked ? "checked" : ""}>` : ""}</td><td><strong>${escapeHtml(question.sourceIdentifier)}</strong><div class="bank-meta">${escapeHtml(question.sourceSystem || "")}</div></td><td><strong>${escapeHtml(question.bankType)}</strong><br>${escapeHtml(question.categoryCode)} · ${escapeHtml(question.categoryName)}${question.lumUnitNo ? `<div class="bank-meta">LUM Unit ${escapeHtml(question.lumUnitNo)}</div>` : ""}</td><td class="question-cell"><strong>${escapeHtml(question.title || "")}</strong><br>${escapeHtml(question.question)}${question.coachingFocus ? `<div class="bank-meta">Focus: ${escapeHtml(question.coachingFocus)}</div>` : ""}</td><td><span class="difficulty-pill difficulty-${escapeHtml(question.difficultyRank)}">${escapeHtml(question.difficultyRank)} · ${escapeHtml(question.difficultyLabel)}</span></td><td>${escapeHtml(question.rubricType)}</td><td>${escapeHtml(question.responseSeconds)} sec<div class="bank-meta">Prep ${escapeHtml(question.prepSeconds)} sec</div></td><td>${escapeHtml(question.followupMode || "NONE")}</td><td><span class="status-badge ${question.isActive && question.isApproved ? "status-completed" : "status-withdrawn"}">${question.isActive ? (question.isApproved ? "ACTIVE" : "UNAPPROVED") : "WITHDRAWN"}</span></td><td>${actions}</td></tr>`;
+      }).join("")}</tbody></table>`;
+      document.querySelectorAll(".bank-question-check").forEach(box => box.addEventListener("change",() => {
+        if (box.checked) selectedBankQuestions.add(box.value); else selectedBankQuestions.delete(box.value);
+        updateBankSelectedCount();
+      }));
+      document.querySelectorAll(".bank-edit-button").forEach(button => button.addEventListener("click",() => openBankQuestionEditor(button.dataset.question)));
+      document.querySelectorAll(".bank-active-button").forEach(button => button.addEventListener("click",() => setBankQuestionActive(button.dataset.question,button.dataset.active === "true")));
+      updateBankSelectedCount();
+    }
+
+    async function loadQuestionBank(message="Loading question bank…") {
+      showLoading(message);
+      try {
+        const result = await callRpc(RPC.questionBank,{
+          p_session_token:currentSession.sessionToken,
+          p_bank_type:null,
+          p_category_code:null,
+          p_difficulty_rank:null,
+          p_search:null,
+          p_include_inactive:isAdmin() && byId("bankIncludeInactive").checked,
+          p_include_source_duplicates:false,
+          p_limit:1000,
+          p_offset:0
+        });
+        if (!result || result.ok !== true) {
+          if (result && result.error === "invalid_staff_session") { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./trainer-login.html"; return; }
+          throw new Error(result && result.message ? result.message : "Question bank could not be loaded.");
+        }
+        questionBankData = result;
+        const loadedIds = new Set((result.questions || []).filter(question => question.isActive && question.isApproved && question.isSelectable).map(question => question.questionUuid));
+        selectedBankQuestions = new Set(Array.from(selectedBankQuestions).filter(uuid => loadedIds.has(uuid)));
+        updateBankCategoryControls();
+        renderQuestionBankTable();
+        setStatus(byId("questionBankStatus"),`Question bank updated. ${result.totalMatching} records match the current administrator view.`,"success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("questionBankStatus"),"ASCENT could not load the question bank. " + error.message,"error");
+      } finally { hideLoading(); }
+    }
+
+    function resetBankQuestionEditor() {
+      byId("bankQuestionEditor").reset();
+      byId("bankEditQuestionUuid").value = "";
+      byId("bankEditType").value = "LUM";
+      byId("bankEditDifficulty").value = "1";
+      byId("bankEditResponseSeconds").value = "60";
+      byId("bankEditPrepSeconds").value = "10";
+      byId("bankEditFollowupMode").value = "NONE";
+      byId("bankEditActive").checked = true;
+      byId("bankEditApproved").checked = true;
+      byId("bankEditorHeading").textContent = "Add Question";
+      fillBankCategorySelect("bankEditCategory","LUM","Choose category");
+      byId("bankEditFixedFollowupGroup").hidden = true;
+      setStatus(byId("bankEditorStatus"),"","");
+    }
+
+    function openBankQuestionEditor(questionUuid=null) {
+      if (!isAdmin()) return;
+      resetBankQuestionEditor();
+      if (questionUuid) {
+        const question = (questionBankData.questions || []).find(item => item.questionUuid === questionUuid);
+        if (!question) { setStatus(byId("questionBankStatus"),"The selected question is not in the loaded bank view.","error"); return; }
+        byId("bankEditorHeading").textContent = "Edit Question";
+        byId("bankEditQuestionUuid").value = question.questionUuid;
+        byId("bankEditType").value = question.bankType;
+        fillBankCategorySelect("bankEditCategory",question.bankType,"Choose category",question.categoryCode);
+        byId("bankEditTitle").value = question.title || "";
+        byId("bankEditQuestion").value = question.question || "";
+        byId("bankEditInstructions").value = question.instructions || "";
+        byId("bankEditCoachingFocus").value = question.coachingFocus || "";
+        byId("bankEditCanDo").value = question.canDo || "";
+        byId("bankEditDifficulty").value = String(question.difficultyRank || 1);
+        byId("bankEditResponseSeconds").value = String(question.responseSeconds || 60);
+        byId("bankEditPrepSeconds").value = String(question.prepSeconds || 10);
+        byId("bankEditFollowupMode").value = question.followupMode || "NONE";
+        byId("bankEditFixedFollowup").value = question.fixedFollowup || "";
+        byId("bankEditFollowupFocus").value = (question.approvedFollowupFocus || []).join(", ");
+        byId("bankEditActive").checked = Boolean(question.isActive);
+        byId("bankEditApproved").checked = Boolean(question.isApproved);
+        byId("bankEditFixedFollowupGroup").hidden = byId("bankEditFollowupMode").value !== "FIXED_FOLLOW_UP";
+      }
+      byId("bankQuestionEditor").hidden = false;
+      byId("bankQuestionEditor").scrollIntoView({behavior:"smooth",block:"start"});
+    }
+
+    function closeBankQuestionEditor() {
+      byId("bankQuestionEditor").hidden = true;
+      resetBankQuestionEditor();
+    }
+
+    async function saveBankQuestion(event) {
+      event.preventDefault();
+      if (!isAdmin()) return;
+      const bankType = byId("bankEditType").value;
+      const categoryCode = byId("bankEditCategory").value;
+      const question = byId("bankEditQuestion").value.trim();
+      const followupMode = byId("bankEditFollowupMode").value;
+      if (!categoryCode) { setStatus(byId("bankEditorStatus"),"Choose the question category.","error"); return; }
+      if (!question) { setStatus(byId("bankEditorStatus"),"Enter the question.","error"); return; }
+      if (followupMode === "FIXED_FOLLOW_UP" && !byId("bankEditFixedFollowup").value.trim()) { setStatus(byId("bankEditorStatus"),"Enter the fixed follow-up question.","error"); return; }
+      const button = byId("saveBankQuestionButton"); button.disabled = true; button.textContent = "Saving…";
+      try {
+        const focuses = byId("bankEditFollowupFocus").value.split(",").map(value => value.trim().toLowerCase()).filter(Boolean);
+        const result = await callRpc(RPC.upsertQuestionBank,{
+          p_session_token:currentSession.sessionToken,
+          p_question_uuid:byId("bankEditQuestionUuid").value || null,
+          p_bank_type:bankType,
+          p_category_code:categoryCode,
+          p_question:question,
+          p_title:byId("bankEditTitle").value.trim() || null,
+          p_instructions:byId("bankEditInstructions").value.trim() || null,
+          p_coaching_focus:byId("bankEditCoachingFocus").value.trim() || null,
+          p_can_do:byId("bankEditCanDo").value.trim() || null,
+          p_difficulty_rank:Number(byId("bankEditDifficulty").value),
+          p_response_seconds:Number(byId("bankEditResponseSeconds").value || 60),
+          p_prep_seconds:Number(byId("bankEditPrepSeconds").value || 10),
+          p_followup_mode:followupMode,
+          p_fixed_followup:followupMode === "FIXED_FOLLOW_UP" ? byId("bankEditFixedFollowup").value.trim() : null,
+          p_approved_followup_focus:focuses,
+          p_is_active:byId("bankEditActive").checked,
+          p_is_approved:byId("bankEditApproved").checked
+        });
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Question could not be saved.");
+        setStatus(byId("questionBankStatus"),result.message,"success");
+        closeBankQuestionEditor();
+        await loadQuestionBank("Refreshing question bank…");
+      } catch (error) { console.error(error); setStatus(byId("bankEditorStatus"),error.message,"error"); }
+      finally { button.disabled = false; button.textContent = "Save Question"; }
+    }
+
+    async function setBankQuestionActive(questionUuid,isActive) {
+      if (!isAdmin()) return;
+      showLoading(isActive ? "Reactivating bank question…" : "Withdrawing bank question…");
+      try {
+        const result = await callRpc(RPC.questionBankActive,{p_session_token:currentSession.sessionToken,p_question_uuid:questionUuid,p_is_active:isActive});
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Question status could not be changed.");
+        if (!isActive) selectedBankQuestions.delete(questionUuid);
+        await loadQuestionBank("Refreshing question bank…");
+      } catch (error) { console.error(error); setStatus(byId("questionBankStatus"),error.message,"error"); }
+      finally { hideLoading(); }
+    }
+
+    async function assignSelectedBankQuestions(event) {
+      event.preventDefault();
+      if (isCeo()) return;
+      const questionUuids = Array.from(selectedBankQuestions);
+      const targetType = byId("bankTargetType").value;
+      const followupMode = byId("bankAssignmentFollowupMode").value;
+      if (!questionUuids.length) { setStatus(byId("bankAssignmentStatus"),"Select at least one question from the bank.","error"); return; }
+      if (targetType === "BATCH" && !byId("bankTargetBatch").value) { setStatus(byId("bankAssignmentStatus"),"Choose the student batch.","error"); return; }
+      if (targetType === "STUDENTS" && !selectedBankStudentUuids().length) { setStatus(byId("bankAssignmentStatus"),"Choose at least one student.","error"); return; }
+      if (followupMode === "FIXED_FOLLOW_UP" && !byId("bankAssignmentFixedFollowup").value.trim()) { setStatus(byId("bankAssignmentStatus"),"Enter the fixed follow-up question.","error"); return; }
+      const button = byId("assignBankQuestionsButton"); button.disabled = true; button.textContent = "Assigning…"; setStatus(byId("bankAssignmentStatus"),"","");
+      try {
+        const dueText = byId("bankDueDays").value.trim();
+        const result = await callRpc(RPC.assignQuestionBank,{
+          p_session_token:currentSession.sessionToken,
+          p_question_uuids:questionUuids,
+          p_title_prefix:byId("bankAssignmentTitle").value.trim() || "ASCENT Bank Task",
+          p_target_type:targetType,
+          p_target_batch:targetType === "BATCH" ? byId("bankTargetBatch").value : null,
+          p_student_uuids:targetType === "STUDENTS" ? selectedBankStudentUuids() : null,
+          p_start_at:toIsoOrNull(byId("bankStartAt").value),
+          p_interval_days:Number(byId("bankIntervalDays").value || 0),
+          p_due_days:dueText === "" ? null : Number(dueText),
+          p_max_attempts:Number(byId("bankMaxAttempts").value || 1),
+          p_followup_mode:followupMode,
+          p_fixed_followup:followupMode === "FIXED_FOLLOW_UP" ? byId("bankAssignmentFixedFollowup").value.trim() : null,
+          p_followup_prep_seconds:Number(byId("bankAssignmentPrepSeconds").value || 5),
+          p_followup_response_seconds:Number(byId("bankAssignmentResponseSeconds").value || 45)
+        });
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Bank questions could not be assigned.");
+        setStatus(byId("bankAssignmentStatus"),`${result.message} ${result.assignmentsCreated} student assignments were added. Rubrics were fixed from the Question Bank.`,"success");
+        selectedBankQuestions.clear();
+        renderQuestionBankTable();
+        await loadReport("Refreshing assignments…");
+      } catch (error) { console.error(error); setStatus(byId("bankAssignmentStatus"),error.message,"error"); }
+      finally { button.disabled = false; button.textContent = "Create and Assign Selected Questions"; }
     }
 
     function renderAll() {
@@ -578,6 +952,25 @@
       byId("refreshTasksButton").addEventListener("click",() => loadReport("Refreshing tasks…"));
       byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results));
       byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows));
+      byId("refreshQuestionBankButton").addEventListener("click",() => loadQuestionBank("Refreshing question bank…"));
+      byId("addBankQuestionButton").addEventListener("click",() => openBankQuestionEditor());
+      byId("cancelBankEditButton").addEventListener("click",closeBankQuestionEditor);
+      byId("bankQuestionEditor").addEventListener("submit",saveBankQuestion);
+      byId("bankEditType").addEventListener("change",() => fillBankCategorySelect("bankEditCategory",byId("bankEditType").value,"Choose category"));
+      byId("bankEditFollowupMode").addEventListener("change",() => { byId("bankEditFixedFollowupGroup").hidden = byId("bankEditFollowupMode").value !== "FIXED_FOLLOW_UP"; });
+      byId("bankTypeFilter").addEventListener("change",() => { fillBankCategorySelect("bankCategoryFilter",byId("bankTypeFilter").value,"All categories"); renderQuestionBankTable(); });
+      byId("bankCategoryFilter").addEventListener("change",renderQuestionBankTable);
+      byId("bankDifficultyFilter").addEventListener("change",renderQuestionBankTable);
+      byId("bankSearchFilter").addEventListener("input",renderQuestionBankTable);
+      byId("applyBankFiltersButton").addEventListener("click",renderQuestionBankTable);
+      byId("clearBankFiltersButton").addEventListener("click",() => { byId("bankTypeFilter").value=""; fillBankCategorySelect("bankCategoryFilter","","All categories"); byId("bankDifficultyFilter").value=""; byId("bankSearchFilter").value=""; renderQuestionBankTable(); });
+      byId("bankIncludeInactive").addEventListener("change",() => loadQuestionBank("Updating administrator view…"));
+      byId("clearBankSelectionButton").addEventListener("click",() => { selectedBankQuestions.clear(); renderQuestionBankTable(); });
+      byId("bankTargetType").addEventListener("change",() => { const value=byId("bankTargetType").value; byId("bankTargetBatchGroup").hidden=value!=="BATCH"; byId("bankTargetStudentsGroup").hidden=value!=="STUDENTS"; updateBankAssignmentEstimate(); });
+      byId("bankTargetBatch").addEventListener("change",updateBankAssignmentEstimate);
+      byId("bankStudentSearch").addEventListener("input",event => renderBankStudentPicker(event.target.value));
+      byId("bankAssignmentFollowupMode").addEventListener("change",() => { const show=byId("bankAssignmentFollowupMode").value==="FIXED_FOLLOW_UP"; byId("bankAssignmentFixedFollowupGroup").hidden=!show; byId("bankAssignmentPrepGroup").hidden=!show; byId("bankAssignmentResponseGroup").hidden=!show; });
+      byId("bankAssignmentForm").addEventListener("submit",assignSelectedBankQuestions);
       byId("questionsText").addEventListener("input",updateQuestionCount);
       byId("targetType").addEventListener("change",() => { const value=byId("targetType").value; byId("targetBatchGroup").hidden=value!=="BATCH"; byId("targetStudentsGroup").hidden=value!=="STUDENTS"; updateAssignmentEstimate(); });
       byId("targetBatch").addEventListener("change",updateAssignmentEstimate);
@@ -595,8 +988,9 @@
       currentSession = loadTrainerSession(); if (!currentSession) return;
       byId("trainerName").textContent = currentSession.fullName || currentSession.email;
       byId("trainerRole").textContent = currentSession.role || "TRAINER";
-      byId("trainersNavItem").hidden = !["ADMIN","CEO"].includes(String(currentSession.role || "").toUpperCase());
-      setDefaultStartTime(); wireEvents(); updateQuestionCount(); await loadReport();
+      applyRoleAccess(); setDefaultStartTime(); wireEvents(); updateQuestionCount(); resetBankQuestionEditor();
+      await loadReport();
+      await loadQuestionBank();
     }
     initialise();
   </script>
