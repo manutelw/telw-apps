@@ -165,7 +165,7 @@
   <div id="loadingOverlay" class="loading-overlay"><div id="loadingText" class="loading-card">Loading ASCENT…</div></div>
   <div class="app-shell">
     <header class="topbar">
-      <div class="brand-wrap"><div class="brand-mark">A</div><div class="brand-text"><h1>ASCENT</h1><p>Trainer &amp; Admin Portal</p></div></div>
+      <div class="brand-wrap"><div id="adminTouchpoint" class="brand-mark" role="button" tabindex="0" aria-label="ASCENT">A</div><div class="brand-text"><h1>ASCENT</h1><p>Trainer &amp; Admin Portal</p></div></div>
       <div class="topbar-actions"><div class="user-summary"><div id="trainerName" class="user-name">Trainer</div><div id="trainerRole" class="user-role">Trainer</div></div><button id="logoutButton" class="logout-button" type="button">Log Out</button></div>
     </header>
 
@@ -259,8 +259,8 @@
               <div class="form-group"><label for="bankIntervalDays">Release pace</label><select id="bankIntervalDays"><option value="0" selected>All at once</option><option value="1">One question daily</option><option value="2">One every 2 days</option><option value="3">One every 3 days</option><option value="7">One every week</option></select></div>
               <div class="form-group"><label for="bankDueDays">Days allowed per question</label><input id="bankDueDays" type="number" min="0" max="365" value="7"><div class="form-note">Leave blank for no deadline.</div></div>
               <div class="form-group"><label for="bankMaxAttempts">Attempt limit</label><input id="bankMaxAttempts" type="number" min="1" max="100" value="1"></div>
-              <div class="form-group"><label for="bankAssignmentFollowupMode">Assignment follow-up</label><select id="bankAssignmentFollowupMode"><option value="NONE">No follow-up</option><option value="FIXED_FOLLOW_UP">Same fixed follow-up</option></select></div>
-              <div id="bankAssignmentFixedFollowupGroup" class="form-group two-wide" hidden><label for="bankAssignmentFixedFollowup">Fixed follow-up question</label><input id="bankAssignmentFixedFollowup" type="text" placeholder="This follow-up is used for every selected question"></div>
+              <div class="form-group"><label for="bankAssignmentFollowupMode">Assignment follow-up</label><select id="bankAssignmentFollowupMode"><option value="NONE">No follow-up</option><option value="FIXED_FOLLOW_UP">Same fixed follow-up</option><option value="SMART_FOLLOW_UP">Smart follow-up from approved bank</option></select></div>
+              <div id="bankAssignmentFixedFollowupGroup" class="form-group two-wide" hidden><label for="bankAssignmentFixedFollowup">Fixed follow-up question</label><input id="bankAssignmentFixedFollowup" type="text" placeholder="This follow-up is used for every selected question"></div><div id="bankAssignmentSmartFollowupNote" class="form-group two-wide" hidden><label>Smart follow-up</label><div class="form-note" style="margin-top:0">ASCENT will choose an approved follow-up from the relevant weakness group: evidence, ownership, decision logic, alternatives, risk or business impact.</div></div>
               <div id="bankAssignmentPrepGroup" class="form-group" hidden><label for="bankAssignmentPrepSeconds">Follow-up preparation</label><input id="bankAssignmentPrepSeconds" type="number" min="0" max="120" value="5"></div>
               <div id="bankAssignmentResponseGroup" class="form-group" hidden><label for="bankAssignmentResponseSeconds">Follow-up response</label><input id="bankAssignmentResponseSeconds" type="number" min="10" max="300" value="45"></div>
             </div>
@@ -305,6 +305,27 @@
             <div class="form-group"><label for="assignmentTaskFilter">Task</label><select id="assignmentTaskFilter"><option value="">All tasks</option></select></div>
             <div class="form-group"><label for="assignmentStatusFilter">Status</label><select id="assignmentStatusFilter"><option value="">All statuses</option><option value="COMPLETED">Completed</option><option value="NOT_STARTED">Not started</option><option value="NOT_ATTEMPTED">Not attempted</option><option value="SCHEDULED">Scheduled</option><option value="WITHDRAWN">Withdrawn</option></select></div>
           </div><div class="inline-row"><button id="applyAssignmentFiltersButton" class="primary-button" type="button">Apply Filters</button><button id="clearAssignmentFiltersButton" class="secondary-button" type="button">Clear</button></div></div>
+
+          <div id="testRegisterAdminPanel" class="panel" hidden>
+            <div class="panel-title-row">
+              <div>
+                <h3>Clear Test Register</h3>
+                <div class="panel-subtitle">Administrator-only cleanup for test students. This deletes the selected test student's assignments and submissions, but preserves the student login, tasks and question bank.</div>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-group two-wide">
+                <label for="testStudentClearSelect">Test student</label>
+                <select id="testStudentClearSelect"><option value="">Choose a test student</option></select>
+                <div class="form-note">Only Student IDs beginning with ASCENTTEST are eligible.</div>
+              </div>
+            </div>
+            <div class="inline-row">
+              <button id="clearTestRegisterButton" class="secondary-button danger-button" type="button">Clear Selected Test Register</button>
+            </div>
+            <div id="clearTestRegisterStatus" class="form-status" role="status" aria-live="polite"></div>
+          </div>
+
           <div class="panel"><div class="panel-title-row"><div><h3>Assignment Register</h3><div id="assignmentCountLabel" class="panel-subtitle"></div></div></div><div id="assignmentsTableWrap" class="table-wrap"></div></div>
         </section>
 
@@ -350,7 +371,8 @@
       questionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_question_bank_get",
       assignQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_assign_question_bank_tasks",
       upsertQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_upsert_question_bank",
-      questionBankActive: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_set_question_bank_active"
+      questionBankActive: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_set_question_bank_active",
+      clearTestRegister: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_clear_test_student_register"
     };
     let currentSession = null;
     let reportData = { summary:{}, batches:[], students:[], tasks:[], results:[] };
@@ -408,6 +430,7 @@
       byId("questionBankReadOnlyNote").hidden = !isCeo();
       byId("bankAssignmentForm").hidden = isCeo();
       byId("bulkQuestionsNavItem").hidden = isCeo();
+      byId("testRegisterAdminPanel").hidden = !isAdmin();
     }
 
     function cleanQuestions() {
@@ -492,6 +515,9 @@
       ["targetBatch","bankTargetBatch","assignmentBatchFilter","resultBatchFilter"].forEach(id => fillSelect(id,batches,"value",item => item.label,["targetBatch","bankTargetBatch"].includes(id) ? "Choose batch" : "All batches"));
       ["assignmentStudentFilter","resultStudentFilter"].forEach(id => fillSelect(id,reportData.students,"studentUuid",student => `${student.fullName} (${student.studentId})`,"All students"));
       ["assignmentTaskFilter","resultTaskFilter"].forEach(id => fillSelect(id,reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks"));
+      const testStudents = reportData.students.filter(student => String(student.studentId || "").trim().toUpperCase().startsWith("ASCENTTEST"));
+      fillSelect("testStudentClearSelect",testStudents,"studentUuid",student => `${student.fullName} (${student.studentId})`,"Choose a test student");
+      byId("clearTestRegisterButton").disabled = !testStudents.length;
       renderStudentPicker(byId("studentSearch").value);
       renderBankStudentPicker(byId("bankStudentSearch").value);
     }
@@ -930,6 +956,71 @@
       setStatus(byId("resultsStatus"),"Excel report downloaded.","success");
     }
 
+    async function clearSelectedTestRegister() {
+      if (!isAdmin()) {
+        setStatus(byId("clearTestRegisterStatus"),"Only an administrator can clear test assignment records.","error");
+        return;
+      }
+
+      const studentUuid = byId("testStudentClearSelect").value;
+      const student = reportData.students.find(item => item.studentUuid === studentUuid);
+
+      if (!studentUuid || !student) {
+        setStatus(byId("clearTestRegisterStatus"),"Choose the test student whose register must be cleared.","error");
+        return;
+      }
+
+      const studentId = String(student.studentId || "").trim().toUpperCase();
+      if (!studentId.startsWith("ASCENTTEST")) {
+        setStatus(byId("clearTestRegisterStatus"),"For safety, only Student IDs beginning with ASCENTTEST can be cleared here.","error");
+        return;
+      }
+
+      const confirmation = window.prompt(
+        `This will permanently delete all assignments and submissions for ${student.fullName} (${student.studentId}).\n\n` +
+        `The student login, tasks and question bank will remain.\n\n` +
+        `Type CLEAR TEST DATA to continue.`
+      );
+
+      if (confirmation === null) return;
+
+      if (String(confirmation).trim().toUpperCase() !== "CLEAR TEST DATA") {
+        setStatus(byId("clearTestRegisterStatus"),"Nothing was deleted. The confirmation text did not match.","warning");
+        return;
+      }
+
+      const button = byId("clearTestRegisterButton");
+      button.disabled = true;
+      button.textContent = "Clearing Test Register…";
+      setStatus(byId("clearTestRegisterStatus"),"","");
+
+      try {
+        const result = await callRpc(RPC.clearTestRegister,{
+          p_session_token:currentSession.sessionToken,
+          p_student_uuid:studentUuid,
+          p_confirmation:"CLEAR TEST DATA"
+        });
+
+        if (!result || result.ok !== true) {
+          throw new Error(result && result.message ? result.message : "The test register could not be cleared.");
+        }
+
+        setStatus(
+          byId("clearTestRegisterStatus"),
+          `${result.message} ${result.assignmentsDeleted || 0} assignments and ${result.submissionsDeleted || 0} submissions were deleted. The student login was preserved.`,
+          "success"
+        );
+
+        await loadReport("Refreshing the Assignment Register…");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("clearTestRegisterStatus"),error.message || "ASCENT could not clear the test register.","error");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Clear Selected Test Register";
+      }
+    }
+
     async function createTrainer(event) {
       event.preventDefault();
       const name = byId("newTrainerName").value.trim(), email = byId("newTrainerEmail").value.trim().toLowerCase(), password = byId("newTrainerPassword").value, role = byId("newTrainerRole").value;
@@ -943,6 +1034,51 @@
     function clearFilters(prefix) {
       ["BatchFilter","StudentFilter","TaskFilter","StatusFilter"].forEach(suffix => { const element = byId(prefix+suffix); if (element) element.value=""; });
       if (prefix === "result") { byId("resultDateFrom").value=""; byId("resultDateTo").value=""; renderResultsTable(); } else renderAssignmentsTable();
+    }
+
+    function initialiseAdminTouchpoint() {
+      const touchpoint = byId("adminTouchpoint");
+      if (!touchpoint) return;
+
+      let clickCount = 0;
+      let resetTimer = null;
+
+      const registerTouch = () => {
+        if (!isAdmin()) return;
+
+        clickCount += 1;
+        window.clearTimeout(resetTimer);
+
+        if (clickCount >= 5) {
+          clickCount = 0;
+          window.location.href = "./admin-monetisation.html";
+          return;
+        }
+
+        resetTimer = window.setTimeout(() => {
+          clickCount = 0;
+        }, 3000);
+      };
+
+      touchpoint.addEventListener("click",registerTouch);
+      touchpoint.addEventListener("keydown",event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          registerTouch();
+        }
+      });
+    }
+
+    function updateBankAssignmentFollowupControls() {
+      const mode = byId("bankAssignmentFollowupMode").value;
+      const fixed = mode === "FIXED_FOLLOW_UP";
+      const smart = mode === "SMART_FOLLOW_UP";
+      const timed = fixed || smart;
+
+      byId("bankAssignmentFixedFollowupGroup").hidden = !fixed;
+      byId("bankAssignmentSmartFollowupNote").hidden = !smart;
+      byId("bankAssignmentPrepGroup").hidden = !timed;
+      byId("bankAssignmentResponseGroup").hidden = !timed;
     }
 
     function wireEvents() {
@@ -969,7 +1105,7 @@
       byId("bankTargetType").addEventListener("change",() => { const value=byId("bankTargetType").value; byId("bankTargetBatchGroup").hidden=value!=="BATCH"; byId("bankTargetStudentsGroup").hidden=value!=="STUDENTS"; updateBankAssignmentEstimate(); });
       byId("bankTargetBatch").addEventListener("change",updateBankAssignmentEstimate);
       byId("bankStudentSearch").addEventListener("input",event => renderBankStudentPicker(event.target.value));
-      byId("bankAssignmentFollowupMode").addEventListener("change",() => { const show=byId("bankAssignmentFollowupMode").value==="FIXED_FOLLOW_UP"; byId("bankAssignmentFixedFollowupGroup").hidden=!show; byId("bankAssignmentPrepGroup").hidden=!show; byId("bankAssignmentResponseGroup").hidden=!show; });
+      byId("bankAssignmentFollowupMode").addEventListener("change",updateBankAssignmentFollowupControls);
       byId("bankAssignmentForm").addEventListener("submit",assignSelectedBankQuestions);
       byId("questionsText").addEventListener("input",updateQuestionCount);
       byId("targetType").addEventListener("change",() => { const value=byId("targetType").value; byId("targetBatchGroup").hidden=value!=="BATCH"; byId("targetStudentsGroup").hidden=value!=="STUDENTS"; updateAssignmentEstimate(); });
@@ -979,6 +1115,7 @@
       byId("bulkTaskForm").addEventListener("submit",createQuestionBatch);
       byId("applyAssignmentFiltersButton").addEventListener("click",renderAssignmentsTable);
       byId("clearAssignmentFiltersButton").addEventListener("click",() => clearFilters("assignment"));
+      byId("clearTestRegisterButton").addEventListener("click",clearSelectedTestRegister);
       byId("applyResultFiltersButton").addEventListener("click",renderResultsTable);
       byId("clearResultFiltersButton").addEventListener("click",() => clearFilters("result"));
       byId("addTrainerForm").addEventListener("submit",createTrainer);
@@ -988,7 +1125,7 @@
       currentSession = loadTrainerSession(); if (!currentSession) return;
       byId("trainerName").textContent = currentSession.fullName || currentSession.email;
       byId("trainerRole").textContent = currentSession.role || "TRAINER";
-      applyRoleAccess(); setDefaultStartTime(); wireEvents(); updateQuestionCount(); resetBankQuestionEditor();
+      applyRoleAccess(); setDefaultStartTime(); wireEvents(); initialiseAdminTouchpoint(); updateBankAssignmentFollowupControls(); updateQuestionCount(); resetBankQuestionEditor();
       await loadReport();
       await loadQuestionBank();
     }
