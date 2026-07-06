@@ -27,7 +27,7 @@
     p { margin:0 0 14px; color:var(--muted); line-height:1.6; font-size:14px; }
     .status { padding:12px; border-radius:10px; background:var(--soft); color:var(--navy); font-size:13px; font-weight:700; }
     .actions { display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; }
-    button { min-height:44px; border-radius:10px; padding:0 16px; font:inherit; font-weight:800; cursor:pointer; }
+    button,.action-link { min-height:44px; border-radius:10px; padding:0 16px; font:inherit; font-weight:800; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
     .primary { border:0; background:linear-gradient(135deg,var(--navy),var(--blue)); color:#fff; }
     .secondary { border:1px solid var(--border); background:#fff; color:var(--navy); }
     [hidden] { display:none !important; }
@@ -45,6 +45,7 @@
       <p>No payment configuration is currently stored, and no student can be charged from this page.</p>
       <div class="status">Access is restricted to an authenticated ASCENT Administrator. A fresh password-confirmation layer will be installed when payment settings are activated.</div>
       <div class="actions">
+        <a class="secondary action-link" href="../" aria-label="Go to ClarionPrep home">Home</a>
         <button id="returnButton" class="primary" type="button">Return to Trainer Portal</button>
         <button id="logoutButton" class="secondary" type="button">Log Out</button>
       </div>
