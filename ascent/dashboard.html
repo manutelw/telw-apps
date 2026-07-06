@@ -862,7 +862,7 @@ function normaliseFeedback(feedback) {
       if (!row || !details) return;
 
       const feedback = normaliseFeedback(details.feedback);
-      const criterionHtml = formatCriterionScores(details.criterionScores);
+      const criterionHtml = "";
 
       feedbackModalTitle.textContent =
         categoryLabel(row.category) + " · Attempt " + (attemptIndex + 1);
@@ -891,12 +891,7 @@ function normaliseFeedback(feedback) {
           <p>${escapeHtml(feedback.summary)}</p>
         </section>
 
-        ${criterionHtml ? `
-          <section class="feedback-section">
-            <h4>Score Details</h4>
-            ${criterionHtml}
-          </section>
-        ` : ""}
+        
 
         ${sectionsHtml}
       `;
