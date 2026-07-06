@@ -1862,48 +1862,44 @@ clearElement(otherIssuesList);
 otherIssues.forEach(function (issue) {
   const item = document.createElement("li");
 
-  if (typeof issue === "string") {
-    item.textContent = issue;
-  } else {
-    const label =
-      String(issue.label || "Other issue").trim();
+  const label =
+    String(issue.label || "Other issue").trim();
 
-    const evidenceQuote =
-      String(
-        issue.evidenceQuote ||
-        issue.evidence_quote ||
-        ""
-      ).trim();
+  const evidenceQuote =
+    String(
+      issue.evidenceQuote ||
+      issue.evidence_quote ||
+      ""
+    ).trim();
 
-    const explanation =
-      String(issue.explanation || "").trim();
+  const explanation =
+    String(issue.explanation || "").trim();
 
-    const title =
-      document.createElement("strong");
+  const title =
+    document.createElement("strong");
 
-    title.textContent = label;
-    item.appendChild(title);
+  title.textContent = label;
+  item.appendChild(title);
 
-    if (evidenceQuote) {
-      const example =
-        document.createElement("div");
+  if (evidenceQuote) {
+    const example =
+      document.createElement("div");
 
-      example.textContent =
-        "Example: “" + evidenceQuote + "”";
+    example.textContent =
+      "Example: “" + evidenceQuote + "”";
 
-      item.appendChild(example);
-    }
+    item.appendChild(example);
+  }
 
-    if (explanation) {
-      const reason =
-        document.createElement("div");
+  if (explanation) {
+    const reason =
+      document.createElement("div");
 
-      reason.textContent =
-        "Why this is a problem: " +
-        explanation;
+    reason.textContent =
+      "Why this is a problem: " +
+      explanation;
 
-      item.appendChild(reason);
-    }
+    item.appendChild(reason);
   }
 
   otherIssuesList.appendChild(item);
