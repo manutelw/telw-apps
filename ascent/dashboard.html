@@ -797,19 +797,7 @@ function normaliseFeedback(feedback) {
     }
   });
 
-  const otherIssues =
-    feedback.otherIssues ||
-    feedback.other_issues ||
-    "";
-
-  if (otherIssues) {
-    sections.push({
-      title:"Main Issue",
-      text:Array.isArray(otherIssues)
-        ? otherIssues.join(", ")
-        : String(otherIssues)
-    });
-  }
+  
 
   const nextAction =
     feedback.nextAction ||
