@@ -3,753 +3,784 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="CLARION turns spoken communication practice into transcripts, criterion-level scores, precise feedback and focused next actions.">
-  <meta name="theme-color" content="#151326">
-  <title>CLARION · Communication Readiness, Made Visible</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%23151326%22/><path d=%22M41 18c-3-3-7-5-12-5-10 0-17 8-17 19s7 19 17 19c5 0 9-2 12-5l-6-7c-2 2-4 3-6 3-5 0-8-4-8-10s3-10 8-10c2 0 4 1 6 3z%22 fill=%22%23F5B642%22/></svg>">
+  <title>ASCENT · Communication Practice and Performance</title>
+  <meta name="description" content="ASCENT helps students and professionals practise managerial communication, interviews, group discussions and structured workplace speaking.">
+  <meta name="application-name" content="ASCENT">
+  <meta name="apple-mobile-web-app-title" content="ASCENT">
+  <meta name="theme-color" content="#102b47">
+  <meta name="robots" content="index,follow">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23143a60'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='Arial' font-size='34' font-weight='700' fill='white'%3EA%3C/text%3E%3C/svg%3E">
   <style>
     :root {
-      --ink: #151326;
-      --ink-soft: #312e4a;
-      --paper: #fbfaf7;
-      --surface: #ffffff;
-      --line: #e8e4ef;
-      --muted: #6f6b7d;
-      --violet: #6d4aff;
-      --violet-soft: #eee9ff;
-      --teal: #008f86;
-      --teal-soft: #e2f7f4;
-      --coral: #f05a47;
-      --coral-soft: #ffebe7;
-      --gold: #f5b642;
-      --gold-soft: #fff3d2;
-      --blue: #2c6bed;
-      --blue-soft: #e8f0ff;
-      --green: #2d8a57;
-      --green-soft: #e7f5ec;
-      --shadow: 0 24px 70px rgba(31, 25, 65, .12);
-      --shadow-small: 0 10px 30px rgba(31, 25, 65, .08);
-      --radius: 22px;
-      --radius-small: 14px;
+      --navy:#143a60;
+      --navy-dark:#0d2943;
+      --blue:#27679d;
+      --blue-soft:#eef5fb;
+      --gold:#c67b00;
+      --gold-soft:#fff5df;
+      --text:#24364a;
+      --muted:#687a8d;
+      --border:#d7e1eb;
+      --white:#ffffff;
+      --success:#18794e;
+      --shadow:0 24px 70px rgba(6,28,48,.18);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
     body {
-      font-family: "DM Sans", system-ui, sans-serif;
-      background: var(--paper);
-      color: var(--ink);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      color:var(--text);
+      background:#f5f8fb;
     }
-    a { color: inherit; text-decoration: none; }
-    button, a { -webkit-tap-highlight-color: transparent; }
-    .wrap { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
-    .mono { font-family: "DM Mono", monospace; }
 
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background: rgba(251, 250, 247, .88);
-      border-bottom: 1px solid rgba(232, 228, 239, .8);
-      backdrop-filter: blur(18px);
+    a { color:inherit; text-decoration:none; }
+    button { font:inherit; }
+
+    .site-header {
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:rgba(255,255,255,.96);
+      backdrop-filter:blur(12px);
+      border-bottom:1px solid rgba(215,225,235,.9);
     }
-    .nav {
-      height: 74px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
+
+    .nav-shell {
+      width:min(1180px,calc(100% - 36px));
+      min-height:76px;
+      margin:0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:24px;
     }
-    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+    .brand {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex:0 0 auto;
+    }
+
     .brand-mark {
-      width: 38px;
-      height: 38px;
-      border-radius: 11px;
-      background: var(--ink);
-      color: var(--gold);
-      display: grid;
-      place-items: center;
-      font-family: "Manrope", sans-serif;
-      font-weight: 800;
-      box-shadow: 0 8px 20px rgba(21, 19, 38, .16);
+      width:44px;
+      height:44px;
+      border-radius:12px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(145deg,var(--navy),var(--blue));
+      color:#fff;
+      font-size:21px;
+      font-weight:800;
+      box-shadow:0 10px 28px rgba(20,58,96,.22);
     }
-    .brand-copy { display: flex; flex-direction: column; line-height: 1.15; }
-    .brand-name { font-family: "Manrope", sans-serif; font-weight: 800; letter-spacing: .12em; font-size: .98rem; }
-    .brand-sub { color: var(--muted); font-size: .66rem; letter-spacing: .05em; }
-    .nav-links { display: flex; align-items: center; gap: 26px; font-size: .88rem; font-weight: 600; color: var(--ink-soft); }
-    .nav-links a:hover { color: var(--violet); }
-    .nav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
-    .nav-actions { display: flex; gap: 10px; }
-    .menu-button {
-      display: none;
-      width: 44px;
-      height: 44px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--surface);
-      cursor: pointer;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 5px;
-      box-shadow: var(--shadow-small);
-    }
-    .menu-button span {
-      width: 20px;
-      height: 2px;
-      border-radius: 999px;
-      background: var(--ink);
-      transition: transform .18s ease, opacity .18s ease;
-    }
-    .menu-button[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-    .menu-button[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
-    .menu-button[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-    .mobile-menu {
-      display: none;
-      border-top: 1px solid var(--line);
-      background: rgba(251, 250, 247, .98);
-      box-shadow: 0 16px 30px rgba(31, 25, 65, .08);
+    .brand-copy strong {
+      display:block;
+      color:var(--navy);
+      font-size:21px;
+      letter-spacing:1px;
+      line-height:1;
     }
-    .mobile-menu.open { display: block; }
-    .mobile-menu-inner {
-      width: min(1180px, calc(100% - 40px));
-      margin: 0 auto;
-      padding: 10px 0 16px;
-      display: grid;
-      gap: 6px;
+
+    .brand-copy span {
+      display:block;
+      margin-top:5px;
+      color:var(--gold);
+      font-size:10px;
+      font-weight:800;
+      letter-spacing:.8px;
+      text-transform:uppercase;
     }
-    .mobile-menu a {
-      min-height: 46px;
-      display: flex;
-      align-items: center;
-      padding: 0 14px;
-      border-radius: 11px;
-      color: var(--ink-soft);
-      font-weight: 700;
-      font-size: .92rem;
+
+    .nav-links {
+      display:flex;
+      align-items:center;
+      gap:24px;
+      color:#496074;
+      font-size:14px;
+      font-weight:700;
     }
-    .mobile-menu a:hover,
-    .mobile-menu a:focus-visible {
-      color: var(--violet);
-      background: var(--violet-soft);
-      outline: none;
+
+    .nav-links a:hover { color:var(--navy); }
+
+    .nav-actions {
+      display:flex;
+      align-items:center;
+      gap:10px;
     }
 
     .button {
-      min-height: 44px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 0 18px;
-      border-radius: 12px;
-      border: 1px solid transparent;
-      font-weight: 700;
-      font-size: .88rem;
-      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+      min-height:44px;
+      padding:0 17px;
+      border-radius:10px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid transparent;
+      font-size:14px;
+      font-weight:800;
+      transition:transform .15s ease,box-shadow .15s ease,background .15s ease;
     }
-    .button:hover { transform: translateY(-2px); }
-    .button-dark { background: var(--ink); color: white; box-shadow: 0 10px 25px rgba(21, 19, 38, .18); }
-    .button-dark:hover { box-shadow: 0 14px 32px rgba(21, 19, 38, .24); }
-    .button-light { background: var(--surface); border-color: var(--line); color: var(--ink); }
-    .button-violet { background: var(--violet); color: white; box-shadow: 0 12px 28px rgba(109, 74, 255, .26); }
+
+    .button:hover {
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(20,58,96,.14);
+    }
+
+    .button-primary {
+      background:linear-gradient(135deg,var(--navy),var(--blue));
+      color:#fff;
+    }
+
+    .button-secondary {
+      background:#fff;
+      border-color:var(--border);
+      color:var(--navy);
+    }
+
+    .menu-button {
+      display:none;
+      width:44px;
+      height:44px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#fff;
+      color:var(--navy);
+      font-size:22px;
+      cursor:pointer;
+    }
 
     .hero {
-      position: relative;
-      overflow: hidden;
-      padding: 82px 0 72px;
+      position:relative;
+      overflow:hidden;
+      padding:86px 0 76px;
+      background:
+        radial-gradient(circle at 82% 18%,rgba(244,201,107,.42),transparent 27%),
+        linear-gradient(145deg,#0d2943 0%,#173f66 62%,#1d5688 100%);
+      color:#fff;
     }
-    .hero::before {
-      content: "";
-      position: absolute;
-      width: 500px;
-      height: 500px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(109,74,255,.16), rgba(109,74,255,0) 67%);
-      top: -220px;
-      left: -160px;
-      pointer-events: none;
-    }
+
     .hero::after {
-      content: "";
-      position: absolute;
-      width: 520px;
-      height: 520px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(0,143,134,.14), rgba(0,143,134,0) 68%);
-      right: -190px;
-      bottom: -250px;
-      pointer-events: none;
+      content:"";
+      position:absolute;
+      width:480px;
+      height:480px;
+      border:1px solid rgba(255,255,255,.09);
+      border-radius:50%;
+      right:-180px;
+      bottom:-250px;
     }
-    .hero-grid {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: .93fr 1.07fr;
-      gap: 70px;
-      align-items: center;
+
+    .hero-shell {
+      position:relative;
+      z-index:1;
+      width:min(1180px,calc(100% - 36px));
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:minmax(0,1.15fr) minmax(330px,.85fr);
+      align-items:center;
+      gap:56px;
     }
+
     .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      padding: 7px 11px;
-      border: 1px solid #d9d0ff;
-      border-radius: 999px;
-      background: var(--violet-soft);
-      color: #4b31c7;
-      font-family: "DM Mono", monospace;
-      font-size: .68rem;
-      font-weight: 500;
-      letter-spacing: .07em;
-      text-transform: uppercase;
-      margin-bottom: 14px;
-    }
-    .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--violet); box-shadow: 0 0 0 5px rgba(109, 74, 255, .12); }
-    h1 {
-      font-family: "Manrope", sans-serif;
-      font-size: clamp(3.05rem, 6vw, 5.45rem);
-      line-height: .99;
-      letter-spacing: -.055em;
-      max-width: 760px;
-      margin-bottom: 24px;
-    }
-    .gradient-word {
-      background: linear-gradient(100deg, var(--violet), var(--blue) 48%, var(--teal));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .hero-copy {
-      font-size: 1.08rem;
-      color: var(--muted);
-      max-width: 620px;
-      margin-bottom: 30px;
-    }
-    .hero-copy strong { color: var(--ink); font-weight: 700; }
-    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
-
-.hero-quick-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 26px;
-}
-
-.hero-quick-links a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 40px;
-  padding: 0 15px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--ink-soft);
-  font-size: .82rem;
-  font-weight: 700;
-  box-shadow: 0 8px 20px rgba(21, 19, 38, .06);
-  transition: transform .18s ease, border-color .18s ease, color .18s ease;
-}
-
-.hero-quick-links a:hover {
-  color: var(--violet);
-  border-color: rgba(109, 74, 255, .4);
-  transform: translateY(-1px);
-}
-
-.hero-note { display: flex; align-items: flex-start; gap: 10px; color: var(--muted); font-size: .8rem; max-width: 530px; }
-    .hero-note strong { color: var(--ink); }
-    .note-mark { width: 21px; height: 21px; border-radius: 50%; display: grid; place-items: center; background: var(--gold-soft); color: #9b6900; font-size: .75rem; flex: 0 0 auto; }
-
-    .evaluation-shell {
-      border-radius: 28px;
-      padding: 12px;
-      background: linear-gradient(135deg, #241d54, #151326 56%, #123c4b);
-      box-shadow: var(--shadow);
-      transform: rotate(1deg);
-    }
-    .evaluation-card {
-      background: var(--surface);
-      border-radius: 19px;
-      padding: 24px;
-      transform: rotate(-1deg);
-    }
-    .eval-top { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; margin-bottom: 18px; }
-    .eval-label { color: var(--muted); font-family: "DM Mono", monospace; font-size: .63rem; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 5px; }
-    .eval-question { font-weight: 700; line-height: 1.35; max-width: 330px; }
-    .score-orbit {
-      width: 92px;
-      height: 92px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: conic-gradient(var(--violet) 0 60%, #ece9f2 60% 100%);
-      position: relative;
-      flex: 0 0 auto;
-    }
-    .score-orbit::after { content: ""; width: 72px; height: 72px; border-radius: 50%; background: white; position: absolute; }
-    .score-copy { position: relative; z-index: 1; text-align: center; line-height: 1; }
-    .score-number { font-family: "Manrope", sans-serif; font-size: 1.55rem; font-weight: 800; }
-    .score-outof { color: var(--muted); font-size: .62rem; margin-top: 5px; }
-    .status-line { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-    .status-chip { font-family: "DM Mono", monospace; font-size: .62rem; padding: 5px 8px; border-radius: 7px; }
-    .status-amber { background: var(--gold-soft); color: #835700; }
-    .status-blue { background: var(--blue-soft); color: #1e54b8; }
-    .criteria { display: grid; gap: 10px; margin-bottom: 18px; }
-    .criterion { display: grid; grid-template-columns: 152px 1fr 34px; gap: 10px; align-items: center; font-size: .73rem; }
-    .criterion-name { color: var(--ink-soft); font-weight: 600; white-space: nowrap; }
-    .bar { height: 8px; background: #efedf3; border-radius: 999px; overflow: hidden; }
-    .fill { height: 100%; border-radius: inherit; }
-    .fill-violet { width: 60%; background: var(--violet); }
-    .fill-teal { width: 60%; background: var(--teal); }
-    .fill-coral { width: 60%; background: var(--coral); }
-    .fill-blue { width: 60%; background: var(--blue); }
-    .fill-green { width: 60%; background: var(--green); }
-    .criterion-score { font-family: "DM Mono", monospace; color: var(--muted); text-align: right; }
-    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .action-box { border-radius: 12px; padding: 12px; min-height: 105px; }
-    .action-box.next { background: var(--coral-soft); }
-    .action-box.practice { background: var(--teal-soft); }
-    .action-title { font-family: "DM Mono", monospace; font-size: .58rem; letter-spacing: .07em; text-transform: uppercase; margin-bottom: 6px; }
-    .action-box.next .action-title { color: #b73a2c; }
-    .action-box.practice .action-title { color: #006e67; }
-    .action-text { font-size: .72rem; line-height: 1.45; color: var(--ink-soft); }
-    .illustrative { text-align: right; color: var(--muted); font-family: "DM Mono", monospace; font-size: .56rem; margin-top: 10px; }
-
-    .module-strip { padding-bottom: 68px; }
-    .module-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      overflow: hidden;
-      background: var(--surface);
-      box-shadow: var(--shadow-small);
-    }
-    .module { padding: 18px 20px; border-right: 1px solid var(--line); display: flex; gap: 12px; align-items: center; }
-    .module:last-child { border-right: 0; }
-    .module-icon { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: .82rem; }
-    .module:nth-child(1) .module-icon { background: var(--violet-soft); color: var(--violet); }
-    .module:nth-child(2) .module-icon { background: var(--teal-soft); color: var(--teal); }
-    .module:nth-child(3) .module-icon { background: var(--coral-soft); color: var(--coral); }
-    .module:nth-child(4) .module-icon { background: var(--blue-soft); color: var(--blue); }
-    .module-title { font-weight: 700; font-size: .84rem; }
-    .module-sub { color: var(--muted); font-size: .68rem; }
-
-    section { padding: 88px 0; }
-    .section-kicker { font-family: "DM Mono", monospace; color: var(--violet); text-transform: uppercase; letter-spacing: .1em; font-size: .68rem; font-weight: 500; margin-bottom: 12px; }
-    .section-title { font-family: "Manrope", sans-serif; font-size: clamp(2rem, 4vw, 3.35rem); line-height: 1.08; letter-spacing: -.04em; max-width: 780px; }
-    .section-intro { color: var(--muted); font-size: 1rem; max-width: 700px; margin-top: 17px; }
-    .section-head { margin-bottom: 44px; }
-
-    .how { background: var(--ink); color: white; position: relative; overflow: hidden; }
-    .how::after { content: ""; position: absolute; width: 470px; height: 470px; border-radius: 50%; right: -180px; top: -220px; border: 90px solid rgba(245,182,66,.06); }
-    .how .section-kicker { color: var(--gold); }
-    .how .section-intro { color: rgba(255,255,255,.62); }
-    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; position: relative; z-index: 1; }
-    .step { min-height: 250px; border: 1px solid rgba(255,255,255,.11); border-radius: 18px; padding: 22px; background: rgba(255,255,255,.045); }
-    .step-number { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; font-family: "DM Mono", monospace; font-size: .72rem; margin-bottom: 40px; }
-    .step:nth-child(1) .step-number { background: var(--violet); }
-    .step:nth-child(2) .step-number { background: var(--teal); }
-    .step:nth-child(3) .step-number { background: var(--coral); }
-    .step:nth-child(4) .step-number { background: var(--gold); color: var(--ink); }
-    .step h3 { font-family: "Manrope", sans-serif; font-size: 1.06rem; margin-bottom: 9px; }
-    .step p { color: rgba(255,255,255,.62); font-size: .82rem; }
-
-    .audiences { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    .audience-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 32px; background: var(--surface); box-shadow: var(--shadow-small); }
-    .audience-card.student { border-top: 7px solid var(--violet); }
-    .audience-card.institution { border-top: 7px solid var(--teal); }
-    .audience-tag { font-family: "DM Mono", monospace; font-size: .64rem; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
-    .student .audience-tag { color: var(--violet); }
-    .institution .audience-tag { color: var(--teal); }
-    .audience-card h3 { font-family: "Manrope", sans-serif; font-size: 1.65rem; line-height: 1.15; margin-bottom: 14px; }
-    .audience-card > p { color: var(--muted); margin-bottom: 22px; }
-    .output-list { display: grid; gap: 10px; }
-    .output { display: grid; grid-template-columns: 31px 1fr; gap: 10px; align-items: start; padding: 12px; border-radius: 11px; background: #f8f7fa; }
-    .output-icon { width: 31px; height: 31px; border-radius: 9px; display: grid; place-items: center; font-size: .76rem; font-weight: 800; }
-    .student .output-icon { background: var(--violet-soft); color: var(--violet); }
-    .institution .output-icon { background: var(--teal-soft); color: var(--teal); }
-    .output strong { display: block; font-size: .83rem; margin-bottom: 2px; }
-    .output span { color: var(--muted); font-size: .72rem; }
-
-    .evidence { background: #f1eff8; }
-    .evidence-grid { display: grid; grid-template-columns: .84fr 1.16fr; gap: 60px; align-items: center; }
-    .evidence-points { display: grid; gap: 12px; margin-top: 28px; }
-    .evidence-point { display: flex; gap: 11px; align-items: flex-start; color: var(--ink-soft); font-size: .85rem; }
-    .check { width: 23px; height: 23px; border-radius: 7px; display: grid; place-items: center; background: var(--green-soft); color: var(--green); font-weight: 800; flex: 0 0 auto; }
-    .feedback-panel { background: var(--surface); border-radius: 24px; padding: 25px; box-shadow: var(--shadow); border: 1px solid rgba(109,74,255,.13); }
-    .feedback-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
-    .feedback-head h3 { font-family: "Manrope", sans-serif; font-size: 1.12rem; }
-    .feedback-score { font-family: "DM Mono", monospace; font-size: .66rem; background: var(--violet-soft); color: var(--violet); border-radius: 8px; padding: 5px 8px; }
-    .feedback-row { border-top: 1px solid var(--line); padding: 16px 0; }
-    .feedback-row:first-of-type { border-top: 0; padding-top: 0; }
-    .feedback-type { display: inline-block; font-family: "DM Mono", monospace; text-transform: uppercase; letter-spacing: .08em; font-size: .58rem; margin-bottom: 6px; }
-    .feedback-type.worked { color: var(--green); }
-    .feedback-type.weak { color: var(--coral); }
-    .feedback-type.fix { color: var(--blue); }
-    .feedback-row p { color: var(--ink-soft); font-size: .8rem; }
-
-    .data-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .data-card { min-height: 190px; padding: 22px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); }
-    .data-card:nth-child(1) { background: var(--violet-soft); border-color: #ddd3ff; }
-    .data-card:nth-child(2) { background: var(--teal-soft); border-color: #c8ece7; }
-    .data-card:nth-child(3) { background: var(--gold-soft); border-color: #f0dda2; }
-    .data-card:nth-child(4) { background: var(--coral-soft); border-color: #ffd2ca; }
-    .data-card:nth-child(5) { background: var(--blue-soft); border-color: #ccdcff; }
-    .data-card:nth-child(6) { background: var(--green-soft); border-color: #cfe8d8; }
-    .data-index { font-family: "DM Mono", monospace; font-size: .62rem; color: var(--muted); margin-bottom: 42px; }
-    .data-card h3 { font-family: "Manrope", sans-serif; font-size: 1.05rem; margin-bottom: 7px; }
-    .data-card p { color: var(--muted); font-size: .77rem; }
-
-    .principle {
-      margin-top: 28px;
-      border-left: 5px solid var(--gold);
-      background: #fffaf0;
-      padding: 18px 20px;
-      border-radius: 0 13px 13px 0;
-      color: var(--ink-soft);
-      font-size: .86rem;
-    }
-    .principle strong { color: var(--ink); }
-
-    .cta { padding-top: 30px; padding-bottom: 90px; }
-    .cta-box {
-      position: relative;
-      overflow: hidden;
-      border-radius: 28px;
-      background: linear-gradient(120deg, #5d39ef, #2c6bed 52%, #008f86);
-      color: white;
-      padding: 52px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 30px;
-      box-shadow: var(--shadow);
-    }
-    .cta-box::after { content: ""; position: absolute; width: 260px; height: 260px; border-radius: 50%; right: -65px; bottom: -160px; border: 45px solid rgba(255,255,255,.09); }
-    .cta-copy { position: relative; z-index: 1; }
-    .cta-copy h2 { font-family: "Manrope", sans-serif; font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1.05; letter-spacing: -.04em; margin-bottom: 10px; }
-    .cta-copy p { color: rgba(255,255,255,.75); max-width: 650px; }
-    .cta-actions { display: flex; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; flex: 0 0 auto; }
-    .cta .button-light { border-color: transparent; }
-    .cta .button-dark { background: #151326; }
-
-    footer { border-top: 1px solid var(--line); padding: 30px 0 38px; }
-    .footer-row { display: flex; justify-content: space-between; gap: 24px; align-items: center; color: var(--muted); font-size: .73rem; }
-    .footer-links { display: flex; gap: 18px; }
-    .footer-links a:hover { color: var(--violet); }
-
-    @media (max-width: 980px) {
-      .hero-grid, .evidence-grid { grid-template-columns: 1fr; }
-      .hero-grid { gap: 48px; }
-      .evaluation-shell { max-width: 680px; width: 100%; margin: 0 auto; }
-      .steps { grid-template-columns: 1fr 1fr; }
-      .module-row { grid-template-columns: 1fr 1fr; }
-      .module:nth-child(2) { border-right: 0; }
-      .module:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
-      .data-grid { grid-template-columns: 1fr 1fr; }
-      .nav-links { display: none; }
-      .menu-button { display: inline-flex; }
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.1);
+      border:1px solid rgba(255,255,255,.16);
+      color:#ffe0a0;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:1px;
+      text-transform:uppercase;
     }
 
-    @media (max-width: 720px) {
-      .wrap { width: min(100% - 26px, 1180px); }
-      .nav { height: 66px; }
-      .brand-sub { display: none; }
-      .nav-actions .button-light { display: none; }
-      .hero { padding: 58px 0 54px; }
-      h1 { font-size: clamp(2.55rem, 14vw, 4.1rem); }
-      .hero-copy { font-size: .98rem; }
-      .evaluation-card { padding: 17px; }
-      .eval-top { align-items: center; }
-      .score-orbit { width: 78px; height: 78px; }
-      .score-orbit::after { width: 61px; height: 61px; }
-      .score-number { font-size: 1.3rem; }
-      .criterion { grid-template-columns: 128px 1fr 29px; gap: 7px; }
-      .criterion-name { font-size: .65rem; }
-      .action-grid, .audiences, .data-grid { grid-template-columns: 1fr; }
-      .module-row, .steps { grid-template-columns: 1fr; }
-      .module { border-right: 0; border-bottom: 1px solid var(--line); }
-      .module:last-child { border-bottom: 0; }
-      .step { min-height: auto; }
-      .step-number { margin-bottom: 25px; }
-      section { padding: 68px 0; }
-      .audience-card { padding: 24px; }
-      .cta-box { padding: 34px 24px; align-items: flex-start; flex-direction: column; }
-      .footer-row { align-items: flex-start; flex-direction: column; }
+    .hero h1 {
+      max-width:760px;
+      margin:20px 0 20px;
+      font-size:clamp(42px,6vw,72px);
+      line-height:1.02;
+      letter-spacing:-2px;
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      .button { transition: none; }
-      .button:hover { transform: none; }
+    .hero-lead {
+      max-width:690px;
+      margin:0;
+      color:rgba(255,255,255,.82);
+      font-size:18px;
+      line-height:1.7;
+    }
+
+    .hero-actions {
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:30px;
+    }
+
+    .hero .button-primary {
+      background:linear-gradient(135deg,#f0b43a,#c67b00);
+      color:#172c40;
+    }
+
+    .hero .button-secondary {
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      border-color:rgba(255,255,255,.24);
+    }
+
+    .hero-card {
+      padding:24px;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:22px;
+      background:rgba(255,255,255,.09);
+      box-shadow:0 30px 80px rgba(0,0,0,.23);
+      backdrop-filter:blur(14px);
+    }
+
+    .hero-card h2 {
+      margin:0 0 8px;
+      font-size:20px;
+    }
+
+    .hero-card p {
+      margin:0 0 20px;
+      color:rgba(255,255,255,.72);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .practice-list {
+      display:grid;
+      gap:10px;
+    }
+
+    .practice-item {
+      display:grid;
+      grid-template-columns:42px 1fr;
+      gap:12px;
+      align-items:center;
+      padding:13px;
+      border-radius:13px;
+      background:rgba(255,255,255,.09);
+    }
+
+    .practice-number {
+      width:36px;
+      height:36px;
+      display:grid;
+      place-items:center;
+      border-radius:10px;
+      background:rgba(244,201,107,.18);
+      color:#ffd88d;
+      font-weight:800;
+    }
+
+    .practice-item strong {
+      display:block;
+      font-size:13px;
+      margin-bottom:3px;
+    }
+
+    .practice-item span {
+      color:rgba(255,255,255,.66);
+      font-size:11px;
+      line-height:1.4;
+    }
+
+    .section {
+      padding:78px 0;
+    }
+
+    .section-alt {
+      background:#fff;
+    }
+
+    .section-shell {
+      width:min(1180px,calc(100% - 36px));
+      margin:0 auto;
+    }
+
+    .section-head {
+      max-width:730px;
+      margin-bottom:34px;
+    }
+
+    .section-kicker {
+      color:var(--gold);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:1px;
+      text-transform:uppercase;
+    }
+
+    .section h2 {
+      margin:10px 0 12px;
+      color:var(--navy);
+      font-size:clamp(30px,4vw,45px);
+      line-height:1.12;
+      letter-spacing:-1px;
+    }
+
+    .section-head p {
+      margin:0;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.7;
+    }
+
+    .feature-grid {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:16px;
+    }
+
+    .feature-card {
+      padding:23px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:#fff;
+      box-shadow:0 12px 34px rgba(20,58,96,.06);
+    }
+
+    .feature-icon {
+      width:42px;
+      height:42px;
+      display:grid;
+      place-items:center;
+      border-radius:11px;
+      background:var(--blue-soft);
+      color:var(--navy);
+      font-size:20px;
+      font-weight:800;
+    }
+
+    .feature-card h3 {
+      margin:17px 0 9px;
+      color:var(--navy);
+      font-size:17px;
+    }
+
+    .feature-card p {
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.65;
+    }
+
+    .steps {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:18px;
+      counter-reset:step;
+    }
+
+    .step {
+      position:relative;
+      padding:26px 22px;
+      border-radius:17px;
+      background:#f8fbfe;
+      border:1px solid var(--border);
+    }
+
+    .step::before {
+      counter-increment:step;
+      content:counter(step);
+      width:36px;
+      height:36px;
+      display:grid;
+      place-items:center;
+      border-radius:50%;
+      background:linear-gradient(135deg,var(--navy),var(--blue));
+      color:#fff;
+      font-weight:800;
+      margin-bottom:17px;
+    }
+
+    .step h3 {
+      margin:0 0 8px;
+      color:var(--navy);
+      font-size:17px;
+    }
+
+    .step p {
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.65;
+    }
+
+    .audience-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+    }
+
+    .audience-card {
+      padding:30px;
+      border-radius:20px;
+      border:1px solid var(--border);
+      background:#fff;
+      box-shadow:0 18px 48px rgba(20,58,96,.08);
+    }
+
+    .audience-card.highlight {
+      color:#fff;
+      border-color:transparent;
+      background:linear-gradient(145deg,var(--navy-dark),var(--blue));
+    }
+
+    .audience-card h3 {
+      margin:0 0 12px;
+      color:var(--navy);
+      font-size:23px;
+    }
+
+    .audience-card.highlight h3 { color:#fff; }
+
+    .audience-card p {
+      margin:0 0 18px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.7;
+    }
+
+    .audience-card.highlight p { color:rgba(255,255,255,.76); }
+
+    .clean-list {
+      display:grid;
+      gap:10px;
+      margin:0 0 24px;
+      padding:0;
+      list-style:none;
+    }
+
+    .clean-list li {
+      position:relative;
+      padding-left:25px;
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .clean-list li::before {
+      content:"✓";
+      position:absolute;
+      left:0;
+      top:0;
+      color:var(--success);
+      font-weight:900;
+    }
+
+    .highlight .clean-list li::before { color:#ffd57a; }
+
+    .cta {
+      padding:68px 0;
+      background:linear-gradient(145deg,#102b47,#1e5688);
+      color:#fff;
+    }
+
+    .cta-shell {
+      width:min(1040px,calc(100% - 36px));
+      margin:0 auto;
+      text-align:center;
+    }
+
+    .cta h2 {
+      margin:0 0 14px;
+      font-size:clamp(31px,4.8vw,49px);
+      letter-spacing:-1px;
+    }
+
+    .cta p {
+      max-width:700px;
+      margin:0 auto;
+      color:rgba(255,255,255,.76);
+      font-size:16px;
+      line-height:1.7;
+    }
+
+    .cta .hero-actions {
+      justify-content:center;
+      margin-top:26px;
+    }
+
+    .site-footer {
+      padding:28px 0;
+      background:#0a2238;
+      color:rgba(255,255,255,.64);
+    }
+
+    .footer-shell {
+      width:min(1180px,calc(100% - 36px));
+      margin:0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    .footer-brand {
+      color:#fff;
+      font-weight:800;
+      letter-spacing:.6px;
+    }
+
+    @media (max-width:980px) {
+      .nav-links { display:none; }
+      .menu-button { display:block; }
+      .nav-actions { display:none; }
+      .nav-shell.open {
+        align-items:flex-start;
+        padding:15px 0;
+        flex-wrap:wrap;
+      }
+      .nav-shell.open .nav-links {
+        order:3;
+        width:100%;
+        display:grid;
+        gap:4px;
+        padding-top:8px;
+      }
+      .nav-shell.open .nav-links a {
+        padding:12px;
+        border-radius:8px;
+        background:var(--blue-soft);
+      }
+      .nav-shell.open .nav-actions {
+        order:4;
+        width:100%;
+        display:flex;
+      }
+      .nav-shell.open .nav-actions .button {
+        flex:1;
+      }
+      .hero-shell { grid-template-columns:1fr; }
+      .hero-card { max-width:680px; }
+      .feature-grid,.steps { grid-template-columns:repeat(2,1fr); }
+    }
+
+    @media (max-width:680px) {
+      .nav-shell { width:min(100% - 24px,1180px); }
+      .brand-copy span { display:none; }
+      .hero { padding:64px 0 56px; }
+      .hero-shell,.section-shell,.cta-shell,.footer-shell { width:min(100% - 28px,1180px); }
+      .hero h1 { letter-spacing:-1px; }
+      .hero-lead { font-size:16px; }
+      .hero-actions { display:grid; }
+      .button { width:100%; }
+      .section { padding:58px 0; }
+      .feature-grid,.steps,.audience-grid { grid-template-columns:1fr; }
+      .footer-shell { display:block; text-align:center; }
+      .footer-shell div + div { margin-top:8px; }
     }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="wrap nav">
-      <a class="brand" href="#top" aria-label="CLARION home">
-        <span class="brand-mark">C</span>
+  <header class="site-header">
+    <nav id="navShell" class="nav-shell" aria-label="Main navigation">
+      <a class="brand" href="#top" aria-label="ASCENT home">
+        <span class="brand-mark">A</span>
         <span class="brand-copy">
-          <span class="brand-name">CLARION</span>
-          <span class="brand-sub">Managerial Communication Performance</span>
+          <strong>ASCENT</strong>
+          <span>Communication Practice &amp; Performance</span>
         </span>
       </a>
-     <nav class="nav-links" aria-label="Primary navigation">
-  <a href="./portal/">Students</a>
-  <a href="./portal/trainer/">Trainer</a>
-  <a href="./portal/ceo/">Admin</a>
-</nav>
-      <div class="nav-right">
-        <button class="menu-button" id="menuButton" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileMenu">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-        <div class="nav-actions">
-          <a class="button button-light" href="./app/">Try the demo</a>
-          <a class="button button-dark" href="./app/">Login <span aria-hidden="true">→</span></a>
-        </div>
+
+      <div class="nav-links">
+        <a href="./ascent/">ASCENT</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#students">For Students</a>
+        <a href="#institutions">For Trainers &amp; Institutions</a>
       </div>
-    </div>
-    <nav class="mobile-menu" id="mobileMenu" aria-label="Mobile navigation">
-      <div class="mobile-menu-inner">
-        <a href="./portal/">Students</a>
-        <a href="./portal/trainer/">Trainer</a>
-        <a href="./portal/ceo/">Admin</a>
+
+      <div class="nav-actions">
+        <a class="button button-secondary" href="./ascent/trainer-login.html">Trainer Login</a>
+        <a class="button button-primary" href="./ascent/">Student Login</a>
       </div>
+
+      <button id="menuButton" class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
     </nav>
   </header>
 
   <main id="top">
     <section class="hero">
-      <div class="wrap hero-grid">
+      <div class="hero-shell">
         <div>
-          <div class="eyebrow"><span class="pulse"></span> Evidence-led communication practice</div>
-
-<nav class="hero-quick-links" aria-label="Explore CLARION">
-  <a href="#how">How it works</a>
-  <a href="#students">For students</a>
-  <a href="#institutions">For institutions</a>
-  <a href="#evidence">What it measures</a>
-</nav>
-
-<h1>Communication readiness, <span class="gradient-word">made visible.</span></h1>
-<p class="hero-copy">CLARION turns a spoken response into a <strong>transcript, criterion-level scores, specific feedback, and one focused next task</strong>—so students know what to improve and trainers can see what has actually changed.</p>
-<div class="hero-actions">
-  <a class="button button-violet" href="./app/">Open CLARION <span aria-hidden="true">→</span></a>
-</div>
-          </div>
-          <div class="hero-note">
-            <span class="note-mark">✓</span>
-            <span><strong>No generic praise.</strong> Progress is shown only when comparable attempts and sufficient evidence exist.</span>
+          <div class="eyebrow">Structured speaking practice for real performance</div>
+          <h1>Think clearly. Speak with evidence. Improve under pressure.</h1>
+          <p class="hero-lead">
+            ASCENT gives students and professionals a disciplined way to practise managerial communication, interviews, group discussions and workplace speaking—then improve through scoring, feedback and repeated performance.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="./ascent/">Open ASCENT</a>
+            <a class="button button-secondary" href="./ascent/trainer-login.html">Trainer Login</a>
           </div>
         </div>
 
-        <div class="evaluation-shell" aria-label="Illustrative CLARION evaluation">
-          <div class="evaluation-card">
-            <div class="eval-top">
-              <div>
-                <div class="eval-label">Diagnostic · Illustrative evaluation</div>
-                <div class="eval-question">Describe an important task you handled recently and what you learnt from it.</div>
-              </div>
-              <div class="score-orbit">
-                <div class="score-copy">
-                  <div class="score-number">6.0</div>
-                  <div class="score-outof">out of 10</div>
-                </div>
-              </div>
+        <aside class="hero-card" aria-label="ASCENT practice areas">
+          <h2>One practice system</h2>
+          <p>Assigned work and open practice come together in one student journey.</p>
+          <div class="practice-list">
+            <div class="practice-item">
+              <div class="practice-number">14</div>
+              <div><strong>LUM progression</strong><span>Structured communication development across fourteen learning units.</span></div>
             </div>
-            <div class="status-line">
-              <span class="status-chip status-amber">Approaching readiness benchmark</span>
-              <span class="status-chip status-blue">Transcript available</span>
+            <div class="practice-item">
+              <div class="practice-number">PI</div>
+              <div><strong>Interview practice</strong><span>Background, experience, judgement, pressure and role-fit questions.</span></div>
             </div>
-            <div class="criteria">
-              <div class="criterion"><span class="criterion-name">Structure & clarity</span><span class="bar"><span class="fill fill-violet"></span></span><span class="criterion-score">3/5</span></div>
-              <div class="criterion"><span class="criterion-name">Business thinking</span><span class="bar"><span class="fill fill-teal"></span></span><span class="criterion-score">3/5</span></div>
-              <div class="criterion"><span class="criterion-name">Language control</span><span class="bar"><span class="fill fill-coral"></span></span><span class="criterion-score">3/5</span></div>
-              <div class="criterion"><span class="criterion-name">Confidence & delivery</span><span class="bar"><span class="fill fill-blue"></span></span><span class="criterion-score">3/5</span></div>
-              <div class="criterion"><span class="criterion-name">Professionalism</span><span class="bar"><span class="fill fill-green"></span></span><span class="criterion-score">3/5</span></div>
+            <div class="practice-item">
+              <div class="practice-number">GD</div>
+              <div><strong>Discussion practice</strong><span>Entry, reasoning, response, leadership and pressure handling.</span></div>
             </div>
-            <div class="action-grid">
-              <div class="action-box next">
-                <div class="action-title">Next action</div>
-                <div class="action-text">Explain the broader business implication, not only what happened.</div>
-              </div>
-              <div class="action-box practice">
-                <div class="action-title">Practice task</div>
-                <div class="action-text">Record a 45-second answer linking one action to risk, stakeholder impact and outcome.</div>
-              </div>
+            <div class="practice-item">
+              <div class="practice-number">MC</div>
+              <div><strong>Managerial communication</strong><span>Workplace explanation, decisions, evidence, risk and business impact.</span></div>
             </div>
-            <div class="illustrative">Example interface · no student data shown</div>
           </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section section-alt">
+      <div class="section-shell">
+        <div class="section-head">
+          <div class="section-kicker">What ASCENT does</div>
+          <h2>Practice that turns into visible performance.</h2>
+          <p>ASCENT is not a content library. It is a practice-and-correction system built around actual spoken responses.</p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <div class="feature-icon">🎙</div>
+            <h3>Record real responses</h3>
+            <p>Students answer assigned or self-selected questions in their own voice, under a clear response time.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon">✓</div>
+            <h3>Receive criterion feedback</h3>
+            <p>Responses are scored using the chosen PI, GD or Managerial Communication rubric.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon">↗</div>
+            <h3>Track improvement</h3>
+            <p>First and latest scores, attempts, criterion results and task completion create a visible progress record.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon">▦</div>
+            <h3>Support institutional reporting</h3>
+            <p>Trainers can assign questions, review participation, use dashboards and export structured reports.</p>
+          </article>
         </div>
       </div>
     </section>
 
-    <div class="module-strip">
-      <div class="wrap module-row">
-        <div class="module"><span class="module-icon">D</span><span><span class="module-title">Diagnostics</span><span class="module-sub">Baseline evidence</span></span></div>
-        <div class="module"><span class="module-icon">MC</span><span><span class="module-title">Managerial communication</span><span class="module-sub">Thought made visible</span></span></div>
-        <div class="module"><span class="module-icon">PI</span><span><span class="module-title">Personal interviews</span><span class="module-sub">Evidence under pressure</span></span></div>
-        <div class="module"><span class="module-icon">GD</span><span><span class="module-title">Group discussions</span><span class="module-sub">Reasoning and leadership</span></span></div>
-      </div>
-    </div>
-
-    <section class="how" id="how">
-      <div class="wrap">
+    <section id="how-it-works" class="section">
+      <div class="section-shell">
         <div class="section-head">
-          <div class="section-kicker">How CLARION works</div>
-          <h2 class="section-title">One response becomes a practical improvement cycle.</h2>
-          <p class="section-intro">The platform does not stop at a score. It identifies the exact criterion holding the response back and turns it into the next practice task.</p>
+          <div class="section-kicker">How it works</div>
+          <h2>A simple practice loop.</h2>
+          <p>Each cycle moves the learner from a question to a clearer, more professional response.</p>
         </div>
+
         <div class="steps">
-          <article class="step"><div class="step-number">01</div><h3>Respond</h3><p>Answer a realistic communication, interview or discussion task in your own voice.</p></article>
-          <article class="step"><div class="step-number">02</div><h3>See the evidence</h3><p>Review the transcript, overall score and criterion-level performance—not a vague impression.</p></article>
-          <article class="step"><div class="step-number">03</div><h3>Fix one priority</h3><p>Use the lowest criterion, next action and targeted practice task to focus the next attempt.</p></article>
-          <article class="step"><div class="step-number">04</div><h3>Reassess</h3><p>Compare like with like. Improvement is recorded only when a valid baseline and reassessment exist.</p></article>
-        </div>
-      </div>
-    </section>
-
-    <section>
-      <div class="wrap">
-        <div class="section-head">
-          <div class="section-kicker">Different users. One evidence trail.</div>
-          <h2 class="section-title">Useful to the person practising and the person responsible for development.</h2>
-        </div>
-        <div class="audiences">
-          <article class="audience-card student" id="students">
-            <div class="audience-tag">For students</div>
-            <h3>Know what to change in the next attempt.</h3>
-            <p>A score without direction is not training. CLARION shows the performance gap and the next concrete move.</p>
-            <div class="output-list">
-              <div class="output"><span class="output-icon">T</span><span><strong>Transcript</strong><span>See what was actually said, not what you intended to say.</span></span></div>
-              <div class="output"><span class="output-icon">5</span><span><strong>Five criterion scores</strong><span>Separate structure, thinking, language, delivery and professionalism.</span></span></div>
-              <div class="output"><span class="output-icon">→</span><span><strong>Next action</strong><span>One direct change for the next response.</span></span></div>
-              <div class="output"><span class="output-icon">P</span><span><strong>Practice task</strong><span>A short exercise aimed at the weakest area.</span></span></div>
-            </div>
+          <article class="step">
+            <h3>Receive or choose a task</h3>
+            <p>The trainer assigns a formal task, or the student uses available practice.</p>
           </article>
-
-          <article class="audience-card institution" id="institutions">
-            <div class="audience-tag">For trainers and institutions</div>
-            <h3>See participation, gaps and defensible progress.</h3>
-            <p>CLARION builds a record of attempts, feedback and reassessment without claiming progress where the evidence is incomplete.</p>
-            <div class="output-list">
-              <div class="output"><span class="output-icon">B</span><span><strong>Baseline and latest attempt</strong><span>Compare the first valid performance with a comparable reassessment.</span></span></div>
-              <div class="output"><span class="output-icon">F</span><span><strong>Batch and student filters</strong><span>Locate participation, repeated weakness and support needs.</span></span></div>
-              <div class="output"><span class="output-icon">R</span><span><strong>Review status</strong><span>Separate automated evaluation from trainer review and follow-up.</span></span></div>
-              <div class="output"><span class="output-icon">E</span><span><strong>Evidence-conscious reporting</strong><span>Distinguish not assessed, baseline available, reassessed and improvement visible.</span></span></div>
-            </div>
+          <article class="step">
+            <h3>Plan and record</h3>
+            <p>The question, response time and selected rubric are clear before recording begins.</p>
+          </article>
+          <article class="step">
+            <h3>Review the result</h3>
+            <p>ASCENT returns a score, criterion feedback and an exact improvement action.</p>
+          </article>
+          <article class="step">
+            <h3>Try again with purpose</h3>
+            <p>The student improves the weak line, strengthens the evidence and records a better response.</p>
           </article>
         </div>
       </div>
     </section>
 
-    <section class="evidence" id="evidence">
-      <div class="wrap evidence-grid">
-        <div>
-          <div class="section-kicker">Specific, not flattering</div>
-          <h2 class="section-title">Feedback explains why the answer is at this level.</h2>
-          <p class="section-intro">Each criterion separates what worked, what prevented a higher score, and what the learner should do differently.</p>
-          <div class="evidence-points">
-            <div class="evidence-point"><span class="check">✓</span><span>Scores are tied to defined rubric levels rather than general fluency.</span></div>
-            <div class="evidence-point"><span class="check">✓</span><span>Audio-only responses are not penalised for visual evidence that cannot be observed.</span></div>
-            <div class="evidence-point"><span class="check">✓</span><span>Length, polished vocabulary and confidence alone do not substitute for reasoning or evidence.</span></div>
-          </div>
-        </div>
-        <div class="feedback-panel">
-          <div class="feedback-head"><h3>Business thinking · 3/5</h3><span class="feedback-score">Developing</span></div>
-          <div class="feedback-row"><span class="feedback-type worked">What worked</span><p>The response connects the action to a clear operational result and shows ownership of the task.</p></div>
-          <div class="feedback-row"><span class="feedback-type weak">What holds it back</span><p>It explains what was done but does not examine risk, stakeholder impact, constraints or alternative choices.</p></div>
-          <div class="feedback-row"><span class="feedback-type fix">What moves it higher</span><p>Add one sentence showing what could have gone wrong, who was affected and why this action was chosen over another option.</p></div>
-        </div>
-      </div>
-    </section>
+    <section id="students" class="section section-alt">
+      <div class="section-shell">
+        <div class="audience-grid">
+          <article class="audience-card">
+            <div class="section-kicker">For students</div>
+            <h3>Know what to practise next.</h3>
+            <p>ASCENT keeps the work visible and manageable instead of leaving students with vague advice such as “communicate better.”</p>
+            <ul class="clean-list">
+              <li>See assigned questions before recording.</li>
+              <li>Use PI, GD and Managerial Communication practice.</li>
+              <li>Receive clear, specific feedback on each response.</li>
+              <li>Review completed work and attempt history.</li>
+              <li>Build confidence through repeated spoken practice.</li>
+            </ul>
+            <a class="button button-primary" href="./ascent/">Student Login or Registration</a>
+          </article>
 
-    <section>
-      <div class="wrap">
-        <div class="section-head">
-          <div class="section-kicker">What CLARION records</div>
-          <h2 class="section-title">A usable learning record—not a pile of disconnected scores.</h2>
-          <p class="section-intro">Every completed response can carry the information needed for review, coaching and later comparison.</p>
+          <article id="institutions" class="audience-card highlight">
+            <div class="section-kicker">For trainers &amp; institutions</div>
+            <h3>Assign, track and report without manual chasing.</h3>
+            <p>The trainer portal brings question banks, assignments, results, participation and reporting into one operational view.</p>
+            <ul class="clean-list">
+              <li>Create and assign formal speaking tasks.</li>
+              <li>Select from organised LUM, PI and GD question banks.</li>
+              <li>Control rubrics, follow-ups, release pace and attempts.</li>
+              <li>See participation, scores and student improvement.</li>
+              <li>Download Excel reports for institutional review.</li>
+            </ul>
+            <a class="button button-secondary" href="./ascent/trainer-login.html">Open Trainer Portal</a>
+          </article>
         </div>
-        <div class="data-grid">
-          <article class="data-card"><div class="data-index">01 · RESPONSE</div><h3>Question and transcript</h3><p>The task, student response and submission context stay connected.</p></article>
-          <article class="data-card"><div class="data-index">02 · PERFORMANCE</div><h3>Overall and criterion scores</h3><p>Five separate performance areas show where the overall number comes from.</p></article>
-          <article class="data-card"><div class="data-index">03 · EXPLANATION</div><h3>Worked, weak and fix</h3><p>Detailed comments explain the evidence behind every criterion score.</p></article>
-          <article class="data-card"><div class="data-index">04 · PRIORITY</div><h3>Lowest criterion</h3><p>The weakest demonstrated area becomes the immediate training priority.</p></article>
-          <article class="data-card"><div class="data-index">05 · ACTION</div><h3>Next action and practice task</h3><p>Feedback is converted into a small, executable next step.</p></article>
-          <article class="data-card"><div class="data-index">06 · REVIEW</div><h3>Readiness and trainer review</h3><p>Automated evaluation can sit alongside trainer judgement and follow-up.</p></article>
-        </div>
-        <div class="principle"><strong>CLARION does not treat every submission as proof of progress.</strong> A progress claim requires a valid baseline, a comparable reassessment and enough participation to support the comparison.</div>
       </div>
     </section>
 
     <section class="cta">
-      <div class="wrap cta-box">
-        <div class="cta-copy">
-          <h2>Practise. See the gap. Improve the next attempt.</h2>
-          <p>Open the current CLARION application, or request a demonstration for a programme or institution.</p>
-        </div>
-        <div class="cta-actions">
-          <a class="button button-light" href="./app/">Try the demo</a>
-          <a class="button button-dark" href="./app/">Login to CLARION <span aria-hidden="true">→</span></a>
+      <div class="cta-shell">
+        <h2>Make spoken practice visible, measurable and repeatable.</h2>
+        <p>ASCENT gives learners a place to practise and gives trainers the evidence needed to guide progress.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="./ascent/">Open ASCENT</a>
+          <a class="button button-secondary" href="./ascent/trainer-login.html">Trainer Login</a>
         </div>
       </div>
     </section>
   </main>
 
-  <footer>
-    <div class="wrap footer-row">
-      <div>CLARION · Managerial Communication Performance · Powered by TELW The English Workshop</div>
-      <div class="footer-links"><a href="#how">How it works</a><a href="./app/">Login</a><a href="./app/">Try demo</a></div>
+  <footer class="site-footer">
+    <div class="footer-shell">
+      <div><span class="footer-brand">ASCENT</span> · Communication Practice &amp; Performance</div>
+      <div>Created by Manu Vikraman · TELW The English Workshop</div>
     </div>
   </footer>
 
   <script>
-    (function () {
-      const button = document.getElementById('menuButton');
-      const menu = document.getElementById('mobileMenu');
+    const menuButton = document.getElementById("menuButton");
+    const navShell = document.getElementById("navShell");
 
-      if (!button || !menu) return;
+    menuButton.addEventListener("click",() => {
+      const open = navShell.classList.toggle("open");
+      menuButton.setAttribute("aria-expanded",String(open));
+      menuButton.textContent = open ? "✕" : "☰";
+    });
 
-      function closeMenu() {
-        menu.classList.remove('open');
-        button.setAttribute('aria-expanded', 'false');
-        button.setAttribute('aria-label', 'Open navigation menu');
-      }
-
-      button.addEventListener('click', function () {
-        const willOpen = !menu.classList.contains('open');
-        menu.classList.toggle('open', willOpen);
-        button.setAttribute('aria-expanded', String(willOpen));
-        button.setAttribute(
-          'aria-label',
-          willOpen ? 'Close navigation menu' : 'Open navigation menu'
-        );
+    navShell.querySelectorAll("a").forEach(link => {
+      link.addEventListener("click",() => {
+        navShell.classList.remove("open");
+        menuButton.setAttribute("aria-expanded","false");
+        menuButton.textContent = "☰";
       });
-
-      menu.querySelectorAll('a').forEach(function (link) {
-        link.addEventListener('click', closeMenu);
-      });
-
-      document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape') closeMenu();
-      });
-
-      window.addEventListener('resize', function () {
-        if (window.innerWidth > 980) closeMenu();
-      });
-    }());
+    });
   </script>
 </body>
 </html>
