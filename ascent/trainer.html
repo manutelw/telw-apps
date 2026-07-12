@@ -1049,347 +1049,724 @@ async function exportSelectedStudentExcel() {
     return;
   }
 
-  const studentUuid =
-    byId("resultStudentFilter").value;
+  const students = Array.isArray(reportData.students)
+    ? reportData.students
+    : [];
 
-  if (!studentUuid) {
+  if (!students.length) {
     setStatus(
       byId("resultsStatus"),
-      "Choose one student in the Student filter before downloading the individual report.",
+      "There are no students in this institution to export.",
       "error"
     );
     return;
   }
 
-  const button =
-    byId("studentExportButton");
+  const button = byId("studentExportButton");
+  const originalButtonText = button.textContent;
 
   button.disabled = true;
-  button.textContent =
-    "Preparing Student Report…";
-
-  setStatus(
-    byId("resultsStatus"),
-    "",
-    ""
-  );
+  button.textContent = "Preparing Student-wise Report…";
+  setStatus(byId("resultsStatus"), "", "");
 
   try {
-    const response = await callRpc(
-      RPC.studentAttemptReport,
-      {
-        p_session_token:
-          currentSession.sessionToken,
+    const studentReports = [];
+    const batchSize = 8;
 
-        p_student_uuid:
-          studentUuid
-      }
-    );
+    for (
+      let start = 0;
+      start < students.length;
+      start += batchSize
+    ) {
+      const batch = students.slice(
+        start,
+        start + batchSize
+      );
 
-    const report =
-      Array.isArray(response)
-        ? response[0]
-        : response;
+      button.textContent =
+        `Preparing ${Math.min(
+          start + batch.length,
+          students.length
+        )} of ${students.length}…`;
 
-    if (!report || report.ok !== true) {
+      const batchReports = await Promise.all(
+        batch.map(async student => {
+          try {
+            const response = await callRpc(
+              RPC.studentAttemptReport,
+              {
+                p_session_token:
+                  currentSession.sessionToken,
+
+                p_student_uuid:
+                  student.studentUuid
+              }
+            );
+
+            const report = Array.isArray(response)
+              ? response[0]
+              : response;
+
+            if (!report || report.ok !== true) {
+              throw new Error(
+                report && report.message
+                  ? report.message
+                  : "Student report unavailable."
+              );
+            }
+
+            return {
+              student,
+              report,
+              error: null
+            };
+
+          } catch (error) {
+            console.error(
+              `Student report failed for ${
+                student.studentId ||
+                student.fullName
+              }:`,
+              error
+            );
+
+            return {
+              student,
+              report: null,
+              error:
+                error.message ||
+                "Student report unavailable."
+            };
+          }
+        })
+      );
+
+      studentReports.push(...batchReports);
+    }
+
+    const successfulReports =
+      studentReports.filter(
+        item => item.report
+      );
+
+    if (!successfulReports.length) {
       throw new Error(
-        report && report.message
-          ? report.message
-          : "The student report could not be created."
+        "ASCENT could not retrieve any student reports."
       );
     }
 
-    const student =
-      report.student || {};
+    const questionMap = new Map();
 
-    const summary =
-      report.summary || {};
+    const assignmentKey = assignment =>
+      String(
+        assignment.taskUuid ||
+        assignment.questionBankUuid ||
+        assignment.sourceQuestionUuid ||
+        [
+          assignment.taskTitle || "",
+          assignment.question || "",
+          assignment.rubricType || ""
+        ].join("||")
+      );
 
-    const assignments =
-      Array.isArray(report.assignments)
-        ? report.assignments
-        : [];
+    successfulReports.forEach(({ report }) => {
+      const assignments =
+        Array.isArray(report.assignments)
+          ? report.assignments
+          : [];
 
-    const studentRows = [
+      assignments.forEach(assignment => {
+        const key =
+          assignmentKey(assignment);
+
+        if (!questionMap.has(key)) {
+          questionMap.set(key, {
+            key,
+
+            title:
+              assignment.taskTitle ||
+              assignment.question ||
+              "Untitled Question",
+
+            question:
+              assignment.question || "",
+
+            rubricType:
+              assignment.rubricType || ""
+          });
+        }
+      });
+    });
+
+    const questions =
+      Array.from(questionMap.values());
+
+    if (!questions.length) {
+      throw new Error(
+        "No assignments were found for the students in this institution."
+      );
+    }
+
+    const studentColumnCount = 4;
+    const columnsPerQuestion = 16;
+
+    const headerRow1 = [
+      "Student ID",
+      "Student Name",
+      "Email",
+      "Batch"
+    ];
+
+    const headerRow2 = [
+      "",
+      "",
+      "",
+      ""
+    ];
+
+    const headerRow3 = [
+      "",
+      "",
+      "",
+      ""
+    ];
+
+    const merges = [];
+
+    for (
+      let column = 0;
+      column < studentColumnCount;
+      column += 1
+    ) {
+      merges.push({
+        s: {
+          r: 0,
+          c: column
+        },
+
+        e: {
+          r: 2,
+          c: column
+        }
+      });
+    }
+
+    questions.forEach(
+      (question, index) => {
+        const startColumn =
+          studentColumnCount +
+          index * columnsPerQuestion;
+
+        const questionHeading =
+          `Question ${index + 1}: ` +
+          (
+            question.title ===
+              question.question ||
+            !question.question
+              ? question.title
+              : `${question.title} — ${question.question}`
+          );
+
+        headerRow1[startColumn] =
+          questionHeading;
+
+        for (
+          let offset = 1;
+          offset < columnsPerQuestion;
+          offset += 1
+        ) {
+          headerRow1[
+            startColumn + offset
+          ] = "";
+        }
+
+        merges.push({
+          s: {
+            r: 0,
+            c: startColumn
+          },
+
+          e: {
+            r: 0,
+            c:
+              startColumn +
+              columnsPerQuestion -
+              1
+          }
+        });
+
+        headerRow2[startColumn] =
+          "TOTAL SCORES";
+
+        for (
+          let offset = 1;
+          offset < 10;
+          offset += 1
+        ) {
+          headerRow2[
+            startColumn + offset
+          ] = "";
+        }
+
+        merges.push({
+          s: {
+            r: 1,
+            c: startColumn
+          },
+
+          e: {
+            r: 1,
+            c: startColumn + 9
+          }
+        });
+
+        headerRow2[
+          startColumn + 10
+        ] = "LATEST ATTEMPT";
+
+        for (
+          let offset = 11;
+          offset < columnsPerQuestion;
+          offset += 1
+        ) {
+          headerRow2[
+            startColumn + offset
+          ] = "";
+        }
+
+        merges.push({
+          s: {
+            r: 1,
+            c: startColumn + 10
+          },
+
+          e: {
+            r: 1,
+            c: startColumn + 15
+          }
+        });
+
+        for (
+          let attempt = 1;
+          attempt <= 10;
+          attempt += 1
+        ) {
+          headerRow3[
+            startColumn +
+            attempt -
+            1
+          ] = `Attempt ${attempt}`;
+        }
+
+        for (
+          let criterion = 1;
+          criterion <= 5;
+          criterion += 1
+        ) {
+          headerRow3[
+            startColumn +
+            9 +
+            criterion
+          ] = `Criterion ${criterion}`;
+        }
+
+        headerRow3[
+          startColumn + 15
+        ] = "Detailed Feedback";
+      }
+    );
+
+    const dataRows =
+      studentReports.map(
+        ({
+          student,
+          report,
+          error
+        }) => {
+          const reportStudent =
+            report && report.student
+              ? report.student
+              : {};
+
+          const row = [
+            reportStudent.studentId ||
+              student.studentId ||
+              "",
+
+            reportStudent.fullName ||
+              student.fullName ||
+              "",
+
+            reportStudent.email ||
+              student.email ||
+              "",
+
+            reportStudent.batch ||
+              student.batch ||
+              ""
+          ];
+
+          const assignmentMap =
+            new Map();
+
+          if (
+            report &&
+            Array.isArray(
+              report.assignments
+            )
+          ) {
+            report.assignments.forEach(
+              assignment => {
+                assignmentMap.set(
+                  assignmentKey(
+                    assignment
+                  ),
+                  assignment
+                );
+              }
+            );
+          }
+
+          questions.forEach(
+            question => {
+              const assignment =
+                assignmentMap.get(
+                  question.key
+                );
+
+              const attempts =
+                assignment &&
+                Array.isArray(
+                  assignment.attempts
+                )
+                  ? [
+                      ...assignment.attempts
+                    ]
+                  : [];
+
+              attempts.sort(
+                (a, b) => {
+                  const attemptA =
+                    Number(
+                      a.attemptNo
+                    );
+
+                  const attemptB =
+                    Number(
+                      b.attemptNo
+                    );
+
+                  if (
+                    Number.isFinite(
+                      attemptA
+                    ) &&
+                    Number.isFinite(
+                      attemptB
+                    ) &&
+                    attemptA !==
+                      attemptB
+                  ) {
+                    return (
+                      attemptA -
+                      attemptB
+                    );
+                  }
+
+                  return (
+                    new Date(
+                      a.submittedAt ||
+                        0
+                    ).getTime() -
+                    new Date(
+                      b.submittedAt ||
+                        0
+                    ).getTime()
+                  );
+                }
+              );
+
+              const scoreSlots =
+                new Map();
+
+              attempts.forEach(
+                (
+                  attempt,
+                  index
+                ) => {
+                  const reportedAttemptNo =
+                    Number(
+                      attempt.attemptNo
+                    );
+
+                  const slot =
+                    Number.isInteger(
+                      reportedAttemptNo
+                    ) &&
+                    reportedAttemptNo >=
+                      1 &&
+                    reportedAttemptNo <=
+                      10
+                      ? reportedAttemptNo
+                      : index + 1;
+
+                  if (
+                    slot <= 10 &&
+                    !scoreSlots.has(
+                      slot
+                    )
+                  ) {
+                    scoreSlots.set(
+                      slot,
+                      attempt.score ??
+                        ""
+                    );
+                  }
+                }
+              );
+
+              for (
+                let attempt = 1;
+                attempt <= 10;
+                attempt += 1
+              ) {
+                row.push(
+                  scoreSlots.get(
+                    attempt
+                  ) ?? ""
+                );
+              }
+
+              const latestAttempt =
+                attempts.length
+                  ? attempts[
+                      attempts.length -
+                        1
+                    ]
+                  : null;
+
+              const criterionValues =
+                latestAttempt
+                  ? Object.values(
+                      flattenCriterionScores(
+                        latestAttempt
+                          .criterionScores ||
+                          {}
+                      )
+                    ).slice(0, 5)
+                  : [];
+
+              for (
+                let criterion = 0;
+                criterion < 5;
+                criterion += 1
+              ) {
+                row.push(
+                  criterionValues[
+                    criterion
+                  ] ?? ""
+                );
+              }
+
+              const feedbackEntries =
+                latestAttempt
+                  ? flattenFeedbackEntries(
+                      latestAttempt.feedback ||
+                        {}
+                    )
+                  : [];
+
+              const feedbackText =
+                feedbackEntries.length
+                  ? feedbackEntries
+                      .map(
+                        entry =>
+                          `${entry.section}: ${entry.value}`
+                      )
+                      .join("\n")
+                  : "";
+
+              row.push(
+                feedbackText ||
+                  (
+                    error
+                      ? error
+                      : ""
+                  )
+              );
+            }
+          );
+
+          return row;
+        }
+      );
+
+    const sheet =
+      XLSX.utils.aoa_to_sheet([
+        headerRow1,
+        headerRow2,
+        headerRow3,
+        ...dataRows
+      ]);
+
+    sheet["!merges"] = merges;
+
+    sheet["!cols"] = [
       {
-        Field: "Institution",
-        Value:
-          report.accessPoint?.displayName || ""
+        wch: 18
       },
       {
-        Field: "Student ID",
-        Value: student.studentId || ""
+        wch: 28
       },
       {
-        Field: "Student Name",
-        Value: student.fullName || ""
+        wch: 32
       },
       {
-        Field: "Email",
-        Value: student.email || ""
+        wch: 18
+      },
+
+      ...questions.flatMap(() => [
+        ...Array.from(
+          {
+            length: 10
+          },
+          () => ({
+            wch: 11
+          })
+        ),
+
+        ...Array.from(
+          {
+            length: 5
+          },
+          () => ({
+            wch: 12
+          })
+        ),
+
+        {
+          wch: 70
+        }
+      ])
+    ];
+
+    sheet["!rows"] = [
+      {
+        hpt: 42
       },
       {
-        Field: "Batch",
-        Value: student.batch || ""
+        hpt: 24
       },
       {
-        Field: "Total Assignments",
-        Value:
-          summary.totalAssignments ?? 0
-      },
-      {
-        Field: "Attempted Assignments",
-        Value:
-          summary.attemptedAssignments ?? 0
-      },
-      {
-        Field: "Total Attempts",
-        Value:
-          summary.totalAttempts ?? 0
-      },
-      {
-        Field: "Not Attempted",
-        Value:
-          summary.notAttempted ?? 0
-      },
-      {
-        Field: "Average Latest Score",
-        Value:
-          summary.averageLatestScore ?? ""
-      },
-      {
-        Field: "Average Improvement",
-        Value:
-          summary.averageImprovement ?? ""
-      },
-      {
-        Field: "Report Downloaded",
-        Value: new Date().toLocaleString()
+        hpt: 34
       }
     ];
 
-    const assignmentRows =
-      assignments.map(assignment => ({
-        "Task Title":
-          assignment.taskTitle || "",
+    const lastColumn =
+      studentColumnCount +
+      questions.length *
+        columnsPerQuestion -
+      1;
 
-        "Question":
-          assignment.question || "",
-
-        "Practice Type":
-          assignment.deliveryStream || "",
-
-        "Rubric":
-          assignment.rubricType || "",
-
-        "Status":
-          assignment.status || "",
-
-        "Assigned At":
-          formatDate(
-            assignment.assignedAt
-          ),
-
-        "Available At":
-          formatDate(
-            assignment.availableAt
-          ),
-
-        "Due At":
-          formatDate(
-            assignment.dueAt
-          ),
-
-        "Attempts Made":
-          assignment.attemptCount ?? 0,
-
-        "Attempt Limit":
-          assignment.attemptLimitMode ===
-          "UNLIMITED"
-            ? "Unlimited"
-            : assignment.maxAttempts ?? "",
-
-        "First Score":
-          assignment.firstScore ?? "",
-
-        "Latest Score":
-          assignment.latestScore ?? "",
-
-        "Improvement":
-          assignment.improvement ?? ""
-      }));
-
-    const attemptRows = [];
-
-    const feedbackRows = [];
-
-    assignments.forEach(assignment => {
-      const attempts =
-        Array.isArray(assignment.attempts)
-          ? assignment.attempts
-          : [];
-
-      attempts.forEach(attempt => {
-        attemptRows.push({
-          "Task Title":
-            assignment.taskTitle || "",
-
-          "Question":
-            assignment.question || "",
-
-          "Practice Type":
-            assignment.deliveryStream || "",
-
-          "Rubric":
-            assignment.rubricType || "",
-
-          "Attempt Number":
-            attempt.attemptNo ?? "",
-
-          "Total Score":
-            attempt.score ?? "",
-
-          "Submitted At":
-            formatDate(
-              attempt.submittedAt
-            ),
-
-          "Transcript":
-            attempt.transcript || "",
-
-          ...flattenCriterionScores(
-            attempt.criterionScores || {}
-          )
-        });
-
-        const entries =
-          flattenFeedbackEntries(
-            attempt.feedback || {}
-          );
-
-        if (!entries.length) {
-          feedbackRows.push({
-            "Task Title":
-              assignment.taskTitle || "",
-
-            "Question":
-              assignment.question || "",
-
-            "Attempt Number":
-              attempt.attemptNo ?? "",
-
-            "Total Score":
-              attempt.score ?? "",
-
-            "Feedback Section":
-              "Feedback",
-
-            "Feedback":
-              "No detailed feedback available."
+    for (
+      let rowIndex = 0;
+      rowIndex <= 2;
+      rowIndex += 1
+    ) {
+      for (
+        let columnIndex = 0;
+        columnIndex <= lastColumn;
+        columnIndex += 1
+      ) {
+        const address =
+          XLSX.utils.encode_cell({
+            r: rowIndex,
+            c: columnIndex
           });
 
-          return;
+        if (!sheet[address]) {
+          continue;
         }
 
-        entries.forEach(entry => {
-          feedbackRows.push({
-            "Task Title":
-              assignment.taskTitle || "",
+        sheet[address].s = {
+          font: {
+            bold: true
+          },
 
-            "Question":
-              assignment.question || "",
+          alignment: {
+            horizontal: "center",
+            vertical: "center",
+            wrapText: true
+          }
+        };
+      }
+    }
 
-            "Attempt Number":
-              attempt.attemptNo ?? "",
+    questions.forEach(
+      (question, index) => {
+        const feedbackColumn =
+          studentColumnCount +
+          index *
+            columnsPerQuestion +
+          15;
 
-            "Total Score":
-              attempt.score ?? "",
+        dataRows.forEach(
+          (row, dataIndex) => {
+            const address =
+              XLSX.utils.encode_cell({
+                r: dataIndex + 3,
+                c: feedbackColumn
+              });
 
-            "Feedback Section":
-              entry.section,
+            if (!sheet[address]) {
+              return;
+            }
 
-            "Feedback":
-              entry.value
-          });
-        });
-      });
-    });
+            sheet[address].s = {
+              alignment: {
+                vertical: "top",
+                wrapText: true
+              }
+            };
+          }
+        );
+      }
+    );
 
     const workbook =
       XLSX.utils.book_new();
 
-    const addStudentSheet =
-      (name, rows) => {
-        const data =
-          rows.length
-            ? rows
-            : [{ Message: "No data" }];
-
-        const sheet =
-          XLSX.utils.json_to_sheet(data);
-
-        sheet["!cols"] =
-          Object.keys(data[0]).map(
-            key => ({
-              wch: Math.min(
-                Math.max(
-                  key.length + 4,
-                  16
-                ),
-                key === "Question" ||
-                key === "Transcript" ||
-                key === "Feedback"
-                  ? 70
-                  : 32
-              )
-            })
-          );
-
-        XLSX.utils.book_append_sheet(
-          workbook,
-          sheet,
-          name
-        );
-      };
-
-    addStudentSheet(
-      "Student Summary",
-      studentRows
+    XLSX.utils.book_append_sheet(
+      workbook,
+      sheet,
+      "Student-wise Report"
     );
-
-    addStudentSheet(
-      "Assignments",
-      assignmentRows
-    );
-
-    addStudentSheet(
-      "Attempt Scores",
-      attemptRows
-    );
-
-    addStudentSheet(
-      "Detailed Feedback",
-      feedbackRows
-    );
-
-    const fileName =
-      `ASCENT_${safeExcelFileName(
-        student.studentId
-      )}_${safeExcelFileName(
-        student.fullName
-      )}_${new Date()
-        .toISOString()
-        .slice(0, 10)}.xlsx`;
 
     XLSX.writeFile(
       workbook,
-      fileName
+      `ASCENT_Student_Wise_Report_${new Date()
+        .toISOString()
+        .slice(0, 10)}.xlsx`
     );
+
+    const failedCount =
+      studentReports.filter(
+        item => item.error
+      ).length;
 
     setStatus(
       byId("resultsStatus"),
-      `Individual Excel report downloaded for ${student.fullName}.`,
-      "success"
+
+      failedCount
+        ? `Student-wise Excel downloaded. ${failedCount} student report${
+            failedCount === 1
+              ? " was"
+              : "s were"
+          } unavailable and left blank.`
+        : `Student-wise Excel downloaded for ${studentReports.length} students.`,
+
+      failedCount
+        ? "warning"
+        : "success"
     );
 
   } catch (error) {
@@ -1397,19 +1774,19 @@ async function exportSelectedStudentExcel() {
 
     setStatus(
       byId("resultsStatus"),
+
       error.message ||
-        "ASCENT could not create the individual student report.",
+        "ASCENT could not create the student-wise Excel report.",
+
       "error"
     );
 
   } finally {
     button.disabled = false;
     button.textContent =
-      "Download Selected Student";
+      originalButtonText;
   }
 }
-
-    async function clearSelectedTestRegister() {
       if (!isAdmin()) {
         setStatus(byId("clearTestRegisterStatus"),"Only an administrator can clear test assignment records.","error");
         return;
