@@ -1787,6 +1787,7 @@ async function exportSelectedStudentExcel() {
       originalButtonText;
   }
 }
+    async function clearSelectedTestRegister() {
       if (!isAdmin()) {
         setStatus(byId("clearTestRegisterStatus"),"Only an administrator can clear test assignment records.","error");
         return;
