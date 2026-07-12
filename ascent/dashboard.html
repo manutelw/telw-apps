@@ -817,27 +817,88 @@ function normaliseFeedback(feedback) {
   };
 }
 
-    function formatCriterionScores(scores) {
-      if (!scores || typeof scores !== "object") return "";
+function formatCriterionScores(details) {
+  if (!details || typeof details !== "object") {
+    return "";
+  }
 
-      const items = Object.entries(scores).map(([key,value]) => {
-        const label = key
-          .replace(/([a-z])([A-Z])/g,"$1 $2")
+  const feedback =
+    details.feedback &&
+    typeof details.feedback === "object"
+      ? details.feedback
+      : {};
+
+  const criteria =
+    Array.isArray(feedback.criteria)
+      ? feedback.criteria
+      : [];
+
+  let items = criteria
+    .filter(item =>
+      item &&
+      item.status !== "not_assessed" &&
+      item.score !== null &&
+      item.score !== undefined
+    )
+    .map(item => ({
+      name:
+        item.name ||
+        String(item.key || "Criterion")
           .replaceAll("_"," ")
-          .replace(/\b\w/g,char => char.toUpperCase());
+          .replace(/\b\w/g,char => char.toUpperCase()),
 
-        const shownValue =
-          value && typeof value === "object"
-            ? JSON.stringify(value)
-            : String(value);
+      score:item.score
+    }));
 
-        return `<li><strong>${escapeHtml(label)}:</strong> ${escapeHtml(shownValue)}</li>`;
-      });
+  if (!items.length) {
+    const rawScores =
+      details.criterionScores &&
+      typeof details.criterionScores === "object"
+        ? details.criterionScores
+        : {};
 
-      return items.length
-        ? `<ul class="criterion-list">${items.join("")}</ul>`
-        : "";
-    }
+    items = Object.entries(rawScores)
+      .map(([key,value]) => {
+        const score =
+          value &&
+          typeof value === "object"
+            ? value.score
+            : value;
+
+        return {
+          name:key
+            .replace(/([a-z])([A-Z])/g,"$1 $2")
+            .replaceAll("_"," ")
+            .replace(/\b\w/g,char => char.toUpperCase()),
+
+          score
+        };
+      })
+      .filter(item =>
+        item.score !== null &&
+        item.score !== undefined &&
+        Number.isFinite(Number(item.score))
+      );
+  }
+
+  if (!items.length) {
+    return "";
+  }
+
+  return `
+    <section class="feedback-section">
+      <h4>Criterion-wise Scores</h4>
+      <ul class="criterion-list">
+        ${items.map(item => `
+          <li>
+            <strong>${escapeHtml(item.name)}:</strong>
+            ${escapeHtml(Number(item.score).toFixed(1))} / 2
+          </li>
+        `).join("")}
+      </ul>
+    </section>
+  `;
+}
 
     function openAttemptFeedback(rowIndex,attemptIndex) {
       const row = currentTableRows[rowIndex];
@@ -850,7 +911,7 @@ function normaliseFeedback(feedback) {
       if (!row || !details) return;
 
       const feedback = normaliseFeedback(details.feedback);
-      const criterionHtml = "";
+      const criterionHtml = formatCriterionScores(details);
 
       feedbackModalTitle.textContent =
         categoryLabel(row.category) + " · Attempt " + (attemptIndex + 1);
@@ -874,14 +935,19 @@ function normaliseFeedback(feedback) {
           <p>${escapeHtml(row.question || "—")}</p>
         </section>
 
-        <section class="feedback-section">
-          <h4>Feedback</h4>
-          <p>${escapeHtml(feedback.summary)}</p>
-        </section>
+       <section class="feedback-section">
+  <h4>Total Score</h4>
+  <p>${escapeHtml(formatScore(details.score))} / 10</p>
+</section>
 
-        
+${criterionHtml}
 
-        ${sectionsHtml}
+<section class="feedback-section">
+  <h4>Detailed Feedback</h4>
+  <p>${escapeHtml(feedback.summary)}</p>
+</section>
+
+${sectionsHtml}
       `;
 
       feedbackModalBackdrop.hidden = false;
