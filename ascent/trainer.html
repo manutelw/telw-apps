@@ -330,7 +330,23 @@
         </section>
 
         <section id="resultsSection" class="section-panel">
-          <div class="workspace-header"><div><h2>Results</h2><p>Filter results, compare first and latest scores, and download the complete Excel report.</p></div><div class="header-actions"><button id="resultsExportButton" class="primary-button" type="button">Download Excel</button></div></div>
+          <div class="workspace-header"><div><h2>Results</h2><p>Filter results, compare first and latest scores, and download the complete Excel report.</p></div><div class="header-actions">
+  <button
+    id="studentExportButton"
+    class="secondary-button"
+    type="button"
+  >
+    Download Selected Student
+  </button>
+
+  <button
+    id="resultsExportButton"
+    class="primary-button"
+    type="button"
+  >
+    Download Master Excel
+  </button>
+</div></div>
           <div class="panel"><div class="filter-grid">
             <div class="form-group"><label for="resultBatchFilter">Batch</label><select id="resultBatchFilter"><option value="">All batches</option></select></div>
             <div class="form-group"><label for="resultStudentFilter">Student</label><select id="resultStudentFilter"><option value="">All students</option></select></div>
@@ -365,7 +381,12 @@
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
     const RPC = {
       report: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_report_data",
-      bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
+
+studentAttemptReport:
+  SUPABASE_URL +
+  "/rest/v1/rpc/ascent_trainer_student_attempt_report",
+
+bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
       taskActive: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_task_active",
       createTrainer: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_create_trainer",
       questionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_question_bank_get",
@@ -958,6 +979,435 @@
       XLSX.writeFile(workbook,`ASCENT_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
       setStatus(byId("resultsStatus"),"Excel report downloaded.","success");
     }
+    function safeExcelFileName(value) {
+  return String(value || "Student")
+    .replace(/[\\/:*?"<>|]+/g, "_")
+    .replace(/\s+/g, "_")
+    .slice(0, 80);
+}
+
+function flattenFeedbackEntries(
+  value,
+  path = "",
+  output = []
+) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return output;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => {
+      flattenFeedbackEntries(
+        item,
+        path
+          ? `${path} > Item ${index + 1}`
+          : `Item ${index + 1}`,
+        output
+      );
+    });
+
+    return output;
+  }
+
+  if (typeof value === "object") {
+    Object.entries(value).forEach(
+      ([key, item]) => {
+        const label = humaniseKey(key);
+
+        flattenFeedbackEntries(
+          item,
+          path
+            ? `${path} > ${label}`
+            : label,
+          output
+        );
+      }
+    );
+
+    return output;
+  }
+
+  output.push({
+    section: path || "Feedback",
+    value: String(value)
+  });
+
+  return output;
+}
+
+async function exportSelectedStudentExcel() {
+  if (!window.XLSX) {
+    setStatus(
+      byId("resultsStatus"),
+      "The Excel library did not load. Check the internet connection and try again.",
+      "error"
+    );
+    return;
+  }
+
+  const studentUuid =
+    byId("resultStudentFilter").value;
+
+  if (!studentUuid) {
+    setStatus(
+      byId("resultsStatus"),
+      "Choose one student in the Student filter before downloading the individual report.",
+      "error"
+    );
+    return;
+  }
+
+  const button =
+    byId("studentExportButton");
+
+  button.disabled = true;
+  button.textContent =
+    "Preparing Student Report…";
+
+  setStatus(
+    byId("resultsStatus"),
+    "",
+    ""
+  );
+
+  try {
+    const response = await callRpc(
+      RPC.studentAttemptReport,
+      {
+        p_session_token:
+          currentSession.sessionToken,
+
+        p_student_uuid:
+          studentUuid
+      }
+    );
+
+    const report =
+      Array.isArray(response)
+        ? response[0]
+        : response;
+
+    if (!report || report.ok !== true) {
+      throw new Error(
+        report && report.message
+          ? report.message
+          : "The student report could not be created."
+      );
+    }
+
+    const student =
+      report.student || {};
+
+    const summary =
+      report.summary || {};
+
+    const assignments =
+      Array.isArray(report.assignments)
+        ? report.assignments
+        : [];
+
+    const studentRows = [
+      {
+        Field: "Institution",
+        Value:
+          report.accessPoint?.displayName || ""
+      },
+      {
+        Field: "Student ID",
+        Value: student.studentId || ""
+      },
+      {
+        Field: "Student Name",
+        Value: student.fullName || ""
+      },
+      {
+        Field: "Email",
+        Value: student.email || ""
+      },
+      {
+        Field: "Batch",
+        Value: student.batch || ""
+      },
+      {
+        Field: "Total Assignments",
+        Value:
+          summary.totalAssignments ?? 0
+      },
+      {
+        Field: "Attempted Assignments",
+        Value:
+          summary.attemptedAssignments ?? 0
+      },
+      {
+        Field: "Total Attempts",
+        Value:
+          summary.totalAttempts ?? 0
+      },
+      {
+        Field: "Not Attempted",
+        Value:
+          summary.notAttempted ?? 0
+      },
+      {
+        Field: "Average Latest Score",
+        Value:
+          summary.averageLatestScore ?? ""
+      },
+      {
+        Field: "Average Improvement",
+        Value:
+          summary.averageImprovement ?? ""
+      },
+      {
+        Field: "Report Downloaded",
+        Value: new Date().toLocaleString()
+      }
+    ];
+
+    const assignmentRows =
+      assignments.map(assignment => ({
+        "Task Title":
+          assignment.taskTitle || "",
+
+        "Question":
+          assignment.question || "",
+
+        "Practice Type":
+          assignment.deliveryStream || "",
+
+        "Rubric":
+          assignment.rubricType || "",
+
+        "Status":
+          assignment.status || "",
+
+        "Assigned At":
+          formatDate(
+            assignment.assignedAt
+          ),
+
+        "Available At":
+          formatDate(
+            assignment.availableAt
+          ),
+
+        "Due At":
+          formatDate(
+            assignment.dueAt
+          ),
+
+        "Attempts Made":
+          assignment.attemptCount ?? 0,
+
+        "Attempt Limit":
+          assignment.attemptLimitMode ===
+          "UNLIMITED"
+            ? "Unlimited"
+            : assignment.maxAttempts ?? "",
+
+        "First Score":
+          assignment.firstScore ?? "",
+
+        "Latest Score":
+          assignment.latestScore ?? "",
+
+        "Improvement":
+          assignment.improvement ?? ""
+      }));
+
+    const attemptRows = [];
+
+    const feedbackRows = [];
+
+    assignments.forEach(assignment => {
+      const attempts =
+        Array.isArray(assignment.attempts)
+          ? assignment.attempts
+          : [];
+
+      attempts.forEach(attempt => {
+        attemptRows.push({
+          "Task Title":
+            assignment.taskTitle || "",
+
+          "Question":
+            assignment.question || "",
+
+          "Practice Type":
+            assignment.deliveryStream || "",
+
+          "Rubric":
+            assignment.rubricType || "",
+
+          "Attempt Number":
+            attempt.attemptNo ?? "",
+
+          "Total Score":
+            attempt.score ?? "",
+
+          "Submitted At":
+            formatDate(
+              attempt.submittedAt
+            ),
+
+          "Transcript":
+            attempt.transcript || "",
+
+          ...flattenCriterionScores(
+            attempt.criterionScores || {}
+          )
+        });
+
+        const entries =
+          flattenFeedbackEntries(
+            attempt.feedback || {}
+          );
+
+        if (!entries.length) {
+          feedbackRows.push({
+            "Task Title":
+              assignment.taskTitle || "",
+
+            "Question":
+              assignment.question || "",
+
+            "Attempt Number":
+              attempt.attemptNo ?? "",
+
+            "Total Score":
+              attempt.score ?? "",
+
+            "Feedback Section":
+              "Feedback",
+
+            "Feedback":
+              "No detailed feedback available."
+          });
+
+          return;
+        }
+
+        entries.forEach(entry => {
+          feedbackRows.push({
+            "Task Title":
+              assignment.taskTitle || "",
+
+            "Question":
+              assignment.question || "",
+
+            "Attempt Number":
+              attempt.attemptNo ?? "",
+
+            "Total Score":
+              attempt.score ?? "",
+
+            "Feedback Section":
+              entry.section,
+
+            "Feedback":
+              entry.value
+          });
+        });
+      });
+    });
+
+    const workbook =
+      XLSX.utils.book_new();
+
+    const addStudentSheet =
+      (name, rows) => {
+        const data =
+          rows.length
+            ? rows
+            : [{ Message: "No data" }];
+
+        const sheet =
+          XLSX.utils.json_to_sheet(data);
+
+        sheet["!cols"] =
+          Object.keys(data[0]).map(
+            key => ({
+              wch: Math.min(
+                Math.max(
+                  key.length + 4,
+                  16
+                ),
+                key === "Question" ||
+                key === "Transcript" ||
+                key === "Feedback"
+                  ? 70
+                  : 32
+              )
+            })
+          );
+
+        XLSX.utils.book_append_sheet(
+          workbook,
+          sheet,
+          name
+        );
+      };
+
+    addStudentSheet(
+      "Student Summary",
+      studentRows
+    );
+
+    addStudentSheet(
+      "Assignments",
+      assignmentRows
+    );
+
+    addStudentSheet(
+      "Attempt Scores",
+      attemptRows
+    );
+
+    addStudentSheet(
+      "Detailed Feedback",
+      feedbackRows
+    );
+
+    const fileName =
+      `ASCENT_${safeExcelFileName(
+        student.studentId
+      )}_${safeExcelFileName(
+        student.fullName
+      )}_${new Date()
+        .toISOString()
+        .slice(0, 10)}.xlsx`;
+
+    XLSX.writeFile(
+      workbook,
+      fileName
+    );
+
+    setStatus(
+      byId("resultsStatus"),
+      `Individual Excel report downloaded for ${student.fullName}.`,
+      "success"
+    );
+
+  } catch (error) {
+    console.error(error);
+
+    setStatus(
+      byId("resultsStatus"),
+      error.message ||
+        "ASCENT could not create the individual student report.",
+      "error"
+    );
+
+  } finally {
+    button.disabled = false;
+    button.textContent =
+      "Download Selected Student";
+  }
+}
 
     async function clearSelectedTestRegister() {
       if (!isAdmin()) {
@@ -1139,6 +1589,7 @@
       byId("refreshDashboardButton").addEventListener("click",() => loadReport("Refreshing dashboard…"));
       byId("refreshTasksButton").addEventListener("click",() => loadReport("Refreshing tasks…"));
       byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results));
+      byId("studentExportButton").addEventListener("click", exportSelectedStudentExcel);
       byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows));
       byId("refreshQuestionBankButton").addEventListener("click",() => loadQuestionBank("Refreshing question bank…"));
       byId("addBankQuestionButton").addEventListener("click",() => openBankQuestionEditor());
