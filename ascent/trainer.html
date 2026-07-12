@@ -1184,27 +1184,16 @@ function buildActionableFeedback(feedback) {
       ? feedback.criteria
       : [];
 
-  const priorities = criteria
-    .filter(item =>
-      item &&
-      (
-        item.explanation ||
-        item.corrected_version ||
-        item.correctedVersion
-      )
-    )
-    .sort(
-      (a, b) =>
-        Number(a.score ?? 999) -
-        Number(b.score ?? 999)
-    )
-    .slice(0, 2);
+  if (criteria.length) {
+    lines.push("");
+    lines.push("Feedback by criterion:");
 
-  if (priorities.length) {
-    lines.push("Focus next:");
-
-    priorities.forEach(
+    criteria.forEach(
       (item, index) => {
+        if (!item) {
+          return;
+        }
+
         const name =
           item.name ||
           humaniseKey(
@@ -1220,9 +1209,16 @@ function buildActionableFeedback(feedback) {
           item.correctedVersion ||
           "";
 
+        lines.push("");
         lines.push(
-          `${index + 1}. ${name}: ${explanation}`
+          `${index + 1}. ${name}`
         );
+
+        if (explanation) {
+          lines.push(
+            `What to improve: ${explanation}`
+          );
+        }
 
         if (corrected) {
           lines.push(
@@ -1245,22 +1241,31 @@ function buildActionableFeedback(feedback) {
           : [];
 
   if (otherIssues.length) {
-    const issue = otherIssues[0];
+    lines.push("");
+    lines.push("Other issues noticed:");
 
-    const label =
-      issue.label ||
-      "Other issue";
+    otherIssues
+      .slice(0, 3)
+      .forEach(issue => {
+        if (!issue) {
+          return;
+        }
 
-    const explanation =
-      issue.explanation || "";
+        const label =
+          issue.label ||
+          "Other issue";
 
-    lines.push(
-      `Also fix: ${label}${
-        explanation
-          ? ` — ${explanation}`
-          : ""
-      }`
-    );
+        const explanation =
+          issue.explanation || "";
+
+        lines.push(
+          `• ${label}${
+            explanation
+              ? `: ${explanation}`
+              : ""
+          }`
+        );
+      });
   }
 
   return lines.join("\n");
