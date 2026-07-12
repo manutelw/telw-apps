@@ -1160,6 +1160,126 @@ function criterionScoresForLatestAttempt(
   );
 }
 
+function whyAlternativeIsStronger(
+  criterionName,
+  explanation
+) {
+  const criterion =
+    String(criterionName || "")
+      .toLowerCase();
+
+  const reason =
+    String(explanation || "")
+      .toLowerCase();
+
+  if (
+    criterion.includes("confidence") ||
+    criterion.includes("delivery") ||
+    criterion.includes("composure")
+  ) {
+    return "The calmer pace and clear pause make the answer easier to follow and sound more controlled.";
+  }
+
+  if (
+    criterion.includes("business") ||
+    criterion.includes("reasoning") ||
+    criterion.includes("decision")
+  ) {
+    return "It adds the missing reasoning, risk or trade-off and shows stronger managerial judgement.";
+  }
+
+  if (
+    criterion.includes("structure") ||
+    criterion.includes("clarity") ||
+    criterion.includes("entry")
+  ) {
+    return "It removes unnecessary wording and presents the main point more clearly.";
+  }
+
+  if (
+    criterion.includes("language")
+  ) {
+    return "It removes repetition or awkward wording and makes the sentence cleaner and more accurate.";
+  }
+
+  if (
+    criterion.includes("professional")
+  ) {
+    return "It uses a more precise and professional tone.";
+  }
+
+  if (
+    criterion.includes("evidence") ||
+    criterion.includes("content")
+  ) {
+    return "It adds clearer evidence and makes the point more convincing.";
+  }
+
+  if (
+    criterion.includes("listening") ||
+    criterion.includes("response")
+  ) {
+    return "It responds more directly to the previous point and keeps the discussion connected.";
+  }
+
+  if (
+    criterion.includes("leadership")
+  ) {
+    return "It moves the discussion forward while keeping the group focused.";
+  }
+
+  if (
+    reason.includes("filler")
+  ) {
+    return "It removes the filler word and makes the sentence more direct.";
+  }
+
+  return "It corrects the weakness and makes the response clearer, stronger and easier to understand.";
+}
+
+function deliveryAlternative(
+  weakLine,
+  correctedVersion
+) {
+  const original =
+    String(weakLine || "").trim();
+
+  const corrected =
+    String(correctedVersion || "").trim();
+
+  if (
+    corrected &&
+    corrected !== original
+  ) {
+    return corrected;
+  }
+
+  if (!original) {
+    return "";
+  }
+
+  const commaIndex =
+    original.indexOf(",");
+
+  if (commaIndex > 0) {
+    return (
+      original.slice(
+        0,
+        commaIndex + 1
+      ) +
+      " [brief pause] " +
+      original.slice(
+        commaIndex + 1
+      ).trim()
+    );
+  }
+
+  return (
+    original +
+    " [Say this more slowly, with one clear pause after the main point.]"
+  );
+}
+
 function buildActionableFeedback(feedback) {
   if (
     !feedback ||
@@ -1176,7 +1296,9 @@ function buildActionableFeedback(feedback) {
     "";
 
   if (overall) {
-    lines.push(`Overall: ${overall}`);
+    lines.push(
+      `Overall: ${overall}`
+    );
   }
 
   const criteria =
@@ -1186,7 +1308,9 @@ function buildActionableFeedback(feedback) {
 
   if (criteria.length) {
     lines.push("");
-    lines.push("Feedback by criterion:");
+    lines.push(
+      "Feedback by criterion:"
+    );
 
     criteria.forEach(
       (item, index) => {
@@ -1201,28 +1325,66 @@ function buildActionableFeedback(feedback) {
             `Criterion ${index + 1}`
           );
 
+        const weakLine =
+          item.weak_line ||
+          item.weakLine ||
+          item.evidence_quote ||
+          item.evidenceQuote ||
+          "";
+
         const explanation =
           item.explanation || "";
 
-        const corrected =
+        const correctedVersion =
           item.corrected_version ||
           item.correctedVersion ||
           "";
+
+        const isDeliveryCriterion =
+          /confidence|delivery|composure/i.test(
+            name
+          );
+
+        const strongAlternative =
+          isDeliveryCriterion
+            ? deliveryAlternative(
+                weakLine,
+                correctedVersion
+              )
+            : correctedVersion;
+
+        const whyStrong =
+          whyAlternativeIsStronger(
+            name,
+            explanation
+          );
 
         lines.push("");
         lines.push(
           `${index + 1}. ${name}`
         );
 
-        if (explanation) {
+        if (weakLine) {
           lines.push(
-            `What to improve: ${explanation}`
+            `Weak sentence: ${weakLine}`
           );
         }
 
-        if (corrected) {
+        if (explanation) {
           lines.push(
-            `Use: ${corrected}`
+            `Why it is weak: ${explanation}`
+          );
+        }
+
+        if (strongAlternative) {
+          lines.push(
+            `Strong alternative: ${strongAlternative}`
+          );
+        }
+
+        if (whyStrong) {
+          lines.push(
+            `Why it is strong: ${whyStrong}`
           );
         }
       }
@@ -1242,7 +1404,9 @@ function buildActionableFeedback(feedback) {
 
   if (otherIssues.length) {
     lines.push("");
-    lines.push("Other issues noticed:");
+    lines.push(
+      "Other issues noticed:"
+    );
 
     otherIssues
       .slice(0, 3)
