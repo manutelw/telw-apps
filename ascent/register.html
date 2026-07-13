@@ -568,6 +568,24 @@
               required
             >
           </div>
+          <div class="form-group">
+  <label for="institutionName">
+    Institution
+  </label>
+
+  <input
+    id="institutionName"
+    name="institutionName"
+    type="text"
+    autocomplete="organization"
+    placeholder="Enter your institution name"
+    required
+  >
+
+  <div class="field-note">
+    Your verified email address determines whether you receive FIIB access.
+  </div>
+</div>
 
           <div class="form-group">
             <label for="batch">
@@ -661,6 +679,66 @@
           Already registered? Student Login
         </a>
       </div>
+      <div
+  id="verificationPanel"
+  class="form-panel"
+  style="display: none;"
+>
+  <h2>Verify Your Email</h2>
+
+  <p class="form-intro">
+    We sent a six-digit verification code to
+    <strong id="maskedEmail"></strong>.
+  </p>
+
+  <form id="verificationForm">
+    <div class="form-group">
+      <label for="verificationCode">
+        Verification code
+      </label>
+
+      <input
+        id="verificationCode"
+        name="verificationCode"
+        type="text"
+        inputmode="numeric"
+        autocomplete="one-time-code"
+        maxlength="6"
+        pattern="[0-9]{6}"
+        placeholder="Enter the 6-digit code"
+        required
+      >
+    </div>
+
+    <p id="expiryMessage" class="field-note">
+      This code expires in 10:00.
+    </p>
+
+    <button
+      id="verifyButton"
+      class="register-button"
+      type="submit"
+    >
+      Verify Email
+    </button>
+
+    <button
+      id="resendButton"
+      class="login-link"
+      type="button"
+      disabled
+    >
+      Resend code
+    </button>
+
+    <div
+      id="verificationStatus"
+      class="status-message"
+      role="status"
+      aria-live="polite"
+    ></div>
+  </form>
+</div>
 
       <div
         id="successPanel"
@@ -696,9 +774,13 @@
     const SUPABASE_PUBLISHABLE_KEY =
       "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
 
-    const REGISTER_RPC_URL =
-      SUPABASE_URL +
-      "/rest/v1/rpc/ascent_student_register";
+    const REGISTRATION_FUNCTION_URL =
+  SUPABASE_URL +
+  "/functions/v1/ascent-student-registration";
+
+const VERIFICATION_FUNCTION_URL =
+  SUPABASE_URL +
+  "/functions/v1/ascent-student-email-verification";
 
     const registrationPanel =
       document.getElementById(
@@ -724,6 +806,251 @@
       document.getElementById(
         "emailAddress"
       );
+    const institutionNameInput =
+  document.getElementById(
+    "institutionName"
+  );
+
+const verificationPanel =
+  document.getElementById(
+    "verificationPanel"
+  );
+
+const verificationForm =
+  document.getElementById(
+    "verificationForm"
+  );
+
+const maskedEmail =
+  document.getElementById(
+    "maskedEmail"
+  );
+
+const verificationCodeInput =
+  document.getElementById(
+    "verificationCode"
+  );
+
+const expiryMessage =
+  document.getElementById(
+    "expiryMessage"
+  );
+
+const verifyButton =
+  document.getElementById(
+    "verifyButton"
+  );
+
+const resendButton =
+  document.getElementById(
+    "resendButton"
+  );
+
+const verificationStatus =
+  document.getElementById(
+    "verificationStatus"
+  );
+
+let pendingStudentUuid = "";
+let pendingRegistrationPayload = null;
+let verificationExpiresAt = 0;
+let verificationTimer = null;
+    let resendAvailableAt = 0;
+
+function showVerificationStatus(
+  message,
+  type
+) {
+  verificationStatus.className =
+    "status-message" +
+    (type ? " " + type : "");
+
+  verificationStatus.textContent =
+    message;
+}
+
+async function sendFunctionRequest(
+  url,
+  payload
+) {
+  const response = await fetch(
+    url,
+    {
+      method: "POST",
+      headers: {
+        "apikey":
+          SUPABASE_PUBLISHABLE_KEY,
+        "Authorization":
+          "Bearer " +
+          SUPABASE_PUBLISHABLE_KEY,
+        "Content-Type":
+          "application/json"
+      },
+      body: JSON.stringify(payload)
+    }
+  );
+
+  const result =
+    await response.json().catch(
+      function () {
+        return null;
+      }
+    );
+
+  if (
+    !response.ok ||
+    !result ||
+    result.ok !== true
+  ) {
+    const error = new Error(
+      result && result.message
+        ? result.message
+        : "The request could not be completed."
+    );
+
+    error.code =
+      result && result.code
+        ? result.code
+        : "request_failed";
+
+    error.retryAfterSeconds =
+      result &&
+      result.retry_after_seconds
+        ? result.retry_after_seconds
+        : 0;
+
+    throw error;
+  }
+
+  return result;
+}
+
+function startVerificationTimer(
+  expiresAt
+) {
+  if (verificationTimer) {
+    clearInterval(
+      verificationTimer
+    );
+  }
+
+  verificationExpiresAt =
+    Date.parse(expiresAt);
+
+  resendAvailableAt =
+    Date.now() + 60000;
+
+  verifyButton.disabled = false;
+  resendButton.disabled = true;
+
+  function updateTimer() {
+    const now = Date.now();
+
+    const remainingSeconds =
+      Math.max(
+        0,
+        Math.ceil(
+          (
+            verificationExpiresAt -
+            now
+          ) / 1000
+        )
+      );
+
+    const minutes =
+      Math.floor(
+        remainingSeconds / 60
+      );
+
+    const seconds =
+      String(
+        remainingSeconds % 60
+      ).padStart(2, "0");
+
+    if (remainingSeconds > 0) {
+      expiryMessage.textContent =
+        "This code expires in " +
+        minutes +
+        ":" +
+        seconds +
+        ".";
+    } else {
+      expiryMessage.textContent =
+        "This code has expired. Request a new code.";
+
+      verifyButton.disabled = true;
+    }
+
+    const resendSeconds =
+      Math.max(
+        0,
+        Math.ceil(
+          (
+            resendAvailableAt -
+            now
+          ) / 1000
+        )
+      );
+
+    if (resendSeconds > 0) {
+      resendButton.disabled = true;
+      resendButton.textContent =
+        "Resend code in " +
+        resendSeconds +
+        "s";
+    } else {
+      resendButton.disabled = false;
+      resendButton.textContent =
+        "Resend code";
+    }
+
+    if (
+      remainingSeconds === 0 &&
+      resendSeconds === 0
+    ) {
+      clearInterval(
+        verificationTimer
+      );
+
+      verificationTimer = null;
+    }
+  }
+
+  updateTimer();
+
+  verificationTimer =
+    setInterval(
+      updateTimer,
+      1000
+    );
+}
+
+function openVerificationStage(
+  result
+) {
+  pendingStudentUuid =
+    result.student_uuid;
+
+  maskedEmail.textContent =
+    result.masked_email ||
+    "your email address";
+
+  registrationPanel.style.display =
+    "none";
+
+  verificationPanel.style.display =
+    "block";
+
+  verificationCodeInput.value = "";
+
+  showVerificationStatus("", "");
+
+  startVerificationTimer(
+    result.expires_at
+  );
+
+  verificationCodeInput.focus();
+}
 
     const batchInput =
       document.getElementById(
@@ -800,189 +1127,352 @@
 
 
     registrationForm.addEventListener(
-      "submit",
-      async function (event) {
-        event.preventDefault();
+  "submit",
+  async function (event) {
+    event.preventDefault();
 
-        const studentId =
-          studentIdInput.value.trim();
+    const studentId =
+      studentIdInput.value.trim();
 
-        const fullName =
-          fullNameInput.value.trim();
+    const fullName =
+      fullNameInput.value.trim();
 
-        const email =
-          emailInput.value
-            .trim()
-            .toLowerCase();
+    const email =
+      emailInput.value
+        .trim()
+        .toLowerCase();
 
-        const batch =
-          batchInput.value.trim();
+    const institutionName =
+      institutionNameInput.value.trim();
 
-        const password =
-          passwordInput.value;
+    const batch =
+      batchInput.value.trim();
 
-        const confirmPassword =
-          confirmPasswordInput.value;
+    const password =
+      passwordInput.value;
 
-        showStatus("", "");
+    const confirmPassword =
+      confirmPasswordInput.value;
 
-        if (!studentId) {
-          showStatus(
-            "Enter your student ID.",
-            "error"
-          );
+    showStatus("", "");
 
-          studentIdInput.focus();
-          return;
-        }
+    if (!studentId) {
+      showStatus(
+        "Enter your student ID.",
+        "error"
+      );
 
-        if (!fullName) {
-          showStatus(
-            "Enter your full name.",
-            "error"
-          );
+      studentIdInput.focus();
+      return;
+    }
 
-          fullNameInput.focus();
-          return;
-        }
+    if (!fullName) {
+      showStatus(
+        "Enter your full name.",
+        "error"
+      );
 
-        if (!email) {
-          showStatus(
-            "Enter a valid email address.",
-            "error"
-          );
+      fullNameInput.focus();
+      return;
+    }
 
-          emailInput.focus();
-          return;
-        }
+    if (
+      !email ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        email
+      )
+    ) {
+      showStatus(
+        "Enter a valid email address.",
+        "error"
+      );
 
-        if (password.length < 8) {
-          showStatus(
-            "Use a password with at least eight characters.",
-            "error"
-          );
+      emailInput.focus();
+      return;
+    }
 
-          passwordInput.focus();
-          return;
-        }
+    if (!institutionName) {
+      showStatus(
+        "Enter your institution name.",
+        "error"
+      );
 
-        if (
-          password !==
-          confirmPassword
-        ) {
-          showStatus(
-            "The two passwords do not match.",
-            "error"
-          );
+      institutionNameInput.focus();
+      return;
+    }
 
-          confirmPasswordInput.focus();
-          return;
-        }
+    if (password.length < 8) {
+      showStatus(
+        "Use a password with at least eight characters.",
+        "error"
+      );
 
-        registerButton.disabled = true;
-        registerButton.textContent =
-          "Creating Account…";
+      passwordInput.focus();
+      return;
+    }
 
-        try {
-          const response =
-            await fetch(
-              REGISTER_RPC_URL,
-              {
-                method: "POST",
+    if (
+      password !== confirmPassword
+    ) {
+      showStatus(
+        "The two passwords do not match.",
+        "error"
+      );
 
-                headers: {
-                  "apikey":
-                    SUPABASE_PUBLISHABLE_KEY,
+      confirmPasswordInput.focus();
+      return;
+    }
 
-                  "Authorization":
-                    "Bearer " +
-                    SUPABASE_PUBLISHABLE_KEY,
+    pendingRegistrationPayload = {
+      studentId: studentId,
+      fullName: fullName,
+      email: email,
+      password: password,
+      batch: batch || null,
+      institutionName:
+        institutionName
+    };
 
-                  "Content-Type":
-                    "application/json"
-                },
+    registerButton.disabled = true;
 
-                body:
-                  JSON.stringify({
-                    p_student_id:
-                      studentId,
+    registerButton.textContent =
+      "Sending Verification Code…";
 
-                    p_full_name:
-                      fullName,
+    try {
+      const result =
+        await sendFunctionRequest(
+          REGISTRATION_FUNCTION_URL,
+          pendingRegistrationPayload
+        );
 
-                    p_email:
-                      email,
+      openVerificationStage(
+        result
+      );
+    } catch (error) {
+      console.error(
+        "ASCENT registration error:",
+        error
+      );
 
-                    p_password:
-                      password,
+      showStatus(
+        error &&
+        error.message
+          ? error.message
+          : "Registration could not be started. Please try again.",
+        "error"
+      );
+    } finally {
+      registerButton.disabled = false;
 
-                    p_batch:
-                      batch || null
-                  })
-              }
-            );
+      registerButton.textContent =
+        "Create Student Account";
+    }
+  }
+);
 
-          if (!response.ok) {
-            const responseText =
-              await response.text();
+verificationCodeInput.addEventListener(
+  "input",
+  function () {
+    verificationCodeInput.value =
+      verificationCodeInput.value
+        .replace(/\D/g, "")
+        .slice(0, 6);
+  }
+);
 
-            throw new Error(
-              "Registration failed: " +
-              response.status +
-              " " +
-              responseText
-            );
-          }
+verificationForm.addEventListener(
+  "submit",
+  async function (event) {
+    event.preventDefault();
 
-          const result =
-            await response.json();
+    const code =
+      verificationCodeInput.value
+        .replace(/\D/g, "")
+        .slice(0, 6);
 
-          const outcome =
-            Array.isArray(result)
-              ? result[0]
-              : null;
+    verificationCodeInput.value =
+      code;
 
-          if (
-            !outcome ||
-            outcome.ok !== true
-          ) {
-            showStatus(
-              outcome &&
-              outcome.message
-                ? outcome.message
-                : "Your account could not be created.",
-              "error"
-            );
-
-            return;
-          }
-
-          registrationForm.reset();
-          registrationPanel.style.display =
-            "none";
-
-          successPanel.classList.add(
-            "visible"
-          );
-
-        } catch (error) {
-          console.error(
-            "ASCENT student registration error:",
-            error
-          );
-
-          showStatus(
-            "ASCENT could not create the account. Please try again.",
-            "error"
-          );
-
-        } finally {
-          registerButton.disabled = false;
-          registerButton.textContent =
-            "Create Student Account";
-        }
-      }
+    showVerificationStatus(
+      "",
+      ""
     );
+
+    if (!pendingStudentUuid) {
+      showVerificationStatus(
+        "Your registration reference is missing. Please restart registration.",
+        "error"
+      );
+
+      return;
+    }
+
+    if (!/^\d{6}$/.test(code)) {
+      showVerificationStatus(
+        "Enter the six-digit verification code.",
+        "error"
+      );
+
+      verificationCodeInput.focus();
+      return;
+    }
+
+    verifyButton.disabled = true;
+
+    verifyButton.textContent =
+      "Verifying…";
+
+    let keepButtonDisabled =
+      false;
+
+    try {
+      await sendFunctionRequest(
+        VERIFICATION_FUNCTION_URL,
+        {
+          student_uuid:
+            pendingStudentUuid,
+          code: code
+        }
+      );
+
+      if (verificationTimer) {
+        clearInterval(
+          verificationTimer
+        );
+
+        verificationTimer = null;
+      }
+
+      verificationForm.reset();
+      registrationForm.reset();
+
+      verificationPanel.style.display =
+        "none";
+
+      successPanel.classList.add(
+        "visible"
+      );
+
+      pendingStudentUuid = "";
+      pendingRegistrationPayload =
+        null;
+
+      keepButtonDisabled = true;
+    } catch (error) {
+      console.error(
+        "ASCENT verification error:",
+        error
+      );
+
+      showVerificationStatus(
+        error &&
+        error.message
+          ? error.message
+          : "Your email could not be verified. Please try again.",
+        "error"
+      );
+
+      if (
+        error &&
+        (
+          error.code ===
+            "verification_code_expired" ||
+          error.code ===
+            "too_many_attempts"
+        )
+      ) {
+        keepButtonDisabled = true;
+      }
+    } finally {
+      verifyButton.textContent =
+        "Verify Email";
+
+      verifyButton.disabled =
+        keepButtonDisabled ||
+        Date.now() >=
+          verificationExpiresAt;
+    }
+  }
+);
+
+resendButton.addEventListener(
+  "click",
+  async function () {
+    showVerificationStatus(
+      "",
+      ""
+    );
+
+    if (
+      !pendingRegistrationPayload
+    ) {
+      showVerificationStatus(
+        "Your registration details are missing. Please restart registration.",
+        "error"
+      );
+
+      return;
+    }
+
+    resendButton.disabled = true;
+
+    resendButton.textContent =
+      "Sending…";
+
+    try {
+      const result =
+        await sendFunctionRequest(
+          REGISTRATION_FUNCTION_URL,
+          pendingRegistrationPayload
+        );
+
+      openVerificationStage(
+        result
+      );
+
+      showVerificationStatus(
+        "A new verification code has been sent.",
+        "success"
+      );
+    } catch (error) {
+      console.error(
+        "ASCENT resend error:",
+        error
+      );
+
+      if (
+        error &&
+        error.retryAfterSeconds
+      ) {
+        resendAvailableAt =
+          Date.now() +
+          (
+            error.retryAfterSeconds *
+            1000
+          );
+      }
+
+      showVerificationStatus(
+        error &&
+        error.message
+          ? error.message
+          : "A new code could not be sent. Please try again.",
+        "error"
+      );
+    } finally {
+      if (
+        Date.now() >=
+          resendAvailableAt
+      ) {
+        resendButton.disabled =
+          false;
+
+        resendButton.textContent =
+          "Resend code";
+      }
+    }
+  }
+);
   </script>
 </body>
 </html>
