@@ -570,7 +570,7 @@
           </div>
           <div class="form-group">
   <label for="institutionName">
-    Institution
+    Institution <span class="optional-label">(optional)</span>
   </label>
 
   <input
@@ -578,12 +578,11 @@
     name="institutionName"
     type="text"
     autocomplete="organization"
-    placeholder="Enter your institution name"
-    required
+    placeholder="Enter your institution name, if applicable"
   >
 
   <div class="field-note">
-    Your verified email address determines whether you receive FIIB access.
+    Independent learners may leave this blank. FIIB access requires a verified @fiib.edu.in email address.
   </div>
 </div>
 
@@ -1191,15 +1190,7 @@ function openVerificationStage(
       return;
     }
 
-    if (!institutionName) {
-      showStatus(
-        "Enter your institution name.",
-        "error"
-      );
-
-      institutionNameInput.focus();
-      return;
-    }
+    
 
     if (password.length < 8) {
       showStatus(
