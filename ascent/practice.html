@@ -266,6 +266,150 @@
       line-height: 1.55;
     }
 
+    .practice-context-panel {
+      margin-bottom: 24px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: #fbfdff;
+    }
+
+    .practice-context-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .practice-context-kicker {
+      margin-bottom: 5px;
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .practice-context-heading {
+      color: var(--navy);
+      font-size: 20px;
+      line-height: 1.25;
+    }
+
+    .pass-status-badge {
+      flex: 0 0 auto;
+      max-width: 220px;
+      padding: 9px 12px;
+      border: 1px solid #ead7af;
+      border-radius: 999px;
+      background: #fff8e8;
+      color: #845000;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.35;
+      text-align: center;
+    }
+
+    .practice-context-loading {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .practice-context-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .practice-field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .practice-field[hidden] {
+      display: none;
+    }
+
+    .practice-label {
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    .practice-select,
+    .practice-input,
+    .practice-textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 11px 12px;
+      background: var(--white);
+      color: var(--text);
+      font: inherit;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .practice-select:focus,
+    .practice-input:focus,
+    .practice-textarea:focus {
+      border-color: var(--blue);
+      outline: 3px solid rgba(39, 103, 157, 0.12);
+    }
+
+    .practice-textarea {
+      min-height: 105px;
+      resize: vertical;
+    }
+
+    .practice-filter-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr;
+      gap: 10px;
+    }
+
+    .selected-question-box {
+      padding: 15px;
+      border: 1px solid #d5e3ef;
+      border-radius: 13px;
+      background: var(--blue-soft);
+    }
+
+    .selected-question-meta {
+      margin-bottom: 6px;
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+    }
+
+    .selected-question-title {
+      margin-bottom: 7px;
+      color: var(--navy);
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .selected-question-text {
+      color: #405a73;
+      font-size: 14px;
+      line-height: 1.58;
+      white-space: pre-wrap;
+    }
+
+    .practice-context-note {
+      padding: 12px 13px;
+      border-radius: 11px;
+      background: #f1f4f7;
+      color: #596a7b;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
     .recorder-box {
       padding: 26px;
       border: 1px solid var(--border);
@@ -880,6 +1024,20 @@
         grid-template-columns: 1fr;
       }
 
+      .practice-context-header {
+        display: block;
+      }
+
+      .pass-status-badge {
+        max-width: none;
+        margin-top: 12px;
+        border-radius: 12px;
+      }
+
+      .practice-filter-grid {
+        grid-template-columns: 1fr;
+      }
+
       .result-action-row .action-button {
         width: 100%;
         min-width: 0;
@@ -983,16 +1141,204 @@
         <h2>Record Your Response</h2>
 
         <p class="intro-text">
-          Record the response to the question assigned by your trainer.
-          You can listen to the recording and record it again before
-          submitting.
+          Choose the question you want to answer, record your response,
+          listen to it, and submit it for evaluation.
         </p>
 
         <div class="instruction-box">
           Find a quiet place, keep the microphone close enough for a clear
-          recording, and speak naturally. The question itself does not need
-          to be entered into the app.
+          recording, and speak naturally. Keep your answer focused on the
+          question shown below.
         </div>
+
+        <section
+          id="practiceContextPanel"
+          class="practice-context-panel"
+          aria-live="polite"
+        >
+          <div class="practice-context-header">
+            <div>
+              <div class="practice-context-kicker">
+                Practice question
+              </div>
+
+              <h3 class="practice-context-heading">
+                Choose what you will answer
+              </h3>
+            </div>
+
+            <div
+              id="passStatusBadge"
+              class="pass-status-badge"
+              hidden
+            ></div>
+          </div>
+
+          <div
+            id="practiceContextLoading"
+            class="practice-context-loading"
+          >
+            Loading your practice options…
+          </div>
+
+          <div
+            id="practiceContextControls"
+            class="practice-context-grid"
+            hidden
+          >
+            <div
+              id="practiceModeField"
+              class="practice-field"
+            >
+              <label
+                class="practice-label"
+                for="practiceModeSelect"
+              >
+                Practice route
+              </label>
+
+              <select
+                id="practiceModeSelect"
+                class="practice-select"
+              ></select>
+            </div>
+
+            <div
+              id="assignedTaskField"
+              class="practice-field"
+              hidden
+            >
+              <label
+                class="practice-label"
+                for="assignedTaskSelect"
+              >
+                Assigned task
+              </label>
+
+              <select
+                id="assignedTaskSelect"
+                class="practice-select"
+              ></select>
+            </div>
+
+            <div
+              id="questionBankField"
+              class="practice-field"
+              hidden
+            >
+              <div class="practice-filter-grid">
+                <div class="practice-field">
+                  <label
+                    class="practice-label"
+                    for="questionBankSearch"
+                  >
+                    Search the question bank
+                  </label>
+
+                  <input
+                    id="questionBankSearch"
+                    class="practice-input"
+                    type="search"
+                    placeholder="Search by title, question or category"
+                  >
+                </div>
+
+                <div class="practice-field">
+                  <label
+                    class="practice-label"
+                    for="questionBankRubricFilter"
+                  >
+                    Rubric
+                  </label>
+
+                  <select
+                    id="questionBankRubricFilter"
+                    class="practice-select"
+                  >
+                    <option value="">All rubrics</option>
+                  </select>
+                </div>
+              </div>
+
+              <label
+                class="practice-label"
+                for="questionBankSelect"
+              >
+                Question-bank task
+              </label>
+
+              <select
+                id="questionBankSelect"
+                class="practice-select"
+              ></select>
+            </div>
+
+            <div
+              id="customQuestionField"
+              class="practice-field"
+              hidden
+            >
+              <label
+                class="practice-label"
+                for="customQuestionInput"
+              >
+                Your question
+              </label>
+
+              <textarea
+                id="customQuestionInput"
+                class="practice-textarea"
+                maxlength="1200"
+                placeholder="Enter the exact question you want ASCENT to evaluate."
+              ></textarea>
+
+              <label
+                class="practice-label"
+                for="customRubricSelect"
+              >
+                Evaluation rubric
+              </label>
+
+              <select
+                id="customRubricSelect"
+                class="practice-select"
+              >
+                <option value="MANAGERIAL_COMMUNICATION">
+                  Managerial Communication
+                </option>
+                <option value="PI">PI</option>
+                <option value="GD">GD</option>
+              </select>
+            </div>
+
+            <div
+              id="practiceContextNote"
+              class="practice-context-note"
+              hidden
+            ></div>
+
+            <div
+              id="selectedQuestionBox"
+              class="selected-question-box"
+              hidden
+            >
+              <div
+                id="selectedQuestionMeta"
+                class="selected-question-meta"
+              ></div>
+
+              <div
+                id="selectedQuestionTitle"
+                class="selected-question-title"
+              ></div>
+
+              <div
+                id="selectedQuestionText"
+                class="selected-question-text"
+              ></div>
+            </div>
+          </div>
+        </section>
 
         <section
           id="pressurePanel"
@@ -1070,6 +1416,7 @@
               id="startButton"
               class="action-button start-button"
               type="button"
+              disabled
             >
               Start Recording
             </button>
@@ -1239,6 +1586,10 @@
       SUPABASE_URL +
       "/functions/v1/ascent-submit-response";
 
+    const PRACTICE_CONTEXT_URL =
+      SUPABASE_URL +
+      "/rest/v1/rpc/ascent_get_student_practice_context";
+
     const studentName =
       document.getElementById("studentName");
 
@@ -1338,6 +1689,96 @@
 const otherIssuesList =
   document.getElementById("otherIssuesList");
 
+    const practiceContextLoading =
+      document.getElementById(
+        "practiceContextLoading"
+      );
+
+    const practiceContextControls =
+      document.getElementById(
+        "practiceContextControls"
+      );
+
+    const passStatusBadge =
+      document.getElementById(
+        "passStatusBadge"
+      );
+
+    const practiceModeSelect =
+      document.getElementById(
+        "practiceModeSelect"
+      );
+
+    const assignedTaskField =
+      document.getElementById(
+        "assignedTaskField"
+      );
+
+    const assignedTaskSelect =
+      document.getElementById(
+        "assignedTaskSelect"
+      );
+
+    const questionBankField =
+      document.getElementById(
+        "questionBankField"
+      );
+
+    const questionBankSearch =
+      document.getElementById(
+        "questionBankSearch"
+      );
+
+    const questionBankRubricFilter =
+      document.getElementById(
+        "questionBankRubricFilter"
+      );
+
+    const questionBankSelect =
+      document.getElementById(
+        "questionBankSelect"
+      );
+
+    const customQuestionField =
+      document.getElementById(
+        "customQuestionField"
+      );
+
+    const customQuestionInput =
+      document.getElementById(
+        "customQuestionInput"
+      );
+
+    const customRubricSelect =
+      document.getElementById(
+        "customRubricSelect"
+      );
+
+    const practiceContextNote =
+      document.getElementById(
+        "practiceContextNote"
+      );
+
+    const selectedQuestionBox =
+      document.getElementById(
+        "selectedQuestionBox"
+      );
+
+    const selectedQuestionMeta =
+      document.getElementById(
+        "selectedQuestionMeta"
+      );
+
+    const selectedQuestionTitle =
+      document.getElementById(
+        "selectedQuestionTitle"
+      );
+
+    const selectedQuestionText =
+      document.getElementById(
+        "selectedQuestionText"
+      );
+
     const newResponseButton =
       document.getElementById("newResponseButton");
 
@@ -1359,6 +1800,12 @@ const otherIssuesList =
     let pressurePrepInterval = null;
     let recordingLimitSeconds = null;
     let recordingAutoStopTriggered = false;
+    let practiceContext = null;
+    let activeAssignments = [];
+    let questionBank = [];
+    let filteredQuestionBank = [];
+    let practiceContextLocked = false;
+    let displayedResponsesRemaining = null;
 
 
     function loadStudentSession() {
@@ -1446,6 +1893,823 @@ const otherIssuesList =
 
       statusMessage.textContent =
         message;
+    }
+
+
+    function rubricLabel(value) {
+      switch (
+        String(value || "")
+          .trim()
+          .toUpperCase()
+      ) {
+        case "MANAGERIAL_COMMUNICATION":
+          return "Managerial Communication";
+        case "PI":
+          return "PI";
+        case "GD":
+          return "GD";
+        default:
+          return "ASCENT";
+      }
+    }
+
+
+    function formatPassExpiry(value) {
+      const timestamp =
+        Date.parse(String(value || ""));
+
+      if (!Number.isFinite(timestamp)) {
+        return "";
+      }
+
+      return new Intl.DateTimeFormat(
+        "en-IN",
+        {
+          day: "numeric",
+          month: "short",
+          year: "numeric"
+        }
+      ).format(new Date(timestamp));
+    }
+
+
+    function normalisePracticeArray(value) {
+      if (Array.isArray(value)) {
+        return value;
+      }
+
+      if (typeof value === "string") {
+        try {
+          const parsed = JSON.parse(value);
+
+          return Array.isArray(parsed)
+            ? parsed
+            : [];
+        } catch {
+          return [];
+        }
+      }
+
+      return [];
+    }
+
+
+    function setPracticeContextLocked(locked) {
+      practiceContextLocked =
+        Boolean(locked);
+
+      [
+        practiceModeSelect,
+        assignedTaskSelect,
+        questionBankSearch,
+        questionBankRubricFilter,
+        questionBankSelect,
+        customQuestionInput,
+        customRubricSelect
+      ].forEach(function (control) {
+        if (control) {
+          control.disabled =
+            practiceContextLocked;
+        }
+      });
+    }
+
+
+    function getSelectedPractice() {
+      if (!practiceContext) {
+        return {
+          valid: false,
+          message:
+            "Your practice options are still loading."
+        };
+      }
+
+      if (
+        practiceContext.is_private_learner === true &&
+        Number.isFinite(
+          Number(displayedResponsesRemaining)
+        ) &&
+        Number(displayedResponsesRemaining) <= 0
+      ) {
+        return {
+          valid: false,
+          message:
+            "You have used all responses included in this private learner pass."
+        };
+      }
+
+      const mode =
+        String(
+          practiceModeSelect.value || ""
+        );
+
+      if (mode === "assigned") {
+        const assignmentUuid =
+          String(
+            assignedTaskSelect.value || ""
+          );
+
+        const selected =
+          activeAssignments.find(
+            function (item) {
+              return String(
+                item.assignmentUuid || ""
+              ) === assignmentUuid;
+            }
+          );
+
+        if (!selected) {
+          return {
+            valid: false,
+            message:
+              "Choose an assigned task before recording."
+          };
+        }
+
+        return {
+          valid: true,
+          mode,
+          assignmentUuid,
+          title:
+            String(
+              selected.title ||
+              "Assigned Task"
+            ),
+          question:
+            String(
+              selected.question || ""
+            ),
+          rubricType:
+            String(
+              selected.rubricType || ""
+            )
+        };
+      }
+
+      if (mode === "question_bank") {
+        const questionBankUuid =
+          String(
+            questionBankSelect.value || ""
+          );
+
+        const selected =
+          questionBank.find(
+            function (item) {
+              return String(
+                item.questionBankUuid || ""
+              ) === questionBankUuid;
+            }
+          );
+
+        if (!selected) {
+          return {
+            valid: false,
+            message:
+              "Choose a question-bank task before recording."
+          };
+        }
+
+        return {
+          valid: true,
+          mode,
+          questionBankUuid,
+          title:
+            String(
+              selected.title ||
+              "Question-bank Task"
+            ),
+          question:
+            String(
+              selected.question || ""
+            ),
+          rubricType:
+            String(
+              selected.rubricType || ""
+            )
+        };
+      }
+
+      if (mode === "custom") {
+        const question =
+          String(
+            customQuestionInput.value || ""
+          ).trim();
+
+        const rubricType =
+          String(
+            customRubricSelect.value || ""
+          ).trim();
+
+        if (
+          question.length < 10 ||
+          question.length > 1200
+        ) {
+          return {
+            valid: false,
+            message:
+              "Enter a clear question of at least 10 characters before recording."
+          };
+        }
+
+        if (
+          ![
+            "MANAGERIAL_COMMUNICATION",
+            "PI",
+            "GD"
+          ].includes(rubricType)
+        ) {
+          return {
+            valid: false,
+            message:
+              "Choose an evaluation rubric for your question."
+          };
+        }
+
+        return {
+          valid: true,
+          mode,
+          title: "My Practice Question",
+          question,
+          rubricType
+        };
+      }
+
+      return {
+        valid: false,
+        message:
+          "No practice route is currently available."
+      };
+    }
+
+
+    function updatePassStatus() {
+      if (
+        !practiceContext ||
+        practiceContext.is_private_learner !== true
+      ) {
+        passStatusBadge.hidden = true;
+        passStatusBadge.textContent = "";
+        return;
+      }
+
+      const remaining =
+        Number(displayedResponsesRemaining);
+
+      const expiry =
+        formatPassExpiry(
+          practiceContext
+            .entitlement_expires_at
+        );
+
+      const parts = [];
+
+      if (Number.isFinite(remaining)) {
+        parts.push(
+          String(Math.max(0, remaining)) +
+          (
+            remaining === 1
+              ? " response left"
+              : " responses left"
+          )
+        );
+      }
+
+      if (expiry) {
+        parts.push("valid until " + expiry);
+      }
+
+      passStatusBadge.textContent =
+        parts.join(" · ") ||
+        "Private learner pass active";
+
+      passStatusBadge.hidden = false;
+    }
+
+
+    function updateSelectedQuestion() {
+      const selected =
+        getSelectedPractice();
+
+      if (!selected.valid) {
+        selectedQuestionBox.hidden = true;
+        selectedQuestionMeta.textContent = "";
+        selectedQuestionTitle.textContent = "";
+        selectedQuestionText.textContent = "";
+
+        if (selected.message) {
+          practiceContextNote.textContent =
+            selected.message;
+          practiceContextNote.hidden = false;
+        }
+
+        if (
+          responsePhase === "main" &&
+          !isRecording
+        ) {
+          startButton.disabled = true;
+        }
+
+        return;
+      }
+
+      practiceContextNote.hidden = true;
+      practiceContextNote.textContent = "";
+
+      selectedQuestionMeta.textContent =
+        rubricLabel(
+          selected.rubricType
+        ) +
+        " · " +
+        (
+          selected.mode === "assigned"
+            ? "Assigned task"
+            : selected.mode ===
+                "question_bank"
+              ? "Question bank"
+              : "Your own question"
+        );
+
+      selectedQuestionTitle.textContent =
+        selected.title;
+
+      selectedQuestionText.textContent =
+        selected.question;
+
+      selectedQuestionBox.hidden = false;
+
+      if (
+        responsePhase === "main" &&
+        !isRecording &&
+        !practiceContextLocked
+      ) {
+        startButton.disabled = false;
+      }
+    }
+
+
+    function populateAssignedTasks() {
+      clearElement(assignedTaskSelect);
+
+      activeAssignments.forEach(
+        function (item) {
+          const option =
+            document.createElement(
+              "option"
+            );
+
+          option.value =
+            String(
+              item.assignmentUuid || ""
+            );
+
+          option.textContent =
+            String(
+              item.title ||
+              item.question ||
+              "Assigned Task"
+            );
+
+          assignedTaskSelect.appendChild(
+            option
+          );
+        }
+      );
+    }
+
+
+    function populateRubricFilter() {
+      clearElement(
+        questionBankRubricFilter
+      );
+
+      const allOption =
+        document.createElement("option");
+
+      allOption.value = "";
+      allOption.textContent =
+        "All rubrics";
+
+      questionBankRubricFilter.appendChild(
+        allOption
+      );
+
+      const rubricTypes =
+        [
+          ...new Set(
+            questionBank
+              .map(function (item) {
+                return String(
+                  item.rubricType || ""
+                );
+              })
+              .filter(Boolean)
+          )
+        ];
+
+      rubricTypes
+        .sort(function (left, right) {
+          return rubricLabel(left)
+            .localeCompare(
+              rubricLabel(right)
+            );
+        })
+        .forEach(function (rubricType) {
+          const option =
+            document.createElement(
+              "option"
+            );
+
+          option.value = rubricType;
+          option.textContent =
+            rubricLabel(rubricType);
+
+          questionBankRubricFilter
+            .appendChild(option);
+        });
+    }
+
+
+    function populateQuestionBank() {
+      const previousValue =
+        String(
+          questionBankSelect.value || ""
+        );
+
+      const searchValue =
+        String(
+          questionBankSearch.value || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      const rubricValue =
+        String(
+          questionBankRubricFilter
+            .value || ""
+        );
+
+      filteredQuestionBank =
+        questionBank.filter(
+          function (item) {
+            const searchable =
+              [
+                item.title,
+                item.question,
+                item.category,
+                item.bankType,
+                item.difficultyLabel
+              ]
+                .map(function (value) {
+                  return String(
+                    value || ""
+                  ).toLowerCase();
+                })
+                .join(" ");
+
+            const matchesSearch =
+              !searchValue ||
+              searchable.includes(
+                searchValue
+              );
+
+            const matchesRubric =
+              !rubricValue ||
+              String(
+                item.rubricType || ""
+              ) === rubricValue;
+
+            return (
+              matchesSearch &&
+              matchesRubric
+            );
+          }
+        );
+
+      clearElement(questionBankSelect);
+
+      if (
+        filteredQuestionBank.length === 0
+      ) {
+        const emptyOption =
+          document.createElement(
+            "option"
+          );
+
+        emptyOption.value = "";
+        emptyOption.textContent =
+          "No matching questions";
+
+        questionBankSelect.appendChild(
+          emptyOption
+        );
+
+        updateSelectedQuestion();
+        return;
+      }
+
+      filteredQuestionBank.forEach(
+        function (item) {
+          const option =
+            document.createElement(
+              "option"
+            );
+
+          option.value =
+            String(
+              item.questionBankUuid || ""
+            );
+
+          const title =
+            String(
+              item.title ||
+              item.question ||
+              "ASCENT Question"
+            );
+
+          option.textContent =
+            "[" +
+            rubricLabel(
+              item.rubricType
+            ) +
+            "] " +
+            title;
+
+          questionBankSelect.appendChild(
+            option
+          );
+        }
+      );
+
+      const canRestore =
+        filteredQuestionBank.some(
+          function (item) {
+            return String(
+              item.questionBankUuid || ""
+            ) === previousValue;
+          }
+        );
+
+      if (canRestore) {
+        questionBankSelect.value =
+          previousValue;
+      }
+
+      updateSelectedQuestion();
+    }
+
+
+    function updatePracticeMode() {
+      const mode =
+        String(
+          practiceModeSelect.value || ""
+        );
+
+      assignedTaskField.hidden =
+        mode !== "assigned";
+
+      questionBankField.hidden =
+        mode !== "question_bank";
+
+      customQuestionField.hidden =
+        mode !== "custom";
+
+      updateSelectedQuestion();
+    }
+
+
+    function renderPracticeContext() {
+      clearElement(practiceModeSelect);
+
+      const isPrivateLearner =
+        practiceContext &&
+        practiceContext
+          .is_private_learner === true;
+
+      if (activeAssignments.length > 0) {
+        const assignedOption =
+          document.createElement(
+            "option"
+          );
+
+        assignedOption.value =
+          "assigned";
+
+        assignedOption.textContent =
+          "Answer an assigned task";
+
+        practiceModeSelect.appendChild(
+          assignedOption
+        );
+      }
+
+      if (isPrivateLearner) {
+        if (questionBank.length > 0) {
+          const bankOption =
+            document.createElement(
+              "option"
+            );
+
+          bankOption.value =
+            "question_bank";
+
+          bankOption.textContent =
+            "Choose from the ASCENT question bank";
+
+          practiceModeSelect.appendChild(
+            bankOption
+          );
+        }
+
+        const customOption =
+          document.createElement(
+            "option"
+          );
+
+        customOption.value = "custom";
+        customOption.textContent =
+          "Enter my own question";
+
+        practiceModeSelect.appendChild(
+          customOption
+        );
+      }
+
+      populateAssignedTasks();
+      populateRubricFilter();
+      populateQuestionBank();
+
+      practiceContextLoading.hidden =
+        true;
+
+      practiceContextControls.hidden =
+        false;
+
+      if (
+        practiceModeSelect.options.length === 0
+      ) {
+        practiceContextNote.textContent =
+          "No active task is available. Please contact your trainer.";
+        practiceContextNote.hidden = false;
+        selectedQuestionBox.hidden = true;
+        startButton.disabled = true;
+        return;
+      }
+
+      practiceModeSelect.value =
+        activeAssignments.length > 0
+          ? "assigned"
+          : questionBank.length > 0
+            ? "question_bank"
+            : "custom";
+
+      updatePassStatus();
+      updatePracticeMode();
+    }
+
+
+    async function loadPracticeContext() {
+      startButton.disabled = true;
+      practiceContextLoading.hidden =
+        false;
+
+      practiceContextLoading.textContent =
+        "Loading your practice options…";
+
+      practiceContextControls.hidden =
+        true;
+
+      try {
+        const response =
+          await fetch(
+            PRACTICE_CONTEXT_URL,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                "apikey":
+                  SUPABASE_PUBLISHABLE_KEY,
+
+                "Authorization":
+                  "Bearer " +
+                  SUPABASE_PUBLISHABLE_KEY
+              },
+
+              body: JSON.stringify({
+                p_session_token:
+                  currentSession
+                    .sessionToken
+              })
+            }
+          );
+
+        const responseText =
+          await response.text();
+
+        let payload = null;
+
+        try {
+          payload =
+            responseText
+              ? JSON.parse(responseText)
+              : null;
+        } catch (parseError) {
+          console.error(
+            "Invalid ASCENT practice context response:",
+            responseText,
+            parseError
+          );
+        }
+
+        const result =
+          Array.isArray(payload)
+            ? payload[0]
+            : payload;
+
+        if (
+          !response.ok ||
+          !result ||
+          result.ok !== true
+        ) {
+          throw new Error(
+            result &&
+            result.message
+              ? result.message
+              : "ASCENT could not load your practice options."
+          );
+        }
+
+        practiceContext = result;
+
+        activeAssignments =
+          normalisePracticeArray(
+            result.active_assignments
+          );
+
+        questionBank =
+          normalisePracticeArray(
+            result.question_bank
+          );
+
+        displayedResponsesRemaining =
+          result.submissions_remaining ===
+            null ||
+          result.submissions_remaining ===
+            undefined
+            ? null
+            : Number(
+                result.submissions_remaining
+              );
+
+        renderPracticeContext();
+
+      } catch (error) {
+        console.error(
+          "ASCENT practice context error:",
+          error
+        );
+
+        practiceContextLoading.hidden =
+          false;
+
+        practiceContextLoading.textContent =
+          error.message ||
+          "ASCENT could not load your practice options.";
+
+        practiceContextControls.hidden =
+          true;
+
+        startButton.disabled = true;
+
+        showStatus(
+          error.message ||
+          "ASCENT could not load your practice options. Please refresh the page.",
+          "error"
+        );
+      }
+    }
+
+
+    function consumeDisplayedResponse() {
+      if (
+        !practiceContext ||
+        practiceContext
+          .is_private_learner !== true
+      ) {
+        return;
+      }
+
+      const current =
+        Number(displayedResponsesRemaining);
+
+      if (Number.isFinite(current)) {
+        displayedResponsesRemaining =
+          Math.max(0, current - 1);
+
+        updatePassStatus();
+      }
     }
 
 
@@ -2533,6 +3797,24 @@ otherIssuesSection.hidden =
     async function startRecording() {
       showStatus("", "");
 
+      if (responsePhase === "main") {
+        const selectedPractice =
+          getSelectedPractice();
+
+        if (!selectedPractice.valid) {
+          showStatus(
+            selectedPractice.message ||
+            "Choose a question before recording.",
+            "error"
+          );
+
+          updateSelectedQuestion();
+          return;
+        }
+
+        setPracticeContextLocked(true);
+      }
+
       const AudioContextConstructor =
         getAudioContextConstructor();
 
@@ -2541,6 +3823,11 @@ otherIssuesSection.hidden =
         !navigator.mediaDevices.getUserMedia ||
         !AudioContextConstructor
       ) {
+        if (responsePhase === "main") {
+          setPracticeContextLocked(false);
+          updateSelectedQuestion();
+        }
+
         showStatus(
           "Audio recording is not supported in this browser. Please use an updated version of Chrome, Edge or Safari.",
           "error"
@@ -2659,7 +3946,13 @@ otherIssuesSection.hidden =
 
         stopAudioCapture();
 
-        startButton.disabled = false;
+        if (responsePhase === "main") {
+          setPracticeContextLocked(false);
+          updateSelectedQuestion();
+        } else {
+          startButton.disabled = false;
+        }
+
         stopButton.disabled = true;
 
         showStatus(
@@ -2803,7 +4096,13 @@ otherIssuesSection.hidden =
           "active"
         );
 
-        startButton.disabled = false;
+        if (responsePhase === "main") {
+          setPracticeContextLocked(false);
+          updateSelectedQuestion();
+        } else {
+          startButton.disabled = false;
+        }
+
         stopButton.disabled = true;
 
         showStatus(
@@ -2845,7 +4144,9 @@ otherIssuesSection.hidden =
       timer.textContent =
         "00:00";
 
-      startButton.disabled = false;
+      setPracticeContextLocked(false);
+      updateSelectedQuestion();
+
       stopButton.disabled = true;
       recordAgainButton.disabled = false;
       submitButton.disabled = false;
@@ -2887,6 +4188,22 @@ otherIssuesSection.hidden =
           "error"
         );
         return;
+      }
+
+      let selectedPractice = null;
+
+      if (responsePhase === "main") {
+        selectedPractice =
+          getSelectedPractice();
+
+        if (!selectedPractice.valid) {
+          showStatus(
+            selectedPractice.message ||
+            "Choose a valid question before submitting.",
+            "error"
+          );
+          return;
+        }
       }
 
       submitButton.disabled = true;
@@ -2957,6 +4274,40 @@ otherIssuesSection.hidden =
           "submission_id",
           pressureSubmissionId
         );
+      } else if (selectedPractice) {
+        if (
+          selectedPractice.mode ===
+          "assigned"
+        ) {
+          formData.append(
+            "assignment_uuid",
+            selectedPractice
+              .assignmentUuid
+          );
+        } else if (
+          selectedPractice.mode ===
+          "question_bank"
+        ) {
+          formData.append(
+            "question_bank_uuid",
+            selectedPractice
+              .questionBankUuid
+          );
+        } else if (
+          selectedPractice.mode ===
+          "custom"
+        ) {
+          formData.append(
+            "custom_question",
+            selectedPractice.question
+          );
+
+          formData.append(
+            "custom_rubric_type",
+            selectedPractice
+              .rubricType
+          );
+        }
       }
 
       formData.append(
@@ -3024,6 +4375,10 @@ otherIssuesSection.hidden =
         submitButton.textContent =
           "Submitted";
 
+        if (responsePhase === "main") {
+          consumeDisplayedResponse();
+        }
+
         if (
           responsePhase === "main" &&
           result.pressureRequired === true
@@ -3080,7 +4435,7 @@ otherIssuesSection.hidden =
           } else {
             submitButton.disabled = false;
             recordAgainButton.disabled = false;
-            startButton.disabled = false;
+            startButton.disabled = true;
 
             submitButton.textContent =
               "Submit Response";
@@ -3113,7 +4468,45 @@ otherIssuesSection.hidden =
 
     if (currentSession) {
       displayStudent(currentSession);
+      void loadPracticeContext();
     }
+
+
+    practiceModeSelect.addEventListener(
+      "change",
+      updatePracticeMode
+    );
+
+    assignedTaskSelect.addEventListener(
+      "change",
+      updateSelectedQuestion
+    );
+
+    questionBankSearch.addEventListener(
+      "input",
+      populateQuestionBank
+    );
+
+    questionBankRubricFilter
+      .addEventListener(
+        "change",
+        populateQuestionBank
+      );
+
+    questionBankSelect.addEventListener(
+      "change",
+      updateSelectedQuestion
+    );
+
+    customQuestionInput.addEventListener(
+      "input",
+      updateSelectedQuestion
+    );
+
+    customRubricSelect.addEventListener(
+      "change",
+      updateSelectedQuestion
+    );
 
 
     startButton.addEventListener(
