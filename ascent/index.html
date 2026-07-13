@@ -557,6 +557,15 @@
   line-height: 1.4;
   text-align: center;
 }
+    .private-payment-note.error {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.private-payment-note.success {
+  color: var(--success);
+  font-weight: 700;
+}
 
 .private-benefits-link {
   display: block;
@@ -876,18 +885,66 @@
   <div class="private-pass-price">
     Founding learner price: ₹699
   </div>
+  <div class="form-group">
+    <label for="privateBuyerName">
+      Full name
+    </label>
 
-  <button
+    <input
+      id="privateBuyerName"
+      name="privateBuyerName"
+      type="text"
+      autocomplete="name"
+      placeholder="Enter your full name"
+      required
+    >
+  </div>
+
+  <div class="form-group">
+    <label for="privateBuyerEmail">
+      Email address
+    </label>
+
+    <input
+      id="privateBuyerEmail"
+      name="privateBuyerEmail"
+      type="email"
+      autocomplete="email"
+      placeholder="Enter the email you will register with"
+      required
+    >
+  </div>
+    <div class="form-group">
+    <label for="privateBuyerPhone">
+      Mobile number
+    </label>
+
+    <input
+      id="privateBuyerPhone"
+      name="privateBuyerPhone"
+      type="tel"
+      inputmode="numeric"
+      autocomplete="tel"
+      placeholder="Enter your 10-digit mobile number"
+      maxlength="10"
+      required
+    >
+  </div>
+   <button
+    id="privatePassButton"
     class="private-pass-button"
     type="button"
-    disabled
-    aria-disabled="true"
   >
     Start Your 4-Week ASCENT Pass
   </button>
 
-  <p class="private-payment-note">
-    Secure online payment will open shortly.
+  <p
+    id="privatePaymentStatus"
+    class="private-payment-note"
+    role="status"
+    aria-live="polite"
+  >
+    Secure payment through Razorpay Test Mode.
   </p>
 
   <a
@@ -971,7 +1028,9 @@
       </div>
 
     </section>
-  </main>
+   </main>
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
   <script>
   const SUPABASE_URL =
@@ -991,6 +1050,17 @@ const STUDENT_LOGIN_RPC_URL =
 const TRAINER_LOGIN_RPC_URL =
   SUPABASE_URL +
   "/rest/v1/rpc/ascent_trainer_login_for_access_point";
+       
+const CREATE_PRIVATE_PASS_ORDER_URL =
+  SUPABASE_URL +
+  "/functions/v1/ascent-create-private-pass-order";
+
+const VERIFY_PRIVATE_PASS_PAYMENT_URL =
+  SUPABASE_URL +
+  "/functions/v1/ascent-verify-private-pass-payment";
+
+const PRIVATE_PASS_PRODUCT_CODE =
+  "ASCENT_PRIVATE_4W_FOUNDING";
 
   const accessForm =
   document.getElementById("accessForm");
@@ -1042,6 +1112,443 @@ const statusMessage =
 
 const showPasswordButton =
   document.getElementById("showPasswordButton");
+
+const privatePassButton =
+  document.getElementById("privatePassButton");
+
+const privatePaymentStatus =
+  document.getElementById("privatePaymentStatus");
+    
+const privateBuyerName =
+  document.getElementById("privateBuyerName");
+
+const privateBuyerEmail =
+  document.getElementById("privateBuyerEmail");
+const privateBuyerPhone =
+  document.getElementById("privateBuyerPhone");
+
+    function showPrivatePaymentStatus(message, type) {
+  privatePaymentStatus.className =
+    "private-payment-note" +
+    (type ? " " + type : "");
+
+  privatePaymentStatus.textContent = message;
+}
+function getPrivateBuyerDetails() {
+  const fullName =
+    privateBuyerName.value.trim();
+
+  const email =
+    privateBuyerEmail.value
+      .trim()
+      .toLowerCase();
+
+  const phone =
+    privateBuyerPhone.value
+      .replace(/\D/g, "");
+
+  if (fullName.length < 2) {
+    showPrivatePaymentStatus(
+      "Please enter your full name.",
+      "error"
+    );
+
+    privateBuyerName.focus();
+    return null;
+  }
+
+  if (
+    !email ||
+    !email.includes("@") ||
+    email.startsWith("@") ||
+    email.endsWith("@")
+  ) {
+    showPrivatePaymentStatus(
+      "Please enter a valid email address.",
+      "error"
+    );
+
+    privateBuyerEmail.focus();
+    return null;
+  }
+
+  if (!/^[6-9][0-9]{9}$/.test(phone)) {
+    showPrivatePaymentStatus(
+      "Please enter a valid 10-digit Indian mobile number.",
+      "error"
+    );
+
+    privateBuyerPhone.focus();
+    return null;
+  }
+
+  return {
+    fullName,
+    email,
+    phone
+  };
+}
+function setPrivatePassButtonBusy(isBusy) {
+  privatePassButton.disabled =
+    isBusy;
+
+  privatePassButton.textContent =
+    isBusy
+      ? "Preparing secure checkout…"
+      : "Start Your 4-Week ASCENT Pass";
+}
+function privatePaymentHeaders() {
+  return {
+    "apikey":
+      SUPABASE_PUBLISHABLE_KEY,
+
+    "Authorization":
+      "Bearer " +
+      SUPABASE_PUBLISHABLE_KEY,
+
+    "Content-Type":
+      "application/json"
+  };
+}
+async function readPrivatePaymentResponse(response) {
+  const responseText =
+    await response.text();
+
+  if (!responseText) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(responseText);
+  } catch (error) {
+    console.error(
+      "ASCENT payment response was not valid JSON:",
+      responseText
+    );
+
+    return {
+      ok: false,
+      message:
+        "ASCENT received an unexpected payment response."
+    };
+  }
+}
+async function createPrivatePassOrder(buyer) {
+  const response = await fetch(
+    CREATE_PRIVATE_PASS_ORDER_URL,
+    {
+      method: "POST",
+
+      headers:
+        privatePaymentHeaders(),
+
+      body: JSON.stringify({
+        productCode:
+          PRIVATE_PASS_PRODUCT_CODE,
+
+        buyerName:
+          buyer.fullName,
+
+        buyerEmail:
+          buyer.email,
+
+        buyerPhone:
+          buyer.phone
+      })
+    }
+  );
+
+  const result =
+    await readPrivatePaymentResponse(response);
+
+  if (!response.ok || result.ok !== true) {
+    throw new Error(
+      result.message ||
+      "ASCENT could not create the payment order."
+    );
+  }
+
+  if (
+    !result.payment_order_uuid ||
+    !result.razorpay_order_id ||
+    !result.razorpay_key_id ||
+    !result.amount_paise
+  ) {
+    throw new Error(
+      "ASCENT received an incomplete payment order."
+    );
+  }
+
+  return {
+    ...result,
+    amount:
+      Number(result.amount_paise)
+  };
+}
+async function verifyPrivatePassPayment(
+  paymentOrder,
+  razorpayResponse
+) {
+  const response = await fetch(
+    VERIFY_PRIVATE_PASS_PAYMENT_URL,
+    {
+      method: "POST",
+
+      headers:
+        privatePaymentHeaders(),
+
+      body: JSON.stringify({
+        payment_order_uuid:
+          paymentOrder.payment_order_uuid,
+
+        razorpay_payment_id:
+          razorpayResponse.razorpay_payment_id,
+
+        razorpay_order_id:
+          razorpayResponse.razorpay_order_id,
+
+        razorpay_signature:
+          razorpayResponse.razorpay_signature
+      })
+    }
+  );
+
+  const result =
+    await readPrivatePaymentResponse(response);
+
+  if (!response.ok || result.ok !== true) {
+    throw new Error(
+      result.message ||
+      "ASCENT could not verify the payment."
+    );
+  }
+
+  return result;
+}
+function openPrivatePassCheckout(
+  paymentOrder,
+  buyer
+) {
+  if (
+    typeof window.Razorpay !==
+    "function"
+  ) {
+    throw new Error(
+      "Razorpay Checkout could not load. Please refresh the page and try again."
+    );
+  }
+
+  const razorpayKeyId =
+    paymentOrder.razorpay_key_id ||
+    paymentOrder.key_id;
+
+  if (!razorpayKeyId) {
+    throw new Error(
+      "ASCENT did not provide the Razorpay checkout key."
+    );
+  }
+
+  let verificationStarted =
+    false;
+
+  const checkoutOptions = {
+    key:
+      razorpayKeyId,
+
+    amount:
+      Number(paymentOrder.amount),
+
+    currency:
+      paymentOrder.currency ||
+      "INR",
+
+    name:
+      "ASCENT",
+
+    description:
+      "ASCENT 4-Week Practice Pass",
+
+    order_id:
+      paymentOrder.razorpay_order_id,
+
+    prefill: {
+      name:
+        buyer.fullName,
+
+      email:
+        buyer.email,
+
+      contact:
+        "+91" + buyer.phone
+    },
+
+    notes: {
+      payment_order_uuid:
+        paymentOrder.payment_order_uuid,
+
+      product_code:
+        PRIVATE_PASS_PRODUCT_CODE
+    },
+
+    handler:
+      async function (
+        razorpayResponse
+      ) {
+        verificationStarted =
+          true;
+
+        privatePassButton.disabled =
+          true;
+
+        privatePassButton.textContent =
+          "Verifying payment…";
+
+        showPrivatePaymentStatus(
+          "Payment received. ASCENT is verifying it securely…",
+          ""
+        );
+
+        try {
+          await verifyPrivatePassPayment(
+            paymentOrder,
+            razorpayResponse
+          );
+
+          showPrivatePaymentStatus(
+            "Payment verified. Your ASCENT 4-Week Practice Pass is active.",
+            "success"
+          );
+
+          privatePassButton.disabled =
+            true;
+
+          privatePassButton.textContent =
+            "Pass activated";
+
+        } catch (error) {
+          console.error(
+            "ASCENT payment verification error:",
+            error
+          );
+
+          setPrivatePassButtonBusy(
+            false
+          );
+
+          showPrivatePaymentStatus(
+            error.message ||
+            "ASCENT could not verify the payment. Please contact support before paying again.",
+            "error"
+          );
+        }
+      },
+
+    modal: {
+      confirm_close:
+        true,
+
+      ondismiss:
+        function () {
+          if (
+            verificationStarted
+          ) {
+            return;
+          }
+
+          setPrivatePassButtonBusy(
+            false
+          );
+
+          showPrivatePaymentStatus(
+            "Payment was not completed. You can try again when ready.",
+            ""
+          );
+        }
+    },
+
+    retry: {
+      enabled:
+        true
+    }
+  };
+
+  const razorpayCheckout =
+    new window.Razorpay(
+      checkoutOptions
+    );
+
+  razorpayCheckout.on(
+    "payment.failed",
+    function (failureResponse) {
+      const failureMessage =
+        failureResponse &&
+        failureResponse.error &&
+        failureResponse.error.description
+          ? failureResponse.error.description
+          : "The payment was not completed.";
+
+      showPrivatePaymentStatus(
+        failureMessage,
+        "error"
+      );
+    }
+  );
+
+  razorpayCheckout.open();
+}
+privatePassButton.addEventListener(
+  "click",
+  async function () {
+    const buyer =
+      getPrivateBuyerDetails();
+
+    if (!buyer) {
+      return;
+    }
+
+    setPrivatePassButtonBusy(
+      true
+    );
+
+    showPrivatePaymentStatus(
+      "Preparing secure checkout…",
+      ""
+    );
+
+    try {
+      const paymentOrder =
+        await createPrivatePassOrder(
+          buyer
+        );
+
+      showPrivatePaymentStatus(
+        "Secure checkout is ready. Complete the payment in the Razorpay window.",
+        ""
+      );
+
+      openPrivatePassCheckout(
+        paymentOrder,
+        buyer
+      );
+
+    } catch (error) {
+      console.error(
+        "ASCENT payment-order error:",
+        error
+      );
+
+      setPrivatePassButtonBusy(
+        false
+      );
+
+      showPrivatePaymentStatus(
+        error.message ||
+        "ASCENT could not prepare the payment. Please try again.",
+        "error"
+      );
+    }
+  }
+);
 
 let selectedAccessPoint = null;
 let selectedLoginRole = "";
