@@ -1558,7 +1558,7 @@
               class="action-button secondary-button"
               type="button"
             >
-              Choose Another Question
+              Continue
             </button>
           </div>
         </section>
@@ -3382,8 +3382,14 @@ otherIssuesSection.hidden =
       recordAgainButton.style.display =
         "none";
 
+      const privateLearnerCanContinue =
+        practiceContext &&
+        practiceContext.is_private_learner === true;
+
       newResponseButton.textContent =
-        "Choose Another Question";
+        privateLearnerCanContinue
+          ? "Choose Another Question"
+          : "Return to Dashboard";
 
       newResponseButton.disabled =
         false;
@@ -4741,6 +4747,16 @@ otherIssuesSection.hidden =
     newResponseButton.addEventListener(
       "click",
       async function () {
+        const isPrivateLearner =
+          practiceContext &&
+          practiceContext.is_private_learner === true;
+
+        if (!isPrivateLearner) {
+          window.location.href =
+            "./dashboard.html";
+          return;
+        }
+
         resetRecording();
 
         showStatus(
