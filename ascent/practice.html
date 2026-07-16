@@ -1558,7 +1558,7 @@
               class="action-button secondary-button"
               type="button"
             >
-              Record Another Response
+              Choose Another Question
             </button>
           </div>
         </section>
@@ -1589,6 +1589,10 @@
     const PRACTICE_CONTEXT_URL =
       SUPABASE_URL +
       "/rest/v1/rpc/ascent_get_student_practice_context";
+
+    const SINGLE_ATTEMPT_HISTORY_URL =
+      SUPABASE_URL +
+      "/rest/v1/rpc/ascent_student_single_attempt_history";
 
     const studentName =
       document.getElementById("studentName");
@@ -1804,6 +1808,9 @@ const otherIssuesList =
     let activeAssignments = [];
     let questionBank = [];
     let filteredQuestionBank = [];
+    let answeredAssignmentUuids = new Set();
+    let answeredQuestionBankUuids = new Set();
+    let answeredQuestionKeys = new Set();
     let practiceContextLocked = false;
     let displayedResponsesRemaining = null;
 
@@ -1954,6 +1961,57 @@ const otherIssuesList =
     }
 
 
+    function normaliseQuestionKey(value) {
+      return String(value || "")
+        .normalize("NFKC")
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}]+/gu, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+
+    function questionWasAnswered(question) {
+      const key = normaliseQuestionKey(question);
+
+      return Boolean(
+        key && answeredQuestionKeys.has(key)
+      );
+    }
+
+
+    function markSelectedPracticeAnswered(selected) {
+      if (!selected || selected.valid !== true) {
+        return;
+      }
+
+      const questionKey =
+        normaliseQuestionKey(selected.question);
+
+      if (questionKey) {
+        answeredQuestionKeys.add(questionKey);
+      }
+
+      if (
+        selected.mode === "assigned" &&
+        selected.assignmentUuid
+      ) {
+        answeredAssignmentUuids.add(
+          String(selected.assignmentUuid)
+        );
+      }
+
+      if (
+        selected.mode === "question_bank" &&
+        selected.questionBankUuid
+      ) {
+        answeredQuestionBankUuids.add(
+          String(selected.questionBankUuid)
+        );
+      }
+    }
+
+
     function setPracticeContextLocked(locked) {
       practiceContextLocked =
         Boolean(locked);
@@ -2026,6 +2084,17 @@ const otherIssuesList =
           };
         }
 
+        if (
+          answeredAssignmentUuids.has(assignmentUuid) ||
+          questionWasAnswered(selected.question)
+        ) {
+          return {
+            valid: false,
+            message:
+              "You have already answered this question. Choose a different question."
+          };
+        }
+
         return {
           valid: true,
           mode,
@@ -2066,6 +2135,17 @@ const otherIssuesList =
             valid: false,
             message:
               "Choose a question-bank task before recording."
+          };
+        }
+
+        if (
+          answeredQuestionBankUuids.has(questionBankUuid) ||
+          questionWasAnswered(selected.question)
+        ) {
+          return {
+            valid: false,
+            message:
+              "You have already answered this question. Choose a different question."
           };
         }
 
@@ -2122,6 +2202,14 @@ const otherIssuesList =
             valid: false,
             message:
               "Choose an evaluation rubric for your question."
+          };
+        }
+
+        if (questionWasAnswered(question)) {
+          return {
+            valid: false,
+            message:
+              "You have already answered this question. Enter a different question."
           };
         }
 
@@ -2567,6 +2655,70 @@ const otherIssuesList =
     }
 
 
+    async function loadSingleAttemptHistory() {
+      const response =
+        await fetch(
+          SINGLE_ATTEMPT_HISTORY_URL,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              "apikey":
+                SUPABASE_PUBLISHABLE_KEY,
+
+              "Authorization":
+                "Bearer " +
+                SUPABASE_PUBLISHABLE_KEY
+            },
+
+            body: JSON.stringify({
+              p_session_token:
+                currentSession.sessionToken
+            })
+          }
+        );
+
+      const responseText =
+        await response.text();
+
+      let payload = null;
+
+      try {
+        payload = responseText
+          ? JSON.parse(responseText)
+          : null;
+      } catch (parseError) {
+        console.error(
+          "Invalid ASCENT single-attempt history response:",
+          responseText,
+          parseError
+        );
+      }
+
+      const result =
+        Array.isArray(payload)
+          ? payload[0]
+          : payload;
+
+      if (
+        !response.ok ||
+        !result ||
+        result.ok !== true
+      ) {
+        throw new Error(
+          result && result.message
+            ? result.message
+            : "ASCENT could not check your completed questions."
+        );
+      }
+
+      return result;
+    }
+
+
     async function loadPracticeContext() {
       startButton.disabled = true;
       practiceContextLoading.hidden =
@@ -2643,15 +2795,66 @@ const otherIssuesList =
 
         practiceContext = result;
 
+        const singleAttemptHistory =
+          await loadSingleAttemptHistory();
+
+        answeredAssignmentUuids =
+          new Set(
+            normalisePracticeArray(
+              singleAttemptHistory
+                .answeredAssignmentUuids
+            ).map(String)
+          );
+
+        answeredQuestionBankUuids =
+          new Set(
+            normalisePracticeArray(
+              singleAttemptHistory
+                .answeredQuestionBankUuids
+            ).map(String)
+          );
+
+        answeredQuestionKeys =
+          new Set(
+            normalisePracticeArray(
+              singleAttemptHistory
+                .answeredQuestionKeys
+            )
+              .map(normaliseQuestionKey)
+              .filter(Boolean)
+          );
+
         activeAssignments =
           normalisePracticeArray(
             result.active_assignments
-          );
+          ).filter(function (item) {
+            return !(
+              answeredAssignmentUuids.has(
+                String(
+                  item.assignmentUuid || ""
+                )
+              ) ||
+              questionWasAnswered(
+                item.question
+              )
+            );
+          });
 
         questionBank =
           normalisePracticeArray(
             result.question_bank
-          );
+          ).filter(function (item) {
+            return !(
+              answeredQuestionBankUuids.has(
+                String(
+                  item.questionBankUuid || ""
+                )
+              ) ||
+              questionWasAnswered(
+                item.question
+              )
+            );
+          });
 
         displayedResponsesRemaining =
           result.submissions_remaining ===
@@ -3174,10 +3377,13 @@ otherIssuesSection.hidden =
       }
 
       recordAgainButton.disabled =
-        false;
+        true;
 
-      recordAgainButton.textContent =
-        "Record Another Response";
+      recordAgainButton.style.display =
+        "none";
+
+      newResponseButton.textContent =
+        "Choose Another Question";
 
       newResponseButton.disabled =
         false;
@@ -4377,6 +4583,9 @@ otherIssuesSection.hidden =
 
         if (responsePhase === "main") {
           consumeDisplayedResponse();
+          markSelectedPracticeAnswered(
+            selectedPractice
+          );
         }
 
         if (
@@ -4531,7 +4740,26 @@ otherIssuesSection.hidden =
 
     newResponseButton.addEventListener(
       "click",
-      resetRecording
+      async function () {
+        resetRecording();
+
+        showStatus(
+          "Loading questions you have not answered yet…",
+          ""
+        );
+
+        await loadPracticeContext();
+
+        showStatus(
+          "Choose a different question for your next response.",
+          "success"
+        );
+
+        practiceContextControls.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }
     );
 
     logoutButton.addEventListener(
