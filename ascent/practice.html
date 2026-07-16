@@ -2636,8 +2636,13 @@ const otherIssuesList =
         practiceModeSelect.options.length === 0
       ) {
         practiceContextNote.textContent =
-          "No active task is available. Please contact your trainer.";
+          String(
+            practiceContext && practiceContext.message
+              ? practiceContext.message
+              : "No assigned question is available right now."
+          );
         practiceContextNote.hidden = false;
+        practiceContextControls.hidden = true;
         selectedQuestionBox.hidden = true;
         startButton.disabled = true;
         return;
@@ -2824,19 +2829,65 @@ const otherIssuesList =
               .filter(Boolean)
           );
 
-        activeAssignments =
+        const rawAssignments =
           normalisePracticeArray(
             result.active_assignments
-          ).filter(function (item) {
-            return !(
-              answeredAssignmentUuids.has(
-                String(
-                  item.assignmentUuid || ""
-                )
-              ) ||
-              questionWasAnswered(
-                item.question
-              )
+          );
+
+        const newestAssignment =
+          rawAssignments
+            .slice()
+            .sort(function (left, right) {
+              const leftTime = Date.parse(
+                String(left.assignedAt || "")
+              );
+              const rightTime = Date.parse(
+                String(right.assignedAt || "")
+              );
+              return (Number.isFinite(rightTime) ? rightTime : 0) -
+                (Number.isFinite(leftTime) ? leftTime : 0);
+            })[0] || null;
+
+        const newestBatchKey = newestAssignment
+          ? String(
+              newestAssignment.questionBatchUuid ||
+              newestAssignment.taskUuid ||
+              newestAssignment.assignmentUuid ||
+              ""
+            )
+          : "";
+
+        activeAssignments =
+          rawAssignments.filter(function (item) {
+            const assignmentUuid = String(
+              item.assignmentUuid || ""
+            );
+            const batchKey = String(
+              item.questionBatchUuid ||
+              item.taskUuid ||
+              assignmentUuid
+            );
+            const availableAt = Date.parse(
+              String(item.availableAt || item.assignedAt || "")
+            );
+            const dueAt = item.dueAt
+              ? Date.parse(String(item.dueAt))
+              : null;
+            const now = Date.now();
+            const isReleased =
+              !Number.isFinite(availableAt) ||
+              availableAt <= now;
+            const isOpen =
+              dueAt === null ||
+              !Number.isFinite(dueAt) ||
+              dueAt >= now;
+
+            return (
+              (!newestBatchKey || batchKey === newestBatchKey) &&
+              isReleased &&
+              isOpen &&
+              !answeredAssignmentUuids.has(assignmentUuid) &&
+              !questionWasAnswered(item.question)
             );
           });
 
@@ -2867,6 +2918,20 @@ const otherIssuesList =
               );
 
         renderPracticeContext();
+
+        if (
+          practiceContext &&
+          practiceContext.is_private_learner !== true &&
+          activeAssignments.length === 0
+        ) {
+          showStatus(
+            String(
+              practiceContext.message ||
+              "No assigned question is available right now."
+            ),
+            "success"
+          );
+        }
 
       } catch (error) {
         console.error(
