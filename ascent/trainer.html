@@ -194,13 +194,11 @@
             <div class="summary-card"><div class="summary-label">Completed</div><div id="completedValue" class="summary-value">—</div></div>
             <div class="summary-card"><div class="summary-label">Not Attempted</div><div id="notAttemptedValue" class="summary-value">—</div></div>
             <div class="summary-card"><div class="summary-label">Average Score</div><div id="averageScoreValue" class="summary-value">—</div></div>
-            <div class="summary-card"><div class="summary-label">Average Improvement</div><div id="averageImprovementValue" class="summary-value">—</div></div>
           </div>
           <div class="dashboard-grid">
             <div class="panel chart-box"><div class="panel-title-row"><div><h3>Completion</h3><div class="panel-subtitle">Completed, pending and other assignments.</div></div></div><div id="completionChart"></div></div>
             <div class="panel chart-box"><div class="panel-title-row"><div><h3>Criterion Performance</h3><div class="panel-subtitle">Average of the latest criterion scores.</div></div></div><div id="criterionChart"></div></div>
             <div class="panel chart-box"><div class="panel-title-row"><div><h3>Score Progress</h3><div class="panel-subtitle">Average latest score by submission date.</div></div></div><div id="progressChart"></div></div>
-            <div class="panel chart-box"><div class="panel-title-row"><div><h3>Student Improvement</h3><div class="panel-subtitle">Students ranked by first-to-latest score change.</div></div></div><div id="studentImprovementChart"></div></div>
           </div>
           <div id="dashboardStatus" class="form-status" role="status" aria-live="polite"></div>
         </section>
@@ -258,7 +256,6 @@
               <div class="form-group"><label for="bankStartAt">First release</label><input id="bankStartAt" type="datetime-local"></div>
               <div class="form-group"><label for="bankIntervalDays">Release pace</label><select id="bankIntervalDays"><option value="0" selected>All at once</option><option value="1">One question daily</option><option value="2">One every 2 days</option><option value="3">One every 3 days</option><option value="7">One every week</option></select></div>
               <div class="form-group"><label for="bankDueDays">Days allowed per question</label><input id="bankDueDays" type="number" min="0" max="365" value="7"><div class="form-note">Leave blank for no deadline.</div></div>
-              <div class="form-group"><label for="bankMaxAttempts">Attempt limit</label><input id="bankMaxAttempts" type="number" min="1" max="100" value="1"></div>
               <div class="form-group"><label for="bankAssignmentFollowupMode">Assignment follow-up</label><select id="bankAssignmentFollowupMode"><option value="NONE">No follow-up</option><option value="FIXED_FOLLOW_UP">Same fixed follow-up</option><option value="SMART_FOLLOW_UP">Smart follow-up from approved bank</option></select></div>
               <div id="bankAssignmentFixedFollowupGroup" class="form-group two-wide" hidden><label for="bankAssignmentFixedFollowup">Fixed follow-up question</label><input id="bankAssignmentFixedFollowup" type="text" placeholder="This follow-up is used for every selected question"></div><div id="bankAssignmentSmartFollowupNote" class="form-group two-wide" hidden><label>Smart follow-up</label><div class="form-note" style="margin-top:0">ASCENT will choose an approved follow-up from the relevant weakness group: evidence, ownership, decision logic, alternatives, risk or business impact.</div></div>
               <div id="bankAssignmentPrepGroup" class="form-group" hidden><label for="bankAssignmentPrepSeconds">Follow-up preparation</label><input id="bankAssignmentPrepSeconds" type="number" min="0" max="120" value="5"></div>
@@ -285,7 +282,6 @@
               <div class="form-group"><label for="startAt">First release</label><input id="startAt" type="datetime-local"></div>
               <div class="form-group"><label for="intervalDays">Release pace</label><select id="intervalDays"><option value="0">All at once</option><option value="1" selected>One question daily</option><option value="2">One every 2 days</option><option value="3">One every 3 days</option><option value="7">One every week</option></select></div>
               <div class="form-group"><label for="dueDays">Days allowed per question</label><input id="dueDays" type="number" min="0" max="365" value="7"><div class="form-note">Leave blank for no deadline.</div></div>
-              <div class="form-group"><label for="maxAttempts">Maximum attempts</label><input id="maxAttempts" type="number" min="1" max="10" value="1"></div>
               <div class="form-group"><label for="pressureMode">Follow-up</label><select id="pressureMode"><option value="NONE">No follow-up</option><option value="FIXED_FOLLOW_UP">Use one fixed follow-up</option></select></div>
               <div id="pressurePromptGroup" class="form-group two-wide" hidden><label for="pressurePrompt">Follow-up question</label><input id="pressurePrompt" type="text" placeholder="Paste the follow-up question"><div class="form-note">This same follow-up is attached to every question in this batch.</div></div>
               <div id="pressurePrepGroup" class="form-group" hidden><label for="pressurePrepSeconds">Follow-up preparation</label><input id="pressurePrepSeconds" type="number" min="0" max="120" value="5"></div>
@@ -298,7 +294,7 @@
         </section>
 
         <section id="assignmentsSection" class="section-panel">
-          <div class="workspace-header"><div><h2>Assignments</h2><p>See who received each question, its release time, attempts and current status.</p></div></div>
+          <div class="workspace-header"><div><h2>Assignments</h2><p>See who received each question, its release time and current status. Each learner may submit once per question.</p></div></div>
           <div class="panel"><div class="filter-grid">
             <div class="form-group"><label for="assignmentBatchFilter">Batch</label><select id="assignmentBatchFilter"><option value="">All batches</option></select></div>
             <div class="form-group"><label for="assignmentStudentFilter">Student</label><select id="assignmentStudentFilter"><option value="">All students</option></select></div>
@@ -330,23 +326,7 @@
         </section>
 
         <section id="resultsSection" class="section-panel">
-          <div class="workspace-header"><div><h2>Results</h2><p>Filter results, compare first and latest scores, and download the complete Excel report.</p></div><div class="header-actions">
-  <button
-    id="studentExportButton"
-    class="secondary-button"
-    type="button"
-  >
-    Download Selected Student
-  </button>
-
-  <button
-    id="resultsExportButton"
-    class="primary-button"
-    type="button"
-  >
-    Download Master Excel
-  </button>
-</div></div>
+          <div class="workspace-header"><div><h2>Results</h2><p>Filter results, compare first and latest scores, and download the complete Excel report.</p></div><div class="header-actions"><button id="resultsExportButton" class="primary-button" type="button">Download Excel</button></div></div>
           <div class="panel"><div class="filter-grid">
             <div class="form-group"><label for="resultBatchFilter">Batch</label><select id="resultBatchFilter"><option value="">All batches</option></select></div>
             <div class="form-group"><label for="resultStudentFilter">Student</label><select id="resultStudentFilter"><option value="">All students</option></select></div>
@@ -381,20 +361,14 @@
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
     const RPC = {
       report: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_report_data",
-
-studentAttemptReport:
-  SUPABASE_URL +
-  "/rest/v1/rpc/ascent_trainer_student_attempt_report",
-
-bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
+      bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
       taskActive: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_task_active",
       createTrainer: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_create_trainer",
       questionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_question_bank_get",
       assignQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_assign_question_bank_tasks",
       upsertQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_upsert_question_bank",
       questionBankActive: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_set_question_bank_active",
-      clearTestRegister: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_clear_test_student_register",
-      updateAttemptLimit: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_update_assignment_attempt_limit"
+      clearTestRegister: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_clear_test_student_register"
     };
     let currentSession = null;
     let reportData = { summary:{}, batches:[], students:[], tasks:[], results:[] };
@@ -408,7 +382,6 @@ bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
     const escapeHtml = value => String(value ?? "").replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
     const formatNumber = value => value === null || value === undefined || value === "" ? "—" : Number(value).toFixed(Number(value) % 1 ? 2 : 0);
     const formatDate = value => value ? new Date(value).toLocaleString() : "—";
-    const attemptLimitLabel = row => String(row && row.attemptLimitMode || "").toUpperCase() === "UNLIMITED" ? "Unlimited" : (row && row.maxAttempts !== null && row.maxAttempts !== undefined ? row.maxAttempts : "—");
     const normaliseRpc = value => Array.isArray(value) && value.length === 1 ? value[0] : value;
     const setStatus = (element,message,type="") => { element.className = "form-status" + (type ? " " + type : ""); element.textContent = message || ""; };
     const showLoading = (message="Loading ASCENT…") => { byId("loadingText").textContent = message; byId("loadingOverlay").classList.add("active"); };
@@ -426,14 +399,14 @@ bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
 
     function loadTrainerSession() {
       const raw = localStorage.getItem(SESSION_STORAGE_KEY);
-      if (!raw) { window.location.href = "./index.html"; return null; }
+      if (!raw) { window.location.href = "./trainer-login.html"; return null; }
       try {
         const session = JSON.parse(raw);
         if (!session.sessionToken || !session.trainerUuid || !session.email || !session.expiresAt) throw new Error("Incomplete trainer session");
         if (new Date(session.expiresAt).getTime() <= Date.now()) throw new Error("Expired trainer session");
         return session;
       } catch (error) {
-        console.error(error); localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./index.html"; return null;
+        console.error(error); localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./trainer-login.html"; return null;
       }
     }
 
@@ -551,7 +524,7 @@ bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
       const s = reportData.summary || {};
       summaryValue("activeTasksValue",s.activeTasks || 0); summaryValue("assignedStudentsValue",s.assignedStudents || 0);
       summaryValue("completedValue",s.completed || 0); summaryValue("notAttemptedValue",s.notAttempted || 0);
-      summaryValue("averageScoreValue",s.averageScore); summaryValue("averageImprovementValue",s.averageImprovement);
+      summaryValue("averageScoreValue",s.averageScore);
     }
 
     function renderCompletionChart() {
@@ -607,15 +580,6 @@ bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
       renderLineSvg("progressChart",points,"Scores will appear after submissions.");
     }
 
-    function renderStudentImprovementChart() {
-      const map = {};
-      reportData.results.forEach(row => { if (row.improvement === null || row.improvement === undefined) return; const key = row.studentUuid; if (!map[key]) map[key] = {name:row.fullName,values:[]}; map[key].values.push(Number(row.improvement)); });
-      const data = Object.values(map).map(item => ({name:item.name,value:item.values.reduce((a,b)=>a+b,0)/item.values.length})).sort((a,b)=>b.value-a.value).slice(0,8);
-      if (!data.length) { byId("studentImprovementChart").innerHTML = `<div class="line-empty">Improvement appears after students have more than one scored attempt.</div>`; return; }
-      const max = Math.max(...data.map(item => Math.abs(item.value)),1);
-      byId("studentImprovementChart").innerHTML = `<div class="criterion-chart">${data.map(item => `<div class="criterion-row"><div class="criterion-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div><div class="criterion-track"><div class="criterion-fill" style="width:${Math.min(Math.abs(item.value)/max*100,100)}%"></div></div><div class="criterion-value">${item.value > 0 ? "+" : ""}${item.value.toFixed(2)}</div></div>`).join("")}</div>`;
-    }
-
     function statusClass(status) { return "status-" + String(status || "").toLowerCase().replace(/_/g,"-"); }
 
     function renderTasksTable() {
@@ -644,15 +608,14 @@ bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
       visibleAssignmentRows = resultFilter(reportData.results || [],"assignment");
       byId("assignmentCountLabel").textContent = `${visibleAssignmentRows.length} assignments shown`;
       if (!visibleAssignmentRows.length) { byId("assignmentsTableWrap").innerHTML = `<div class="empty-state">No assignments match these filters.</div>`; return; }
-      byId("assignmentsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Available</th><th>Due</th><th>Attempts Made</th><th>Attempt Limit</th><th>Status</th><th>Action</th></tr></thead><tbody>${visibleAssignmentRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td>${escapeHtml(formatDate(row.availableAt))}</td><td>${escapeHtml(formatDate(row.dueAt))}</td><td>${escapeHtml(row.attemptCount)}</td><td>${escapeHtml(attemptLimitLabel(row))}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td><td>${isCeo() ? "—" : `<button class="small-button attempt-limit-edit" type="button" data-assignment="${escapeHtml(row.assignmentUuid)}" data-attempts="${escapeHtml(row.attemptCount)}" data-limit="${escapeHtml(row.maxAttempts)}">Edit Limit</button>`}</td></tr>`).join("")}</tbody></table>`;
-      document.querySelectorAll(".attempt-limit-edit").forEach(button => button.addEventListener("click",() => editAssignmentAttemptLimit(button.dataset.assignment,Number(button.dataset.attempts || 0),Number(button.dataset.limit || 1))));
+      byId("assignmentsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Available</th><th>Due</th><th>Submitted</th><th>Status</th></tr></thead><tbody>${visibleAssignmentRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td>${escapeHtml(formatDate(row.availableAt))}</td><td>${escapeHtml(formatDate(row.dueAt))}</td><td>${Number(row.attemptCount || 0) > 0 ? "Yes" : "No"}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td></tr>`).join("")}</tbody></table>`;
     }
 
     function renderResultsTable() {
       visibleResultRows = resultFilter(reportData.results || [],"result");
       byId("resultCountLabel").textContent = `${visibleResultRows.length} result rows shown`;
       if (!visibleResultRows.length) { byId("resultsTableWrap").innerHTML = `<div class="empty-state">No results match these filters.</div>`; return; }
-      byId("resultsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Status</th><th>Attempts Made</th><th>Attempt Limit</th><th>First</th><th>Latest</th><th>Improvement</th><th>Latest Submission</th></tr></thead><tbody>${visibleResultRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}<br>${escapeHtml(row.email || "")}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td><td>${escapeHtml(row.attemptCount)}</td><td>${escapeHtml(attemptLimitLabel(row))}</td><td>${escapeHtml(formatNumber(row.firstScore))}</td><td>${escapeHtml(formatNumber(row.latestScore))}</td><td>${row.improvement === null || row.improvement === undefined ? "—" : escapeHtml((Number(row.improvement)>0?"+":"")+formatNumber(row.improvement))}</td><td>${escapeHtml(formatDate(row.latestSubmittedAt))}</td></tr>`).join("")}</tbody></table>`;
+      byId("resultsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Status</th><th>Score</th><th>Submitted At</th></tr></thead><tbody>${visibleResultRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}<br>${escapeHtml(row.email || "")}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td><td>${escapeHtml(formatNumber(row.latestScore))}</td><td>${escapeHtml(formatDate(row.latestSubmittedAt))}</td></tr>`).join("")}</tbody></table>`;
     }
 
     function bankCategoriesForType(bankType="") {
@@ -747,7 +710,7 @@ bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
           p_offset:0
         });
         if (!result || result.ok !== true) {
-          if (result && result.error === "invalid_staff_session") { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./index.html"; return; }
+          if (result && result.error === "invalid_staff_session") { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./trainer-login.html"; return; }
           throw new Error(result && result.message ? result.message : "Question bank could not be loaded.");
         }
         questionBankData = result;
@@ -887,7 +850,7 @@ bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
           p_start_at:toIsoOrNull(byId("bankStartAt").value),
           p_interval_days:Number(byId("bankIntervalDays").value || 0),
           p_due_days:dueText === "" ? null : Number(dueText),
-          p_max_attempts:Number(byId("bankMaxAttempts").value || 1),
+          p_max_attempts:1,
           p_followup_mode:followupMode,
           p_fixed_followup:followupMode === "FIXED_FOLLOW_UP" ? byId("bankAssignmentFixedFollowup").value.trim() : null,
           p_followup_prep_seconds:Number(byId("bankAssignmentPrepSeconds").value || 5),
@@ -903,7 +866,7 @@ bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
     }
 
     function renderAll() {
-      renderSummary(); renderCompletionChart(); renderCriterionChart(); renderProgressChart(); renderStudentImprovementChart(); renderTasksTable(); populateControls(); renderAssignmentsTable(); renderResultsTable(); updateAssignmentEstimate();
+      renderSummary(); renderCompletionChart(); renderCriterionChart(); renderProgressChart(); renderTasksTable(); populateControls(); renderAssignmentsTable(); renderResultsTable(); updateAssignmentEstimate();
     }
 
     async function loadReport(message="Loading dashboard…") {
@@ -911,7 +874,7 @@ bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
       try {
         const data = await callRpc(RPC.report,{ p_session_token:currentSession.sessionToken, p_batch:null, p_student_uuid:null, p_task_uuid:null });
         if (!data || data.ok !== true) {
-          if (data && data.error === "invalid_trainer_session") { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./index.html"; return; }
+          if (data && data.error === "invalid_trainer_session") { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./trainer-login.html"; return; }
           throw new Error(data && data.message ? data.message : "Report data could not be loaded.");
         }
         reportData = data; renderAll(); setStatus(byId("dashboardStatus"),"Dashboard updated " + new Date().toLocaleTimeString(),"success");
@@ -933,7 +896,7 @@ bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
           p_session_token:currentSession.sessionToken, p_questions:questions, p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
           p_rubric_type:byId("rubricType").value, p_target_type:targetType, p_target_batch:targetType === "BATCH" ? byId("targetBatch").value : null,
           p_student_uuids:targetType === "STUDENTS" ? selectedStudentUuids() : null, p_start_at:toIsoOrNull(byId("startAt").value),
-          p_interval_days:Number(byId("intervalDays").value || 0), p_due_days:dueText === "" ? null : Number(dueText), p_max_attempts:Number(byId("maxAttempts").value || 1),
+          p_interval_days:Number(byId("intervalDays").value || 0), p_due_days:dueText === "" ? null : Number(dueText), p_max_attempts:1,
           p_response_seconds:Number(byId("responseSeconds").value || 60), p_pressure_mode:pressureMode,
           p_pressure_prompt:pressureMode === "FIXED_FOLLOW_UP" ? byId("pressurePrompt").value.trim() : null,
           p_pressure_prep_seconds:Number(byId("pressurePrepSeconds").value || 5), p_pressure_response_seconds:Number(byId("pressureResponseSeconds").value || 45)
@@ -964,13 +927,13 @@ bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
         {Metric:"Active Tasks",Value:summary.activeTasks || 0},{Metric:"Total Assignments",Value:summary.totalAssignments || 0},
         {Metric:"Assigned Students",Value:summary.assignedStudents || 0},{Metric:"Completed",Value:summary.completed || 0},
         {Metric:"Not Attempted",Value:summary.notAttempted || 0},{Metric:"Average Score",Value:summary.averageScore ?? ""},
-        {Metric:"Average Improvement",Value:summary.averageImprovement ?? ""},{Metric:"Exported At",Value:new Date().toLocaleString()}
+        {Metric:"Exported At",Value:new Date().toLocaleString()}
       ];
       const resultRows = chosenRows.map(row => ({
         "Student ID":row.studentId,"Student Name":row.fullName,"Email":row.email,"Batch":row.batch,"Task Title":row.taskTitle,
         "Question":row.question,"Rubric":row.rubricType,"Status":row.status,"Available At":formatDate(row.availableAt),"Due At":formatDate(row.dueAt),
-        "Attempts Made":row.attemptCount,"Attempt Limit":attemptLimitLabel(row),"First Score":row.firstScore,"Latest Score":row.latestScore,
-        "Improvement":row.improvement,"Latest Submission":formatDate(row.latestSubmittedAt),...flattenCriterionScores(row.criterionScores)
+        "Submitted":Number(row.attemptCount || 0) > 0 ? "Yes" : "No","Score":row.latestScore,
+        "Submitted At":formatDate(row.latestSubmittedAt),...flattenCriterionScores(row.criterionScores)
       }));
       const pendingRows = chosenRows.filter(row => Number(row.attemptCount || 0) === 0 && !["SCHEDULED","WITHDRAWN"].includes(row.status)).map(row => ({"Student ID":row.studentId,"Student Name":row.fullName,"Email":row.email,"Batch":row.batch,"Task Title":row.taskTitle,"Question":row.question,"Status":row.status,"Available At":formatDate(row.availableAt),"Due At":formatDate(row.dueAt)}));
       const workbook = XLSX.utils.book_new();
@@ -979,1187 +942,7 @@ bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
       XLSX.writeFile(workbook,`ASCENT_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
       setStatus(byId("resultsStatus"),"Excel report downloaded.","success");
     }
-    function safeExcelFileName(value) {
-  return String(value || "Student")
-    .replace(/[\\/:*?"<>|]+/g, "_")
-    .replace(/\s+/g, "_")
-    .slice(0, 80);
-}
 
-function flattenFeedbackEntries(
-  value,
-  path = "",
-  output = []
-) {
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
-    return output;
-  }
-
-  if (Array.isArray(value)) {
-    value.forEach((item, index) => {
-      flattenFeedbackEntries(
-        item,
-        path
-          ? `${path} > Item ${index + 1}`
-          : `Item ${index + 1}`,
-        output
-      );
-    });
-
-    return output;
-  }
-
-  if (typeof value === "object") {
-    Object.entries(value).forEach(
-      ([key, item]) => {
-        const label = humaniseKey(key);
-
-        flattenFeedbackEntries(
-          item,
-          path
-            ? `${path} > ${label}`
-            : label,
-          output
-        );
-      }
-    );
-
-    return output;
-  }
-
-  output.push({
-    section: path || "Feedback",
-    value: String(value)
-  });
-
-  return output;
-}
-    function normaliseCriterionName(value) {
-  return String(value || "")
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
-function criterionNamesForRubric(rubricType) {
-  const rubric = String(rubricType || "").toUpperCase();
-
-  if (rubric === "GD") {
-    return [
-      "Entry & Clarity",
-      "Reasoning",
-      "Listening & Response",
-      "Leadership Moves",
-      "Composure"
-    ];
-  }
-
-  if (rubric === "PI") {
-    return [
-      "Structure & Clarity",
-      "Content Depth & Evidence",
-      "Business Thinking",
-      "Communication & Professionalism",
-      "Composure Under Pressure"
-    ];
-  }
-
-  return [
-    "Structure & Clarity",
-    "Business Thinking",
-    "Language Control",
-    "Confidence & Delivery",
-    "Professionalism"
-  ];
-}
-
-function criterionScoresForLatestAttempt(
-  attempt,
-  rubricType
-) {
-  const names =
-    criterionNamesForRubric(rubricType);
-
-  if (!attempt) {
-    return names.map(() => "");
-  }
-
-  const feedbackCriteria =
-    Array.isArray(
-      attempt.feedback &&
-      attempt.feedback.criteria
-    )
-      ? attempt.feedback.criteria
-      : [];
-
-  const scoreByName = new Map();
-
-  feedbackCriteria.forEach(item => {
-    const name =
-      normaliseCriterionName(
-        item && (
-          item.name ||
-          item.key
-        )
-      );
-
-    if (
-      name &&
-      item &&
-      item.score !== null &&
-      item.score !== undefined
-    ) {
-      scoreByName.set(
-        name,
-        item.score
-      );
-    }
-  });
-
-  const fallbackScores =
-    Object.values(
-      flattenCriterionScores(
-        attempt.criterionScores || {}
-      )
-    ).filter(value =>
-      typeof value === "number" &&
-      Number.isFinite(value)
-    );
-
-  return names.map(
-    (name, index) => {
-      const exactScore =
-        scoreByName.get(
-          normaliseCriterionName(name)
-        );
-
-      if (
-        exactScore !== undefined
-      ) {
-        return exactScore;
-      }
-
-      const indexedScore =
-        feedbackCriteria[index] &&
-        feedbackCriteria[index].score;
-
-      if (
-        indexedScore !== null &&
-        indexedScore !== undefined
-      ) {
-        return indexedScore;
-      }
-
-      return fallbackScores[index] ?? "";
-    }
-  );
-}
-
-function whyAlternativeIsStronger(
-  criterionName,
-  explanation
-) {
-  const criterion =
-    String(criterionName || "")
-      .toLowerCase();
-
-  const reason =
-    String(explanation || "")
-      .toLowerCase();
-
-  if (
-    criterion.includes("confidence") ||
-    criterion.includes("delivery") ||
-    criterion.includes("composure")
-  ) {
-    return "The calmer pace and clear pause make the answer easier to follow and sound more controlled.";
-  }
-
-  if (
-    criterion.includes("business") ||
-    criterion.includes("reasoning") ||
-    criterion.includes("decision")
-  ) {
-    return "It adds the missing reasoning, risk or trade-off and shows stronger managerial judgement.";
-  }
-
-  if (
-    criterion.includes("structure") ||
-    criterion.includes("clarity") ||
-    criterion.includes("entry")
-  ) {
-    return "It removes unnecessary wording and presents the main point more clearly.";
-  }
-
-  if (
-    criterion.includes("language")
-  ) {
-    return "It removes repetition or awkward wording and makes the sentence cleaner and more accurate.";
-  }
-
-  if (
-    criterion.includes("professional")
-  ) {
-    return "It uses a more precise and professional tone.";
-  }
-
-  if (
-    criterion.includes("evidence") ||
-    criterion.includes("content")
-  ) {
-    return "It adds clearer evidence and makes the point more convincing.";
-  }
-
-  if (
-    criterion.includes("listening") ||
-    criterion.includes("response")
-  ) {
-    return "It responds more directly to the previous point and keeps the discussion connected.";
-  }
-
-  if (
-    criterion.includes("leadership")
-  ) {
-    return "It moves the discussion forward while keeping the group focused.";
-  }
-
-  if (
-    reason.includes("filler")
-  ) {
-    return "It removes the filler word and makes the sentence more direct.";
-  }
-
-  return "It corrects the weakness and makes the response clearer, stronger and easier to understand.";
-}
-
-function deliveryAlternative(
-  weakLine,
-  correctedVersion
-) {
-  const original =
-    String(weakLine || "").trim();
-
-  const corrected =
-    String(correctedVersion || "").trim();
-
-  if (
-    corrected &&
-    corrected !== original
-  ) {
-    return corrected;
-  }
-
-  if (!original) {
-    return "";
-  }
-
-  const commaIndex =
-    original.indexOf(",");
-
-  if (commaIndex > 0) {
-    return (
-      original.slice(
-        0,
-        commaIndex + 1
-      ) +
-      " [brief pause] " +
-      original.slice(
-        commaIndex + 1
-      ).trim()
-    );
-  }
-
-  return (
-    original +
-    " [Say this more slowly, with one clear pause after the main point.]"
-  );
-}
-
-function buildActionableFeedback(feedback) {
-  if (
-    !feedback ||
-    typeof feedback !== "object"
-  ) {
-    return "";
-  }
-
-  const lines = [];
-
-  const overall =
-    feedback.overall_comment ||
-    feedback.overallComment ||
-    "";
-
-  if (overall) {
-    lines.push(
-      `Overall: ${overall}`
-    );
-  }
-
-  const criteria =
-    Array.isArray(feedback.criteria)
-      ? feedback.criteria
-      : [];
-
-  if (criteria.length) {
-    lines.push("");
-    lines.push(
-      "Feedback by criterion:"
-    );
-
-    criteria.forEach(
-      (item, index) => {
-        if (!item) {
-          return;
-        }
-
-        const name =
-          item.name ||
-          humaniseKey(
-            item.key ||
-            `Criterion ${index + 1}`
-          );
-
-        const weakLine =
-          item.weak_line ||
-          item.weakLine ||
-          item.evidence_quote ||
-          item.evidenceQuote ||
-          "";
-
-        const explanation =
-          item.explanation || "";
-
-        const correctedVersion =
-          item.corrected_version ||
-          item.correctedVersion ||
-          "";
-
-        const isDeliveryCriterion =
-          /confidence|delivery|composure/i.test(
-            name
-          );
-
-        const strongAlternative =
-          isDeliveryCriterion
-            ? deliveryAlternative(
-                weakLine,
-                correctedVersion
-              )
-            : correctedVersion;
-
-        const whyStrong =
-          whyAlternativeIsStronger(
-            name,
-            explanation
-          );
-
-        lines.push("");
-        lines.push(
-          `${index + 1}. ${name}`
-        );
-
-        if (weakLine) {
-          lines.push(
-            `Weak sentence: ${weakLine}`
-          );
-        }
-
-        if (explanation) {
-          lines.push(
-            `Why it is weak: ${explanation}`
-          );
-        }
-
-        if (strongAlternative) {
-          lines.push(
-            `Strong alternative: ${strongAlternative}`
-          );
-        }
-
-        if (whyStrong) {
-          lines.push(
-            `Why it is strong: ${whyStrong}`
-          );
-        }
-      }
-    );
-  }
-
-  const otherIssues =
-    Array.isArray(
-      feedback.other_issues
-    )
-      ? feedback.other_issues
-      : Array.isArray(
-          feedback.otherIssues
-        )
-          ? feedback.otherIssues
-          : [];
-
-  if (otherIssues.length) {
-    lines.push("");
-    lines.push(
-      "Other issues noticed:"
-    );
-
-    otherIssues
-      .slice(0, 3)
-      .forEach(issue => {
-        if (!issue) {
-          return;
-        }
-
-        const label =
-          issue.label ||
-          "Other issue";
-
-        const explanation =
-          issue.explanation || "";
-
-        lines.push(
-          `• ${label}${
-            explanation
-              ? `: ${explanation}`
-              : ""
-          }`
-        );
-      });
-  }
-
-  return lines.join("\n");
-}
-
-async function exportSelectedStudentExcel() {
-  if (!window.XLSX) {
-    setStatus(
-      byId("resultsStatus"),
-      "The Excel library did not load. Check the internet connection and try again.",
-      "error"
-    );
-    return;
-  }
-
-  const students = Array.isArray(reportData.students)
-    ? reportData.students
-    : [];
-
-  if (!students.length) {
-    setStatus(
-      byId("resultsStatus"),
-      "There are no students in this institution to export.",
-      "error"
-    );
-    return;
-  }
-
-  const button = byId("studentExportButton");
-  const originalButtonText = button.textContent;
-
-  button.disabled = true;
-  button.textContent = "Preparing Student-wise Report…";
-  setStatus(byId("resultsStatus"), "", "");
-
-  try {
-    const studentReports = [];
-    const batchSize = 8;
-
-    for (
-      let start = 0;
-      start < students.length;
-      start += batchSize
-    ) {
-      const batch = students.slice(
-        start,
-        start + batchSize
-      );
-
-      button.textContent =
-        `Preparing ${Math.min(
-          start + batch.length,
-          students.length
-        )} of ${students.length}…`;
-
-      const batchReports = await Promise.all(
-        batch.map(async student => {
-          try {
-            const response = await callRpc(
-              RPC.studentAttemptReport,
-              {
-                p_session_token:
-                  currentSession.sessionToken,
-
-                p_student_uuid:
-                  student.studentUuid
-              }
-            );
-
-            const report = Array.isArray(response)
-              ? response[0]
-              : response;
-
-            if (!report || report.ok !== true) {
-              throw new Error(
-                report && report.message
-                  ? report.message
-                  : "Student report unavailable."
-              );
-            }
-
-            return {
-              student,
-              report,
-              error: null
-            };
-
-          } catch (error) {
-            console.error(
-              `Student report failed for ${
-                student.studentId ||
-                student.fullName
-              }:`,
-              error
-            );
-
-            return {
-              student,
-              report: null,
-              error:
-                error.message ||
-                "Student report unavailable."
-            };
-          }
-        })
-      );
-
-      studentReports.push(...batchReports);
-    }
-
-    const successfulReports =
-      studentReports.filter(
-        item => item.report
-      );
-
-    if (!successfulReports.length) {
-      throw new Error(
-        "ASCENT could not retrieve any student reports."
-      );
-    }
-
-    const questionMap = new Map();
-
-    const assignmentKey = assignment =>
-      String(
-        assignment.taskUuid ||
-        assignment.questionBankUuid ||
-        assignment.sourceQuestionUuid ||
-        [
-          assignment.taskTitle || "",
-          assignment.question || "",
-          assignment.rubricType || ""
-        ].join("||")
-      );
-
-    successfulReports.forEach(({ report }) => {
-      const assignments =
-        Array.isArray(report.assignments)
-          ? report.assignments
-          : [];
-
-      assignments.forEach(assignment => {
-        const key =
-          assignmentKey(assignment);
-
-        if (!questionMap.has(key)) {
-          questionMap.set(key, {
-            key,
-
-            title:
-              assignment.taskTitle ||
-              assignment.question ||
-              "Untitled Question",
-
-            question:
-              assignment.question || "",
-
-            rubricType:
-              assignment.rubricType || ""
-          });
-        }
-      });
-    });
-
-    const questions =
-      Array.from(questionMap.values());
-
-    if (!questions.length) {
-      throw new Error(
-        "No assignments were found for the students in this institution."
-      );
-    }
-
-    const studentColumnCount = 4;
-    const columnsPerQuestion = 16;
-
-    const headerRow1 = [
-      "Student ID",
-      "Student Name",
-      "Email",
-      "Batch"
-    ];
-
-    const headerRow2 = [
-      "",
-      "",
-      "",
-      ""
-    ];
-
-    const headerRow3 = [
-      "",
-      "",
-      "",
-      ""
-    ];
-
-    const merges = [];
-
-    for (
-      let column = 0;
-      column < studentColumnCount;
-      column += 1
-    ) {
-      merges.push({
-        s: {
-          r: 0,
-          c: column
-        },
-
-        e: {
-          r: 2,
-          c: column
-        }
-      });
-    }
-
-    questions.forEach(
-      (question, index) => {
-        const startColumn =
-          studentColumnCount +
-          index * columnsPerQuestion;
-
-        const questionHeading =
-          `Question ${index + 1}: ` +
-          (
-            question.title ===
-              question.question ||
-            !question.question
-              ? question.title
-              : `${question.title} — ${question.question}`
-          );
-
-        headerRow1[startColumn] =
-          questionHeading;
-
-        for (
-          let offset = 1;
-          offset < columnsPerQuestion;
-          offset += 1
-        ) {
-          headerRow1[
-            startColumn + offset
-          ] = "";
-        }
-
-        merges.push({
-          s: {
-            r: 0,
-            c: startColumn
-          },
-
-          e: {
-            r: 0,
-            c:
-              startColumn +
-              columnsPerQuestion -
-              1
-          }
-        });
-
-        headerRow2[startColumn] =
-          "TOTAL SCORES";
-
-        for (
-          let offset = 1;
-          offset < 10;
-          offset += 1
-        ) {
-          headerRow2[
-            startColumn + offset
-          ] = "";
-        }
-
-        merges.push({
-          s: {
-            r: 1,
-            c: startColumn
-          },
-
-          e: {
-            r: 1,
-            c: startColumn + 9
-          }
-        });
-
-        headerRow2[
-          startColumn + 10
-        ] = "LATEST ATTEMPT";
-
-        for (
-          let offset = 11;
-          offset < columnsPerQuestion;
-          offset += 1
-        ) {
-          headerRow2[
-            startColumn + offset
-          ] = "";
-        }
-
-        merges.push({
-          s: {
-            r: 1,
-            c: startColumn + 10
-          },
-
-          e: {
-            r: 1,
-            c: startColumn + 15
-          }
-        });
-
-        for (
-          let attempt = 1;
-          attempt <= 10;
-          attempt += 1
-        ) {
-          headerRow3[
-            startColumn +
-            attempt -
-            1
-          ] = `Attempt ${attempt}`;
-        }
-
-        const criterionNames =
-  criterionNamesForRubric(
-    question.rubricType
-  );
-
-criterionNames.forEach(
-  (criterionName, criterionIndex) => {
-    headerRow3[
-      startColumn +
-      10 +
-      criterionIndex
-    ] = criterionName;
-  }
-);
-
-        headerRow3[
-          startColumn + 15
-        ] = "Detailed Feedback";
-      }
-    );
-
-    const dataRows =
-      studentReports.map(
-        ({
-          student,
-          report,
-          error
-        }) => {
-          const reportStudent =
-            report && report.student
-              ? report.student
-              : {};
-
-          const row = [
-            reportStudent.studentId ||
-              student.studentId ||
-              "",
-
-            reportStudent.fullName ||
-              student.fullName ||
-              "",
-
-            reportStudent.email ||
-              student.email ||
-              "",
-
-            reportStudent.batch ||
-              student.batch ||
-              ""
-          ];
-
-          const assignmentMap =
-            new Map();
-
-          if (
-            report &&
-            Array.isArray(
-              report.assignments
-            )
-          ) {
-            report.assignments.forEach(
-              assignment => {
-                assignmentMap.set(
-                  assignmentKey(
-                    assignment
-                  ),
-                  assignment
-                );
-              }
-            );
-          }
-
-          questions.forEach(
-            question => {
-              const assignment =
-                assignmentMap.get(
-                  question.key
-                );
-
-              const attempts =
-                assignment &&
-                Array.isArray(
-                  assignment.attempts
-                )
-                  ? [
-                      ...assignment.attempts
-                    ]
-                  : [];
-
-              attempts.sort(
-                (a, b) => {
-                  const attemptA =
-                    Number(
-                      a.attemptNo
-                    );
-
-                  const attemptB =
-                    Number(
-                      b.attemptNo
-                    );
-
-                  if (
-                    Number.isFinite(
-                      attemptA
-                    ) &&
-                    Number.isFinite(
-                      attemptB
-                    ) &&
-                    attemptA !==
-                      attemptB
-                  ) {
-                    return (
-                      attemptA -
-                      attemptB
-                    );
-                  }
-
-                  return (
-                    new Date(
-                      a.submittedAt ||
-                        0
-                    ).getTime() -
-                    new Date(
-                      b.submittedAt ||
-                        0
-                    ).getTime()
-                  );
-                }
-              );
-
-              const scoreSlots =
-                new Map();
-
-              attempts.forEach(
-                (
-                  attempt,
-                  index
-                ) => {
-                  const reportedAttemptNo =
-                    Number(
-                      attempt.attemptNo
-                    );
-
-                  const slot =
-                    Number.isInteger(
-                      reportedAttemptNo
-                    ) &&
-                    reportedAttemptNo >=
-                      1 &&
-                    reportedAttemptNo <=
-                      10
-                      ? reportedAttemptNo
-                      : index + 1;
-
-                  if (
-                    slot <= 10 &&
-                    !scoreSlots.has(
-                      slot
-                    )
-                  ) {
-                    scoreSlots.set(
-                      slot,
-                      attempt.score ??
-                        ""
-                    );
-                  }
-                }
-              );
-
-              for (
-                let attempt = 1;
-                attempt <= 10;
-                attempt += 1
-              ) {
-                row.push(
-                  scoreSlots.get(
-                    attempt
-                  ) ?? ""
-                );
-              }
-
-              const latestAttempt =
-                attempts.length
-                  ? attempts[
-                      attempts.length -
-                        1
-                    ]
-                  : null;
-
-              const criterionValues =
-  criterionScoresForLatestAttempt(
-    latestAttempt,
-    question.rubricType
-  );
-
-criterionValues.forEach(
-  criterionScore => {
-    row.push(criterionScore);
-  }
-);
-
-const feedbackText =
-  latestAttempt
-    ? buildActionableFeedback(
-        latestAttempt.feedback || {}
-      )
-    : "";
-
-row.push(
-  feedbackText ||
-  (error ? error : "")
-);
-            }
-          );
-
-          return row;
-        }
-      );
-
-    const sheet =
-      XLSX.utils.aoa_to_sheet([
-        headerRow1,
-        headerRow2,
-        headerRow3,
-        ...dataRows
-      ]);
-
-    sheet["!merges"] = merges;
-
-    sheet["!cols"] = [
-      {
-        wch: 18
-      },
-      {
-        wch: 28
-      },
-      {
-        wch: 32
-      },
-      {
-        wch: 18
-      },
-
-      ...questions.flatMap(() => [
-        ...Array.from(
-          {
-            length: 10
-          },
-          () => ({
-            wch: 11
-          })
-        ),
-
-        ...Array.from(
-          {
-            length: 5
-          },
-          () => ({
-            wch: 12
-          })
-        ),
-
-        {
-          wch: 70
-        }
-      ])
-    ];
-
-    sheet["!rows"] = [
-      {
-        hpt: 42
-      },
-      {
-        hpt: 24
-      },
-      {
-        hpt: 34
-      }
-    ];
-
-    const lastColumn =
-      studentColumnCount +
-      questions.length *
-        columnsPerQuestion -
-      1;
-
-    for (
-      let rowIndex = 0;
-      rowIndex <= 2;
-      rowIndex += 1
-    ) {
-      for (
-        let columnIndex = 0;
-        columnIndex <= lastColumn;
-        columnIndex += 1
-      ) {
-        const address =
-          XLSX.utils.encode_cell({
-            r: rowIndex,
-            c: columnIndex
-          });
-
-        if (!sheet[address]) {
-          continue;
-        }
-
-        sheet[address].s = {
-          font: {
-            bold: true
-          },
-
-          alignment: {
-            horizontal: "center",
-            vertical: "center",
-            wrapText: true
-          }
-        };
-      }
-    }
-
-    questions.forEach(
-      (question, index) => {
-        const feedbackColumn =
-          studentColumnCount +
-          index *
-            columnsPerQuestion +
-          15;
-
-        dataRows.forEach(
-          (row, dataIndex) => {
-            const address =
-              XLSX.utils.encode_cell({
-                r: dataIndex + 3,
-                c: feedbackColumn
-              });
-
-            if (!sheet[address]) {
-              return;
-            }
-
-            sheet[address].s = {
-              alignment: {
-                vertical: "top",
-                wrapText: true
-              }
-            };
-          }
-        );
-      }
-    );
-
-    const workbook =
-      XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      sheet,
-      "Student-wise Report"
-    );
-
-    XLSX.writeFile(
-      workbook,
-      `ASCENT_Student_Wise_Report_${new Date()
-        .toISOString()
-        .slice(0, 10)}.xlsx`
-    );
-
-    const failedCount =
-      studentReports.filter(
-        item => item.error
-      ).length;
-
-    setStatus(
-      byId("resultsStatus"),
-
-      failedCount
-        ? `Student-wise Excel downloaded. ${failedCount} student report${
-            failedCount === 1
-              ? " was"
-              : "s were"
-          } unavailable and left blank.`
-        : `Student-wise Excel downloaded for ${studentReports.length} students.`,
-
-      failedCount
-        ? "warning"
-        : "success"
-    );
-
-  } catch (error) {
-    console.error(error);
-
-    setStatus(
-      byId("resultsStatus"),
-
-      error.message ||
-        "ASCENT could not create the student-wise Excel report.",
-
-      "error"
-    );
-
-  } finally {
-    button.disabled = false;
-    button.textContent =
-      originalButtonText;
-  }
-}
     async function clearSelectedTestRegister() {
       if (!isAdmin()) {
         setStatus(byId("clearTestRegisterStatus"),"Only an administrator can clear test assignment records.","error");
@@ -2225,55 +1008,6 @@ row.push(
       }
     }
 
-    async function editAssignmentAttemptLimit(assignmentUuid,attemptsMade,currentLimit) {
-      if (isCeo()) return;
-
-      const minimum = Math.max(Number(attemptsMade || 0),1);
-      const suggested = Math.max(Number(currentLimit || 1),minimum);
-      const answer = window.prompt(
-        `Attempts Made: ${attemptsMade}\nCurrent Attempt Limit: ${currentLimit}\n\nEnter the new Attempt Limit. It cannot be lower than ${minimum}.`,
-        String(suggested)
-      );
-
-      if (answer === null) return;
-
-      const newLimit = Number(answer.trim());
-      if (!Number.isInteger(newLimit) || newLimit < 1) {
-        setStatus(byId("assignmentActionStatus"),"Enter a whole-number Attempt Limit of at least 1.","error");
-        return;
-      }
-
-      if (newLimit < minimum) {
-        setStatus(byId("assignmentActionStatus"),`The Attempt Limit cannot be lower than Attempts Made (${attemptsMade}).`,"error");
-        return;
-      }
-
-      showLoading("Updating Attempt Limit…");
-      setStatus(byId("assignmentActionStatus"),"","");
-
-      try {
-        const result = await callRpc(RPC.updateAttemptLimit,{
-          p_session_token:currentSession.sessionToken,
-          p_assignment_uuid:assignmentUuid,
-          p_attempt_limit_mode:"LIMITED",
-          p_max_attempts:newLimit
-        });
-
-        if (!result || result.ok !== true) {
-          throw new Error(result && result.message ? result.message : "The Attempt Limit could not be updated.");
-        }
-
-        await loadReport("Refreshing assignments…");
-        setStatus(byId("assignmentActionStatus"),`Attempt Limit updated to ${newLimit}.`,"success");
-        showSection("assignments");
-      } catch (error) {
-        console.error(error);
-        setStatus(byId("assignmentActionStatus"),error.message || "ASCENT could not update the Attempt Limit.","error");
-      } finally {
-        hideLoading();
-      }
-    }
-
     async function createTrainer(event) {
       event.preventDefault();
       const name = byId("newTrainerName").value.trim(), email = byId("newTrainerEmail").value.trim().toLowerCase(), password = byId("newTrainerPassword").value, role = byId("newTrainerRole").value;
@@ -2336,11 +1070,10 @@ row.push(
 
     function wireEvents() {
       document.querySelectorAll(".nav-item").forEach(item => item.addEventListener("click",() => showSection(item.dataset.section)));
-      byId("logoutButton").addEventListener("click",() => { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href="./index.html"; });
+      byId("logoutButton").addEventListener("click",() => { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href="./trainer-login.html"; });
       byId("refreshDashboardButton").addEventListener("click",() => loadReport("Refreshing dashboard…"));
       byId("refreshTasksButton").addEventListener("click",() => loadReport("Refreshing tasks…"));
       byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results));
-      byId("studentExportButton").addEventListener("click", exportSelectedStudentExcel);
       byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows));
       byId("refreshQuestionBankButton").addEventListener("click",() => loadQuestionBank("Refreshing question bank…"));
       byId("addBankQuestionButton").addEventListener("click",() => openBankQuestionEditor());
