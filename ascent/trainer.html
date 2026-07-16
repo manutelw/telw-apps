@@ -254,8 +254,8 @@
               <div id="bankTargetBatchGroup" class="form-group" hidden><label for="bankTargetBatch">Student batch</label><select id="bankTargetBatch"><option value="">Choose batch</option></select></div>
               <div id="bankTargetStudentsGroup" class="form-group two-wide" hidden><label>Selected students</label><div class="student-picker"><input id="bankStudentSearch" type="search" placeholder="Search by name, ID, email or batch"><div id="bankStudentOptions" class="student-options"></div></div><div id="bankSelectedStudentCount" class="form-note">0 students selected</div></div>
               <div class="form-group"><label for="bankStartAt">First release</label><input id="bankStartAt" type="datetime-local"></div>
-              <div class="form-group"><label for="bankIntervalDays">Release pace</label><select id="bankIntervalDays"><option value="0" selected>All at once</option><option value="1">One question daily</option><option value="2">One every 2 days</option><option value="3">One every 3 days</option><option value="7">One every week</option></select></div>
-              <div class="form-group"><label for="bankDueDays">Days allowed per question</label><input id="bankDueDays" type="number" min="0" max="365" value="7"><div class="form-note">Leave blank for no deadline.</div></div>
+              <div class="form-group"><label for="bankIntervalDays">Days between question releases</label><input id="bankIntervalDays" type="number" min="0" max="365" step="1" placeholder="Enter 0, 1, 7…" required><div class="form-note">Enter the exact pace: 0 = all at once, 1 = daily, 7 = weekly.</div></div>
+              <div class="form-group"><label for="bankDueDays">Days each released question stays open</label><input id="bankDueDays" type="number" min="0" max="365" value="7"><div class="form-note">Leave blank for no deadline.</div></div>
               <div class="form-group"><label for="bankAssignmentFollowupMode">Assignment follow-up</label><select id="bankAssignmentFollowupMode"><option value="NONE">No follow-up</option><option value="FIXED_FOLLOW_UP">Same fixed follow-up</option><option value="SMART_FOLLOW_UP">Smart follow-up from approved bank</option></select></div>
               <div id="bankAssignmentFixedFollowupGroup" class="form-group two-wide" hidden><label for="bankAssignmentFixedFollowup">Fixed follow-up question</label><input id="bankAssignmentFixedFollowup" type="text" placeholder="This follow-up is used for every selected question"></div><div id="bankAssignmentSmartFollowupNote" class="form-group two-wide" hidden><label>Smart follow-up</label><div class="form-note" style="margin-top:0">ASCENT will choose an approved follow-up from the relevant weakness group: evidence, ownership, decision logic, alternatives, risk or business impact.</div></div>
               <div id="bankAssignmentPrepGroup" class="form-group" hidden><label for="bankAssignmentPrepSeconds">Follow-up preparation</label><input id="bankAssignmentPrepSeconds" type="number" min="0" max="120" value="5"></div>
@@ -280,8 +280,8 @@
               <div id="targetBatchGroup" class="form-group" hidden><label for="targetBatch">Student batch</label><select id="targetBatch"><option value="">Choose batch</option></select></div>
               <div id="targetStudentsGroup" class="form-group two-wide" hidden><label>Selected students</label><div class="student-picker"><input id="studentSearch" type="search" placeholder="Search by name, ID, email or batch"><div id="studentOptions" class="student-options"></div></div><div id="selectedStudentCount" class="form-note">0 students selected</div></div>
               <div class="form-group"><label for="startAt">First release</label><input id="startAt" type="datetime-local"></div>
-              <div class="form-group"><label for="intervalDays">Release pace</label><select id="intervalDays"><option value="0">All at once</option><option value="1" selected>One question daily</option><option value="2">One every 2 days</option><option value="3">One every 3 days</option><option value="7">One every week</option></select></div>
-              <div class="form-group"><label for="dueDays">Days allowed per question</label><input id="dueDays" type="number" min="0" max="365" value="7"><div class="form-note">Leave blank for no deadline.</div></div>
+              <div class="form-group"><label for="intervalDays">Days between question releases</label><input id="intervalDays" type="number" min="0" max="365" step="1" placeholder="Enter 0, 1, 7…" required><div class="form-note">Enter the exact pace: 0 = all at once, 1 = daily, 7 = weekly.</div></div>
+              <div class="form-group"><label for="dueDays">Days each released question stays open</label><input id="dueDays" type="number" min="0" max="365" value="7"><div class="form-note">Leave blank for no deadline.</div></div>
               <div class="form-group"><label for="pressureMode">Follow-up</label><select id="pressureMode"><option value="NONE">No follow-up</option><option value="FIXED_FOLLOW_UP">Use one fixed follow-up</option></select></div>
               <div id="pressurePromptGroup" class="form-group two-wide" hidden><label for="pressurePrompt">Follow-up question</label><input id="pressurePrompt" type="text" placeholder="Paste the follow-up question"><div class="form-note">This same follow-up is attached to every question in this batch.</div></div>
               <div id="pressurePrepGroup" class="form-group" hidden><label for="pressurePrepSeconds">Follow-up preparation</label><input id="pressurePrepSeconds" type="number" min="0" max="120" value="5"></div>
@@ -447,6 +447,57 @@
 
     function toIsoOrNull(value) { if (!value) return null; const d = new Date(value); return Number.isNaN(d.getTime()) ? null : d.toISOString(); }
 
+    function readReleaseInterval(inputId) {
+      const raw = String(byId(inputId).value || "").trim();
+      if (raw === "") {
+        throw new Error("Enter the number of days between question releases.");
+      }
+      const intervalDays = Number(raw);
+      if (!Number.isInteger(intervalDays) || intervalDays < 0 || intervalDays > 365) {
+        throw new Error("Release interval must be a whole number from 0 to 365.");
+      }
+      return intervalDays;
+    }
+
+    function scheduleLabel(intervalDays) {
+      if (intervalDays === 0) return "all questions at once";
+      if (intervalDays === 1) return "one question every day";
+      return `one question every ${intervalDays} days`;
+    }
+
+    function releaseDateFromInput(inputId) {
+      const raw = String(byId(inputId).value || "").trim();
+      const parsed = raw ? new Date(raw) : new Date();
+      return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+    }
+
+    function schedulePreview(questionCount, intervalDays, startInputId) {
+      if (!questionCount) return "";
+      const firstRelease = releaseDateFromInput(startInputId);
+      const lastRelease = new Date(
+        firstRelease.getTime() +
+        Math.max(questionCount - 1, 0) * intervalDays * 86400000
+      );
+      return `${scheduleLabel(intervalDays)} · first ${firstRelease.toLocaleString()} · last ${lastRelease.toLocaleString()}`;
+    }
+
+    function confirmReleaseSchedule(questionCount, studentCount, intervalDays, startInputId) {
+      const firstRelease = releaseDateFromInput(startInputId);
+      const lastRelease = new Date(
+        firstRelease.getTime() +
+        Math.max(questionCount - 1, 0) * intervalDays * 86400000
+      );
+      return window.confirm(
+        `Please confirm this assignment schedule:\n\n` +
+        `${questionCount} question${questionCount === 1 ? "" : "s"}\n` +
+        `${studentCount} student${studentCount === 1 ? "" : "s"}\n` +
+        `Release pace: ${scheduleLabel(intervalDays)}\n` +
+        `First release: ${firstRelease.toLocaleString()}\n` +
+        `Last release: ${lastRelease.toLocaleString()}\n\n` +
+        `Press OK only if this is exactly what you intend.`
+      );
+    }
+
     function updateQuestionCount() {
       const count = cleanQuestions().length;
       byId("questionCount").textContent = count + (count === 1 ? " question" : " questions");
@@ -471,7 +522,17 @@
     function updateAssignmentEstimate() {
       const questions = cleanQuestions().length;
       const students = estimatedTargetCount();
-      byId("assignmentEstimate").textContent = questions && students ? `${questions} questions × ${students} students = ${questions * students} assignments` : "";
+      const rawInterval = String(byId("intervalDays").value || "").trim();
+      if (!questions || !students) {
+        byId("assignmentEstimate").textContent = "";
+        return;
+      }
+      const intervalDays = Number(rawInterval);
+      const schedule = Number.isInteger(intervalDays) && intervalDays >= 0
+        ? ` · ${schedulePreview(questions, intervalDays, "startAt")}`
+        : " · enter the release interval";
+      byId("assignmentEstimate").textContent =
+        `${questions} questions × ${students} students = ${questions * students} assignments${schedule}`;
     }
 
     function renderStudentPicker(filter="") {
@@ -668,7 +729,17 @@
     function updateBankAssignmentEstimate() {
       const questions = selectedBankQuestions.size;
       const students = estimatedBankTargetCount();
-      byId("bankAssignmentEstimate").textContent = questions && students ? `${questions} questions × ${students} students = ${questions * students} assignments` : "";
+      const rawInterval = String(byId("bankIntervalDays").value || "").trim();
+      if (!questions || !students) {
+        byId("bankAssignmentEstimate").textContent = "";
+        return;
+      }
+      const intervalDays = Number(rawInterval);
+      const schedule = Number.isInteger(intervalDays) && intervalDays >= 0
+        ? ` · ${schedulePreview(questions, intervalDays, "bankStartAt")}`
+        : " · enter the release interval";
+      byId("bankAssignmentEstimate").textContent =
+        `${questions} questions × ${students} students = ${questions * students} assignments${schedule}`;
     }
 
     function renderQuestionBankTable() {
@@ -833,10 +904,19 @@
       const questionUuids = Array.from(selectedBankQuestions);
       const targetType = byId("bankTargetType").value;
       const followupMode = byId("bankAssignmentFollowupMode").value;
+      let intervalDays;
+      try {
+        intervalDays = readReleaseInterval("bankIntervalDays");
+      } catch (error) {
+        setStatus(byId("bankAssignmentStatus"),error.message,"error");
+        return;
+      }
       if (!questionUuids.length) { setStatus(byId("bankAssignmentStatus"),"Select at least one question from the bank.","error"); return; }
       if (targetType === "BATCH" && !byId("bankTargetBatch").value) { setStatus(byId("bankAssignmentStatus"),"Choose the student batch.","error"); return; }
       if (targetType === "STUDENTS" && !selectedBankStudentUuids().length) { setStatus(byId("bankAssignmentStatus"),"Choose at least one student.","error"); return; }
       if (followupMode === "FIXED_FOLLOW_UP" && !byId("bankAssignmentFixedFollowup").value.trim()) { setStatus(byId("bankAssignmentStatus"),"Enter the fixed follow-up question.","error"); return; }
+      const bankStudentCount = estimatedBankTargetCount();
+      if (!confirmReleaseSchedule(questionUuids.length, bankStudentCount, intervalDays, "bankStartAt")) return;
       const button = byId("assignBankQuestionsButton"); button.disabled = true; button.textContent = "Assigning…"; setStatus(byId("bankAssignmentStatus"),"","");
       try {
         const dueText = byId("bankDueDays").value.trim();
@@ -848,7 +928,7 @@
           p_target_batch:targetType === "BATCH" ? byId("bankTargetBatch").value : null,
           p_student_uuids:targetType === "STUDENTS" ? selectedBankStudentUuids() : null,
           p_start_at:toIsoOrNull(byId("bankStartAt").value),
-          p_interval_days:Number(byId("bankIntervalDays").value || 0),
+          p_interval_days:intervalDays,
           p_due_days:dueText === "" ? null : Number(dueText),
           p_max_attempts:1,
           p_followup_mode:followupMode,
@@ -857,7 +937,7 @@
           p_followup_response_seconds:Number(byId("bankAssignmentResponseSeconds").value || 45)
         });
         if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Bank questions could not be assigned.");
-        setStatus(byId("bankAssignmentStatus"),`${result.message} ${result.assignmentsCreated} student assignments were added. Rubrics were fixed from the Question Bank.`,"success");
+        setStatus(byId("bankAssignmentStatus"),`${result.message} ${result.assignmentsCreated} student assignments were added. Applied release pace: ${scheduleLabel(intervalDays)}. Rubrics were fixed from the Question Bank.`,"success");
         selectedBankQuestions.clear();
         renderQuestionBankTable();
         await loadReport("Refreshing assignments…");
@@ -885,10 +965,19 @@
     async function createQuestionBatch(event) {
       event.preventDefault();
       const questions = cleanQuestions(); const targetType = byId("targetType").value; const pressureMode = byId("pressureMode").value;
+      let intervalDays;
+      try {
+        intervalDays = readReleaseInterval("intervalDays");
+      } catch (error) {
+        setStatus(byId("bulkTaskStatus"),error.message,"error");
+        return;
+      }
       if (!questions.length) { setStatus(byId("bulkTaskStatus"),"Paste at least one question, with each question on a separate line.","error"); return; }
       if (targetType === "BATCH" && !byId("targetBatch").value) { setStatus(byId("bulkTaskStatus"),"Choose the student batch.","error"); return; }
       if (targetType === "STUDENTS" && !selectedStudentUuids().length) { setStatus(byId("bulkTaskStatus"),"Choose at least one student.","error"); return; }
       if (pressureMode === "FIXED_FOLLOW_UP" && !byId("pressurePrompt").value.trim()) { setStatus(byId("bulkTaskStatus"),"Enter the follow-up question.","error"); return; }
+      const studentCount = estimatedTargetCount();
+      if (!confirmReleaseSchedule(questions.length, studentCount, intervalDays, "startAt")) return;
       const button = byId("createBatchButton"); button.disabled = true; button.textContent = "Creating Batch…"; setStatus(byId("bulkTaskStatus"),"","");
       try {
         const dueText = byId("dueDays").value.trim();
@@ -896,13 +985,13 @@
           p_session_token:currentSession.sessionToken, p_questions:questions, p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
           p_rubric_type:byId("rubricType").value, p_target_type:targetType, p_target_batch:targetType === "BATCH" ? byId("targetBatch").value : null,
           p_student_uuids:targetType === "STUDENTS" ? selectedStudentUuids() : null, p_start_at:toIsoOrNull(byId("startAt").value),
-          p_interval_days:Number(byId("intervalDays").value || 0), p_due_days:dueText === "" ? null : Number(dueText), p_max_attempts:1,
+          p_interval_days:intervalDays, p_due_days:dueText === "" ? null : Number(dueText), p_max_attempts:1,
           p_response_seconds:Number(byId("responseSeconds").value || 60), p_pressure_mode:pressureMode,
           p_pressure_prompt:pressureMode === "FIXED_FOLLOW_UP" ? byId("pressurePrompt").value.trim() : null,
           p_pressure_prep_seconds:Number(byId("pressurePrepSeconds").value || 5), p_pressure_response_seconds:Number(byId("pressureResponseSeconds").value || 45)
         });
         if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "The batch could not be created.");
-        setStatus(byId("bulkTaskStatus"),`${result.message} ${result.assignmentsCreated} student assignments were added.`,"success");
+        setStatus(byId("bulkTaskStatus"),`${result.message} ${result.assignmentsCreated} student assignments were added. Applied release pace: ${scheduleLabel(intervalDays)}.`,"success");
         byId("questionsText").value = ""; updateQuestionCount(); await loadReport("Refreshing tasks and assignments…");
       } catch (error) { console.error(error); setStatus(byId("bulkTaskStatus"),error.message || "ASCENT could not create the question batch.","error"); }
       finally { button.disabled = false; button.textContent = "Create and Assign Batch"; }
@@ -1091,12 +1180,16 @@
       byId("clearBankSelectionButton").addEventListener("click",() => { selectedBankQuestions.clear(); renderQuestionBankTable(); });
       byId("bankTargetType").addEventListener("change",() => { const value=byId("bankTargetType").value; byId("bankTargetBatchGroup").hidden=value!=="BATCH"; byId("bankTargetStudentsGroup").hidden=value!=="STUDENTS"; updateBankAssignmentEstimate(); });
       byId("bankTargetBatch").addEventListener("change",updateBankAssignmentEstimate);
+      byId("bankIntervalDays").addEventListener("input",updateBankAssignmentEstimate);
+      byId("bankStartAt").addEventListener("change",updateBankAssignmentEstimate);
       byId("bankStudentSearch").addEventListener("input",event => renderBankStudentPicker(event.target.value));
       byId("bankAssignmentFollowupMode").addEventListener("change",updateBankAssignmentFollowupControls);
       byId("bankAssignmentForm").addEventListener("submit",assignSelectedBankQuestions);
       byId("questionsText").addEventListener("input",updateQuestionCount);
       byId("targetType").addEventListener("change",() => { const value=byId("targetType").value; byId("targetBatchGroup").hidden=value!=="BATCH"; byId("targetStudentsGroup").hidden=value!=="STUDENTS"; updateAssignmentEstimate(); });
       byId("targetBatch").addEventListener("change",updateAssignmentEstimate);
+      byId("intervalDays").addEventListener("input",updateAssignmentEstimate);
+      byId("startAt").addEventListener("change",updateAssignmentEstimate);
       byId("studentSearch").addEventListener("input",event => renderStudentPicker(event.target.value));
       byId("pressureMode").addEventListener("change",() => { const show=byId("pressureMode").value==="FIXED_FOLLOW_UP"; byId("pressurePromptGroup").hidden=!show; byId("pressurePrepGroup").hidden=!show; byId("pressureResponseGroup").hidden=!show; });
       byId("bulkTaskForm").addEventListener("submit",createQuestionBatch);
