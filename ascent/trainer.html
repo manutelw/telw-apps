@@ -361,6 +361,7 @@
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
     const RPC = {
       report: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_report_data",
+      workbookExport: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_workbook_export",
       studentMobileMap: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_student_mobile_map",
       bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
       taskActive: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_task_active",
@@ -1246,14 +1247,193 @@
       }
     }
 
-    function makeWorksheet(rows, headers, widths, wrapColumns=[]) {
-      const sheet = XLSX.utils.json_to_sheet(rows, { header:headers });
+    const WORKBOOK_CRITERIA = [
+      {key:"structure_and_clarity",label:"Structure & Clarity"},
+      {key:"content_depth_and_evidence",label:"Content Depth & Evidence"},
+      {key:"business_thinking",label:"Business Thinking"},
+      {key:"communication_and_professionalism",label:"Communication & Professionalism"},
+      {key:"composure_under_pressure",label:"Composure Under Pressure"},
+      {key:"entry_and_clarity",label:"Entry & Clarity"},
+      {key:"reasoning_content_and_logic",label:"Reasoning (Content + Logic)"},
+      {key:"listening_and_response",label:"Listening & Response"},
+      {key:"leadership_moves",label:"Leadership Moves"},
+      {key:"language_control",label:"Language Control"},
+      {key:"confidence_and_delivery",label:"Confidence & Delivery"},
+      {key:"professionalism",label:"Professionalism"}
+    ];
+
+    const WORKBOOK_CRITERION_LABELS = new Map(
+      WORKBOOK_CRITERIA.map(item => [item.key,item.label])
+    );
+
+    function normaliseExportObject(value, fallback) {
+      if (value === null || value === undefined || value === "") return fallback;
+      if (typeof value === "object") return value;
+
+      try {
+        return JSON.parse(String(value));
+      } catch {
+        return fallback;
+      }
+    }
+
+    function exportDate(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      return Number.isFinite(date.getTime()) ? date : "";
+    }
+
+    function exportBoolean(value) {
+      return value === true || String(value).toLowerCase() === "true" ? "Yes" : "No";
+    }
+
+    function criterionScoreMap(value) {
+      const source = normaliseExportObject(value, {});
+      const scores = new Map();
+
+      if (!source || typeof source !== "object" || Array.isArray(source)) {
+        return scores;
+      }
+
+      Object.entries(source).forEach(function ([key,rawValue]) {
+        let score = null;
+
+        if (rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)) {
+          score = exportNumber(
+            rawValue.score ??
+            rawValue.value ??
+            rawValue.points
+          );
+        } else {
+          score = exportNumber(rawValue);
+        }
+
+        if (score !== null) scores.set(key,score);
+      });
+
+      return scores;
+    }
+
+    function criterionFeedbackText(value, detailedFeedback) {
+      let criteria = normaliseExportObject(value, []);
+
+      if (!Array.isArray(criteria)) {
+        const detailed = normaliseExportObject(detailedFeedback, {});
+        criteria = Array.isArray(detailed.criteria) ? detailed.criteria : [];
+      }
+
+      return criteria
+        .map(formatCriterionFeedback)
+        .filter(Boolean)
+        .join("\n\n");
+    }
+
+    function otherIssuesText(value, detailedFeedback) {
+      let issues = normaliseExportObject(value, []);
+
+      if (!Array.isArray(issues)) {
+        const detailed = normaliseExportObject(detailedFeedback, {});
+        issues = Array.isArray(detailed.other_issues)
+          ? detailed.other_issues
+          : Array.isArray(detailed.otherIssues)
+            ? detailed.otherIssues
+            : [];
+      }
+
+      return formatOtherIssues(issues);
+    }
+
+    function scoreOrAssignmentStatus(assignment) {
+      const score = exportNumber(
+        assignment.finalScore ??
+        assignment.totalScore
+      );
+
+      if (score !== null) return score;
+
+      const submissionStatus = exportText(
+        assignment.submissionStatus
+      ).toUpperCase();
+
+      if (submissionStatus === "COMPLETED") return "Pending Evaluation";
+      if (submissionStatus === "NOT AVAILABLE") return "Not Available";
+      if (submissionStatus === "NOT ANSWERED") return "Not Answered";
+      if (submissionStatus === "EXPIRED") return "Expired";
+      if (submissionStatus === "WITHDRAWN") return "Withdrawn";
+
+      return submissionStatus;
+    }
+
+    function questionSortValue(question) {
+      const release = Date.parse(question.firstReleaseAt || "");
+      return [
+        Number.isFinite(release) ? release : Number.MAX_SAFE_INTEGER,
+        exportText(question.questionBatchUuid),
+        exportNumber(question.sequenceNo) ?? Number.MAX_SAFE_INTEGER,
+        exportText(question.taskUuid)
+      ];
+    }
+
+    function compareQuestionRows(left, right) {
+      const a = questionSortValue(left);
+      const b = questionSortValue(right);
+
+      for (let index=0; index<a.length; index+=1) {
+        if (a[index] < b[index]) return -1;
+        if (a[index] > b[index]) return 1;
+      }
+
+      return 0;
+    }
+
+    function selectedAssignment(existing, candidate) {
+      if (!existing) return candidate;
+
+      const existingHasScore = exportNumber(existing.finalScore ?? existing.totalScore) !== null;
+      const candidateHasScore = exportNumber(candidate.finalScore ?? candidate.totalScore) !== null;
+
+      if (candidateHasScore && !existingHasScore) return candidate;
+      if (existingHasScore && !candidateHasScore) return existing;
+
+      const existingSubmitted = Date.parse(existing.submittedAt || "");
+      const candidateSubmitted = Date.parse(candidate.submittedAt || "");
+
+      if (Number.isFinite(candidateSubmitted) &&
+          (!Number.isFinite(existingSubmitted) || candidateSubmitted > existingSubmitted)) {
+        return candidate;
+      }
+
+      const existingRelease = Date.parse(existing.releaseAt || "");
+      const candidateRelease = Date.parse(candidate.releaseAt || "");
+
+      return Number.isFinite(candidateRelease) &&
+        (!Number.isFinite(existingRelease) || candidateRelease > existingRelease)
+          ? candidate
+          : existing;
+    }
+
+    function setWorkbookCellLink(sheet, address, target) {
+      if (!target || !/^https?:\/\//i.test(target) || !sheet[address]) return;
+      sheet[address].l = {Target:target,Tooltip:"Open audio or Drive file"};
+    }
+
+    function makeWorksheet(rows, headers, widths, options={}) {
+      const sheet = XLSX.utils.json_to_sheet(rows, {
+        header:headers,
+        cellDates:true
+      });
+
       sheet["!cols"] = widths.map(wch => ({wch}));
       sheet["!autofilter"] = {
         ref:`A1:${XLSX.utils.encode_col(headers.length - 1)}${Math.max(rows.length + 1,1)}`
       };
+      sheet["!freeze"] = {xSplit:0,ySplit:1,topLeftCell:"A2",activePane:"bottomLeft",state:"frozen"};
 
       const range = XLSX.utils.decode_range(sheet["!ref"] || "A1:A1");
+      const wrapColumns = new Set(options.wrapColumns || []);
+      const scoreColumns = new Set(options.scoreColumns || []);
+      const dateColumns = new Set(options.dateColumns || []);
+      const linkColumns = new Set(options.linkColumns || []);
 
       for (let r=range.s.r; r<=range.e.r; r+=1) {
         for (let c=range.s.c; c<=range.e.c; c+=1) {
@@ -1264,117 +1444,412 @@
           cell.s = cell.s || {};
           cell.s.alignment = {
             vertical:"top",
-            wrapText:r === 0 || wrapColumns.includes(c)
+            wrapText:r === 0 || wrapColumns.has(c)
           };
 
           if (r === 0) {
             cell.s.font = {bold:true};
             cell.s.alignment.horizontal = "center";
+          } else {
+            if (scoreColumns.has(c) && typeof cell.v === "number") {
+              cell.z = "0.00";
+            }
+
+            if (dateColumns.has(c) && cell.v instanceof Date) {
+              cell.z = "dd-mmm-yyyy hh:mm";
+            }
+
+            if (linkColumns.has(c)) {
+              setWorkbookCellLink(sheet,address,exportText(cell.v));
+            }
           }
         }
+      }
+
+      if (rows.length) {
+        sheet["!rows"] = Array(rows.length + 1).fill(null).map(function (_,index) {
+          return index === 0 ? {hpt:30} : {hpt:42};
+        });
       }
 
       return sheet;
     }
 
-    function buildParticipantSummary(chosenRows, mobileByStudent) {
-      const participants = new Map();
+    function buildIndividualPerformanceSheet(workbookData, questions, questionNumberByTask) {
+      const students = Array.isArray(workbookData.students) ? workbookData.students : [];
+      const assignments = Array.isArray(workbookData.assignments) ? workbookData.assignments : [];
+      const assignmentByStudentAndTask = new Map();
 
-      chosenRows.forEach(function (row) {
-        const key = String(
-          row.studentUuid ||
-          row.studentId ||
-          row.email ||
-          row.fullName ||
-          ""
+      assignments.forEach(function (assignment) {
+        const key = `${assignment.studentUuid || ""}::${assignment.taskUuid || ""}`;
+        assignmentByStudentAndTask.set(
+          key,
+          selectedAssignment(assignmentByStudentAndTask.get(key),assignment)
         );
-
-        if (!key) return;
-
-        if (!participants.has(key)) {
-          participants.set(key, {
-            studentUuid:String(row.studentUuid || ""),
-            rollNo:exportText(row.studentId),
-            name:exportText(row.fullName),
-            email:exportText(row.email),
-            assigned:0,
-            completed:0,
-            scores:[]
-          });
-        }
-
-        const participant = participants.get(key);
-        participant.assigned += 1;
-
-        const score = exportNumber(row.latestScore);
-        if (score !== null) {
-          participant.completed += 1;
-          participant.scores.push(score);
-        }
       });
 
-      return Array.from(participants.values())
-        .map(function (participant) {
-          const average = participant.scores.length
-            ? participant.scores.reduce((sum,value) => sum + value,0) /
-              participant.scores.length
-            : null;
+      const questionHeaders = questions.map(function (_,index) {
+        return String(index + 1);
+      });
 
-          return {
-            "Roll No":participant.rollNo,
-            "Name":participant.name,
-            "Email ID":participant.email,
-            "Mobile Number":mobileByStudent.get(participant.studentUuid) || "",
-            "Assigned Questions":participant.assigned,
-            "Completed Questions":participant.completed,
-            "Average Score":average === null ? "" : Number(average.toFixed(2))
-          };
-        })
-        .sort(function (a,b) {
-          return String(a.Name).localeCompare(String(b.Name));
+      const headers = [
+        "Roll No",
+        "Name",
+        "Email ID",
+        "Mobile Number",
+        ...questionHeaders,
+        "Detailed Feedback"
+      ];
+
+      const rows = students.map(function (student) {
+        const row = {
+          "Roll No":exportText(student.rollNo),
+          "Name":exportText(student.name),
+          "Email ID":exportText(student.emailId),
+          "Mobile Number":exportText(student.mobileNumber)
+        };
+        const feedbackSections = [];
+
+        questions.forEach(function (question,index) {
+          const assignment = assignmentByStudentAndTask.get(
+            `${student.studentUuid || ""}::${question.taskUuid || ""}`
+          );
+          const column = String(index + 1);
+
+          row[column] = assignment ? scoreOrAssignmentStatus(assignment) : "";
+
+          if (assignment && assignment.submissionUuid) {
+            const formattedFeedback = formatDetailedFeedback(
+              assignment.detailedFeedback
+            );
+
+            feedbackSections.push(
+              `Q${questionNumberByTask.get(String(question.taskUuid || ""))}: ` +
+              (formattedFeedback || "Feedback was not stored for this response.")
+            );
+          }
         });
+
+        row["Detailed Feedback"] = feedbackSections.join("\n\n");
+        return row;
+      });
+
+      return makeWorksheet(
+        rows,
+        headers,
+        [16,28,34,19,...questionHeaders.map(() => 11),110],
+        {
+          wrapColumns:[headers.length - 1],
+          scoreColumns:questionHeaders.map((_,index) => index + 4)
+        }
+      );
     }
 
-    function buildLeaderboard(summaryRows) {
-      const ranked = summaryRows
-        .filter(row => exportNumber(row["Average Score"]) !== null)
-        .sort(function (a,b) {
-          const scoreDifference =
-            Number(b["Average Score"]) - Number(a["Average Score"]);
-          if (scoreDifference !== 0) return scoreDifference;
+    function buildDetailedResultsSheet(workbookData, questionNumberByTask) {
+      const assignments = Array.isArray(workbookData.assignments) ? workbookData.assignments : [];
+      const criterionHeaders = WORKBOOK_CRITERIA.map(item => item.label);
 
-          const completionDifference =
-            Number(b["Completed Questions"]) - Number(a["Completed Questions"]);
-          if (completionDifference !== 0) return completionDifference;
+      const headers = [
+        "Institution",
+        "Student Batch / Cohort",
+        "Roll No",
+        "Student Name",
+        "Email ID",
+        "Mobile Number",
+        "Weekly Question-Batch Identifier",
+        "Question Number",
+        "Question Text",
+        "Rubric Type",
+        "Assigned At",
+        "Release At",
+        "Due At",
+        "Submitted At",
+        "Submission Status",
+        "Timeliness Status",
+        "Attempt Number",
+        "Total Score",
+        ...criterionHeaders,
+        "Transcript",
+        "Criterion-wise Feedback",
+        "Other Issues",
+        "Follow-up Mode",
+        "Follow-up Question",
+        "Follow-up Completed",
+        "Follow-up Transcript",
+        "Follow-up Submitted At",
+        "Follow-up Score",
+        "Final Score",
+        "Audio / Drive Link",
+        "Audio File Name",
+        "Evaluation Status",
+        "Assignment UUID",
+        "Submission UUID",
+        "Task UUID",
+        "Question Batch UUID"
+      ];
 
-          return String(a.Name).localeCompare(String(b.Name));
+      const rows = assignments.map(function (assignment) {
+        const scoreMap = criterionScoreMap(assignment.criterionScores);
+        const row = {
+          "Institution":exportText(assignment.institution || workbookData.institutionName),
+          "Student Batch / Cohort":exportText(assignment.batch),
+          "Roll No":exportText(assignment.rollNo),
+          "Student Name":exportText(assignment.name),
+          "Email ID":exportText(assignment.emailId),
+          "Mobile Number":exportText(assignment.mobileNumber),
+          "Weekly Question-Batch Identifier":exportText(assignment.weeklyQuestionBatchIdentifier),
+          "Question Number":questionNumberByTask.get(String(assignment.taskUuid || "")) || "",
+          "Question Text":exportText(assignment.question),
+          "Rubric Type":exportText(assignment.rubricType),
+          "Assigned At":exportDate(assignment.assignedAt),
+          "Release At":exportDate(assignment.releaseAt),
+          "Due At":exportDate(assignment.dueAt),
+          "Submitted At":exportDate(assignment.submittedAt),
+          "Submission Status":exportText(assignment.submissionStatus),
+          "Timeliness Status":exportText(assignment.timelinessStatus),
+          "Attempt Number":exportNumber(assignment.attemptNumber) ?? "",
+          "Total Score":exportNumber(assignment.totalScore) ?? "",
+          "Transcript":exportText(assignment.transcript),
+          "Criterion-wise Feedback":criterionFeedbackText(
+            assignment.criterionFeedback,
+            assignment.detailedFeedback
+          ),
+          "Other Issues":otherIssuesText(
+            assignment.otherIssues,
+            assignment.detailedFeedback
+          ),
+          "Follow-up Mode":exportText(assignment.followupMode),
+          "Follow-up Question":exportText(assignment.followupQuestion),
+          "Follow-up Completed":exportBoolean(assignment.followupCompleted),
+          "Follow-up Transcript":exportText(assignment.followupTranscript),
+          "Follow-up Submitted At":exportDate(assignment.followupSubmittedAt),
+          "Follow-up Score":exportNumber(assignment.followupScore) ?? "",
+          "Final Score":exportNumber(assignment.finalScore) ?? "",
+          "Audio / Drive Link":exportText(assignment.audioLink),
+          "Audio File Name":exportText(assignment.audioFileName),
+          "Evaluation Status":exportText(assignment.evaluationStatus),
+          "Assignment UUID":exportText(assignment.assignmentUuid),
+          "Submission UUID":exportText(assignment.submissionUuid),
+          "Task UUID":exportText(assignment.taskUuid),
+          "Question Batch UUID":exportText(assignment.questionBatchUuid)
+        };
+
+        WORKBOOK_CRITERIA.forEach(function (criterion) {
+          row[criterion.label] = scoreMap.has(criterion.key)
+            ? scoreMap.get(criterion.key)
+            : "";
         });
 
-      let previousScore = null;
-      let previousCompleted = null;
-      let previousRank = 0;
-
-      return ranked.map(function (row,index) {
-        const score = Number(row["Average Score"]);
-        const completed = Number(row["Completed Questions"]);
-
-        const rank =
-          previousScore === score && previousCompleted === completed
-            ? previousRank
-            : index + 1;
-
-        previousScore = score;
-        previousCompleted = completed;
-        previousRank = rank;
-
-        return {
-          "Rank":rank,
-          "Roll No":row["Roll No"],
-          "Name":row["Name"],
-          "Completed Questions":completed,
-          "Average Score":score
-        };
+        return row;
       });
+
+      const criterionStart = headers.indexOf(criterionHeaders[0]);
+      const wrapHeaders = [
+        "Question Text",
+        "Transcript",
+        "Criterion-wise Feedback",
+        "Other Issues",
+        "Follow-up Question",
+        "Follow-up Transcript"
+      ];
+      const dateHeaders = [
+        "Assigned At",
+        "Release At",
+        "Due At",
+        "Submitted At",
+        "Follow-up Submitted At"
+      ];
+      const scoreHeaders = [
+        "Total Score",
+        ...criterionHeaders,
+        "Follow-up Score",
+        "Final Score"
+      ];
+
+      return makeWorksheet(
+        rows,
+        headers,
+        headers.map(function (header) {
+          if (["Question Text","Transcript","Criterion-wise Feedback","Other Issues","Follow-up Question","Follow-up Transcript"].includes(header)) return 52;
+          if (["Email ID","Audio / Drive Link"].includes(header)) return 34;
+          if (["Weekly Question-Batch Identifier","Assignment UUID","Submission UUID","Task UUID","Question Batch UUID"].includes(header)) return 38;
+          if (dateHeaders.includes(header)) return 21;
+          if (criterionHeaders.includes(header)) return 18;
+          return 17;
+        }),
+        {
+          wrapColumns:wrapHeaders.map(header => headers.indexOf(header)),
+          dateColumns:dateHeaders.map(header => headers.indexOf(header)),
+          scoreColumns:scoreHeaders.map(header => headers.indexOf(header)),
+          linkColumns:[headers.indexOf("Audio / Drive Link")]
+        }
+      );
+    }
+
+    function buildFirstVsLatestSheet(workbookData, questionNumberByTask) {
+      const students = Array.isArray(workbookData.students) ? workbookData.students : [];
+      const submissions = Array.isArray(workbookData.submissions) ? workbookData.submissions : [];
+      const submissionsByStudent = new Map();
+
+      submissions.forEach(function (submission) {
+        if (exportNumber(submission.score ?? submission.finalScore) === null) return;
+        const key = String(submission.studentUuid || "");
+        if (!submissionsByStudent.has(key)) submissionsByStudent.set(key,[]);
+        submissionsByStudent.get(key).push(submission);
+      });
+
+      submissionsByStudent.forEach(function (items) {
+        items.sort(function (left,right) {
+          const a = Date.parse(left.submittedAt || "");
+          const b = Date.parse(right.submittedAt || "");
+          if (Number.isFinite(a) && Number.isFinite(b) && a !== b) return a - b;
+          return exportText(left.submissionUuid).localeCompare(exportText(right.submissionUuid));
+        });
+      });
+
+      const criterionHeaders = [];
+      WORKBOOK_CRITERIA.forEach(function (criterion) {
+        criterionHeaders.push(
+          `${criterion.label} — First`,
+          `${criterion.label} — Latest`,
+          `${criterion.label} — Change`
+        );
+      });
+
+      const headers = [
+        "Institution",
+        "Student Batch / Cohort",
+        "Roll No",
+        "Student Name",
+        "Email ID",
+        "Mobile Number",
+        "Rubric Compared",
+        "Responses Compared",
+        "First Question Number",
+        "First Question",
+        "First Submitted At",
+        "First Score",
+        "First Audio / Drive Link",
+        "First Transcript",
+        "Latest Question Number",
+        "Latest Question",
+        "Latest Submitted At",
+        "Latest Score",
+        "Latest Audio / Drive Link",
+        "Latest Transcript",
+        "Score Change",
+        ...criterionHeaders,
+        "Improvement Status",
+        "First Assignment UUID",
+        "First Submission UUID",
+        "Latest Assignment UUID",
+        "Latest Submission UUID"
+      ];
+
+      const rows = students.map(function (student) {
+        const completed = submissionsByStudent.get(String(student.studentUuid || "")) || [];
+        const latestCompleted = completed.length ? completed[completed.length - 1] : null;
+        const latestRubric = latestCompleted ? exportText(latestCompleted.rubricType) : "";
+        const comparable = latestCompleted
+          ? completed.filter(item => exportText(item.rubricType) === latestRubric)
+          : [];
+        const first = comparable.length ? comparable[0] : null;
+        const latest = comparable.length ? comparable[comparable.length - 1] : null;
+        const firstScore = first ? exportNumber(first.score ?? first.finalScore) : null;
+        const latestScore = latest ? exportNumber(latest.score ?? latest.finalScore) : null;
+        const scoreChange = firstScore !== null && latestScore !== null
+          ? Number((latestScore - firstScore).toFixed(2))
+          : null;
+        const firstCriteria = criterionScoreMap(first ? first.criterionScores : null);
+        const latestCriteria = criterionScoreMap(latest ? latest.criterionScores : null);
+
+        let improvementStatus = "No Completed Response";
+        if (first && latest && first.submissionUuid === latest.submissionUuid) {
+          improvementStatus = "Baseline Only";
+        } else if (scoreChange !== null && scoreChange > 0) {
+          improvementStatus = "Improved";
+        } else if (scoreChange !== null && scoreChange < 0) {
+          improvementStatus = "Declined";
+        } else if (scoreChange !== null) {
+          improvementStatus = "No Change";
+        }
+
+        const row = {
+          "Institution":exportText(workbookData.institutionName),
+          "Student Batch / Cohort":exportText(student.batch),
+          "Roll No":exportText(student.rollNo),
+          "Student Name":exportText(student.name),
+          "Email ID":exportText(student.emailId),
+          "Mobile Number":exportText(student.mobileNumber),
+          "Rubric Compared":latestRubric,
+          "Responses Compared":comparable.length,
+          "First Question Number":first ? questionNumberByTask.get(String(first.taskUuid || "")) || "" : "",
+          "First Question":first ? exportText(first.question) : "",
+          "First Submitted At":first ? exportDate(first.submittedAt) : "",
+          "First Score":firstScore ?? "",
+          "First Audio / Drive Link":first ? exportText(first.audioLink) : "",
+          "First Transcript":first ? exportText(first.transcript) : "",
+          "Latest Question Number":latest ? questionNumberByTask.get(String(latest.taskUuid || "")) || "" : "",
+          "Latest Question":latest ? exportText(latest.question) : "",
+          "Latest Submitted At":latest ? exportDate(latest.submittedAt) : "",
+          "Latest Score":latestScore ?? "",
+          "Latest Audio / Drive Link":latest ? exportText(latest.audioLink) : "",
+          "Latest Transcript":latest ? exportText(latest.transcript) : "",
+          "Score Change":scoreChange ?? "",
+          "Improvement Status":improvementStatus,
+          "First Assignment UUID":first ? exportText(first.assignmentUuid) : "",
+          "First Submission UUID":first ? exportText(first.submissionUuid) : "",
+          "Latest Assignment UUID":latest ? exportText(latest.assignmentUuid) : "",
+          "Latest Submission UUID":latest ? exportText(latest.submissionUuid) : ""
+        };
+
+        WORKBOOK_CRITERIA.forEach(function (criterion) {
+          const firstCriterionScore = firstCriteria.has(criterion.key)
+            ? firstCriteria.get(criterion.key)
+            : null;
+          const latestCriterionScore = latestCriteria.has(criterion.key)
+            ? latestCriteria.get(criterion.key)
+            : null;
+          const change = firstCriterionScore !== null && latestCriterionScore !== null
+            ? Number((latestCriterionScore - firstCriterionScore).toFixed(2))
+            : null;
+
+          row[`${criterion.label} — First`] = firstCriterionScore ?? "";
+          row[`${criterion.label} — Latest`] = latestCriterionScore ?? "";
+          row[`${criterion.label} — Change`] = change ?? "";
+        });
+
+        return row;
+      });
+
+      const wrapHeaders = [
+        "First Question",
+        "First Transcript",
+        "Latest Question",
+        "Latest Transcript"
+      ];
+      const dateHeaders = ["First Submitted At","Latest Submitted At"];
+      const scoreHeaders = ["First Score","Latest Score","Score Change",...criterionHeaders];
+      const linkHeaders = ["First Audio / Drive Link","Latest Audio / Drive Link"];
+
+      return makeWorksheet(
+        rows,
+        headers,
+        headers.map(function (header) {
+          if (wrapHeaders.includes(header)) return 48;
+          if (["Email ID",...linkHeaders].includes(header)) return 34;
+          if (header.includes("UUID")) return 38;
+          if (criterionHeaders.includes(header)) return 17;
+          if (dateHeaders.includes(header)) return 21;
+          return 18;
+        }),
+        {
+          wrapColumns:wrapHeaders.map(header => headers.indexOf(header)),
+          dateColumns:dateHeaders.map(header => headers.indexOf(header)),
+          scoreColumns:scoreHeaders.map(header => headers.indexOf(header)),
+          linkColumns:linkHeaders.map(header => headers.indexOf(header))
+        }
+      );
     }
 
     async function exportExcel(rows, source) {
@@ -1397,116 +1872,83 @@
         return;
       }
 
-      const chosenRows = Array.isArray(rows) ? rows : [];
-
-      if (!chosenRows.length) {
-        setStatus(statusElement,"There are no result rows to export.","warning");
-        return;
-      }
-
       const originalButtonText = button.textContent;
       button.disabled = true;
       button.textContent = "Preparing Excel…";
       setStatus(statusElement,"","");
 
       try {
-        const mobileResult = await callRpc(
-          RPC.studentMobileMap,
+        const workbookData = await callRpc(
+          RPC.workbookExport,
           {p_session_token:currentSession.sessionToken}
         );
 
-        if (!mobileResult || mobileResult.ok !== true) {
+        if (!workbookData || workbookData.ok !== true) {
           throw new Error(
-            mobileResult && mobileResult.message
-              ? mobileResult.message
-              : "Student contact data could not be loaded."
+            workbookData && workbookData.message
+              ? workbookData.message
+              : "The complete workbook data could not be loaded."
           );
         }
 
-        const mobileByStudent = new Map(
-          (Array.isArray(mobileResult.students) ? mobileResult.students : [])
-            .map(student => [
-              String(student.studentUuid || ""),
-              exportText(student.mobileNumber)
-            ])
+        const questions = (Array.isArray(workbookData.questions) ? workbookData.questions : [])
+          .slice()
+          .sort(compareQuestionRows);
+        const questionNumberByTask = new Map(
+          questions.map((question,index) => [String(question.taskUuid || ""),index + 1])
         );
 
-        const detailedHeaders = [
-          "Roll No",
-          "Name",
-          "Email ID",
-          "Mobile Number",
-          "Score",
-          "Detailed Feedback"
-        ];
-
-        const detailedRows = chosenRows.map(function (row) {
-          const score = exportNumber(row.latestScore);
-
-          return {
-            "Roll No":exportText(row.studentId),
-            "Name":exportText(row.fullName),
-            "Email ID":exportText(row.email),
-            "Mobile Number":mobileByStudent.get(String(row.studentUuid || "")) || "",
-            "Score":score === null ? "" : score,
-            "Detailed Feedback":formatDetailedFeedback(row.feedback)
-          };
-        });
-
-        const summaryRows = buildParticipantSummary(
-          chosenRows,
-          mobileByStudent
+        const individualSheet = buildIndividualPerformanceSheet(
+          workbookData,
+          questions,
+          questionNumberByTask
         );
-
-        const leaderboardRows = buildLeaderboard(summaryRows);
-
-        const detailedSheet = makeWorksheet(
-          detailedRows,
-          detailedHeaders,
-          [16,28,34,19,10,110],
-          [5]
+        const detailedSheet = buildDetailedResultsSheet(
+          workbookData,
+          questionNumberByTask
         );
-
-        const summarySheet = makeWorksheet(
-          summaryRows,
-          [
-            "Roll No",
-            "Name",
-            "Email ID",
-            "Mobile Number",
-            "Assigned Questions",
-            "Completed Questions",
-            "Average Score"
-          ],
-          [16,28,34,19,19,21,15]
-        );
-
-        const leaderboardSheet = makeWorksheet(
-          leaderboardRows,
-          [
-            "Rank",
-            "Roll No",
-            "Name",
-            "Completed Questions",
-            "Average Score"
-          ],
-          [9,16,30,21,15]
+        const progressSheet = buildFirstVsLatestSheet(
+          workbookData,
+          questionNumberByTask
         );
 
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook,detailedSheet,"Detailed Results");
-        XLSX.utils.book_append_sheet(workbook,summarySheet,"Participant Summary");
-        XLSX.utils.book_append_sheet(workbook,leaderboardSheet,"Leaderboard");
+        workbook.Props = {
+          Title:"ASCENT Trainer Performance Report",
+          Subject:"Institution-scoped student performance, detailed results and progress",
+          Author:"ASCENT",
+          CreatedDate:new Date()
+        };
+
+        XLSX.utils.book_append_sheet(
+          workbook,
+          individualSheet,
+          "INDIVIDUAL STUDENT PERFORMANCE"
+        );
+        XLSX.utils.book_append_sheet(
+          workbook,
+          detailedSheet,
+          "DETAILED RESULTS"
+        );
+        XLSX.utils.book_append_sheet(
+          workbook,
+          progressSheet,
+          "FIRST VS LATEST PROGRESS"
+        );
+
+        const institutionName = exportText(workbookData.institutionName)
+          .replace(/[^A-Za-z0-9_-]+/g,"_")
+          .replace(/^_+|_+$/g,"") || "Institution";
 
         XLSX.writeFile(
           workbook,
-          `ASCENT_Trainer_Report_${new Date().toISOString().slice(0,10)}.xlsx`,
-          {cellStyles:true}
+          `ASCENT_${institutionName}_Trainer_Report_${new Date().toISOString().slice(0,10)}.xlsx`,
+          {cellStyles:true,cellDates:true}
         );
 
         setStatus(
           statusElement,
-          "Excel downloaded with Detailed Results, Participant Summary and Leaderboard worksheets.",
+          "Excel downloaded with Individual Student Performance, Detailed Results and First vs Latest Progress worksheets.",
           "success"
         );
       } catch (error) {
