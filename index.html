@@ -566,11 +566,15 @@
       line-height:1.5;
     }
 
-    .footer-brand {
-      color:#fff;
-      font-weight:800;
-      letter-spacing:.6px;
-    }
+    .footer-admin-touchpoint {
+  margin:0;
+  padding:0;
+  border:0;
+  background:none;
+  color:inherit;
+  font:inherit;
+  cursor:default;
+}
 
     @media (max-width:980px) {
       .nav-links { display:none; }
@@ -803,7 +807,18 @@
   <footer class="site-footer">
     <div class="footer-shell">
       <div><span class="footer-brand">ASCENT</span> · Communication Practice &amp; Performance</div>
-      <div>Created by Manu Vikraman · TELW The English Workshop</div>
+      <div>
+  Created by
+  <button
+    id="adminFooterTouchpoint"
+    class="footer-admin-touchpoint"
+    type="button"
+    aria-label="Manu Vikraman"
+  >
+    Manu Vikraman
+  </button>
+  · TELW The English Workshop
+</div>
     </div>
   </footer>
 
@@ -824,6 +839,27 @@
         menuButton.textContent = "☰";
       });
     });
+    const adminFooterTouchpoint =
+  document.getElementById("adminFooterTouchpoint");
+
+let adminFooterClickCount = 0;
+let adminFooterResetTimer = null;
+
+adminFooterTouchpoint.addEventListener("click", () => {
+  adminFooterClickCount += 1;
+
+  window.clearTimeout(adminFooterResetTimer);
+
+  if (adminFooterClickCount >= 5) {
+    adminFooterClickCount = 0;
+    window.location.href = "./ascent/admin-settings.html";
+    return;
+  }
+
+  adminFooterResetTimer = window.setTimeout(() => {
+    adminFooterClickCount = 0;
+  }, 5000);
+});
   </script>
 </body>
 </html>
