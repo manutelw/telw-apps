@@ -8,7 +8,7 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>ASCENT · Student Login</title>
+  <title>ASCENT · Login</title>
 
   <meta
     name="description"
@@ -350,7 +350,7 @@
 
 .role-choice {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 22px;
 }
@@ -392,6 +392,10 @@
     }
 
     @media (max-width: 820px) {
+      .role-choice {
+        grid-template-columns: 1fr;
+      }
+
       body {
         padding: 16px;
       }
@@ -771,6 +775,14 @@
     >
       Trainer Login
     </button>
+
+    <button
+      id="institutionRoleButton"
+      class="role-button"
+      type="button"
+    >
+      Institution Portal
+    </button>
   </div>
 
   <form
@@ -1089,6 +1101,9 @@ const studentRoleButton =
 const trainerRoleButton =
   document.getElementById("trainerRoleButton");
 
+const institutionRoleButton =
+  document.getElementById("institutionRoleButton");
+
 const loginForm =
   document.getElementById("loginForm");
 
@@ -1243,16 +1258,16 @@ async function createPrivatePassOrder(buyer) {
         privatePaymentHeaders(),
 
       body: JSON.stringify({
-        productCode:
+        product_code:
           PRIVATE_PASS_PRODUCT_CODE,
 
-        buyerName:
+        full_name:
           buyer.fullName,
 
-        buyerEmail:
+        email:
           buyer.email,
 
-        buyerPhone:
+        phone:
           buyer.phone
       })
     }
@@ -1271,19 +1286,14 @@ async function createPrivatePassOrder(buyer) {
   if (
     !result.payment_order_uuid ||
     !result.razorpay_order_id ||
-    !result.razorpay_key_id ||
-    !result.amount_paise
+    !result.amount
   ) {
     throw new Error(
       "ASCENT received an incomplete payment order."
     );
   }
 
-  return {
-    ...result,
-    amount:
-      Number(result.amount_paise)
-  };
+  return result;
 }
 async function verifyPrivatePassPayment(
   paymentOrder,
@@ -1661,6 +1671,19 @@ accessForm.addEventListener(
         "active"
       );
 
+      institutionRoleButton.classList.remove(
+        "active"
+      );
+
+      const accessIdentity = String(
+        selectedAccessPoint.access_point_slug ||
+        selectedAccessPoint.display_name ||
+        ""
+      ).toLowerCase();
+
+      institutionRoleButton.hidden =
+        accessIdentity.includes("private");
+
       showAccessStatus("", "");
 
     } catch (error) {
@@ -1696,6 +1719,11 @@ accessForm.addEventListener(
     role === "TRAINER"
   );
 
+  institutionRoleButton.classList.toggle(
+    "active",
+    role === "INSTITUTION"
+  );
+
   if (role === "TRAINER") {
     identityLabel.textContent =
       "Trainer email address";
@@ -1705,6 +1733,15 @@ accessForm.addEventListener(
 
     loginButton.textContent =
       "Log in as Trainer";
+  } else if (role === "INSTITUTION") {
+    identityLabel.textContent =
+      "Institution user email address";
+
+    identityInput.placeholder =
+      "Enter your authorised email address";
+
+    loginButton.textContent =
+      "Open Institution Portal";
   } else {
     identityLabel.textContent =
       "Email address or Student ID";
@@ -1739,6 +1776,13 @@ trainerRoleButton.addEventListener(
     openLoginForRole("TRAINER");
   }
 );
+
+institutionRoleButton.addEventListener(
+  "click",
+  function () {
+    openLoginForRole("INSTITUTION");
+  }
+);
     changeAccessButton.addEventListener(
   "click",
   function () {
@@ -1761,6 +1805,11 @@ trainerRoleButton.addEventListener(
     trainerRoleButton.classList.remove(
       "active"
     );
+
+    institutionRoleButton.classList.remove(
+      "active"
+    );
+    institutionRoleButton.hidden = false;
 
     showStatus("", "");
     showAccessStatus("", "");
@@ -1825,10 +1874,11 @@ loginForm.addEventListener(
 
     if (
       selectedLoginRole !== "STUDENT" &&
-      selectedLoginRole !== "TRAINER"
+      selectedLoginRole !== "TRAINER" &&
+      selectedLoginRole !== "INSTITUTION"
     ) {
       showStatus(
-        "Please choose Student Login or Trainer Login.",
+        "Please choose Student Login, Trainer Login or Institution Portal.",
         "error"
       );
       return;
@@ -1836,9 +1886,9 @@ loginForm.addEventListener(
 
     if (!identity) {
       showStatus(
-        selectedLoginRole === "TRAINER"
-          ? "Please enter your trainer email address."
-          : "Please enter your email address or student ID.",
+        selectedLoginRole === "STUDENT"
+          ? "Please enter your email address or student ID."
+          : "Please enter your authorised email address.",
         "error"
       );
 
@@ -1860,8 +1910,12 @@ loginForm.addEventListener(
     loginButton.textContent =
       "Checking login…";
 
+    const staffLogin =
+      selectedLoginRole === "TRAINER" ||
+      selectedLoginRole === "INSTITUTION";
+
     const loginUrl =
-      selectedLoginRole === "TRAINER"
+      staffLogin
         ? TRAINER_LOGIN_RPC_URL
         : STUDENT_LOGIN_RPC_URL;
 
@@ -1906,9 +1960,9 @@ loginForm.addEventListener(
         loginResult.length === 0
       ) {
         showStatus(
-          selectedLoginRole === "TRAINER"
-            ? "Incorrect trainer email address or password for this access point."
-            : "Incorrect student ID, email address or password for this access point.",
+          selectedLoginRole === "STUDENT"
+            ? "Incorrect student ID, email address or password for this access point."
+            : "Incorrect authorised email address or password for this access point.",
           "error"
         );
 
@@ -1922,7 +1976,7 @@ loginForm.addEventListener(
 
       let destination = "";
 
-      if (selectedLoginRole === "TRAINER") {
+      if (staffLogin) {
         const trainerSession = {
           sessionToken:
             account.session_token,
@@ -1960,8 +2014,26 @@ loginForm.addEventListener(
           JSON.stringify(trainerSession)
         );
 
-        destination =
-          "./trainer.html";
+        if (selectedLoginRole === "INSTITUTION") {
+          const portalSlug = String(
+            account.access_point_slug ||
+            selectedAccessPoint.access_point_slug ||
+            ""
+          ).trim().toLowerCase();
+
+          if (!portalSlug) {
+            throw new Error(
+              "This institution does not have a portal address."
+            );
+          }
+
+          destination =
+            "./institution.html?slug=" +
+            encodeURIComponent(portalSlug);
+        } else {
+          destination =
+            "./trainer.html";
+        }
 
       } else {
         const studentSession = {
@@ -2047,7 +2119,9 @@ loginForm.addEventListener(
         loginButton.textContent =
           selectedLoginRole === "TRAINER"
             ? "Log in as Trainer"
-            : "Log in as Student";
+            : selectedLoginRole === "INSTITUTION"
+              ? "Open Institution Portal"
+              : "Log in as Student";
       }
     }
   }
