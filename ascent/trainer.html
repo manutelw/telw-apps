@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ASCENT · Trainer Portal</title>
   <meta name="description" content="ASCENT trainer and administrator portal">
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" onerror="this.onerror=null;this.src='https://unpkg.com/xlsx-js-style@1.2.0/dist/xlsx.bundle.js';"></script>
   <style>
     :root {
       --navy:#143a60; --navy-dark:#102b47; --blue:#27679d; --blue-soft:#edf4fb;
@@ -1468,66 +1468,361 @@
       sheet[address].l = {Target:target,Tooltip:"Open audio or Drive file"};
     }
 
-    function makeWorksheet(rows, headers, widths, options={}) {
-      const sheet = XLSX.utils.json_to_sheet(rows, {
-        header:headers,
-        cellDates:true
+    const WORKBOOK_STYLE = {
+      navy:"143A60",
+      navyDark:"102B47",
+      blue:"27679D",
+      blueSoft:"EAF2F8",
+      gold:"C67B00",
+      goldSoft:"FFF4D6",
+      green:"18794E",
+      greenSoft:"E7F6EE",
+      red:"B42318",
+      redSoft:"FDECEA",
+      amber:"9A6700",
+      amberSoft:"FFF4CE",
+      purple:"6B5B95",
+      purpleSoft:"F0ECF8",
+      teal:"176B6B",
+      tealSoft:"E6F5F5",
+      grey:"667085",
+      greySoft:"EEF1F4",
+      white:"FFFFFF",
+      text:"24364A",
+      border:"D7E1EB"
+    };
+
+    const WORKBOOK_RUBRIC_CRITERIA = {
+      MANAGERIAL_COMMUNICATION:[
+        "structure_and_clarity",
+        "business_thinking",
+        "language_control",
+        "confidence_and_delivery",
+        "professionalism"
+      ],
+      PI:[
+        "structure_and_clarity",
+        "content_depth_and_evidence",
+        "business_thinking",
+        "communication_and_professionalism",
+        "composure_under_pressure"
+      ],
+      GD:[
+        "entry_and_clarity",
+        "reasoning_content_and_logic",
+        "listening_and_response",
+        "leadership_moves",
+        "composure_under_pressure"
+      ]
+    };
+
+    function workbookRubricKey(value) {
+      const key = exportText(value)
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g,"_")
+        .replace(/^_+|_+$/g,"");
+
+      const aliases = {
+        LUM:"MANAGERIAL_COMMUNICATION",
+        MANAGERIAL:"MANAGERIAL_COMMUNICATION",
+        MANAGERIAL_COMMUNICATION_RUBRIC:"MANAGERIAL_COMMUNICATION",
+        PERSONAL_INTERVIEW:"PI",
+        INTERVIEW:"PI",
+        GROUP_DISCUSSION:"GD"
+      };
+
+      return aliases[key] || key;
+    }
+
+    function workbookCriterionLabel(key) {
+      if (WORKBOOK_CRITERION_LABELS.has(key)) {
+        return WORKBOOK_CRITERION_LABELS.get(key);
+      }
+
+      return exportText(key)
+        .replace(/_/g," ")
+        .replace(/\b\w/g,letter => letter.toUpperCase());
+    }
+
+    function workbookCriteriaForRubric(rubricType, scoreMap) {
+      const rubricKey = workbookRubricKey(rubricType);
+      const preferred = WORKBOOK_RUBRIC_CRITERIA[rubricKey] || [];
+      const ordered = [];
+      const seen = new Set();
+
+      preferred.forEach(function (key) {
+        ordered.push({
+          key,
+          label:workbookCriterionLabel(key),
+          score:scoreMap.has(key) ? scoreMap.get(key) : null
+        });
+        seen.add(key);
       });
 
-      sheet["!cols"] = widths.map(wch => ({wch}));
-      sheet["!autofilter"] = {
-        ref:`A1:${XLSX.utils.encode_col(headers.length - 1)}${Math.max(rows.length + 1,1)}`
-      };
-      sheet["!freeze"] = {xSplit:0,ySplit:1,topLeftCell:"A2",activePane:"bottomLeft",state:"frozen"};
+      scoreMap.forEach(function (score,key) {
+        if (seen.has(key) || ordered.length >= 5) return;
+        ordered.push({key,label:workbookCriterionLabel(key),score});
+        seen.add(key);
+      });
 
-      const range = XLSX.utils.decode_range(sheet["!ref"] || "A1:A1");
+      while (ordered.length < 5) {
+        ordered.push({key:"",label:"",score:null});
+      }
+
+      return ordered.slice(0,5);
+    }
+
+    function workbookFill(rgb) {
+      return {patternType:"solid",fgColor:{rgb}};
+    }
+
+    function workbookBorder() {
+      const side = {style:"thin",color:{rgb:WORKBOOK_STYLE.border}};
+      return {top:side,bottom:side,left:side,right:side};
+    }
+
+    function workbookStyle(fillRgb, fontRgb, bold, horizontal, wrapText=true, fontSize=10) {
+      return {
+        fill:workbookFill(fillRgb),
+        font:{
+          name:"Arial",
+          sz:fontSize,
+          bold:Boolean(bold),
+          color:{rgb:fontRgb}
+        },
+        alignment:{
+          vertical:"center",
+          horizontal:horizontal || "left",
+          wrapText:Boolean(wrapText)
+        },
+        border:workbookBorder()
+      };
+    }
+
+    function ensureWorkbookCell(sheet,row,column) {
+      const address = XLSX.utils.encode_cell({r:row,c:column});
+      if (!sheet[address]) sheet[address] = {t:"s",v:""};
+      return sheet[address];
+    }
+
+    function applyWorkbookStyle(sheet,row,column,style) {
+      ensureWorkbookCell(sheet,row,column).s = style;
+    }
+
+    function applyWorkbookStyleRange(sheet,rowStart,rowEnd,columnStart,columnEnd,style) {
+      for (let row=rowStart; row<=rowEnd; row+=1) {
+        for (let column=columnStart; column<=columnEnd; column+=1) {
+          applyWorkbookStyle(sheet,row,column,style);
+        }
+      }
+    }
+
+    function workbookStatusStyle(value, type) {
+      const status = exportText(value).trim().toUpperCase();
+
+      if (type === "progress") {
+        if (status === "IMPROVED") return workbookStyle(WORKBOOK_STYLE.greenSoft,WORKBOOK_STYLE.green,true,"center");
+        if (status === "DECLINED") return workbookStyle(WORKBOOK_STYLE.redSoft,WORKBOOK_STYLE.red,true,"center");
+        if (status === "STABLE" || status === "BASELINE ONLY") return workbookStyle(WORKBOOK_STYLE.amberSoft,WORKBOOK_STYLE.amber,true,"center");
+        return workbookStyle(WORKBOOK_STYLE.greySoft,WORKBOOK_STYLE.grey,true,"center");
+      }
+
+      if (type === "timeliness") {
+        if (status === "ON TIME") return workbookStyle(WORKBOOK_STYLE.greenSoft,WORKBOOK_STYLE.green,true,"center");
+        if (status === "MISSED" || status === "LATE" || status === "EXPIRED") return workbookStyle(WORKBOOK_STYLE.redSoft,WORKBOOK_STYLE.red,true,"center");
+        return workbookStyle(WORKBOOK_STYLE.greySoft,WORKBOOK_STYLE.grey,true,"center");
+      }
+
+      if (type === "yesno") {
+        if (status === "YES") return workbookStyle(WORKBOOK_STYLE.greenSoft,WORKBOOK_STYLE.green,true,"center");
+        return workbookStyle(WORKBOOK_STYLE.greySoft,WORKBOOK_STYLE.grey,true,"center");
+      }
+
+      if (status === "COMPLETED" || status === "EVALUATED") {
+        return workbookStyle(WORKBOOK_STYLE.greenSoft,WORKBOOK_STYLE.green,true,"center");
+      }
+      if (status === "EXPIRED" || status === "MISSED") {
+        return workbookStyle(WORKBOOK_STYLE.redSoft,WORKBOOK_STYLE.red,true,"center");
+      }
+      if (status === "NOT ANSWERED" || status === "NOT STARTED" || status === "PENDING EVALUATION") {
+        return workbookStyle(WORKBOOK_STYLE.amberSoft,WORKBOOK_STYLE.amber,true,"center");
+      }
+      if (status === "NOT AVAILABLE" || status === "SCHEDULED" || status === "WITHDRAWN" || status === "NO COMPLETED RESPONSE") {
+        return workbookStyle(WORKBOOK_STYLE.greySoft,WORKBOOK_STYLE.grey,true,"center");
+      }
+
+      return workbookStyle(WORKBOOK_STYLE.blueSoft,WORKBOOK_STYLE.blue,true,"center");
+    }
+
+    function workbookChangeStyle(value) {
+      const number = exportNumber(value);
+      if (number === null) return workbookStyle(WORKBOOK_STYLE.greySoft,WORKBOOK_STYLE.grey,false,"center");
+      if (number > 0) return workbookStyle(WORKBOOK_STYLE.greenSoft,WORKBOOK_STYLE.green,true,"center");
+      if (number < 0) return workbookStyle(WORKBOOK_STYLE.redSoft,WORKBOOK_STYLE.red,true,"center");
+      return workbookStyle(WORKBOOK_STYLE.amberSoft,WORKBOOK_STYLE.amber,true,"center");
+    }
+
+    function makeStyledWorksheet(rows, headers, widths, options={}) {
+      const title = options.title || "ASCENT REPORT";
+      const subtitle = options.subtitle || "";
+      const dataRows = rows.map(function (row) {
+        return headers.map(function (header) {
+          const value = row[header];
+          return value === undefined || value === null ? "" : value;
+        });
+      });
+
+      const worksheetRows = [
+        [title],
+        [subtitle],
+        Array(headers.length).fill(""),
+        headers,
+        ...dataRows
+      ];
+
+      const sheet = XLSX.utils.aoa_to_sheet(worksheetRows,{cellDates:true});
+      const finalColumn = Math.max(headers.length - 1,0);
+      const finalDataRow = Math.max(rows.length + 4,4);
+      const freezeColumns = Math.max(Number(options.freezeColumns || 0),0);
+      const hiddenColumns = new Set(options.hiddenColumns || []);
+
+      sheet["!merges"] = [
+        {s:{r:0,c:0},e:{r:0,c:finalColumn}},
+        {s:{r:1,c:0},e:{r:1,c:finalColumn}}
+      ];
+      sheet["!cols"] = widths.map(function (width,index) {
+        return {wch:width,hidden:hiddenColumns.has(index)};
+      });
+      sheet["!rows"] = [
+        {hpt:29},
+        {hpt:27},
+        {hpt:25},
+        {hpt:42},
+        ...rows.map(() => ({hpt:Number(options.dataRowHeight || 34)}))
+      ];
+      sheet["!autofilter"] = {
+        ref:`A4:${XLSX.utils.encode_col(finalColumn)}${finalDataRow}`
+      };
+      sheet["!freeze"] = {
+        xSplit:freezeColumns,
+        ySplit:4,
+        topLeftCell:XLSX.utils.encode_cell({r:4,c:freezeColumns}),
+        activePane:freezeColumns ? "bottomRight" : "bottomLeft",
+        state:"frozen"
+      };
+
+      applyWorkbookStyleRange(
+        sheet,0,0,0,finalColumn,
+        workbookStyle(WORKBOOK_STYLE.navy,WORKBOOK_STYLE.white,true,"left",true,16)
+      );
+      applyWorkbookStyleRange(
+        sheet,1,1,0,finalColumn,
+        workbookStyle(WORKBOOK_STYLE.blueSoft,WORKBOOK_STYLE.text,false,"left",true,10)
+      );
+
+      const groups = Array.isArray(options.groups) ? options.groups : [];
+      groups.forEach(function (group) {
+        if (group.start > group.end || group.start < 0 || group.end > finalColumn) return;
+        const cell = ensureWorkbookCell(sheet,2,group.start);
+        cell.v = group.label;
+        cell.t = "s";
+        if (group.end > group.start) {
+          sheet["!merges"].push({s:{r:2,c:group.start},e:{r:2,c:group.end}});
+        }
+        applyWorkbookStyleRange(
+          sheet,2,2,group.start,group.end,
+          workbookStyle(group.fill || WORKBOOK_STYLE.blue,WORKBOOK_STYLE.white,true,"center",true,10)
+        );
+      });
+
+      applyWorkbookStyleRange(
+        sheet,3,3,0,finalColumn,
+        workbookStyle(WORKBOOK_STYLE.navyDark,WORKBOOK_STYLE.white,true,"center",true,10)
+      );
+
       const wrapColumns = new Set(options.wrapColumns || []);
+      const centerColumns = new Set(options.centerColumns || []);
       const scoreColumns = new Set(options.scoreColumns || []);
       const dateColumns = new Set(options.dateColumns || []);
       const linkColumns = new Set(options.linkColumns || []);
+      const changeColumns = new Set(options.changeColumns || []);
+      const questionMatrixColumns = new Set(options.questionMatrixColumns || []);
+      const emphasisScoreColumns = new Set(options.emphasisScoreColumns || []);
+      const statusColumns = options.statusColumns || {};
 
-      for (let r=range.s.r; r<=range.e.r; r+=1) {
-        for (let c=range.s.c; c<=range.e.c; c+=1) {
-          const address = XLSX.utils.encode_cell({r,c});
-          const cell = sheet[address];
-          if (!cell) continue;
+      rows.forEach(function (_,dataIndex) {
+        const rowIndex = dataIndex + 4;
+        const alternatingFill = dataIndex % 2 === 0 ? WORKBOOK_STYLE.white : "F7F9FB";
 
-          cell.s = cell.s || {};
-          cell.s.alignment = {
-            vertical:"top",
-            wrapText:r === 0 || wrapColumns.has(c)
-          };
+        headers.forEach(function (_,columnIndex) {
+          const cell = ensureWorkbookCell(sheet,rowIndex,columnIndex);
+          const horizontal = centerColumns.has(columnIndex) ? "center" : "left";
+          cell.s = workbookStyle(
+            alternatingFill,
+            WORKBOOK_STYLE.text,
+            false,
+            horizontal,
+            wrapColumns.has(columnIndex),
+            10
+          );
 
-          if (r === 0) {
-            cell.s.font = {bold:true};
+          if (scoreColumns.has(columnIndex) && typeof cell.v === "number") {
+            cell.z = "0.00";
+          }
+
+          if (dateColumns.has(columnIndex) && cell.v instanceof Date) {
+            cell.z = "dd-mmm-yyyy hh:mm";
             cell.s.alignment.horizontal = "center";
-          } else {
-            if (scoreColumns.has(c) && typeof cell.v === "number") {
+          }
+
+          if (emphasisScoreColumns.has(columnIndex) && typeof cell.v === "number") {
+            cell.s = workbookStyle(WORKBOOK_STYLE.blueSoft,WORKBOOK_STYLE.navy,true,"center");
+            cell.z = "0.00";
+          }
+
+          if (questionMatrixColumns.has(columnIndex)) {
+            if (typeof cell.v === "number") {
+              cell.s = workbookStyle(WORKBOOK_STYLE.greenSoft,WORKBOOK_STYLE.green,true,"center");
               cell.z = "0.00";
-            }
-
-            if (dateColumns.has(c) && cell.v instanceof Date) {
-              cell.z = "dd-mmm-yyyy hh:mm";
-            }
-
-            if (linkColumns.has(c)) {
-              setWorkbookCellLink(sheet,address,exportText(cell.v));
+            } else if (exportText(cell.v)) {
+              cell.s = workbookStatusStyle(cell.v,"submission");
             }
           }
-        }
-      }
 
-      if (rows.length) {
-        sheet["!rows"] = Array(rows.length + 1).fill(null).map(function (_,index) {
-          return index === 0 ? {hpt:30} : {hpt:42};
+          if (changeColumns.has(columnIndex)) {
+            cell.s = workbookChangeStyle(cell.v);
+            if (typeof cell.v === "number") cell.z = "+0.00;-0.00;0.00";
+          }
+
+          if (Object.prototype.hasOwnProperty.call(statusColumns,columnIndex)) {
+            cell.s = workbookStatusStyle(cell.v,statusColumns[columnIndex]);
+          }
+
+          if (linkColumns.has(columnIndex)) {
+            const target = exportText(cell.v);
+            setWorkbookCellLink(sheet,XLSX.utils.encode_cell({r:rowIndex,c:columnIndex}),target);
+            if (/^https?:\/\//i.test(target)) {
+              cell.v = "Open recording";
+              cell.t = "s";
+              cell.s = workbookStyle(alternatingFill,WORKBOOK_STYLE.blue,true,"center");
+              cell.s.font.underline = true;
+            }
+          }
         });
-      }
+      });
 
       return sheet;
     }
 
     function buildIndividualPerformanceSheet(workbookData, questions, questionNumberByTask) {
-      const students = Array.isArray(workbookData.students) ? workbookData.students : [];
+      const students = (Array.isArray(workbookData.students) ? workbookData.students : [])
+        .slice()
+        .sort(function (left,right) {
+          return exportText(left.batch).localeCompare(exportText(right.batch)) ||
+            exportText(left.name).localeCompare(exportText(right.name)) ||
+            exportText(left.rollNo).localeCompare(exportText(right.rollNo));
+        });
       const assignments = Array.isArray(workbookData.assignments) ? workbookData.assignments : [];
       const assignmentByStudentAndTask = new Map();
 
@@ -1540,15 +1835,21 @@
       });
 
       const questionHeaders = questions.map(function (_,index) {
-        return String(index + 1);
+        return `Q${index + 1}`;
       });
-
+      const snapshotHeaders = [
+        "Questions Assigned",
+        "Questions Answered",
+        "Average Score",
+        "Latest Score"
+      ];
       const headers = [
         "Roll No",
         "Name",
         "Email ID",
         "Mobile Number",
         ...questionHeaders,
+        ...snapshotHeaders,
         "Detailed Feedback"
       ];
 
@@ -1560,45 +1861,111 @@
           "Mobile Number":exportText(student.mobileNumber)
         };
         const feedbackSections = [];
+        const studentAssignments = [];
 
         questions.forEach(function (question,index) {
           const assignment = assignmentByStudentAndTask.get(
             `${student.studentUuid || ""}::${question.taskUuid || ""}`
           );
-          const column = String(index + 1);
+          const column = `Q${index + 1}`;
 
           row[column] = assignment ? scoreOrAssignmentStatus(assignment) : "";
+          if (assignment) studentAssignments.push(assignment);
 
           if (assignment && assignment.submissionUuid) {
-            const formattedFeedback = formatDetailedFeedback(
-              assignment.detailedFeedback
-            );
-
+            const formattedFeedback = formatDetailedFeedback(assignment.detailedFeedback);
             feedbackSections.push(
-              `Q${questionNumberByTask.get(String(question.taskUuid || ""))}: ` +
-              (formattedFeedback || "Feedback was not stored for this response.")
+              `${column}: ${formattedFeedback || "Feedback was not stored for this response."}`
             );
           }
         });
 
+        const scoredAssignments = studentAssignments
+          .map(function (assignment) {
+            return {
+              assignment,
+              score:exportNumber(assignment.finalScore ?? assignment.totalScore),
+              submittedAt:Date.parse(assignment.submittedAt || "")
+            };
+          })
+          .filter(item => item.score !== null);
+        const latest = scoredAssignments
+          .slice()
+          .sort(function (left,right) {
+            const a = Number.isFinite(left.submittedAt) ? left.submittedAt : 0;
+            const b = Number.isFinite(right.submittedAt) ? right.submittedAt : 0;
+            return b - a;
+          })[0];
+        const average = scoredAssignments.length
+          ? scoredAssignments.reduce((sum,item) => sum + item.score,0) / scoredAssignments.length
+          : null;
+
+        row["Questions Assigned"] = studentAssignments.length;
+        row["Questions Answered"] = studentAssignments.filter(item => Boolean(item.submissionUuid)).length;
+        row["Average Score"] = average === null ? "" : Number(average.toFixed(2));
+        row["Latest Score"] = latest ? latest.score : "";
         row["Detailed Feedback"] = feedbackSections.join("\n\n");
         return row;
       });
 
-      return makeWorksheet(
+      const questionStart = 4;
+      const questionEnd = questionStart + questionHeaders.length - 1;
+      const snapshotStart = questionStart + questionHeaders.length;
+      const feedbackColumn = headers.length - 1;
+      const groups = [
+        {label:"STUDENT DETAILS",start:0,end:3,fill:WORKBOOK_STYLE.navy},
+        ...(questionHeaders.length ? [{label:"SCORES FOR QUESTIONS",start:questionStart,end:questionEnd,fill:WORKBOOK_STYLE.blue}] : []),
+        {label:"PERFORMANCE SNAPSHOT",start:snapshotStart,end:snapshotStart + snapshotHeaders.length - 1,fill:WORKBOOK_STYLE.green},
+        {label:"DETAILED FEEDBACK",start:feedbackColumn,end:feedbackColumn,fill:WORKBOOK_STYLE.purple}
+      ];
+
+      const sheet = makeStyledWorksheet(
         rows,
         headers,
-        [16,28,34,19,...questionHeaders.map(() => 11),110],
+        [16,26,32,18,...questionHeaders.map(() => 10),17,17,14,14,72],
         {
-          wrapColumns:[headers.length - 1],
-          scoreColumns:questionHeaders.map((_,index) => index + 4)
+          title:"INDIVIDUAL STUDENT PERFORMANCE",
+          subtitle:`${exportText(workbookData.institutionName)} | Green = completed score · Amber = unanswered · Red = expired · Grey = not yet available. Hover over a Q heading to see the full question.`,
+          groups,
+          freezeColumns:4,
+          wrapColumns:[feedbackColumn],
+          centerColumns:[0,3,...questionHeaders.map((_,index) => questionStart + index),snapshotStart,snapshotStart + 1,snapshotStart + 2,snapshotStart + 3],
+          scoreColumns:[...questionHeaders.map((_,index) => questionStart + index),snapshotStart + 2,snapshotStart + 3],
+          emphasisScoreColumns:[snapshotStart + 2,snapshotStart + 3],
+          questionMatrixColumns:questionHeaders.map((_,index) => questionStart + index),
+          dataRowHeight:56
         }
       );
+
+      questions.forEach(function (question,index) {
+        const address = XLSX.utils.encode_cell({r:3,c:questionStart + index});
+        const cell = ensureWorkbookCell(sheet,3,questionStart + index);
+        const questionText = exportText(question.question) || "Question text unavailable";
+        const rubric = exportText(question.rubricType);
+        cell.c = [{
+          a:"ASCENT",
+          t:`${questionText}${rubric ? `\nRubric: ${rubric}` : ""}`
+        }];
+        if (sheet[address]) sheet[address].c = cell.c;
+      });
+
+      return sheet;
     }
 
     function buildDetailedResultsSheet(workbookData, questionNumberByTask) {
-      const assignments = Array.isArray(workbookData.assignments) ? workbookData.assignments : [];
-      const criterionHeaders = WORKBOOK_CRITERIA.map(item => item.label);
+      const assignments = (Array.isArray(workbookData.assignments) ? workbookData.assignments : [])
+        .slice()
+        .sort(function (left,right) {
+          return exportText(left.batch).localeCompare(exportText(right.batch)) ||
+            exportText(left.name).localeCompare(exportText(right.name)) ||
+            Number(questionNumberByTask.get(String(left.taskUuid || "")) || 0) - Number(questionNumberByTask.get(String(right.taskUuid || "")) || 0) ||
+            Number(exportNumber(left.attemptNumber) || 0) - Number(exportNumber(right.attemptNumber) || 0);
+        });
+
+      const criterionHeaders = [];
+      for (let index=1; index<=5; index+=1) {
+        criterionHeaders.push(`Criterion ${index}`,`Criterion ${index} Score`);
+      }
 
       const headers = [
         "Institution",
@@ -1619,6 +1986,7 @@
         "Timeliness Status",
         "Attempt Number",
         "Total Score",
+        "Final Score",
         ...criterionHeaders,
         "Transcript",
         "Criterion-wise Feedback",
@@ -1629,7 +1997,6 @@
         "Follow-up Transcript",
         "Follow-up Submitted At",
         "Follow-up Score",
-        "Final Score",
         "Audio / Drive Link",
         "Audio File Name",
         "Evaluation Status",
@@ -1641,6 +2008,7 @@
 
       const rows = assignments.map(function (assignment) {
         const scoreMap = criterionScoreMap(assignment.criterionScores,assignment.detailedFeedback);
+        const criteria = workbookCriteriaForRubric(assignment.rubricType,scoreMap);
         const row = {
           "Institution":exportText(assignment.institution || workbookData.institutionName),
           "Student Batch / Cohort":exportText(assignment.batch),
@@ -1660,22 +2028,16 @@
           "Timeliness Status":exportText(assignment.timelinessStatus),
           "Attempt Number":exportNumber(assignment.attemptNumber) ?? "",
           "Total Score":exportNumber(assignment.totalScore) ?? "",
+          "Final Score":exportNumber(assignment.finalScore) ?? "",
           "Transcript":exportText(assignment.transcript),
-          "Criterion-wise Feedback":criterionFeedbackText(
-            assignment.criterionFeedback,
-            assignment.detailedFeedback
-          ),
-          "Other Issues":otherIssuesText(
-            assignment.otherIssues,
-            assignment.detailedFeedback
-          ),
+          "Criterion-wise Feedback":criterionFeedbackText(assignment.criterionFeedback,assignment.detailedFeedback),
+          "Other Issues":otherIssuesText(assignment.otherIssues,assignment.detailedFeedback),
           "Follow-up Mode":exportText(assignment.followupMode),
           "Follow-up Question":exportText(assignment.followupQuestion),
           "Follow-up Completed":exportBoolean(assignment.followupCompleted),
           "Follow-up Transcript":exportText(assignment.followupTranscript),
           "Follow-up Submitted At":exportDate(assignment.followupSubmittedAt),
           "Follow-up Score":exportNumber(assignment.followupScore) ?? "",
-          "Final Score":exportNumber(assignment.finalScore) ?? "",
           "Audio / Drive Link":exportText(assignment.audioLink),
           "Audio File Name":exportText(assignment.audioFileName),
           "Evaluation Status":exportText(assignment.evaluationStatus),
@@ -1685,60 +2047,129 @@
           "Question Batch UUID":exportText(assignment.questionBatchUuid)
         };
 
-        WORKBOOK_CRITERIA.forEach(function (criterion) {
-          row[criterion.label] = scoreMap.has(criterion.key)
-            ? scoreMap.get(criterion.key)
-            : "";
+        criteria.forEach(function (criterion,index) {
+          row[`Criterion ${index + 1}`] = criterion.label;
+          row[`Criterion ${index + 1} Score`] = criterion.score ?? "";
         });
 
         return row;
       });
 
-      const criterionStart = headers.indexOf(criterionHeaders[0]);
-      const wrapHeaders = [
-        "Question Text",
-        "Transcript",
-        "Criterion-wise Feedback",
-        "Other Issues",
-        "Follow-up Question",
-        "Follow-up Transcript"
-      ];
-      const dateHeaders = [
-        "Assigned At",
-        "Release At",
-        "Due At",
-        "Submitted At",
-        "Follow-up Submitted At"
-      ];
-      const scoreHeaders = [
-        "Total Score",
-        ...criterionHeaders,
-        "Follow-up Score",
-        "Final Score"
-      ];
+      const scoreStart = headers.indexOf("Total Score");
+      const scoreEnd = headers.indexOf("Criterion 5 Score");
+      const feedbackStart = headers.indexOf("Transcript");
+      const feedbackEnd = headers.indexOf("Other Issues");
+      const followupStart = headers.indexOf("Follow-up Mode");
+      const followupEnd = headers.indexOf("Follow-up Score");
+      const linkColumn = headers.indexOf("Audio / Drive Link");
+      const auditStart = headers.indexOf("Audio File Name");
+      const auditEnd = headers.length - 1;
+      const scoreColumns = [headers.indexOf("Total Score"),headers.indexOf("Final Score"),headers.indexOf("Follow-up Score")];
+      for (let index=1; index<=5; index+=1) scoreColumns.push(headers.indexOf(`Criterion ${index} Score`));
 
-      return makeWorksheet(
+      return makeStyledWorksheet(
         rows,
         headers,
         headers.map(function (header) {
-          if (["Question Text","Transcript","Criterion-wise Feedback","Other Issues","Follow-up Question","Follow-up Transcript"].includes(header)) return 52;
-          if (["Email ID","Audio / Drive Link"].includes(header)) return 34;
-          if (["Weekly Question-Batch Identifier","Assignment UUID","Submission UUID","Task UUID","Question Batch UUID"].includes(header)) return 38;
-          if (dateHeaders.includes(header)) return 21;
-          if (criterionHeaders.includes(header)) return 18;
-          return 17;
+          if (["Question Text","Transcript","Criterion-wise Feedback","Other Issues","Follow-up Question","Follow-up Transcript"].includes(header)) return 44;
+          if (["Email ID","Audio / Drive Link"].includes(header)) return 31;
+          if (["Weekly Question-Batch Identifier","Assignment UUID","Submission UUID","Task UUID","Question Batch UUID"].includes(header)) return 36;
+          if (header.startsWith("Criterion ") && !header.endsWith("Score")) return 24;
+          if (header.endsWith("Score")) return 12;
+          if (header.endsWith(" At")) return 20;
+          return 16;
         }),
         {
-          wrapColumns:wrapHeaders.map(header => headers.indexOf(header)),
-          dateColumns:dateHeaders.map(header => headers.indexOf(header)),
-          scoreColumns:scoreHeaders.map(header => headers.indexOf(header)),
-          linkColumns:[headers.indexOf("Audio / Drive Link")]
+          title:"DETAILED RESULTS",
+          subtitle:`${exportText(workbookData.institutionName)} | One row per assigned question and stored attempt. Use the filters in row 4. Technical audit columns are retained but hidden at the far right.`,
+          groups:[
+            {label:"STUDENT",start:0,end:5,fill:WORKBOOK_STYLE.navy},
+            {label:"QUESTION",start:6,end:9,fill:WORKBOOK_STYLE.blue},
+            {label:"TIMELINE & STATUS",start:10,end:16,fill:WORKBOOK_STYLE.gold},
+            {label:"SCORES",start:scoreStart,end:scoreEnd,fill:WORKBOOK_STYLE.green},
+            {label:"RESPONSE & FEEDBACK",start:feedbackStart,end:feedbackEnd,fill:WORKBOOK_STYLE.purple},
+            {label:"FOLLOW-UP",start:followupStart,end:followupEnd,fill:WORKBOOK_STYLE.teal},
+            {label:"RECORDING",start:linkColumn,end:linkColumn,fill:WORKBOOK_STYLE.blue},
+            {label:"AUDIT FIELDS",start:auditStart,end:auditEnd,fill:WORKBOOK_STYLE.grey}
+          ],
+          freezeColumns:4,
+          wrapColumns:[
+            headers.indexOf("Question Text"),
+            headers.indexOf("Transcript"),
+            headers.indexOf("Criterion-wise Feedback"),
+            headers.indexOf("Other Issues"),
+            headers.indexOf("Follow-up Question"),
+            headers.indexOf("Follow-up Transcript")
+          ],
+          centerColumns:[
+            headers.indexOf("Question Number"),
+            headers.indexOf("Rubric Type"),
+            headers.indexOf("Attempt Number"),
+            headers.indexOf("Submission Status"),
+            headers.indexOf("Timeliness Status"),
+            headers.indexOf("Follow-up Mode"),
+            headers.indexOf("Follow-up Completed"),
+            ...scoreColumns
+          ],
+          dateColumns:[
+            headers.indexOf("Assigned At"),
+            headers.indexOf("Release At"),
+            headers.indexOf("Due At"),
+            headers.indexOf("Submitted At"),
+            headers.indexOf("Follow-up Submitted At")
+          ],
+          scoreColumns,
+          emphasisScoreColumns:[headers.indexOf("Total Score"),headers.indexOf("Final Score")],
+          statusColumns:{
+            [headers.indexOf("Submission Status")]:"submission",
+            [headers.indexOf("Timeliness Status")]:"timeliness",
+            [headers.indexOf("Follow-up Completed")]:"yesno"
+          },
+          linkColumns:[linkColumn],
+          hiddenColumns:Array.from({length:auditEnd - auditStart + 1},(_,index) => auditStart + index),
+          dataRowHeight:50
         }
       );
     }
 
+    function workbookProgressSummary(first, latest, firstScore, latestScore, scoreChange, criteria) {
+      if (!first || !latest || firstScore === null || latestScore === null) {
+        return "No completed response is available yet.";
+      }
+
+      if (first.submissionUuid === latest.submissionUuid) {
+        return `Baseline recorded at ${firstScore.toFixed(2)}. A later response under the same rubric is needed to measure progress.`;
+      }
+
+      const movements = criteria
+        .filter(item => item.change !== null)
+        .sort((left,right) => right.change - left.change);
+      const strongestGain = movements.find(item => item.change > 0);
+      const largestDrop = movements.slice().reverse().find(item => item.change < 0);
+      const signed = scoreChange > 0 ? `+${scoreChange.toFixed(2)}` : scoreChange.toFixed(2);
+      let summary = `Overall score moved from ${firstScore.toFixed(2)} to ${latestScore.toFixed(2)} (${signed}).`;
+
+      if (strongestGain) {
+        summary += ` Strongest gain: ${strongestGain.label} (+${strongestGain.change.toFixed(2)}).`;
+      }
+      if (largestDrop) {
+        summary += ` Watch: ${largestDrop.label} (${largestDrop.change.toFixed(2)}).`;
+      }
+      if (!strongestGain && !largestDrop) {
+        summary += " Criterion scores were unchanged.";
+      }
+
+      return summary;
+    }
+
     function buildFirstVsLatestSheet(workbookData, questionNumberByTask) {
-      const students = Array.isArray(workbookData.students) ? workbookData.students : [];
+      const students = (Array.isArray(workbookData.students) ? workbookData.students : [])
+        .slice()
+        .sort(function (left,right) {
+          return exportText(left.batch).localeCompare(exportText(right.batch)) ||
+            exportText(left.name).localeCompare(exportText(right.name)) ||
+            exportText(left.rollNo).localeCompare(exportText(right.rollNo));
+        });
       const submissions = Array.isArray(workbookData.submissions) ? workbookData.submissions : [];
       const submissionsByStudent = new Map();
 
@@ -1759,38 +2190,37 @@
       });
 
       const criterionHeaders = [];
-      WORKBOOK_CRITERIA.forEach(function (criterion) {
+      for (let index=1; index<=5; index+=1) {
         criterionHeaders.push(
-          `${criterion.label} — First`,
-          `${criterion.label} — Latest`,
-          `${criterion.label} — Change`
+          `Criterion ${index}`,
+          `C${index} First`,
+          `C${index} Latest`,
+          `C${index} Change`
         );
-      });
+      }
 
       const headers = [
-        "Institution",
         "Student Batch / Cohort",
         "Roll No",
         "Student Name",
-        "Email ID",
-        "Mobile Number",
         "Rubric Compared",
         "Responses Compared",
+        "First Score",
+        "Latest Score",
+        "Score Change",
+        "Improvement Status",
+        "Overall Progress Summary",
+        ...criterionHeaders,
+        "First Submitted At",
         "First Question Number",
         "First Question",
-        "First Submitted At",
-        "First Score",
         "First Audio / Drive Link",
         "First Transcript",
+        "Latest Submitted At",
         "Latest Question Number",
         "Latest Question",
-        "Latest Submitted At",
-        "Latest Score",
         "Latest Audio / Drive Link",
         "Latest Transcript",
-        "Score Change",
-        ...criterionHeaders,
-        "Improvement Status",
         "First Assignment UUID",
         "First Submission UUID",
         "Latest Assignment UUID",
@@ -1802,7 +2232,7 @@
         const latestCompleted = completed.length ? completed[completed.length - 1] : null;
         const latestRubric = latestCompleted ? exportText(latestCompleted.rubricType) : "";
         const comparable = latestCompleted
-          ? completed.filter(item => exportText(item.rubricType) === latestRubric)
+          ? completed.filter(item => workbookRubricKey(item.rubricType) === workbookRubricKey(latestRubric))
           : [];
         const first = comparable.length ? comparable[0] : null;
         const latest = comparable.length ? comparable[comparable.length - 1] : null;
@@ -1811,14 +2241,32 @@
         const scoreChange = firstScore !== null && latestScore !== null
           ? Number((latestScore - firstScore).toFixed(2))
           : null;
-        const firstCriteria = criterionScoreMap(
+        const firstCriteriaMap = criterionScoreMap(
           first ? first.criterionScores : null,
           first ? first.detailedFeedback : null
         );
-        const latestCriteria = criterionScoreMap(
+        const latestCriteriaMap = criterionScoreMap(
           latest ? latest.criterionScores : null,
           latest ? latest.detailedFeedback : null
         );
+        const criteriaTemplate = workbookCriteriaForRubric(latestRubric,latestCriteriaMap.size ? latestCriteriaMap : firstCriteriaMap);
+        const criteria = criteriaTemplate.map(function (criterion) {
+          const firstCriterionScore = criterion.key && firstCriteriaMap.has(criterion.key)
+            ? firstCriteriaMap.get(criterion.key)
+            : null;
+          const latestCriterionScore = criterion.key && latestCriteriaMap.has(criterion.key)
+            ? latestCriteriaMap.get(criterion.key)
+            : null;
+          const change = firstCriterionScore !== null && latestCriterionScore !== null
+            ? Number((latestCriterionScore - firstCriterionScore).toFixed(2))
+            : null;
+          return {
+            ...criterion,
+            first:firstCriterionScore,
+            latest:latestCriterionScore,
+            change
+          };
+        });
 
         let improvementStatus = "No Completed Response";
         if (first && latest && first.submissionUuid === latest.submissionUuid) {
@@ -1832,79 +2280,114 @@
         }
 
         const row = {
-          "Institution":exportText(workbookData.institutionName),
           "Student Batch / Cohort":exportText(student.batch),
           "Roll No":exportText(student.rollNo),
           "Student Name":exportText(student.name),
-          "Email ID":exportText(student.emailId),
-          "Mobile Number":exportText(student.mobileNumber),
           "Rubric Compared":latestRubric,
           "Responses Compared":comparable.length,
-          "First Question Number":first ? questionNumberByTask.get(String(first.taskUuid || "")) || "" : "",
-          "First Question":first ? exportText(first.question) : "",
-          "First Submitted At":first ? exportDate(first.submittedAt) : "",
           "First Score":firstScore ?? "",
-          "First Audio / Drive Link":first ? exportText(first.audioLink) : "",
-          "First Transcript":first ? exportText(first.transcript) : "",
-          "Latest Question Number":latest ? questionNumberByTask.get(String(latest.taskUuid || "")) || "" : "",
-          "Latest Question":latest ? exportText(latest.question) : "",
-          "Latest Submitted At":latest ? exportDate(latest.submittedAt) : "",
           "Latest Score":latestScore ?? "",
-          "Latest Audio / Drive Link":latest ? exportText(latest.audioLink) : "",
-          "Latest Transcript":latest ? exportText(latest.transcript) : "",
           "Score Change":scoreChange ?? "",
           "Improvement Status":improvementStatus,
+          "Overall Progress Summary":workbookProgressSummary(first,latest,firstScore,latestScore,scoreChange,criteria),
+          "First Submitted At":first ? exportDate(first.submittedAt) : "",
+          "First Question Number":first ? questionNumberByTask.get(String(first.taskUuid || "")) || "" : "",
+          "First Question":first ? exportText(first.question) : "",
+          "First Audio / Drive Link":first ? exportText(first.audioLink) : "",
+          "First Transcript":first ? exportText(first.transcript) : "",
+          "Latest Submitted At":latest ? exportDate(latest.submittedAt) : "",
+          "Latest Question Number":latest ? questionNumberByTask.get(String(latest.taskUuid || "")) || "" : "",
+          "Latest Question":latest ? exportText(latest.question) : "",
+          "Latest Audio / Drive Link":latest ? exportText(latest.audioLink) : "",
+          "Latest Transcript":latest ? exportText(latest.transcript) : "",
           "First Assignment UUID":first ? exportText(first.assignmentUuid) : "",
           "First Submission UUID":first ? exportText(first.submissionUuid) : "",
           "Latest Assignment UUID":latest ? exportText(latest.assignmentUuid) : "",
           "Latest Submission UUID":latest ? exportText(latest.submissionUuid) : ""
         };
 
-        WORKBOOK_CRITERIA.forEach(function (criterion) {
-          const firstCriterionScore = firstCriteria.has(criterion.key)
-            ? firstCriteria.get(criterion.key)
-            : null;
-          const latestCriterionScore = latestCriteria.has(criterion.key)
-            ? latestCriteria.get(criterion.key)
-            : null;
-          const change = firstCriterionScore !== null && latestCriterionScore !== null
-            ? Number((latestCriterionScore - firstCriterionScore).toFixed(2))
-            : null;
-
-          row[`${criterion.label} — First`] = firstCriterionScore ?? "";
-          row[`${criterion.label} — Latest`] = latestCriterionScore ?? "";
-          row[`${criterion.label} — Change`] = change ?? "";
+        criteria.forEach(function (criterion,index) {
+          const number = index + 1;
+          row[`Criterion ${number}`] = criterion.label;
+          row[`C${number} First`] = criterion.first ?? "";
+          row[`C${number} Latest`] = criterion.latest ?? "";
+          row[`C${number} Change`] = criterion.change ?? "";
         });
 
         return row;
       });
 
-      const wrapHeaders = [
-        "First Question",
-        "First Transcript",
-        "Latest Question",
-        "Latest Transcript"
+      const criterionStart = headers.indexOf("Criterion 1");
+      const firstResponseStart = headers.indexOf("First Submitted At");
+      const latestResponseStart = headers.indexOf("Latest Submitted At");
+      const auditStart = headers.indexOf("First Assignment UUID");
+      const auditEnd = headers.length - 1;
+      const changeColumns = [headers.indexOf("Score Change")];
+      const emphasisScoreColumns = [headers.indexOf("First Score"),headers.indexOf("Latest Score")];
+      const scoreColumns = [...emphasisScoreColumns,...changeColumns];
+      const groups = [
+        {label:"STUDENT",start:0,end:2,fill:WORKBOOK_STYLE.navy},
+        {label:"PROGRESS AT A GLANCE",start:3,end:9,fill:WORKBOOK_STYLE.green}
       ];
-      const dateHeaders = ["First Submitted At","Latest Submitted At"];
-      const scoreHeaders = ["First Score","Latest Score","Score Change",...criterionHeaders];
-      const linkHeaders = ["First Audio / Drive Link","Latest Audio / Drive Link"];
 
-      return makeWorksheet(
+      for (let index=0; index<5; index+=1) {
+        const start = criterionStart + index * 4;
+        groups.push({label:`CRITERION ${index + 1}`,start,end:start + 3,fill:index % 2 === 0 ? WORKBOOK_STYLE.blue : WORKBOOK_STYLE.teal});
+        scoreColumns.push(start + 1,start + 2,start + 3);
+        emphasisScoreColumns.push(start + 1,start + 2);
+        changeColumns.push(start + 3);
+      }
+
+      groups.push(
+        {label:"FIRST RESPONSE",start:firstResponseStart,end:firstResponseStart + 4,fill:WORKBOOK_STYLE.purple},
+        {label:"LATEST RESPONSE",start:latestResponseStart,end:latestResponseStart + 4,fill:WORKBOOK_STYLE.blue},
+        {label:"AUDIT FIELDS",start:auditStart,end:auditEnd,fill:WORKBOOK_STYLE.grey}
+      );
+
+      return makeStyledWorksheet(
         rows,
         headers,
         headers.map(function (header) {
-          if (wrapHeaders.includes(header)) return 48;
-          if (["Email ID",...linkHeaders].includes(header)) return 34;
-          if (header.includes("UUID")) return 38;
-          if (criterionHeaders.includes(header)) return 17;
-          if (dateHeaders.includes(header)) return 21;
-          return 18;
+          if (header === "Overall Progress Summary") return 50;
+          if (["First Question","Latest Question","First Transcript","Latest Transcript"].includes(header)) return 42;
+          if (["First Audio / Drive Link","Latest Audio / Drive Link"].includes(header)) return 22;
+          if (header.includes("UUID")) return 36;
+          if (header.startsWith("Criterion ")) return 24;
+          if (/^C[1-5] /.test(header)) return 12;
+          if (header.endsWith(" At")) return 20;
+          return 17;
         }),
         {
-          wrapColumns:wrapHeaders.map(header => headers.indexOf(header)),
-          dateColumns:dateHeaders.map(header => headers.indexOf(header)),
-          scoreColumns:scoreHeaders.map(header => headers.indexOf(header)),
-          linkColumns:linkHeaders.map(header => headers.indexOf(header))
+          title:"FIRST VS LATEST PROGRESS",
+          subtitle:`${exportText(workbookData.institutionName)} | Green = improved · Amber = stable or baseline · Red = declined. Only responses under the same rubric are compared.`,
+          groups,
+          freezeColumns:3,
+          wrapColumns:[
+            headers.indexOf("Overall Progress Summary"),
+            headers.indexOf("First Question"),
+            headers.indexOf("First Transcript"),
+            headers.indexOf("Latest Question"),
+            headers.indexOf("Latest Transcript")
+          ],
+          centerColumns:[
+            headers.indexOf("Rubric Compared"),
+            headers.indexOf("Responses Compared"),
+            headers.indexOf("First Score"),
+            headers.indexOf("Latest Score"),
+            headers.indexOf("Score Change"),
+            headers.indexOf("Improvement Status"),
+            headers.indexOf("First Question Number"),
+            headers.indexOf("Latest Question Number"),
+            ...scoreColumns
+          ],
+          dateColumns:[headers.indexOf("First Submitted At"),headers.indexOf("Latest Submitted At")],
+          scoreColumns,
+          emphasisScoreColumns,
+          changeColumns,
+          statusColumns:{[headers.indexOf("Improvement Status")]:"progress"},
+          linkColumns:[headers.indexOf("First Audio / Drive Link"),headers.indexOf("Latest Audio / Drive Link")],
+          hiddenColumns:Array.from({length:auditEnd - auditStart + 1},(_,index) => auditStart + index),
+          dataRowHeight:54
         }
       );
     }
