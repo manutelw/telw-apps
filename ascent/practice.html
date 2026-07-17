@@ -2084,14 +2084,15 @@ const otherIssuesList =
           };
         }
 
-        if (
-          answeredAssignmentUuids.has(assignmentUuid) ||
-          questionWasAnswered(selected.question)
+               if (
+          answeredAssignmentUuids.has(
+            assignmentUuid
+          )
         ) {
           return {
             valid: false,
             message:
-              "You have already answered this question. Choose a different question."
+              "You have already answered this assigned task."
           };
         }
 
@@ -2882,12 +2883,13 @@ const otherIssuesList =
               !Number.isFinite(dueAt) ||
               dueAt >= now;
 
-            return (
+                       return (
               (!newestBatchKey || batchKey === newestBatchKey) &&
               isReleased &&
               isOpen &&
-              !answeredAssignmentUuids.has(assignmentUuid) &&
-              !questionWasAnswered(item.question)
+              !answeredAssignmentUuids.has(
+                assignmentUuid
+              )
             );
           });
 
