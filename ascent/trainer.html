@@ -361,6 +361,7 @@
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
     const RPC = {
       report: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_report_data",
+      studentMobileMap: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_student_mobile_map",
       bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
       taskActive: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_task_active",
       createTrainer: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_create_trainer",
@@ -1053,32 +1054,427 @@
       finally { hideLoading(); }
     }
 
-    function flattenCriterionScores(scores) {
-      const flat = collectNumericCriteria(scores || {}); return Object.fromEntries(Object.entries(flat).map(([key,value]) => [humaniseKey(key),value]));
+    function exportText(value) {
+      if (value === null || value === undefined) return "";
+      return String(value).replace(/\s+/g," ").trim();
     }
 
-    function exportExcel(rows) {
-      if (!window.XLSX) { setStatus(byId("resultsStatus"),"The Excel library did not load. Check the internet connection and try again.","error"); return; }
-      const chosenRows = rows && rows.length ? rows : reportData.results || [];
-      const summary = reportData.summary || {};
-      const summaryRows = [
-        {Metric:"Active Tasks",Value:summary.activeTasks || 0},{Metric:"Total Assignments",Value:summary.totalAssignments || 0},
-        {Metric:"Assigned Students",Value:summary.assignedStudents || 0},{Metric:"Completed",Value:summary.completed || 0},
-        {Metric:"Not Attempted",Value:summary.notAttempted || 0},{Metric:"Average Score",Value:summary.averageScore ?? ""},
-        {Metric:"Exported At",Value:new Date().toLocaleString()}
-      ];
-      const resultRows = chosenRows.map(row => ({
-        "Student ID":row.studentId,"Student Name":row.fullName,"Email":row.email,"Batch":row.batch,"Task Title":row.taskTitle,
-        "Question":row.question,"Rubric":row.rubricType,"Status":row.status,"Available At":formatDate(row.availableAt),"Due At":formatDate(row.dueAt),
-        "Submitted":Number(row.attemptCount || 0) > 0 ? "Yes" : "No","Score":row.latestScore,
-        "Submitted At":formatDate(row.latestSubmittedAt),...flattenCriterionScores(row.criterionScores)
-      }));
-      const pendingRows = chosenRows.filter(row => Number(row.attemptCount || 0) === 0 && !["SCHEDULED","WITHDRAWN"].includes(row.status)).map(row => ({"Student ID":row.studentId,"Student Name":row.fullName,"Email":row.email,"Batch":row.batch,"Task Title":row.taskTitle,"Question":row.question,"Status":row.status,"Available At":formatDate(row.availableAt),"Due At":formatDate(row.dueAt)}));
-      const workbook = XLSX.utils.book_new();
-      const addSheet = (name,data) => { const sheet = XLSX.utils.json_to_sheet(data.length ? data : [{Message:"No data"}]); sheet["!cols"] = Object.keys(data[0] || {Message:""}).map(key => ({wch:Math.min(Math.max(key.length+2,14),45)})); XLSX.utils.book_append_sheet(workbook,sheet,name); };
-      addSheet("Summary",summaryRows); addSheet("Results",resultRows); addSheet("Not Attempted",pendingRows);
-      XLSX.writeFile(workbook,`ASCENT_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
-      setStatus(byId("resultsStatus"),"Excel report downloaded.","success");
+    function exportNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : null;
+    }
+
+    function formatCriterionFeedback(criterion) {
+      if (!criterion || typeof criterion !== "object") return "";
+
+      const lines = [];
+      const name = exportText(
+        criterion.name ||
+        criterion.criterion_name ||
+        criterion.key ||
+        "Criterion"
+      );
+      const score = exportNumber(criterion.score);
+      const level = exportNumber(criterion.level);
+      const status = exportText(criterion.status).toLowerCase();
+
+      let heading = name;
+      if (score !== null) heading += ` — ${score.toFixed(1)} / 2`;
+      if (level !== null) heading += ` (Level ${level})`;
+      lines.push(heading);
+
+      const notAssessedReason = exportText(
+        criterion.not_assessed_reason ||
+        criterion.notAssessedReason
+      );
+
+      if (status === "not_assessed" || notAssessedReason) {
+        lines.push(
+          "Not assessed: " +
+          (notAssessedReason || "The required evidence was not available.")
+        );
+        return lines.join("\n");
+      }
+
+      const praise = exportText(criterion.praise);
+      const evidence = exportText(
+        criterion.evidence_quote ||
+        criterion.evidenceQuote
+      );
+      const weakLine = exportText(
+        criterion.weak_line ||
+        criterion.weakLine
+      );
+      const explanation = exportText(criterion.explanation);
+      const correctedVersion = exportText(
+        criterion.corrected_version ||
+        criterion.correctedVersion
+      );
+
+      if (praise) lines.push("What worked: " + praise);
+      if (evidence) lines.push("Evidence: “" + evidence + "”");
+      if (weakLine) lines.push("Weak line: “" + weakLine + "”");
+      if (explanation) lines.push("Why it is weak: " + explanation);
+      if (correctedVersion) lines.push("Use this: " + correctedVersion);
+
+      return lines.join("\n");
+    }
+
+    function formatOtherIssues(issues) {
+      if (!Array.isArray(issues) || !issues.length) return "";
+
+      const lines = ["OTHER ISSUES"];
+
+      issues.forEach(function (issue) {
+        if (!issue || typeof issue !== "object") return;
+
+        const label = exportText(issue.label || "Other issue");
+        const evidence = exportText(
+          issue.evidence_quote ||
+          issue.evidenceQuote
+        );
+        const explanation = exportText(issue.explanation);
+
+        let line = "• " + label;
+        if (evidence) line += " — “" + evidence + "”";
+        if (explanation) line += ": " + explanation;
+        lines.push(line);
+      });
+
+      return lines.length > 1 ? lines.join("\n") : "";
+    }
+
+    function formatDetailedFeedback(value) {
+      if (value === null || value === undefined || value === "") return "";
+
+      let feedback = value;
+
+      if (typeof feedback === "string") {
+        const clean = feedback.trim();
+        if (!clean) return "";
+
+        try {
+          feedback = JSON.parse(clean);
+        } catch {
+          return clean;
+        }
+      }
+
+      if (!feedback || typeof feedback !== "object") {
+        return exportText(feedback);
+      }
+
+      const sections = [];
+      const overall = exportText(
+        feedback.overall_comment ||
+        feedback.overallComment
+      );
+
+      if (overall) sections.push("OVERALL\n" + overall);
+
+      if (Array.isArray(feedback.criteria) && feedback.criteria.length) {
+        const criteria = feedback.criteria
+          .map(formatCriterionFeedback)
+          .filter(Boolean);
+
+        if (criteria.length) {
+          sections.push(
+            "DETAILED CRITERION FEEDBACK\n" +
+            criteria.join("\n\n")
+          );
+        }
+      }
+
+      const otherIssues = formatOtherIssues(
+        feedback.other_issues ||
+        feedback.otherIssues
+      );
+
+      if (otherIssues) sections.push(otherIssues);
+
+      if (sections.length) return sections.join("\n\n");
+
+      try {
+        return JSON.stringify(feedback);
+      } catch {
+        return "";
+      }
+    }
+
+    function makeWorksheet(rows, headers, widths, wrapColumns=[]) {
+      const sheet = XLSX.utils.json_to_sheet(rows, { header:headers });
+      sheet["!cols"] = widths.map(wch => ({wch}));
+      sheet["!autofilter"] = {
+        ref:`A1:${XLSX.utils.encode_col(headers.length - 1)}${Math.max(rows.length + 1,1)}`
+      };
+
+      const range = XLSX.utils.decode_range(sheet["!ref"] || "A1:A1");
+
+      for (let r=range.s.r; r<=range.e.r; r+=1) {
+        for (let c=range.s.c; c<=range.e.c; c+=1) {
+          const address = XLSX.utils.encode_cell({r,c});
+          const cell = sheet[address];
+          if (!cell) continue;
+
+          cell.s = cell.s || {};
+          cell.s.alignment = {
+            vertical:"top",
+            wrapText:r === 0 || wrapColumns.includes(c)
+          };
+
+          if (r === 0) {
+            cell.s.font = {bold:true};
+            cell.s.alignment.horizontal = "center";
+          }
+        }
+      }
+
+      return sheet;
+    }
+
+    function buildParticipantSummary(chosenRows, mobileByStudent) {
+      const participants = new Map();
+
+      chosenRows.forEach(function (row) {
+        const key = String(
+          row.studentUuid ||
+          row.studentId ||
+          row.email ||
+          row.fullName ||
+          ""
+        );
+
+        if (!key) return;
+
+        if (!participants.has(key)) {
+          participants.set(key, {
+            studentUuid:String(row.studentUuid || ""),
+            rollNo:exportText(row.studentId),
+            name:exportText(row.fullName),
+            email:exportText(row.email),
+            assigned:0,
+            completed:0,
+            scores:[]
+          });
+        }
+
+        const participant = participants.get(key);
+        participant.assigned += 1;
+
+        const score = exportNumber(row.latestScore);
+        if (score !== null) {
+          participant.completed += 1;
+          participant.scores.push(score);
+        }
+      });
+
+      return Array.from(participants.values())
+        .map(function (participant) {
+          const average = participant.scores.length
+            ? participant.scores.reduce((sum,value) => sum + value,0) /
+              participant.scores.length
+            : null;
+
+          return {
+            "Roll No":participant.rollNo,
+            "Name":participant.name,
+            "Email ID":participant.email,
+            "Mobile Number":mobileByStudent.get(participant.studentUuid) || "",
+            "Assigned Questions":participant.assigned,
+            "Completed Questions":participant.completed,
+            "Average Score":average === null ? "" : Number(average.toFixed(2))
+          };
+        })
+        .sort(function (a,b) {
+          return String(a.Name).localeCompare(String(b.Name));
+        });
+    }
+
+    function buildLeaderboard(summaryRows) {
+      const ranked = summaryRows
+        .filter(row => exportNumber(row["Average Score"]) !== null)
+        .sort(function (a,b) {
+          const scoreDifference =
+            Number(b["Average Score"]) - Number(a["Average Score"]);
+          if (scoreDifference !== 0) return scoreDifference;
+
+          const completionDifference =
+            Number(b["Completed Questions"]) - Number(a["Completed Questions"]);
+          if (completionDifference !== 0) return completionDifference;
+
+          return String(a.Name).localeCompare(String(b.Name));
+        });
+
+      let previousScore = null;
+      let previousCompleted = null;
+      let previousRank = 0;
+
+      return ranked.map(function (row,index) {
+        const score = Number(row["Average Score"]);
+        const completed = Number(row["Completed Questions"]);
+
+        const rank =
+          previousScore === score && previousCompleted === completed
+            ? previousRank
+            : index + 1;
+
+        previousScore = score;
+        previousCompleted = completed;
+        previousRank = rank;
+
+        return {
+          "Rank":rank,
+          "Roll No":row["Roll No"],
+          "Name":row["Name"],
+          "Completed Questions":completed,
+          "Average Score":score
+        };
+      });
+    }
+
+    async function exportExcel(rows, source) {
+      const statusElement =
+        source === "dashboard"
+          ? byId("dashboardStatus")
+          : byId("resultsStatus");
+
+      const button =
+        source === "dashboard"
+          ? byId("dashboardExportButton")
+          : byId("resultsExportButton");
+
+      if (!window.XLSX) {
+        setStatus(
+          statusElement,
+          "The Excel library did not load. Check the internet connection and try again.",
+          "error"
+        );
+        return;
+      }
+
+      const chosenRows = Array.isArray(rows) ? rows : [];
+
+      if (!chosenRows.length) {
+        setStatus(statusElement,"There are no result rows to export.","warning");
+        return;
+      }
+
+      const originalButtonText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Preparing Excel…";
+      setStatus(statusElement,"","");
+
+      try {
+        const mobileResult = await callRpc(
+          RPC.studentMobileMap,
+          {p_session_token:currentSession.sessionToken}
+        );
+
+        if (!mobileResult || mobileResult.ok !== true) {
+          throw new Error(
+            mobileResult && mobileResult.message
+              ? mobileResult.message
+              : "Student contact data could not be loaded."
+          );
+        }
+
+        const mobileByStudent = new Map(
+          (Array.isArray(mobileResult.students) ? mobileResult.students : [])
+            .map(student => [
+              String(student.studentUuid || ""),
+              exportText(student.mobileNumber)
+            ])
+        );
+
+        const detailedHeaders = [
+          "Roll No",
+          "Name",
+          "Email ID",
+          "Mobile Number",
+          "Score",
+          "Detailed Feedback"
+        ];
+
+        const detailedRows = chosenRows.map(function (row) {
+          const score = exportNumber(row.latestScore);
+
+          return {
+            "Roll No":exportText(row.studentId),
+            "Name":exportText(row.fullName),
+            "Email ID":exportText(row.email),
+            "Mobile Number":mobileByStudent.get(String(row.studentUuid || "")) || "",
+            "Score":score === null ? "" : score,
+            "Detailed Feedback":formatDetailedFeedback(row.feedback)
+          };
+        });
+
+        const summaryRows = buildParticipantSummary(
+          chosenRows,
+          mobileByStudent
+        );
+
+        const leaderboardRows = buildLeaderboard(summaryRows);
+
+        const detailedSheet = makeWorksheet(
+          detailedRows,
+          detailedHeaders,
+          [16,28,34,19,10,110],
+          [5]
+        );
+
+        const summarySheet = makeWorksheet(
+          summaryRows,
+          [
+            "Roll No",
+            "Name",
+            "Email ID",
+            "Mobile Number",
+            "Assigned Questions",
+            "Completed Questions",
+            "Average Score"
+          ],
+          [16,28,34,19,19,21,15]
+        );
+
+        const leaderboardSheet = makeWorksheet(
+          leaderboardRows,
+          [
+            "Rank",
+            "Roll No",
+            "Name",
+            "Completed Questions",
+            "Average Score"
+          ],
+          [9,16,30,21,15]
+        );
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook,detailedSheet,"Detailed Results");
+        XLSX.utils.book_append_sheet(workbook,summarySheet,"Participant Summary");
+        XLSX.utils.book_append_sheet(workbook,leaderboardSheet,"Leaderboard");
+
+        XLSX.writeFile(
+          workbook,
+          `ASCENT_Trainer_Report_${new Date().toISOString().slice(0,10)}.xlsx`,
+          {cellStyles:true}
+        );
+
+        setStatus(
+          statusElement,
+          "Excel downloaded with Detailed Results, Participant Summary and Leaderboard worksheets.",
+          "success"
+        );
+      } catch (error) {
+        console.error(error);
+        setStatus(
+          statusElement,
+          error.message || "ASCENT could not prepare the Excel report.",
+          "error"
+        );
+      } finally {
+        button.disabled = false;
+        button.textContent = originalButtonText;
+      }
     }
 
     async function clearSelectedTestRegister() {
@@ -1211,8 +1607,8 @@
       byId("logoutButton").addEventListener("click",() => { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href="./trainer-login.html"; });
       byId("refreshDashboardButton").addEventListener("click",() => loadReport("Refreshing dashboard…"));
       byId("refreshTasksButton").addEventListener("click",() => loadReport("Refreshing tasks…"));
-      byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results));
-      byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows));
+      byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results,"dashboard"));
+      byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows,"results"));
       byId("refreshQuestionBankButton").addEventListener("click",() => loadQuestionBank("Refreshing question bank…"));
       byId("addBankQuestionButton").addEventListener("click",() => openBankQuestionEditor());
       byId("cancelBankEditButton").addEventListener("click",closeBankQuestionEditor);
