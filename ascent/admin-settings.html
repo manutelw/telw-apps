@@ -265,6 +265,18 @@
       font-weight:800;
     }
 
+    .payment-input {
+  width:100%;
+  margin-top:7px;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:9px;
+  background:#fff;
+  color:var(--navy);
+  font-size:20px;
+  font-weight:800;
+}
+
     .payment-actions {
       display:grid;
       gap:10px;
@@ -479,13 +491,23 @@
 
         <div class="payment-grid">
           <div class="payment-item">
-            <div class="payment-label">
-              Price
-            </div>
+           <label
+  class="payment-label"
+  for="passAmount"
+>
+  Enter pass price
+</label>
 
-            <div class="payment-value">
-              ₹699
-            </div>
+<input
+  id="passAmount"
+  class="payment-input"
+  type="number"
+  inputmode="numeric"
+  min="1"
+  step="1"
+  value="699"
+  placeholder="12345"
+>
           </div>
 
           <div class="payment-item">
