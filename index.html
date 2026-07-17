@@ -48,14 +48,14 @@
     }
 
     .nav-shell {
-      width:min(1180px,calc(100% - 36px));
-      min-height:76px;
-      margin:0 auto;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:24px;
-    }
+  width:min(1320px,calc(100% - 72px));
+  min-height:92px;
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:40px;
+}
 
     .brand {
       display:flex;
@@ -96,15 +96,36 @@
     }
 
     .nav-links {
-      display:flex;
-      align-items:center;
-      gap:24px;
-      color:#496074;
-      font-size:14px;
-      font-weight:700;
-    }
+  display:flex;
+  align-items:center;
+  gap:42px;
+  color:var(--navy);
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:.4px;
+  text-transform:uppercase;
+}
 
-    .nav-links a:hover { color:var(--navy); }
+.nav-links a {
+  position:relative;
+  padding:10px 0;
+}
+
+.nav-links a::after {
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:1px;
+  width:0;
+  height:3px;
+  background:var(--gold);
+  transition:width .18s ease;
+}
+
+.nav-links a:hover::after,
+.nav-links a:focus-visible::after {
+  width:100%;
+}
 
     .nav-actions {
       display:flex;
@@ -235,13 +256,31 @@
     }
 
     .hero-card {
-      padding:24px;
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:22px;
-      background:rgba(255,255,255,.09);
-      box-shadow:0 30px 80px rgba(0,0,0,.23);
-      backdrop-filter:blur(14px);
-    }
+  display:block;
+  padding:24px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:22px;
+  background:rgba(255,255,255,.09);
+  box-shadow:0 30px 80px rgba(0,0,0,.23);
+  backdrop-filter:blur(14px);
+  color:#fff;
+  cursor:pointer;
+  transition:transform .18s ease,background .18s ease,border-color .18s ease;
+}
+
+.hero-card:hover,
+.hero-card:focus-visible {
+  transform:translateY(-4px);
+  background:rgba(255,255,255,.13);
+  border-color:rgba(255,224,160,.55);
+}
+
+.hero-card-cta {
+  margin-top:18px;
+  color:#ffe0a0;
+  font-size:14px;
+  font-weight:800;
+}
 
     .hero-card h2 {
       margin:0 0 8px;
@@ -613,28 +652,48 @@
           </p>
         </div>
 
-        <aside class="hero-card" aria-label="ASCENT practice areas">
-          <h2>One practice system</h2>
-          <p>Assigned work and open practice come together in one student journey.</p>
-          <div class="practice-list">
-            <div class="practice-item">
-              <div class="practice-number">14</div>
-              <div><strong>LUM progression</strong><span>Structured communication development across fourteen learning units.</span></div>
-            </div>
-            <div class="practice-item">
-              <div class="practice-number">PI</div>
-              <div><strong>Interview practice</strong><span>Background, experience, judgement, pressure and role-fit questions.</span></div>
-            </div>
-            <div class="practice-item">
-              <div class="practice-number">GD</div>
-              <div><strong>Discussion practice</strong><span>Entry, reasoning, response, leadership and pressure handling.</span></div>
-            </div>
-            <div class="practice-item">
-              <div class="practice-number">MC</div>
-              <div><strong>Managerial communication</strong><span>Workplace explanation, decisions, evidence, risk and business impact.</span></div>
-            </div>
-          </div>
-        </aside>
+<a class="hero-card" href="./ascent/practice-system.html" aria-label="Learn about the ASCENT practice system">
+  <h2>One practice system</h2>
+  <p>Choose a task, record your answer and use the feedback to improve.</p>
+
+  <div class="practice-list">
+    <div class="practice-item">
+      <div class="practice-number">14</div>
+      <div>
+        <strong>LUM progression</strong>
+        <span>Fourteen units build clear workplace speech.</span>
+      </div>
+    </div>
+
+    <div class="practice-item">
+      <div class="practice-number">PI</div>
+      <div>
+        <strong>Interview practice</strong>
+        <span>Practise interview questions and pressure follow-ups.</span>
+      </div>
+    </div>
+
+    <div class="practice-item">
+      <div class="practice-number">GD</div>
+      <div>
+        <strong>Discussion practice</strong>
+        <span>Learn to enter, respond, reason and lead.</span>
+      </div>
+    </div>
+
+    <div class="practice-item">
+      <div class="practice-number">MC</div>
+      <div>
+        <strong>Managerial communication</strong>
+        <span>Explain work, decisions, risk and results clearly.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-card-cta">
+    Explore the practice system →
+  </div>
+</a>
       </div>
     </section>
 
