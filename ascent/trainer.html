@@ -1287,29 +1287,80 @@
       return value === true || String(value).toLowerCase() === "true" ? "Yes" : "No";
     }
 
-    function criterionScoreMap(value) {
+    function normaliseCriterionKey(value) {
+      const key = exportText(value)
+        .trim()
+        .toLowerCase()
+        .replace(/&/g," and ")
+        .replace(/\+/g," and ")
+        .replace(/[^a-z0-9]+/g,"_")
+        .replace(/^_+|_+$/g,"");
+
+      const aliases = {
+        reasoning_content_logic:"reasoning_content_and_logic",
+        communication_professionalism:"communication_and_professionalism"
+      };
+
+      return aliases[key] || key;
+    }
+
+    function criterionScoreMap(value, detailedFeedback=null) {
       const source = normaliseExportObject(value, {});
       const scores = new Map();
 
-      if (!source || typeof source !== "object" || Array.isArray(source)) {
-        return scores;
-      }
+      function storeScore(keyValue, rawValue) {
+        const key = normaliseCriterionKey(
+          rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)
+            ? rawValue.key || rawValue.name || keyValue
+            : keyValue
+        );
 
-      Object.entries(source).forEach(function ([key,rawValue]) {
-        let score = null;
+        if (!key) return;
 
-        if (rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)) {
-          score = exportNumber(
-            rawValue.score ??
-            rawValue.value ??
-            rawValue.points
-          );
-        } else {
-          score = exportNumber(rawValue);
-        }
+        const score = rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)
+          ? exportNumber(
+              rawValue.score ??
+              rawValue.value ??
+              rawValue.points ??
+              rawValue.level_score
+            )
+          : exportNumber(rawValue);
 
         if (score !== null) scores.set(key,score);
-      });
+      }
+
+      if (Array.isArray(source)) {
+        source.forEach(function (item,index) {
+          storeScore(item && (item.key || item.name) || String(index),item);
+        });
+      } else if (source && typeof source === "object") {
+        const nestedCriteria = source.criteria;
+
+        if (Array.isArray(nestedCriteria)) {
+          nestedCriteria.forEach(function (item,index) {
+            storeScore(item && (item.key || item.name) || String(index),item);
+          });
+        } else if (nestedCriteria && typeof nestedCriteria === "object") {
+          Object.entries(nestedCriteria).forEach(function ([key,rawValue]) {
+            storeScore(key,rawValue);
+          });
+        } else {
+          Object.entries(source).forEach(function ([key,rawValue]) {
+            storeScore(key,rawValue);
+          });
+        }
+      }
+
+      if (!scores.size) {
+        const feedback = normaliseExportObject(detailedFeedback, {});
+        const feedbackCriteria = feedback && Array.isArray(feedback.criteria)
+          ? feedback.criteria
+          : [];
+
+        feedbackCriteria.forEach(function (item,index) {
+          storeScore(item && (item.key || item.name) || String(index),item);
+        });
+      }
 
       return scores;
     }
@@ -1589,7 +1640,7 @@
       ];
 
       const rows = assignments.map(function (assignment) {
-        const scoreMap = criterionScoreMap(assignment.criterionScores);
+        const scoreMap = criterionScoreMap(assignment.criterionScores,assignment.detailedFeedback);
         const row = {
           "Institution":exportText(assignment.institution || workbookData.institutionName),
           "Student Batch / Cohort":exportText(assignment.batch),
@@ -1760,8 +1811,14 @@
         const scoreChange = firstScore !== null && latestScore !== null
           ? Number((latestScore - firstScore).toFixed(2))
           : null;
-        const firstCriteria = criterionScoreMap(first ? first.criterionScores : null);
-        const latestCriteria = criterionScoreMap(latest ? latest.criterionScores : null);
+        const firstCriteria = criterionScoreMap(
+          first ? first.criterionScores : null,
+          first ? first.detailedFeedback : null
+        );
+        const latestCriteria = criterionScoreMap(
+          latest ? latest.criterionScores : null,
+          latest ? latest.detailedFeedback : null
+        );
 
         let improvementStatus = "No Completed Response";
         if (first && latest && first.submissionUuid === latest.submissionUuid) {
@@ -1771,7 +1828,7 @@
         } else if (scoreChange !== null && scoreChange < 0) {
           improvementStatus = "Declined";
         } else if (scoreChange !== null) {
-          improvementStatus = "No Change";
+          improvementStatus = "Stable";
         }
 
         const row = {
