@@ -1110,61 +1110,223 @@
       return Number.isFinite(number) ? number : null;
     }
 
-    function formatCriterionFeedback(criterion) {
-      if (!criterion || typeof criterion !== "object") return "";
+   function criterionMeaning(criterion) {
+  const key = normaliseCriterionKey(
+    criterion &&
+    (
+      criterion.key ||
+      criterion.name ||
+      criterion.criterion_name
+    )
+  );
 
-      const lines = [];
-      const name = exportText(
-        criterion.name ||
-        criterion.criterion_name ||
-        criterion.key ||
-        "Criterion"
+  const meanings = {
+    structure_and_clarity:
+      "This shows whether the listener can follow your answer easily. A clear order makes your main point easier to understand and remember.",
+
+    content_depth_and_evidence:
+      "This shows whether your answer is supported by real details. Specific examples make your claims believable.",
+
+    business_thinking:
+      "This shows whether you can explain reasons, options, risks and impact. It makes your answer practical and manager-like.",
+
+    communication_and_professionalism:
+      "This shows whether your language is clear, respectful and suitable for an interview. It affects how mature and workplace-ready you sound.",
+
+    composure_under_pressure:
+      "This shows whether you can stay calm and think clearly when challenged. A steady response builds trust in your judgement.",
+
+    entry_and_clarity:
+      "This shows whether you can enter the discussion at the right time with a clear point. A strong entry helps others notice and understand your contribution.",
+
+    reasoning_content_and_logic:
+      "This shows whether your point is supported by clear reasons and examples. Good logic makes your contribution convincing.",
+
+    listening_and_response:
+      "This shows whether you listen to others and respond to what they actually said. It makes the discussion connected rather than a set of separate speeches.",
+
+    leadership_moves:
+      "This shows whether you help the group organise ideas and move forward. Useful leadership makes the discussion more focused and productive.",
+
+    language_control:
+      "This shows whether your sentences are correct and easy to understand. Clear language keeps attention on your idea instead of your mistakes.",
+
+    confidence_and_delivery:
+      "This shows how steady and controlled you sound. Good pace, pauses and voice control make the listener more confident in you.",
+
+    professionalism:
+      "This shows whether your words and tone fit a workplace setting. Professional language makes you sound mature, dependable and ready for responsibility."
+  };
+
+  return (
+    meanings[key] ||
+    "This shows how effectively this part of your communication helps the listener understand and trust your message."
+  );
+}
+
+
+function formatCriterionFeedback(criterion) {
+  if (!criterion || typeof criterion !== "object") {
+    return "";
+  }
+
+  const lines = [];
+
+  const name = exportText(
+    criterion.name ||
+    criterion.criterion_name ||
+    criterion.key ||
+    "Criterion"
+  );
+
+  const score = exportNumber(
+    criterion.score
+  );
+
+  const level = exportNumber(
+    criterion.level
+  );
+
+  const status = exportText(
+    criterion.status
+  ).toLowerCase();
+
+  let heading = name;
+
+  if (score !== null) {
+    heading +=
+      ` — ${score.toFixed(1)} / 2`;
+  }
+
+  if (level !== null) {
+    heading +=
+      ` (Level ${level})`;
+  }
+
+  lines.push(heading);
+
+  lines.push(
+    "Why this matters: " +
+    criterionMeaning(criterion)
+  );
+
+  const notAssessedReason = exportText(
+    criterion.not_assessed_reason ||
+    criterion.notAssessedReason
+  );
+
+  if (
+    status === "not_assessed" ||
+    notAssessedReason
+  ) {
+    lines.push(
+      "Not assessed: " +
+      (
+        notAssessedReason ||
+        "The required evidence was not available."
+      )
+    );
+
+    return lines.join("\n");
+  }
+
+  const rawPraise = exportText(
+    criterion.praise
+  );
+
+  const usefulPraise =
+    rawPraise.toLowerCase() ===
+    "this criterion did not have a separate material weakness."
+      ? ""
+      : rawPraise;
+
+  const evidence = exportText(
+    criterion.evidence_quote ||
+    criterion.evidenceQuote
+  );
+
+  const weakLine = exportText(
+    criterion.weak_line ||
+    criterion.weakLine
+  );
+
+  const explanation = exportText(
+    criterion.explanation
+  );
+
+  const correctedVersion = exportText(
+    criterion.corrected_version ||
+    criterion.correctedVersion
+  );
+
+  if (usefulPraise) {
+    lines.push(
+      "What you did well: " +
+      usefulPraise
+    );
+  }
+
+  if (level === 5) {
+    if (evidence) {
+      lines.push(
+        "Your strong line: “" +
+        evidence +
+        "”"
       );
-      const score = exportNumber(criterion.score);
-      const level = exportNumber(criterion.level);
-      const status = exportText(criterion.status).toLowerCase();
-
-      let heading = name;
-      if (score !== null) heading += ` — ${score.toFixed(1)} / 2`;
-      if (level !== null) heading += ` (Level ${level})`;
-      lines.push(heading);
-
-      const notAssessedReason = exportText(
-        criterion.not_assessed_reason ||
-        criterion.notAssessedReason
-      );
-
-      if (status === "not_assessed" || notAssessedReason) {
-        lines.push(
-          "Not assessed: " +
-          (notAssessedReason || "The required evidence was not available.")
-        );
-        return lines.join("\n");
-      }
-
-      const praise = exportText(criterion.praise);
-      const evidence = exportText(
-        criterion.evidence_quote ||
-        criterion.evidenceQuote
-      );
-      const weakLine = exportText(
-        criterion.weak_line ||
-        criterion.weakLine
-      );
-      const explanation = exportText(criterion.explanation);
-      const correctedVersion = exportText(
-        criterion.corrected_version ||
-        criterion.correctedVersion
-      );
-
-      if (praise) lines.push("What worked: " + praise);
-      if (evidence) lines.push("Evidence: “" + evidence + "”");
-      if (weakLine) lines.push("Weak line: “" + weakLine + "”");
-      if (explanation) lines.push("Why it is weak: " + explanation);
-      if (correctedVersion) lines.push("Use this: " + correctedVersion);
-
-      return lines.join("\n");
     }
+
+    return lines.join("\n");
+  }
+
+  if (weakLine) {
+    lines.push(
+      "Your line: “" +
+      weakLine +
+      "”"
+    );
+
+    if (explanation) {
+      lines.push(
+        "Why this weakens your answer: " +
+        explanation
+      );
+    }
+
+    if (correctedVersion) {
+      lines.push(
+        "Use this instead: " +
+        correctedVersion
+      );
+    }
+  } else {
+    if (
+      usefulPraise &&
+      evidence
+    ) {
+      lines.push(
+        "Your strong line: “" +
+        evidence +
+        "”"
+      );
+    }
+
+    if (explanation) {
+      lines.push(
+        "What to improve: " +
+        explanation
+      );
+    }
+
+    if (correctedVersion) {
+      lines.push(
+        "Use this instead: " +
+        correctedVersion
+      );
+    }
+  }
+
+  return lines.join("\n");
+}
 
     function formatOtherIssues(issues) {
       if (!Array.isArray(issues) || !issues.length) return "";
