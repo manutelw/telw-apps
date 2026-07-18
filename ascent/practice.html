@@ -3559,6 +3559,7 @@ otherIssuesSection.hidden =
       );
       pressureData = result.pressure || {};
 
+      clearPressureCountdown();
       clearRecordedAudio();
       hideEvaluationResult();
 
@@ -3614,50 +3615,37 @@ otherIssuesSection.hidden =
         block: "start"
       });
 
-      const serverStartedAt =
-        Date.parse(
-          String(pressureData.startedAt || "")
-        );
+      const countdownStartedAt =
+        window.performance &&
+        typeof window.performance.now ===
+          "function"
+          ? window.performance.now()
+          : Date.now();
 
-      const preparationEndsAt =
-        (
-          Number.isFinite(serverStartedAt)
-            ? serverStartedAt
+      function currentCountdownTime() {
+        return (
+          window.performance &&
+          typeof window.performance.now ===
+            "function"
+            ? window.performance.now()
             : Date.now()
-        ) +
-        prepSeconds * 1000;
-
-      const deadlineAt =
-        Date.parse(
-          String(pressureData.deadlineAt || "")
         );
+      }
 
       function updatePreparationCountdown() {
-        const now = Date.now();
-
-        if (
-          Number.isFinite(deadlineAt) &&
-          now >= deadlineAt
-        ) {
-          clearPressureCountdown();
-          pressureCountdownValue.textContent =
-            "Ended";
-          pressureInstruction.textContent =
-            "The time allowed for this pressure follow-up has ended.";
-          showStatus(
-            "The pressure follow-up has expired. Record the main response again to begin a new attempt.",
-            "error"
+        const elapsedMilliseconds =
+          Math.max(
+            0,
+            currentCountdownTime() -
+              countdownStartedAt
           );
-          return;
-        }
 
         const remainingSeconds =
           Math.max(
             0,
             Math.ceil(
-              (
-                preparationEndsAt - now
-              ) / 1000
+              prepSeconds -
+              elapsedMilliseconds / 1000
             )
           );
 
@@ -3665,6 +3653,11 @@ otherIssuesSection.hidden =
           remainingSeconds > 0
             ? String(remainingSeconds) + " sec"
             : "Now";
+
+        pressureInstruction.textContent =
+          remainingSeconds > 0
+            ? "Use this time to prepare. Recording will begin automatically."
+            : "Answer now. Recording stops automatically when the response time ends.";
 
         if (remainingSeconds <= 0) {
           clearPressureCountdown();
