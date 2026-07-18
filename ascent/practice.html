@@ -3156,11 +3156,6 @@ const meaningFeedback =
 
 meaningFeedback.className =
   "criterion-feedback";
-        addFeedbackLine(
-  feedback,
-  "Why this matters:",
-  criterionMeaning(criterion)
-);
 
 addFeedbackLine(
   meaningFeedback,
@@ -3257,6 +3252,11 @@ const note =
 
       feedback.className =
         "criterion-feedback";
+      addFeedbackLine(
+  feedback,
+  "Why this matters:",
+  criterionMeaning(criterion)
+);
 
      const level =
   Number(criterion.level);
@@ -3656,7 +3656,7 @@ otherIssuesSection.hidden =
         Number(
           pressureData &&
           pressureData.responseSeconds
-        ) || 45
+        ) || 20
       );
 
       recordingAutoStopTriggered = false;
@@ -3727,7 +3727,7 @@ otherIssuesSection.hidden =
 
       const responseSeconds = Math.max(
         1,
-        Number(pressureData.responseSeconds) || 45
+        Number(pressureData.responseSeconds) || 20
       );
 
       pressureResponseValue.textContent =
