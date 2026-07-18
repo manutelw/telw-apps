@@ -3050,7 +3050,56 @@ otherIssuesSection.hidden = true;
       line.appendChild(valueElement);
       container.appendChild(line);
     }
+function criterionMeaning(criterion) {
+  const key = String(
+    criterion &&
+    criterion.key ||
+    ""
+  ).trim();
 
+  const meanings = {
+    structure_and_clarity:
+      "This shows whether the listener can follow your answer easily. A clear order makes your main point easier to understand and remember.",
+
+    content_depth_and_evidence:
+      "This shows whether your answer is supported by real details. Specific examples make your claims believable.",
+
+    business_thinking:
+      "This shows whether you can explain reasons, options, risks and impact. It makes your answer practical and manager-like.",
+
+    communication_and_professionalism:
+      "This shows whether your language is clear, respectful and suitable for an interview. It affects how mature and workplace-ready you sound.",
+
+    composure_under_pressure:
+      "This shows whether you can stay calm and think clearly when challenged. A steady response builds trust in your judgement.",
+
+    entry_and_clarity:
+      "This shows whether you can enter the discussion at the right time with a clear point. A strong entry helps others notice and understand your contribution.",
+
+    reasoning_content_and_logic:
+      "This shows whether your point is supported by clear reasons and examples. Good logic makes your contribution convincing.",
+
+    listening_and_response:
+      "This shows whether you listen to others and respond to what they actually said. It makes the discussion connected rather than a set of separate speeches.",
+
+    leadership_moves:
+      "This shows whether you help the group organise ideas and move forward. Useful leadership makes the discussion more focused and productive.",
+
+    language_control:
+      "This shows whether your sentences are correct and easy to understand. Clear language keeps attention on your idea instead of your mistakes.",
+
+    confidence_and_delivery:
+      "This shows how steady and controlled you sound. Good pace, pauses and voice control make the listener more confident in you.",
+
+    professionalism:
+      "This shows whether your words and tone fit a workplace setting. Professional language makes you sound mature, dependable and ready for responsibility."
+  };
+
+  return (
+    meanings[key] ||
+    "This shows how effectively this part of your communication helps the listener understand and trust your message."
+  );
+}
 
     function addCriterionCard(
       criterion
@@ -3102,8 +3151,29 @@ otherIssuesSection.hidden = true;
 
         card.appendChild(topLine);
 
-        const note =
-          document.createElement("div");
+const meaningFeedback =
+  document.createElement("div");
+
+meaningFeedback.className =
+  "criterion-feedback";
+        addFeedbackLine(
+  feedback,
+  "Why this matters:",
+  criterionMeaning(criterion)
+);
+
+addFeedbackLine(
+  meaningFeedback,
+  "Why this matters:",
+  criterionMeaning(criterion)
+);
+
+card.appendChild(
+  meaningFeedback
+);
+
+const note =
+  document.createElement("div");
 
         note.className =
           "not-assessed-note";
@@ -3188,41 +3258,98 @@ otherIssuesSection.hidden = true;
       feedback.className =
         "criterion-feedback";
 
-      if (
-        Number(criterion.level) === 5
-      ) {
-        addFeedbackLine(
-          feedback,
-          "What worked:",
-          criterion.praise
-        );
+     const level =
+  Number(criterion.level);
 
-      } else {
-        const weakLine =
-          String(
-            criterion.weakLine || ""
-          ).trim();
+const rawPraise =
+  String(
+    criterion.praise || ""
+  ).trim();
 
-        addFeedbackLine(
-          feedback,
-          "Weak line:",
-          weakLine
-            ? "“" + weakLine + "”"
-            : ""
-        );
+const usefulPraise =
+  rawPraise.toLowerCase() ===
+  "this criterion did not have a separate material weakness."
+    ? ""
+    : rawPraise;
 
-        addFeedbackLine(
-          feedback,
-          "Why it is weak:",
-          criterion.explanation
-        );
+const evidence =
+  String(
+    criterion.evidenceQuote || ""
+  ).trim();
 
-        addFeedbackLine(
-          feedback,
-          "Use this:",
-          criterion.correctedVersion
-        );
-      }
+const weakLine =
+  String(
+    criterion.weakLine || ""
+  ).trim();
+
+const explanation =
+  String(
+    criterion.explanation || ""
+  ).trim();
+
+const correctedVersion =
+  String(
+    criterion.correctedVersion || ""
+  ).trim();
+
+addFeedbackLine(
+  feedback,
+  "What you did well:",
+  usefulPraise
+);
+
+if (level === 5) {
+  addFeedbackLine(
+    feedback,
+    "Your strong line:",
+    evidence
+      ? "“" + evidence + "”"
+      : ""
+  );
+
+} else if (weakLine) {
+  addFeedbackLine(
+    feedback,
+    "Your line:",
+    "“" + weakLine + "”"
+  );
+
+  addFeedbackLine(
+    feedback,
+    "Why this weakens your answer:",
+    explanation
+  );
+
+  addFeedbackLine(
+    feedback,
+    "Use this instead:",
+    correctedVersion
+  );
+
+} else {
+  if (
+    usefulPraise &&
+    evidence
+  ) {
+    addFeedbackLine(
+      feedback,
+      "Your strong line:",
+      "“" + evidence + "”"
+    );
+  }
+
+  addFeedbackLine(
+    feedback,
+    "What to improve:",
+    explanation
+  );
+
+  addFeedbackLine(
+    feedback,
+    "Use this instead:",
+    correctedVersion
+  );
+}
 
       card.appendChild(feedback);
       criteriaGrid.appendChild(card);
