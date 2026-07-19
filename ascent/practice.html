@@ -554,6 +554,42 @@
       margin-bottom: 16px;
     }
 
+    .private-audio-panel {
+      display: none;
+      margin-top: 18px;
+      padding: 16px;
+      border: 1px solid #e5b44f;
+      border-radius: 12px;
+      background: #fff8e8;
+    }
+
+    .private-audio-panel.visible {
+      display: block;
+    }
+
+    .private-audio-note {
+      color: #694600;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .download-recording-button {
+      display: none;
+      width: 100%;
+      margin-top: 14px;
+      padding: 13px 18px;
+      border-radius: 10px;
+      background: var(--navy);
+      color: var(--white);
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .download-recording-button.visible {
+      display: block;
+    }
+
     .status-message {
       min-height: 24px;
       margin-top: 18px;
@@ -1466,6 +1502,25 @@
             </div>
           </div>
 
+          <section
+            id="privateAudioPanel"
+            class="private-audio-panel"
+            aria-live="polite"
+          >
+            <p class="private-audio-note">
+              Download your recording before you leave or refresh this page. ASCENT does not save audio recordings for private learners.
+            </p>
+
+            <a
+              id="downloadRecordingButton"
+              class="download-recording-button"
+              href="#"
+              download
+            >
+              Download My Recording
+            </a>
+          </section>
+
           <div
             id="statusMessage"
             class="status-message"
@@ -1639,6 +1694,16 @@
     const audioPlayback =
       document.getElementById("audioPlayback");
 
+    const privateAudioPanel =
+      document.getElementById(
+        "privateAudioPanel"
+      );
+
+    const downloadRecordingButton =
+      document.getElementById(
+        "downloadRecordingButton"
+      );
+
     const statusMessage =
       document.getElementById("statusMessage");
 
@@ -1796,6 +1861,9 @@ const otherIssuesList =
     let isRecording = false;
     let audioBlob = null;
     let audioObjectUrl = null;
+    let privateMainAudioBlob = null;
+    let privateFinalAudioBlob = null;
+    let privateDownloadObjectUrl = null;
     let timerInterval = null;
     let recordingStartedAt = null;
     let responsePhase = "main";
@@ -1900,6 +1968,197 @@ const otherIssuesList =
 
       statusMessage.textContent =
         message;
+    }
+
+
+    function isPrivateAudioMode() {
+      return Boolean(
+        practiceContext &&
+        practiceContext
+          .is_private_learner === true
+      );
+    }
+
+
+    function refreshPrivateAudioPanel() {
+      privateAudioPanel.classList.toggle(
+        "visible",
+        isPrivateAudioMode()
+      );
+    }
+
+
+    function clearPrivateDownloadState() {
+      privateMainAudioBlob = null;
+      privateFinalAudioBlob = null;
+
+      if (privateDownloadObjectUrl) {
+        URL.revokeObjectURL(
+          privateDownloadObjectUrl
+        );
+
+        privateDownloadObjectUrl = null;
+      }
+
+      downloadRecordingButton
+        .classList.remove("visible");
+
+      downloadRecordingButton
+        .removeAttribute("href");
+    }
+
+
+    function preparePrivateDownload(blob) {
+      if (
+        !isPrivateAudioMode() ||
+        !(blob instanceof Blob) ||
+        blob.size === 0
+      ) {
+        return;
+      }
+
+      privateFinalAudioBlob = blob;
+
+      if (privateDownloadObjectUrl) {
+        URL.revokeObjectURL(
+          privateDownloadObjectUrl
+        );
+      }
+
+      privateDownloadObjectUrl =
+        URL.createObjectURL(blob);
+
+      const safeStudentId = String(
+        currentSession &&
+        currentSession.studentId
+          ? currentSession.studentId
+          : "private-learner"
+      )
+        .replace(/[^a-z0-9_-]+/gi, "-")
+        .replace(/^-+|-+$/g, "") ||
+        "private-learner";
+
+      downloadRecordingButton.href =
+        privateDownloadObjectUrl;
+
+      downloadRecordingButton.download =
+        "ASCENT-" +
+        safeStudentId +
+        "-" +
+        new Date()
+          .toISOString()
+          .replace(/[:.]/g, "-") +
+        ".wav";
+
+      downloadRecordingButton
+        .classList.add("visible");
+    }
+
+
+    async function combinePrivateWavBlobs(
+      mainBlob,
+      pressureBlob
+    ) {
+      const mainBytes =
+        new Uint8Array(
+          await mainBlob.arrayBuffer()
+        );
+
+      const pressureBytes =
+        new Uint8Array(
+          await pressureBlob.arrayBuffer()
+        );
+
+      if (
+        mainBytes.length < 44 ||
+        pressureBytes.length < 44
+      ) {
+        throw new Error(
+          "The recordings could not be combined for download."
+        );
+      }
+
+      const mainHeader =
+        new TextDecoder("ascii")
+          .decode(mainBytes.slice(0, 12));
+
+      const pressureHeader =
+        new TextDecoder("ascii")
+          .decode(pressureBytes.slice(0, 12));
+
+      if (
+        !mainHeader.startsWith("RIFF") ||
+        !mainHeader.endsWith("WAVE") ||
+        !pressureHeader.startsWith("RIFF") ||
+        !pressureHeader.endsWith("WAVE")
+      ) {
+        throw new Error(
+          "The recordings are not compatible WAV files."
+        );
+      }
+
+      const mainView =
+        new DataView(mainBytes.buffer);
+
+      const pressureView =
+        new DataView(pressureBytes.buffer);
+
+      if (
+        mainView.getUint16(22, true) !==
+          pressureView.getUint16(22, true) ||
+        mainView.getUint32(24, true) !==
+          pressureView.getUint32(24, true) ||
+        mainView.getUint16(34, true) !==
+          pressureView.getUint16(34, true)
+      ) {
+        throw new Error(
+          "The two recordings use different WAV formats."
+        );
+      }
+
+      const combinedBytes =
+        new Uint8Array(
+          44 +
+          (mainBytes.length - 44) +
+          (pressureBytes.length - 44)
+        );
+
+      combinedBytes.set(
+        mainBytes.slice(0, 44),
+        0
+      );
+
+      combinedBytes.set(
+        mainBytes.slice(44),
+        44
+      );
+
+      combinedBytes.set(
+        pressureBytes.slice(44),
+        mainBytes.length
+      );
+
+      const combinedView =
+        new DataView(
+          combinedBytes.buffer
+        );
+
+      combinedView.setUint32(
+        4,
+        combinedBytes.length - 8,
+        true
+      );
+
+      combinedView.setUint32(
+        40,
+        combinedBytes.length - 44,
+        true
+      );
+
+      return new Blob(
+        [combinedBytes],
+        { type: "audio/wav" }
+      );
     }
 
 
@@ -2800,6 +3059,7 @@ const otherIssuesList =
         }
 
         practiceContext = result;
+        refreshPrivateAudioPanel();
 
         const singleAttemptHistory =
           await loadSingleAttemptHistory();
@@ -3588,7 +3848,14 @@ otherIssuesSection.hidden =
       newResponseButton.disabled =
         false;
 
-      resultPanel.scrollIntoView({
+      const resultScrollTarget =
+        isPrivateAudioMode() &&
+        downloadRecordingButton
+          .classList.contains("visible")
+          ? privateAudioPanel
+          : resultPanel;
+
+      resultScrollTarget.scrollIntoView({
         behavior: "smooth",
         block: "start"
       });
@@ -4413,6 +4680,36 @@ otherIssuesSection.hidden =
             targetSampleRate
           );
 
+        if (isPrivateAudioMode()) {
+          if (responsePhase === "main") {
+            privateMainAudioBlob =
+              audioBlob;
+
+            privateFinalAudioBlob = null;
+
+            downloadRecordingButton
+              .classList.remove("visible");
+          } else if (
+            responsePhase === "pressure" &&
+            privateMainAudioBlob
+          ) {
+            try {
+              privateFinalAudioBlob =
+                await combinePrivateWavBlobs(
+                  privateMainAudioBlob,
+                  audioBlob
+                );
+            } catch (downloadCombineError) {
+              console.error(
+                "ASCENT private download combination failed:",
+                downloadCombineError
+              );
+
+              privateFinalAudioBlob = null;
+            }
+          }
+        }
+
         audioObjectUrl =
           URL.createObjectURL(
             audioBlob
@@ -4515,6 +4812,7 @@ otherIssuesSection.hidden =
     function resetRecording() {
       clearPressureCountdown();
       clearRecordedAudio();
+      clearPrivateDownloadState();
 
       responsePhase = "main";
       pressureSubmissionId = "";
@@ -4791,6 +5089,24 @@ otherIssuesSection.hidden =
           return;
         }
 
+        if (isPrivateAudioMode()) {
+          if (
+            responsePhase === "main" &&
+            privateMainAudioBlob
+          ) {
+            preparePrivateDownload(
+              privateMainAudioBlob
+            );
+          } else if (
+            responsePhase === "pressure" &&
+            privateFinalAudioBlob
+          ) {
+            preparePrivateDownload(
+              privateFinalAudioBlob
+            );
+          }
+        }
+
         if (responsePhase === "pressure") {
           clearPressureCountdown();
           pressurePanel.classList.remove(
@@ -4805,8 +5121,12 @@ otherIssuesSection.hidden =
         );
 
         showStatus(
-          result.message ||
-          "Your response has been submitted successfully.",
+          isPrivateAudioMode() &&
+          downloadRecordingButton
+            .classList.contains("visible")
+            ? "Your evaluation is ready. Download your recording before you leave or refresh this page."
+            : result.message ||
+              "Your response has been submitted successfully.",
           "success"
         );
 
@@ -4855,6 +5175,8 @@ otherIssuesSection.hidden =
       if (audioObjectUrl) {
         URL.revokeObjectURL(audioObjectUrl);
       }
+
+      clearPrivateDownloadState();
 
       localStorage.removeItem(
         SESSION_STORAGE_KEY
@@ -4981,6 +5303,12 @@ otherIssuesSection.hidden =
         if (audioObjectUrl) {
           URL.revokeObjectURL(
             audioObjectUrl
+          );
+        }
+
+        if (privateDownloadObjectUrl) {
+          URL.revokeObjectURL(
+            privateDownloadObjectUrl
           );
         }
       }
