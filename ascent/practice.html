@@ -1488,6 +1488,7 @@
                 id="recordAgainButton"
                 class="action-button secondary-button"
                 type="button"
+                style="display: none"
               >
                 Record Again
               </button>
@@ -1977,6 +1978,25 @@ const otherIssuesList =
         practiceContext
           .is_private_learner === true
       );
+    }
+
+
+    function canRecordAgain() {
+      return Boolean(
+        responsePhase === "main" &&
+        isPrivateAudioMode()
+      );
+    }
+
+
+    function applyRecordAgainPolicy() {
+      const allowed = canRecordAgain();
+
+      recordAgainButton.style.display =
+        allowed ? "" : "none";
+
+      recordAgainButton.disabled =
+        !allowed;
     }
 
 
@@ -3060,6 +3080,7 @@ const otherIssuesList =
 
         practiceContext = result;
         refreshPrivateAudioPanel();
+        applyRecordAgainPolicy();
 
         const singleAttemptHistory =
           await loadSingleAttemptHistory();
@@ -4726,7 +4747,9 @@ otherIssuesSection.hidden =
           "active"
         );
 
-        startButton.disabled = false;
+        startButton.disabled =
+          responsePhase === "main" &&
+          !isPrivateAudioMode();
         stopButton.disabled = true;
 
         if (responsePhase === "pressure") {
@@ -4762,11 +4785,15 @@ otherIssuesSection.hidden =
           "visible"
         );
 
+        applyRecordAgainPolicy();
+
         recordingState.textContent =
           "Recording ready";
 
         showStatus(
-          "Your recording is ready. Listen to it before submitting.",
+          isPrivateAudioMode()
+            ? "Your recording is ready. Listen to it before submitting."
+            : "Your one recording is ready. Listen to it, then submit it.",
           "success"
         );
 
@@ -4810,6 +4837,21 @@ otherIssuesSection.hidden =
 
 
     function resetRecording() {
+      if (
+        responsePhase === "main" &&
+        audioBlob &&
+        !isPrivateAudioMode()
+      ) {
+        applyRecordAgainPolicy();
+
+        showStatus(
+          "FIIB responses have one recording attempt. Listen to this recording, then submit it.",
+          "error"
+        );
+
+        return;
+      }
+
       clearPressureCountdown();
       clearRecordedAudio();
       clearPrivateDownloadState();
@@ -4823,7 +4865,7 @@ otherIssuesSection.hidden =
       hidePressureFollowUp();
 
       audioPlayback.style.display = "";
-      recordAgainButton.style.display = "";
+      applyRecordAgainPolicy();
       playbackTitle.textContent =
         "Listen to your recording";
 
@@ -4845,7 +4887,8 @@ otherIssuesSection.hidden =
       updateSelectedQuestion();
 
       stopButton.disabled = true;
-      recordAgainButton.disabled = false;
+      recordAgainButton.disabled =
+        !canRecordAgain();
       submitButton.disabled = false;
 
       startButton.textContent =
@@ -5245,7 +5288,14 @@ otherIssuesSection.hidden =
 
     recordAgainButton.addEventListener(
       "click",
-      resetRecording
+      function () {
+        if (!canRecordAgain()) {
+          applyRecordAgainPolicy();
+          return;
+        }
+
+        resetRecording();
+      }
     );
 
     submitButton.addEventListener(
