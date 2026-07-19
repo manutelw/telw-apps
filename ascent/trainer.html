@@ -68,6 +68,12 @@
     .panel h3 { color:var(--navy); font-size:18px; margin-bottom:5px; }
     .panel-subtitle { color:var(--muted); font-size:12px; line-height:1.5; }
     .dashboard-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .reminder-switch-row { display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+    .reminder-state { display:inline-flex; align-items:center; gap:8px; padding:8px 13px; border-radius:999px; font-size:12px; font-weight:800; letter-spacing:.04em; }
+    .reminder-state.on { color:#087443; background:#e6f7ef; border:1px solid #a8dec5; }
+    .reminder-state.off { color:#6b7785; background:#f1f4f7; border:1px solid #d7dfe7; }
+    .reminder-state-dot { width:9px; height:9px; border-radius:50%; background:currentColor; }
+    .reminder-note { margin-top:14px; padding:14px 16px; border-radius:10px; background:#fff8e8; border:1px solid #eab24d; color:#765000; font-size:13px; line-height:1.5; }
     .chart-box { min-height:270px; }
     .completion-bar { height:34px; display:flex; overflow:hidden; border-radius:10px; background:#e9eef3; margin:28px 0 18px; }
     .completion-segment { min-width:0; transition:width .2s ease; }
@@ -178,6 +184,7 @@
           <button id="bulkQuestionsNavItem" class="nav-item" type="button" data-section="tasks">Bulk Questions</button>
           <button class="nav-item" type="button" data-section="assignments">Assignments</button>
           <button class="nav-item" type="button" data-section="results">Results</button>
+          <button id="followupsNavItem" class="nav-item" type="button" data-section="followups">Student Follow-ups</button>
           <button id="trainersNavItem" class="nav-item" type="button" data-section="trainers" hidden>Trainers</button>
         </div>
       </aside>
@@ -338,6 +345,37 @@
           <div class="panel"><div class="panel-title-row"><div><h3>Student Results</h3><div id="resultCountLabel" class="panel-subtitle"></div></div></div><div id="resultsTableWrap" class="table-wrap"></div><div id="resultsStatus" class="form-status"></div></div>
         </section>
 
+        <section id="followupsSection" class="section-panel">
+          <div class="workspace-header">
+            <div><h2>Student Follow-ups</h2><p>Control institutional response reminders and monitor the students who remain pending after each 48-hour stage.</p></div>
+            <div class="header-actions"><button id="refreshFollowupsButton" class="secondary-button" type="button">Refresh</button><button id="followupsExportButton" class="primary-button" type="button">Download Student-wise Excel</button></div>
+          </div>
+
+          <div class="panel">
+            <div class="reminder-switch-row">
+              <div>
+                <div class="panel-subtitle">Institutional follow-ups</div>
+                <div id="followupState" class="reminder-state off"><span class="reminder-state-dot"></span><span>OFF</span></div>
+              </div>
+              <button id="toggleFollowupsButton" class="primary-button" type="button">Turn On</button>
+            </div>
+            <div id="followupActivationNote" class="reminder-note">Follow-ups are off. No institutional reminder emails will be sent.</div>
+          </div>
+
+          <div class="card-grid">
+            <div class="summary-card"><div class="summary-label">After Reminder 1</div><div id="afterReminder1Value" class="summary-value">—</div><div class="panel-subtitle">Still pending after the next 48 hours</div></div>
+            <div class="summary-card"><div class="summary-label">After Reminder 2</div><div id="afterReminder2Value" class="summary-value">—</div><div class="panel-subtitle">Still pending after another 48 hours</div></div>
+            <div class="summary-card"><div class="summary-label">After Final Reminder</div><div id="afterFinalReminderValue" class="summary-value">—</div><div class="panel-subtitle">Trainer attention required</div></div>
+            <div class="summary-card"><div class="summary-label">Delivery Failures</div><div id="followupDeliveryFailuresValue" class="summary-value">—</div><div class="panel-subtitle">Email deliveries requiring attention</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title-row"><div><h3>Reminder sequence</h3><div class="panel-subtitle">Each reminder gives the learner a complete 48-hour response window.</div></div></div>
+            <div class="form-note">First reminder: 48 hours after release · Second reminder: 48 hours after Reminder 1 · Final reminder: 48 hours after Reminder 2 · Trainer attention: 48 hours after the final reminder. The sequence stops immediately when a response is submitted.</div>
+          </div>
+          <div id="followupsStatus" class="form-status" role="status" aria-live="polite"></div>
+        </section>
+
         <section id="trainersSection" class="section-panel">
           <div class="workspace-header"><div><h2>Add Trainer</h2><p>Create a trainer or administrator login without using SQL.</p></div></div>
           <form id="addTrainerForm" class="panel" novalidate>
@@ -370,7 +408,10 @@
       assignQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_assign_question_bank_tasks",
       upsertQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_upsert_question_bank",
       questionBankActive: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_set_question_bank_active",
-      clearTestRegister: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_clear_test_student_register"
+      clearTestRegister: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_clear_test_student_register",
+      reminderDashboard: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_dashboard",
+      setRemindersEnabled: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_reminders_enabled",
+      reminderExport: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_export"
     };
     let currentSession = null;
     let reportData = { summary:{}, batches:[], students:[], tasks:[], results:[] };
@@ -379,6 +420,7 @@
     let visibleBankQuestions = [];
     let visibleAssignmentRows = [];
     let visibleResultRows = [];
+    let reminderData = { isEnabled:false, didNotRespondAfterReminder1:0, didNotRespondAfterReminder2:0, didNotRespondAfterFinalReminder:0, deliveryFailures:0 };
 
     const byId = id => document.getElementById(id);
     const escapeHtml = value => String(value ?? "").replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
@@ -1039,6 +1081,133 @@
         await loadReport("Refreshing assignments…");
       } catch (error) { console.error(error); setStatus(byId("bankAssignmentStatus"),error.message,"error"); }
       finally { button.disabled = false; button.textContent = "Create and Assign Selected Questions"; }
+    }
+
+    function renderReminderDashboard() {
+      const data = reminderData || {};
+      const enabled = data.isEnabled === true;
+      const state = byId("followupState");
+
+      state.className = "reminder-state " + (enabled ? "on" : "off");
+      state.innerHTML = `<span class="reminder-state-dot"></span><span>${enabled ? "ON" : "OFF"}</span>`;
+      byId("toggleFollowupsButton").textContent = enabled ? "Turn Off" : "Turn On";
+      byId("toggleFollowupsButton").classList.toggle("danger-button",enabled);
+      byId("afterReminder1Value").textContent = formatNumber(data.didNotRespondAfterReminder1 || 0);
+      byId("afterReminder2Value").textContent = formatNumber(data.didNotRespondAfterReminder2 || 0);
+      byId("afterFinalReminderValue").textContent = formatNumber(data.didNotRespondAfterFinalReminder || 0);
+      byId("followupDeliveryFailuresValue").textContent = formatNumber(data.deliveryFailures || 0);
+
+      byId("followupActivationNote").textContent = enabled
+        ? `Follow-ups are on for ${data.institutionName || "this institution"}. Only assignments released from ${formatDate(data.enabledAt)} onward are eligible.`
+        : "Follow-ups are off. No institutional reminder emails will be sent.";
+    }
+
+    async function loadReminderDashboard(message="Loading student follow-ups…") {
+      setStatus(byId("followupsStatus"),message,"");
+      try {
+        const result = await callRpc(RPC.reminderDashboard,{p_session_token:currentSession.sessionToken});
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Student follow-ups could not be loaded.");
+        reminderData = result;
+        renderReminderDashboard();
+        setStatus(byId("followupsStatus"),"Student follow-ups updated " + new Date().toLocaleTimeString(),"success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("followupsStatus"),error.message || "Student follow-ups could not be loaded.","error");
+      }
+    }
+
+    async function toggleInstitutionalFollowups() {
+      const enable = reminderData.isEnabled !== true;
+      const confirmation = enable
+        ? "Turn institutional follow-ups ON?\n\nOnly assignments released after activation will be eligible. Existing assignments will not trigger catch-up emails."
+        : "Turn institutional follow-ups OFF?\n\nNo further reminder emails will be sent while follow-ups are off.";
+
+      if (!window.confirm(confirmation)) return;
+
+      const button = byId("toggleFollowupsButton");
+      button.disabled = true;
+      button.textContent = enable ? "Turning On…" : "Turning Off…";
+      setStatus(byId("followupsStatus"),"Saving follow-up setting…","");
+
+      try {
+        const result = await callRpc(RPC.setRemindersEnabled,{
+          p_session_token:currentSession.sessionToken,
+          p_enabled:enable
+        });
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "The follow-up setting could not be changed.");
+        await loadReminderDashboard();
+        setStatus(byId("followupsStatus"),result.message || "Follow-up setting saved.","success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("followupsStatus"),error.message || "The follow-up setting could not be changed.","error");
+      } finally {
+        button.disabled = false;
+        renderReminderDashboard();
+      }
+    }
+
+    async function downloadFollowupExcel() {
+      if (!window.XLSX) {
+        setStatus(byId("followupsStatus"),"The Excel library did not load. Check the internet connection and try again.","error");
+        return;
+      }
+
+      const button = byId("followupsExportButton");
+      button.disabled = true;
+      button.textContent = "Preparing Excel…";
+      setStatus(byId("followupsStatus"),"Preparing student-wise follow-up report…","");
+
+      try {
+        const result = await callRpc(RPC.reminderExport,{p_session_token:currentSession.sessionToken});
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "The follow-up report could not be loaded.");
+
+        const rows = (Array.isArray(result.rows) ? result.rows : []).map(row => ({
+          "Student Name":row.student_name || "",
+          "Student ID":row.student_id || "",
+          "Email":row.email || "",
+          "Batch":row.batch || "",
+          "Task":row.task_title || "",
+          "Question":row.question || "",
+          "Released At":row.release_time ? new Date(row.release_time) : "",
+          "Assignment Due":row.assignment_due_time ? new Date(row.assignment_due_time) : "",
+          "Reminder Stage":row.reminder_stage || "",
+          "Reminder Due":row.reminder_due_time ? new Date(row.reminder_due_time) : "",
+          "Reminder Sent":row.reminder_sent_time ? new Date(row.reminder_sent_time) : "",
+          "Response Time":row.response_time ? new Date(row.response_time) : "",
+          "Current Stage":row.current_stage || "",
+          "Delivery Status":row.delivery_status || "",
+          "Delivery Attempts":row.delivery_attempts || 0,
+          "Delivery Error":row.delivery_error || ""
+        }));
+
+        const headers = ["Student Name","Student ID","Email","Batch","Task","Question","Released At","Assignment Due","Reminder Stage","Reminder Due","Reminder Sent","Response Time","Current Stage","Delivery Status","Delivery Attempts","Delivery Error"];
+        const sheet = rows.length
+          ? XLSX.utils.json_to_sheet(rows,{header:headers,cellDates:true})
+          : XLSX.utils.aoa_to_sheet([headers]);
+
+        sheet["!cols"] = [22,16,28,22,24,52,20,20,16,20,20,20,22,18,16,38].map(width => ({wch:width}));
+        sheet["!autofilter"] = {ref:`A1:P${Math.max(rows.length + 1,1)}`};
+        sheet["!freeze"] = {xSplit:0,ySplit:1};
+
+        headers.forEach((_,index) => {
+          const cell = sheet[XLSX.utils.encode_cell({r:0,c:index})];
+          if (cell) cell.s = {font:{bold:true,color:{rgb:"FFFFFF"}},fill:{fgColor:{rgb:"173F68"}},alignment:{vertical:"center",wrapText:true}};
+        });
+
+        const workbook = XLSX.utils.book_new();
+        workbook.Props = {Title:"Institutional Student Follow-up Report",Subject:"Student-wise reminder delivery and response status",Author:"ClarionPrep",CreatedDate:new Date()};
+        XLSX.utils.book_append_sheet(workbook,sheet,"STUDENT FOLLOW-UPS");
+
+        const institution = String(result.institutionName || "Institution").replace(/[^A-Za-z0-9_-]+/g,"_").replace(/^_+|_+$/g,"") || "Institution";
+        XLSX.writeFile(workbook,`${institution}_Student_Follow-ups_${new Date().toISOString().slice(0,10)}.xlsx`,{cellStyles:true,cellDates:true});
+        setStatus(byId("followupsStatus"),rows.length ? `Excel downloaded with ${rows.length} reminder delivery record${rows.length === 1 ? "" : "s"}.` : "Excel downloaded. No reminder deliveries have occurred yet.","success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("followupsStatus"),error.message || "The follow-up Excel could not be prepared.","error");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Download Student-wise Excel";
+      }
     }
 
     function renderAll() {
@@ -2946,6 +3115,9 @@ function formatCriterionFeedback(criterion) {
       byId("refreshTasksButton").addEventListener("click",() => loadReport("Refreshing tasks…"));
       byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results,"dashboard"));
       byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows,"results"));
+      byId("refreshFollowupsButton").addEventListener("click",() => loadReminderDashboard("Refreshing student follow-ups…"));
+      byId("toggleFollowupsButton").addEventListener("click",toggleInstitutionalFollowups);
+      byId("followupsExportButton").addEventListener("click",downloadFollowupExcel);
       byId("refreshQuestionBankButton").addEventListener("click",() => loadQuestionBank("Refreshing question bank…"));
       byId("addBankQuestionButton").addEventListener("click",() => openBankQuestionEditor());
       byId("cancelBankEditButton").addEventListener("click",closeBankQuestionEditor);
@@ -2990,6 +3162,7 @@ function formatCriterionFeedback(criterion) {
       applyRoleAccess(); setDefaultStartTime(); wireEvents(); initialiseAdminTouchpoint(); updateBankAssignmentFollowupControls(); updateQuestionCount(); resetBankQuestionEditor();
       await loadReport();
       await loadQuestionBank();
+      await loadReminderDashboard();
     }
     initialise();
   </script>
