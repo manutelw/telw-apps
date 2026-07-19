@@ -1074,6 +1074,9 @@ const VERIFY_PRIVATE_PASS_PAYMENT_URL =
 const PRIVATE_PASS_PRODUCT_CODE =
   "ASCENT_PRIVATE_4W_FOUNDING";
 
+const ENTRY_PARAMETERS =
+  new URLSearchParams(window.location.search);
+
   const accessForm =
   document.getElementById("accessForm");
 
@@ -1686,6 +1689,13 @@ accessForm.addEventListener(
 
       showAccessStatus("", "");
 
+      if (
+        String(ENTRY_PARAMETERS.get("role") || "").toLowerCase() === "student" ||
+        String(ENTRY_PARAMETERS.get("continue") || "").toLowerCase() === "practice"
+      ) {
+        openLoginForRole("STUDENT");
+      }
+
     } catch (error) {
       console.error(
         "ASCENT access search error:",
@@ -2077,7 +2087,9 @@ loginForm.addEventListener(
         );
 
         destination =
-          "./dashboard.html";
+          String(ENTRY_PARAMETERS.get("continue") || "").toLowerCase() === "practice"
+            ? "./practice.html"
+            : "./dashboard.html";
       }
 
       showStatus(
@@ -2126,6 +2138,47 @@ loginForm.addEventListener(
     }
   }
 );
+
+function initialiseDirectInstitutionEntry() {
+  const requestedAccess =
+    String(ENTRY_PARAMETERS.get("access") || "").trim();
+
+  const continueTo =
+    String(ENTRY_PARAMETERS.get("continue") || "").trim().toLowerCase();
+
+  if (continueTo === "practice") {
+    try {
+      const storedSession = JSON.parse(
+        localStorage.getItem("ascent_student_session") || "null"
+      );
+
+      const expiryTime = new Date(
+        storedSession && storedSession.expiresAt
+      ).getTime();
+
+      if (
+        storedSession &&
+        storedSession.sessionToken &&
+        storedSession.studentUuid &&
+        Number.isFinite(expiryTime) &&
+        expiryTime > Date.now()
+      ) {
+        window.location.replace("./practice.html");
+        return;
+      }
+    } catch (error) {
+      console.warn("Stored student session could not be reused:", error);
+      localStorage.removeItem("ascent_student_session");
+    }
+  }
+
+  if (requestedAccess) {
+    accessSearchInput.value = requestedAccess;
+    accessForm.requestSubmit();
+  }
+}
+
+initialiseDirectInstitutionEntry();
 </script>
 </body>
 </html>
