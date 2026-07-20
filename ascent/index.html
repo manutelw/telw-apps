@@ -802,7 +802,7 @@ body {
   id="panelIntro"
   class="login-intro"
 >
-  Enter your institution, learning group, or access code.
+  Enter your institution name. If you are registering independently, enter TELW-PRIVATE.
 </p>
 
 <form
@@ -811,7 +811,7 @@ body {
 >
   <div class="form-group">
     <label for="accessSearch">
-      Institution, group, or access code
+      Institution name
     </label>
 
     <input
@@ -819,7 +819,7 @@ body {
       name="accessSearch"
       type="text"
       autocomplete="organization"
-      placeholder="Enter the exact name or access code"
+      placeholder="Enter your institution name or TELW-PRIVATE"
       required
     >
   </div>
@@ -1716,7 +1716,7 @@ accessForm.addEventListener(
 
     if (!searchValue) {
       showAccessStatus(
-        "Please enter your institution, learning group, or access code.",
+        "Please Enter your institution name. If you are registering independently, enter TELW-PRIVATE.",
         "error"
       );
 
