@@ -716,9 +716,11 @@ body {
   .intro-panel h1 { font-size: 40px; }
   .login-panel { padding: 26px 22px 30px; }
 }
+
 .private-pass-card[hidden] {
   display: none !important;
 }
+
   </style>
 </head>
 
@@ -1233,6 +1235,32 @@ const privateBuyerEmail =
   document.getElementById("privateBuyerEmail");
 const privateBuyerPhone =
   document.getElementById("privateBuyerPhone");
+
+const privatePassCard =
+  document.querySelector(".private-pass-card");
+
+if (!IS_MANUVIKRAMAN_COMMERCIAL) {
+  privatePassCard.hidden = true;
+  privatePassCard.style.setProperty(
+    "display",
+    "none",
+    "important"
+  );
+  document.getElementById("panelIntro").textContent =
+    "Enter the institution name provided by your institution.";
+  document.querySelector('label[for="accessSearch"]').textContent =
+    "Institution name";
+  accessSearchInput.placeholder =
+    "Enter your institution name";
+} else {
+  document.querySelectorAll(".brand-chip, .small-brand")
+    .forEach(function (brandLabel) {
+      brandLabel.textContent = "MANUVIKRAMAN.COM";
+    });
+
+  document.querySelector(".footer").innerHTML =
+    "Created by Manu Vikraman<br>ASCENT Individual Practice";
+}
 
     function showPrivatePaymentStatus(message, type) {
   privatePaymentStatus.className =
@@ -1793,7 +1821,11 @@ accessForm.addEventListener(
 
         if (IS_MANUVIKRAMAN_COMMERCIAL) {
           roleChoice.hidden = true;
-          resolvedAccessPanel.hidden = true;
+          resolvedAccessPanel.hidden = false;
+          resolvedAccessName.hidden = true;
+          resolvedAccessPanel
+            .querySelector(":scope > .login-intro")
+            .hidden = true;
           changeAccessButton.hidden = true;
           document.getElementById("panelTitle").textContent =
             "Individual ASCENT Login";
