@@ -534,20 +534,6 @@
   font-weight: 700;
 }
 
-    #privatePassPlan {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  padding: 12px 14px;
-  border: 1px solid #cbd9e7;
-  border-radius: 12px;
-  background: #ffffff;
-  font: inherit;
-  color: #12395f;
-}
-
 .private-pass-button {
   width: 100%;
   min-height: 50px;
@@ -662,6 +648,7 @@
   font-size: 12px;
   line-height: 1.5;
 }
+
 /* Compact top banner and full-width working section */
 body {
   align-items: flex-start;
@@ -684,9 +671,7 @@ body {
   justify-content: center;
 }
 
-.brand-chip {
-  margin-bottom: 14px;
-}
+.brand-chip { margin-bottom: 14px; }
 
 .intro-panel h1 {
   font-size: 48px;
@@ -700,9 +685,7 @@ body {
 }
 
 .intro-copy,
-.feature-list {
-  display: none;
-}
+.feature-list { display: none; }
 
 .login-panel {
   width: 100%;
@@ -711,9 +694,7 @@ body {
   justify-content: flex-start;
 }
 
-.mobile-brand {
-  display: none !important;
-}
+.mobile-brand { display: none !important; }
 
 #privatePassPlan {
   display: block;
@@ -730,22 +711,12 @@ body {
 }
 
 @media (max-width: 600px) {
-  body {
-    padding: 8px;
-  }
-
-  .intro-panel {
-    padding: 18px 22px;
-  }
-
-  .intro-panel h1 {
-    font-size: 40px;
-  }
-
-  .login-panel {
-    padding: 26px 22px 30px;
-  }
+  body { padding: 8px; }
+  .intro-panel { padding: 18px 22px; }
+  .intro-panel h1 { font-size: 40px; }
+  .login-panel { padding: 26px 22px 30px; }
 }
+
   </style>
 </head>
 
@@ -995,13 +966,13 @@ body {
     <label for="privatePassPlan">Plan</label>
     <select id="privatePassPlan" name="privatePassPlan">
       <option value="ASCENT_PRIVATE_4W_LAUNCH">
-        Launch Practice — ₹699 · 50 responses
+        Launch Practice — ₹699 (50 responses)
       </option>
       <option value="ASCENT_PRIVATE_4W_PRACTICE">
-        Practice — ₹999 · 50 responses
+        Practice — ₹999 (50 responses)
       </option>
       <option value="ASCENT_PRIVATE_4W_INTENSIVE">
-        Intensive — ₹1,499 · (100 + pressure)
+        Intensive — ₹1,499 (100 + pressure)
       </option>
     </select>
     <p class="private-payment-note" id="privatePlanNote">
@@ -1185,6 +1156,10 @@ const VERIFY_PRIVATE_PASS_PAYMENT_URL =
 
 const ENTRY_PARAMETERS =
   new URLSearchParams(window.location.search);
+
+const IS_MANUVIKRAMAN_COMMERCIAL =
+  window.location.hostname === "manuvikraman.com" ||
+  window.location.hostname === "www.manuvikraman.com";
 
   const accessForm =
   document.getElementById("accessForm");
@@ -1716,7 +1691,7 @@ accessForm.addEventListener(
 
     if (!searchValue) {
       showAccessStatus(
-        "Please Enter your institution name. If you are registering independently, enter TELW-PRIVATE.",
+        "Please enter your institution, learning group, or access code.",
         "error"
       );
 
@@ -1760,7 +1735,7 @@ accessForm.addEventListener(
         result.length === 0
       ) {
         showAccessStatus(
-          "No active ASCENT access was found. Check the exact name or access code provided by your trainer.",
+          "No active ASCENT institution was found. Check the institution name and try again.",
           "error"
         );
 
@@ -1799,15 +1774,30 @@ accessForm.addEventListener(
       ).toLowerCase();
 
       institutionRoleButton.hidden =
-        accessIdentity.includes("private");
+        accessIdentity.includes("private") ||
+        IS_MANUVIKRAMAN_COMMERCIAL;
+
+      trainerRoleButton.hidden =
+        IS_MANUVIKRAMAN_COMMERCIAL;
 
       showAccessStatus("", "");
 
       if (
+        IS_MANUVIKRAMAN_COMMERCIAL ||
         String(ENTRY_PARAMETERS.get("role") || "").toLowerCase() === "student" ||
         String(ENTRY_PARAMETERS.get("continue") || "").toLowerCase() === "practice"
       ) {
         openLoginForRole("STUDENT");
+
+        if (IS_MANUVIKRAMAN_COMMERCIAL) {
+          roleChoice.hidden = true;
+          resolvedAccessPanel.hidden = true;
+          changeAccessButton.hidden = true;
+          document.getElementById("panelTitle").textContent =
+            "Individual ASCENT Login";
+          document.getElementById("panelIntro").textContent =
+            "Log in with the personal email address linked to your paid ASCENT pass.";
+        }
       }
 
     } catch (error) {
@@ -2016,6 +2006,18 @@ loginForm.addEventListener(
         "error"
       );
 
+      identityInput.focus();
+      return;
+    }
+
+    if (
+      IS_MANUVIKRAMAN_COMMERCIAL &&
+      identity.toLowerCase().endsWith("@fiib.edu.in")
+    ) {
+      showStatus(
+        "FIIB institution email accounts cannot be used here. Use a personal email address linked to an active paid pass.",
+        "error"
+      );
       identityInput.focus();
       return;
     }
@@ -2259,6 +2261,12 @@ function initialiseDirectInstitutionEntry() {
 
   const continueTo =
     String(ENTRY_PARAMETERS.get("continue") || "").trim().toLowerCase();
+
+  if (IS_MANUVIKRAMAN_COMMERCIAL) {
+    accessSearchInput.value = "TELW-PRIVATE";
+    accessForm.requestSubmit();
+    return;
+  }
 
   if (continueTo === "practice") {
     try {
