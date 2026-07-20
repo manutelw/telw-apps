@@ -885,7 +885,7 @@
   </div>
 
   <h3 id="privatePassTitle">
-    ASCENT 4-Week Practice Pass
+    Choose your ASCENT 4-Week Pass
   </h3>
 
   <p class="private-pass-summary">
@@ -894,8 +894,23 @@
     your next response stronger.
   </p>
 
-  <div class="private-pass-price">
-    Founding learner price: ₹699
+  <div class="form-group">
+    <label for="privatePassPlan">Plan</label>
+    <select id="privatePassPlan" name="privatePassPlan">
+      <option value="ASCENT_PRIVATE_4W_LAUNCH">
+        Launch Practice — ₹699 · 50 evaluated responses
+      </option>
+      <option value="ASCENT_PRIVATE_4W_PRACTICE">
+        Practice — ₹999 · 50 evaluated responses
+      </option>
+      <option value="ASCENT_PRIVATE_4W_INTENSIVE">
+        Intensive — ₹1,499 · 100 evaluated responses + pressure practice
+      </option>
+    </select>
+    <p class="private-payment-note" id="privatePlanNote">
+      Launch price available through 15 August 2026. Renewal is ₹999.
+      Your pass ends after 28 days or when its response allowance is used.
+    </p>
   </div>
   <div class="form-group">
     <label for="privateBuyerName">
@@ -1071,9 +1086,6 @@ const VERIFY_PRIVATE_PASS_PAYMENT_URL =
   SUPABASE_URL +
   "/functions/v1/ascent-verify-private-pass-payment";
 
-const PRIVATE_PASS_PRODUCT_CODE =
-  "ASCENT_PRIVATE_4W_FOUNDING";
-
 const ENTRY_PARAMETERS =
   new URLSearchParams(window.location.search);
 
@@ -1133,6 +1145,9 @@ const showPasswordButton =
 
 const privatePassButton =
   document.getElementById("privatePassButton");
+
+const privatePassPlan =
+  document.getElementById("privatePassPlan");
 
 const privatePaymentStatus =
   document.getElementById("privatePaymentStatus");
@@ -1252,6 +1267,7 @@ async function readPrivatePaymentResponse(response) {
   }
 }
 async function createPrivatePassOrder(buyer) {
+  const productCode = privatePassPlan.value;
   const response = await fetch(
     CREATE_PRIVATE_PASS_ORDER_URL,
     {
@@ -1262,7 +1278,7 @@ async function createPrivatePassOrder(buyer) {
 
       body: JSON.stringify({
         product_code:
-          PRIVATE_PASS_PRODUCT_CODE,
+          productCode,
 
         full_name:
           buyer.fullName,
@@ -1379,7 +1395,8 @@ function openPrivatePassCheckout(
       "ASCENT",
 
     description:
-      "ASCENT 4-Week Practice Pass",
+      paymentOrder.product_name ||
+      "ASCENT 4-Week Pass",
 
     order_id:
       paymentOrder.razorpay_order_id,
@@ -1400,7 +1417,7 @@ function openPrivatePassCheckout(
         paymentOrder.payment_order_uuid,
 
       product_code:
-        PRIVATE_PASS_PRODUCT_CODE
+        paymentOrder.product_code
     },
 
     handler:
