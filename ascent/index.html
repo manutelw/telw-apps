@@ -662,7 +662,90 @@
   font-size: 12px;
   line-height: 1.5;
 }
+/* Compact top banner and full-width working section */
+body {
+  align-items: flex-start;
+  padding: 14px;
+}
 
+.page-shell {
+  width: 100%;
+  max-width: 760px;
+  display: block;
+  border-radius: 20px;
+}
+
+.intro-panel {
+  display: flex !important;
+  min-height: 0;
+  padding: 22px 32px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.brand-chip {
+  margin-bottom: 14px;
+}
+
+.intro-panel h1 {
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.tagline {
+  font-size: 18px;
+  margin-bottom: 0;
+}
+
+.intro-copy,
+.feature-list {
+  display: none;
+}
+
+.login-panel {
+  width: 100%;
+  min-height: 0;
+  padding: 30px 38px 34px;
+  justify-content: flex-start;
+}
+
+.mobile-brand {
+  display: none !important;
+}
+
+#privatePassPlan {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #cbd9e7;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #143a60;
+  font: inherit;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 8px;
+  }
+
+  .intro-panel {
+    padding: 18px 22px;
+  }
+
+  .intro-panel h1 {
+    font-size: 40px;
+  }
+
+  .login-panel {
+    padding: 26px 22px 30px;
+  }
+}
   </style>
 </head>
 
