@@ -568,6 +568,28 @@
               required
             >
           </div>
+
+          <div class="form-group">
+            <label for="mobileNumber">
+              Mobile number
+            </label>
+
+            <input
+              id="mobileNumber"
+              name="mobileNumber"
+              type="tel"
+              inputmode="numeric"
+              autocomplete="tel-national"
+              maxlength="14"
+              placeholder="Enter your 10-digit mobile number"
+              required
+            >
+
+            <div class="field-note">
+              Enter an Indian mobile number. You may include +91.
+            </div>
+          </div>
+
           <div class="form-group">
   <label for="institutionName">
     Institution
@@ -805,6 +827,12 @@ const VERIFICATION_FUNCTION_URL =
       document.getElementById(
         "emailAddress"
       );
+
+    const mobileNumberInput =
+      document.getElementById(
+        "mobileNumber"
+      );
+
     const institutionNameInput =
   document.getElementById(
     "institutionName"
@@ -1141,6 +1169,16 @@ function openVerificationStage(
         .trim()
         .toLowerCase();
 
+    const mobileDigits =
+      mobileNumberInput.value
+        .replace(/\D/g, "");
+
+    const mobileNumber =
+      mobileDigits.length === 12 &&
+      mobileDigits.startsWith("91")
+        ? mobileDigits.slice(2)
+        : mobileDigits;
+
     const institutionName =
       institutionNameInput.value.trim();
 
@@ -1190,7 +1228,15 @@ function openVerificationStage(
       return;
     }
 
-    
+    if (!/^[6-9][0-9]{9}$/.test(mobileNumber)) {
+      showStatus(
+        "Enter a valid 10-digit Indian mobile number.",
+        "error"
+      );
+
+      mobileNumberInput.focus();
+      return;
+    }
 
     if (password.length < 8) {
       showStatus(
@@ -1218,6 +1264,7 @@ function openVerificationStage(
       studentId: studentId,
       fullName: fullName,
       email: email,
+      mobileNumber: mobileNumber,
       password: password,
       batch: batch || null,
       institutionName:
