@@ -163,6 +163,8 @@
     .completion-ring-copy strong { display:block; font-size:23px; }
     .completion-ring-copy span { display:block; margin-top:3px; color:var(--muted); font-size:11px; font-weight:700; }
     .student-question-table td { vertical-align:top; }
+    .roll-number-warning { margin:0 0 16px; padding:12px 14px; border:1px solid #eab24d; border-radius:11px; background:#fff7db; color:#765000; font-size:13px; font-weight:800; animation:roll-number-pulse 1.3s ease-in-out infinite; }
+    @keyframes roll-number-pulse { 50% { background:#fff0b8; border-color:#c67b00; } }
     .loading-overlay { display:none; position:fixed; inset:0; z-index:999; background:rgba(11,35,58,.35); place-items:center; }
     .loading-overlay.active { display:grid; }
     .loading-card { padding:20px 24px; border-radius:14px; background:#fff; color:var(--navy); font-weight:800; box-shadow:var(--shadow); }
@@ -274,8 +276,7 @@
             <div class="bank-selection-strip"><div id="bankSelectedCount" class="bank-selection-text">0 questions selected</div><div class="inline-row"><button id="selectFilteredBankQuestionsButton" class="small-button" type="button">Select Filtered Questions</button><button id="clearBankSelectionButton" class="small-button" type="button">Clear Selection</button></div></div>
             <div class="form-grid">
               <div class="form-group two-wide"><label for="bankAssignmentTitle">Task title prefix</label><input id="bankAssignmentTitle" type="text" value="ASCENT Bank Task" maxlength="100"><div class="form-note">ASCENT adds 01, 02, 03… when several questions are assigned.</div></div>
-              <div class="form-group"><label for="bankTargetType">Assign to</label><select id="bankTargetType"><option value="ALL">All active students</option><option value="YEAR">First Year or Second Year</option><option value="BATCH">One batch</option><option value="STUDENTS">Selected students</option></select></div>
-              <div id="bankTargetYearGroup" class="form-group" hidden><label for="bankTargetYear">Academic year</label><select id="bankTargetYear"><option value="">Choose year</option><option value="FIRST_YEAR">First Year</option><option value="SECOND_YEAR">Second Year</option></select></div>
+              <div class="form-group"><label for="bankTargetType">Assign to</label><select id="bankTargetType"><option value="ALL">All active students</option><option value="BATCH">One batch</option><option value="STUDENTS">Selected students</option></select></div>
               <div id="bankTargetBatchGroup" class="form-group" hidden><label for="bankTargetBatch">Student batch</label><select id="bankTargetBatch"><option value="">Choose batch</option></select></div>
               <div id="bankTargetStudentsGroup" class="form-group two-wide" hidden><label>Selected students</label><div class="student-picker"><input id="bankStudentSearch" type="search" placeholder="Search by name, ID, email or batch"><div id="bankStudentOptions" class="student-options"></div></div><div id="bankSelectedStudentCount" class="form-note">0 students selected</div></div>
               <div class="form-group"><label for="bankStartAt">First release</label><input id="bankStartAt" type="datetime-local"></div>
@@ -365,7 +366,7 @@
 
         <section id="studentsSection" class="section-panel">
           <div class="workspace-header"><div><h2>Students</h2><p>Open an individual student record to see question-wise performance, score movement and response completion.</p></div><div class="header-actions"><button id="refreshStudentsButton" class="secondary-button" type="button">Refresh</button></div></div>
-          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle"></div></div></div><div id="studentRosterTableWrap" class="table-wrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
+          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle"></div></div></div><div id="studentRollNumberWarning" class="roll-number-warning" hidden role="alert"></div><div id="studentRosterTableWrap" class="table-wrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
           <div id="studentProfilePanel" class="panel" hidden></div>
         </section>
 
@@ -886,6 +887,28 @@
       return value === "FIRST_YEAR" ? "First Year" : value === "SECOND_YEAR" ? "Second Year" : "Not set";
     }
 
+    function rollNumberValue(student) {
+      const rollNo = String(studentField(student,["rollNo","studentId","student_id"]) || "").trim();
+      return /^(\d{2})PGDM/i.test(rollNo) ? rollNo : "";
+    }
+
+    function rollNumberCohort(rollNo) {
+      const match = String(rollNo || "").trim().match(/^(\d{2})PGDM/i);
+      if (!match) return {batch:null};
+      const startYear = 2000 + Number(match[1]);
+      return {
+        batch:`${startYear}-${String(startYear + 2).slice(-2)} PGDM`
+      };
+    }
+
+    function withDerivedCohortDetails(student) {
+      const derived = rollNumberCohort(rollNumberValue(student));
+      return {
+        ...student,
+        batch:derived.batch || student.batch
+      };
+    }
+
     async function loadCohortData() {
       const data = await callRpc(
         RPC.cohortRoster,
@@ -895,7 +918,7 @@
         throw new Error(data && data.message ? data.message : "Cohort data could not be loaded.");
       }
       cohortData = {
-        students:Array.isArray(data.students) ? data.students : [],
+        students:Array.isArray(data.students) ? data.students.map(withDerivedCohortDetails) : [],
         groups:Array.isArray(data.groups) ? data.groups : []
       };
       return cohortData;
@@ -950,30 +973,22 @@
       const students = (cohortData.students.length ? cohortData.students : (data && Array.isArray(data.students) ? data.students : [])).slice()
         .sort((left,right) => exportText(studentField(left,["batch","batchName"])).localeCompare(exportText(studentField(right,["batch","batchName"]))) || exportText(studentField(left,["name","fullName"])).localeCompare(exportText(studentField(right,["name","fullName"]))));
       byId("studentRosterCount").textContent = `${students.length} student${students.length === 1 ? "" : "s"}`;
+      const invalidRollStudents = students.filter(student => !rollNumberValue(student));
+      const rollWarning = byId("studentRollNumberWarning");
+      rollWarning.hidden = invalidRollStudents.length === 0;
+      if (invalidRollStudents.length) {
+        rollWarning.textContent = `Please fill in the roll number for ${invalidRollStudents.length === 1 ? "this student" : "these " + invalidRollStudents.length + " students"}. ASCENT found an email address or another invalid value in the roll-number field.`;
+      }
       if (!students.length) {
         byId("studentRosterTableWrap").innerHTML = `<div class="empty-state">No student records are available yet.</div>`;
         return;
       }
-      byId("studentRosterTableWrap").innerHTML = `<table><thead><tr><th>Roll Number</th><th>Name</th><th>Academic Year</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th></th></tr></thead><tbody>${students.map(student => {
+      byId("studentRosterTableWrap").innerHTML = `<table><thead><tr><th>Roll Number</th><th>Name</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th></th></tr></thead><tbody>${students.map(student => {
         const studentUuid = studentUuidOf(student);
         const lastScore = latestStudentScore(data,studentUuid);
-        return `<tr><td>${escapeHtml(studentField(student,["rollNo","studentId","student_id"]) || "—")}</td><td><strong>${escapeHtml(studentField(student,["name","fullName"]) || "—")}</strong><br>${escapeHtml(studentField(student,["emailId","email"]) || "")}</td><td><select class="academic-year-select" data-student="${escapeHtml(studentUuid)}"><option value="">Not set</option><option value="FIRST_YEAR" ${student.academicYear === "FIRST_YEAR" ? "selected" : ""}>First Year</option><option value="SECOND_YEAR" ${student.academicYear === "SECOND_YEAR" ? "selected" : ""}>Second Year</option></select></td><td>${escapeHtml(studentField(student,["batch","batchName"]) || "—")}</td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button></td></tr>`;
+        return `<tr><td>${escapeHtml(rollNumberValue(student) || "—")}</td><td><strong>${escapeHtml(studentField(student,["name","fullName"]) || "—")}</strong><br>${escapeHtml(studentField(student,["emailId","email"]) || "")}</td><td>${escapeHtml(studentField(student,["batch","batchName"]) || "—")}</td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button></td></tr>`;
       }).join("")}</tbody></table>`;
       document.querySelectorAll(".student-profile-button").forEach(button => button.addEventListener("click",() => renderStudentProfile(button.dataset.student)));
-      document.querySelectorAll(".academic-year-select").forEach(select => select.addEventListener("change",async () => {
-        select.disabled = true;
-        try {
-          const result = await callRpc(RPC.setAcademicYear,{p_session_token:currentSession.sessionToken,p_student_uuid:select.dataset.student,p_academic_year:select.value || null});
-          if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Academic year could not be saved.");
-          await loadCohortData();
-          renderStudentRoster();
-          setStatus(byId("studentsStatus"),"Academic year saved.","success");
-        } catch (error) {
-          console.error(error);
-          setStatus(byId("studentsStatus"),error.message || "Academic year could not be saved.","error");
-          select.disabled = false;
-        }
-      }));
     }
 
     function renderStudentProfile(studentUuid) {
@@ -1000,7 +1015,7 @@
       });
       const profile = byId("studentProfilePanel");
       profile.hidden = false;
-      profile.innerHTML = `<div class="student-profile"><div class="student-profile-head"><div><h3>${escapeHtml(studentField(student,["name","fullName"]) || "Student")}</h3><div class="panel-subtitle">Individual ASCENT performance record</div></div><button id="closeStudentProfileButton" class="secondary-button" type="button">Close</button></div><div class="student-detail-grid"><div class="student-detail"><strong>Roll Number</strong><span>${escapeHtml(studentField(student,["rollNo","studentId"]) || "—")}</span></div><div class="student-detail"><strong>Academic Year</strong><span>${escapeHtml(academicYearLabel(student.academicYear))}</span></div><div class="student-detail"><strong>Batch</strong><span>${escapeHtml(studentField(student,["batch","batchName"]) || "—")}</span></div><div class="student-detail"><strong>Date of Joining</strong><span>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])))}</span></div><div class="student-detail"><strong>Date Last Accessed</strong><span>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])))}</span></div><div class="student-detail"><strong>Last Score</strong><span>${escapeHtml(formatNumber(scored.length ? scored[scored.length - 1].score : null))}</span></div></div><div class="student-progress-grid"><div class="panel chart-box"><div class="panel-title-row"><div><h3>Score progress</h3><div class="panel-subtitle">Scores in the order responses were submitted.</div></div></div><div id="studentProgressLine"></div></div><div class="panel"><div class="panel-title-row"><div><h3>Response completion</h3><div class="panel-subtitle">Questions sent versus submitted.</div></div></div><div class="completion-ring-wrap"><div id="studentCompletionRing" class="completion-ring"><div class="completion-ring-copy"><strong>${answeredAssignments.length}/${questionsSent}</strong><span>submitted / sent</span></div></div></div></div></div><div class="panel"><div class="panel-title-row"><div><h3>Question-wise performance</h3><div class="panel-subtitle">Criterion scores shown for the latest response to each question.</div></div></div><div class="table-wrap"><table class="student-question-table"><thead><tr><th>Question Type</th><th>Question</th><th>Criterion-wise Scores</th><th>First Score</th><th>Last Score</th></tr></thead><tbody>${questionRows.length ? questionRows.map(row => `<tr><td>${escapeHtml(rubricLabel(row.rubricType))}</td><td class="question-cell">${escapeHtml(row.question || "—")}</td><td>${escapeHtml(row.criteria)}</td><td>${escapeHtml(formatNumber(row.firstScore))}</td><td>${escapeHtml(formatNumber(row.lastScore))}</td></tr>`).join("") : `<tr><td colspan="5" class="empty-state">No submitted responses yet.</td></tr>`}</tbody></table></div></div></div>`;
+      profile.innerHTML = `<div class="student-profile"><div class="student-profile-head"><div><h3>${escapeHtml(studentField(student,["name","fullName"]) || "Student")}</h3><div class="panel-subtitle">Individual ASCENT performance record</div></div><button id="closeStudentProfileButton" class="secondary-button" type="button">Close</button></div><div class="student-detail-grid"><div class="student-detail"><strong>Roll Number</strong><span>${escapeHtml(rollNumberValue(student) || "—")}</span></div><div class="student-detail"><strong>Batch</strong><span>${escapeHtml(studentField(student,["batch","batchName"]) || "—")}</span></div><div class="student-detail"><strong>Date of Joining</strong><span>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])))}</span></div><div class="student-detail"><strong>Date Last Accessed</strong><span>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])))}</span></div><div class="student-detail"><strong>Last Score</strong><span>${escapeHtml(formatNumber(scored.length ? scored[scored.length - 1].score : null))}</span></div></div><div class="student-progress-grid"><div class="panel chart-box"><div class="panel-title-row"><div><h3>Score progress</h3><div class="panel-subtitle">Scores in the order responses were submitted.</div></div></div><div id="studentProgressLine"></div></div><div class="panel"><div class="panel-title-row"><div><h3>Response completion</h3><div class="panel-subtitle">Questions sent versus submitted.</div></div></div><div class="completion-ring-wrap"><div id="studentCompletionRing" class="completion-ring"><div class="completion-ring-copy"><strong>${answeredAssignments.length}/${questionsSent}</strong><span>submitted / sent</span></div></div></div></div></div><div class="panel"><div class="panel-title-row"><div><h3>Question-wise performance</h3><div class="panel-subtitle">Criterion scores shown for the latest response to each question.</div></div></div><div class="table-wrap"><table class="student-question-table"><thead><tr><th>Question Type</th><th>Question</th><th>Criterion-wise Scores</th><th>First Score</th><th>Last Score</th></tr></thead><tbody>${questionRows.length ? questionRows.map(row => `<tr><td>${escapeHtml(rubricLabel(row.rubricType))}</td><td class="question-cell">${escapeHtml(row.question || "—")}</td><td>${escapeHtml(row.criteria)}</td><td>${escapeHtml(formatNumber(row.firstScore))}</td><td>${escapeHtml(formatNumber(row.lastScore))}</td></tr>`).join("") : `<tr><td colspan="5" class="empty-state">No submitted responses yet.</td></tr>`}</tbody></table></div></div></div>`;
       byId("closeStudentProfileButton").addEventListener("click",() => { profile.hidden = true; profile.innerHTML = ""; });
       const points = scored.map(item => ({label:formatDate(studentField(item.row,["submittedAt","submitted_at"])),shortLabel:String(scored.indexOf(item) + 1),value:item.score}));
       renderLineSvg("studentProgressLine",points,"Scores will appear after the student submits responses.");
@@ -1052,7 +1067,6 @@
     function estimatedBankTargetCount() {
       const targetType = byId("bankTargetType").value;
       if (targetType === "ALL") return reportData.students.length;
-      if (targetType === "YEAR") return cohortStudentUuidsForYear(byId("bankTargetYear").value).length;
       if (targetType === "BATCH") return reportData.students.filter(student => String(student.batch || "").trim().toLowerCase() === String(byId("bankTargetBatch").value || "").trim().toLowerCase()).length;
       return selectedBankStudentUuids().length;
     }
@@ -1260,7 +1274,6 @@
         return;
       }
       if (!questionUuids.length) { setStatus(byId("bankAssignmentStatus"),"Select at least one question from the bank.","error"); return; }
-      if (targetType === "YEAR" && !byId("bankTargetYear").value) { setStatus(byId("bankAssignmentStatus"),"Choose First Year or Second Year.","error"); return; }
       if (targetType === "BATCH" && !byId("bankTargetBatch").value) { setStatus(byId("bankAssignmentStatus"),"Choose the student batch.","error"); return; }
       if (targetType === "STUDENTS" && !selectedBankStudentUuids().length) { setStatus(byId("bankAssignmentStatus"),"Choose at least one student.","error"); return; }
       if (followupMode === "FIXED_FOLLOW_UP" && !byId("bankAssignmentFixedFollowup").value.trim()) { setStatus(byId("bankAssignmentStatus"),"Enter the fixed follow-up question.","error"); return; }
@@ -1269,19 +1282,13 @@
       const button = byId("assignBankQuestionsButton"); button.disabled = true; button.textContent = "Assigning…"; setStatus(byId("bankAssignmentStatus"),"","");
       try {
         const dueText = byId("bankDueDays").value.trim();
-        const yearStudentUuids = targetType === "YEAR"
-          ? cohortStudentUuidsForYear(byId("bankTargetYear").value)
-          : [];
-        if (targetType === "YEAR" && !yearStudentUuids.length) {
-          throw new Error("No active students are marked as " + academicYearLabel(byId("bankTargetYear").value) + ". Set their academic year in the Students section first.");
-        }
         const result = await callRpc(RPC.assignQuestionBank,{
           p_session_token:currentSession.sessionToken,
           p_question_uuids:questionUuids,
           p_title_prefix:byId("bankAssignmentTitle").value.trim() || "ASCENT Bank Task",
-          p_target_type:targetType === "YEAR" ? "STUDENTS" : targetType,
+          p_target_type:targetType,
           p_target_batch:targetType === "BATCH" ? byId("bankTargetBatch").value : null,
-          p_student_uuids:targetType === "YEAR" ? yearStudentUuids : targetType === "STUDENTS" ? selectedBankStudentUuids() : null,
+          p_student_uuids:targetType === "STUDENTS" ? selectedBankStudentUuids() : null,
           p_start_at:toIsoOrNull(byId("bankStartAt").value),
           p_interval_days:intervalDays,
           p_due_days:dueText === "" ? null : Number(dueText),
@@ -3438,8 +3445,7 @@ function formatCriterionFeedback(criterion) {
         renderQuestionBankTable();
       });
       byId("clearBankSelectionButton").addEventListener("click",() => { selectedBankQuestions.clear(); renderQuestionBankTable(); });
-      byId("bankTargetType").addEventListener("change",async () => { const value=byId("bankTargetType").value; byId("bankTargetYearGroup").hidden=value!=="YEAR"; byId("bankTargetBatchGroup").hidden=value!=="BATCH"; byId("bankTargetStudentsGroup").hidden=value!=="STUDENTS"; if (value === "YEAR" && !cohortData.students.length) { try { await loadCohortData(); } catch (error) { setStatus(byId("bankAssignmentStatus"),error.message || "ASCENT could not load cohort data.","error"); } } updateBankAssignmentEstimate(); });
-      byId("bankTargetYear").addEventListener("change",updateBankAssignmentEstimate);
+      byId("bankTargetType").addEventListener("change",() => { const value=byId("bankTargetType").value; byId("bankTargetBatchGroup").hidden=value!=="BATCH"; byId("bankTargetStudentsGroup").hidden=value!=="STUDENTS"; updateBankAssignmentEstimate(); });
       byId("bankTargetBatch").addEventListener("change",updateBankAssignmentEstimate);
       byId("bankIntervalDays").addEventListener("input",updateBankAssignmentEstimate);
       byId("bankStartAt").addEventListener("change",updateBankAssignmentEstimate);
