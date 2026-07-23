@@ -184,6 +184,13 @@
     .roll-correction-body { padding:12px; }
     .roll-correction-note { margin:0 0 10px; color:#754d00; font-family:Arial,sans-serif; font-size:12px; font-weight:400; }
     .roll-correction-row td { background:#fffdf7; }
+    .leaderboard-rule { margin:0 0 16px; padding:12px 14px; border:1px solid #cbdbea; border-radius:10px; background:#f7fbff; color:#40586e; font-size:13px; line-height:1.5; }
+    .leaderboard-rule strong { color:var(--navy); }
+    .leaderboard-score { color:var(--navy); font-weight:800; white-space:nowrap; }
+    .leaderboard-rank { color:var(--navy); font-size:16px; font-weight:800; }
+    .leaderboard-qualifies { color:var(--success); font-weight:700; }
+    .leaderboard-email-row { display:flex; align-items:end; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+    .leaderboard-email-row .form-group { flex:1 1 280px; margin:0; }
     .group-manager-grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(220px,1fr); gap:18px; }
     .group-picker { max-height:280px; overflow:auto; padding:8px; border:1px solid var(--border); border-radius:10px; background:#fff; }
     .group-option { display:flex; align-items:flex-start; gap:8px; padding:8px; border-radius:8px; color:#40586e; font-size:12px; line-height:1.35; }
@@ -226,6 +233,7 @@
         <div class="sidebar-title">Trainer Workspace</div>
         <div class="nav-list">
           <button class="nav-item active" type="button" data-section="dashboard">Dashboard</button>
+          <button class="nav-item" type="button" data-section="leaderboard">Placement Readiness Board</button>
           <button id="questionBankNavItem" class="nav-item" type="button" data-section="questionBank">Question Bank</button>
           <button id="bulkQuestionsNavItem" class="nav-item" type="button" data-section="tasks">Bulk Questions</button>
           <button class="nav-item" type="button" data-section="assignments">Assignments</button>
@@ -256,6 +264,16 @@
             <div class="panel chart-box"><div class="panel-title-row"><div><h3>Score Progress</h3><div class="panel-subtitle">Average latest score by submission date.</div></div></div><div id="progressChart"></div></div>
           </div>
           <div id="dashboardStatus" class="form-status" role="status" aria-live="polite"></div>
+        </section>
+
+        <section id="leaderboardSection" class="section-panel">
+          <div class="workspace-header"><div><h2>ASCENT Placement Readiness Board</h2><p>Top current students who are consistently ready across LUM, GD and PI.</p></div><div class="header-actions"><button id="refreshLeaderboardButton" class="secondary-button" type="button">Refresh</button></div></div>
+          <div class="panel">
+            <div class="leaderboard-rule"><strong>Eligibility:</strong> latest LUM, GD and PI scores must all be available; the readiness score is their average. A student appears only at <strong>8.5/10 (85%) or above</strong>, with no component below <strong>8/10</strong>.</div>
+            <div class="leaderboard-email-row"><div class="form-group"><label for="leaderboardEmailRecipient">Email this board to</label><input id="leaderboardEmailRecipient" type="text" inputmode="email" placeholder="Enter one or more email addresses"></div><button id="emailLeaderboardButton" class="primary-button" type="button">Email Board</button></div>
+            <div class="panel-title-row"><div><h3>Top 10 placement-ready students</h3><div id="leaderboardCountLabel" class="panel-subtitle"></div></div></div>
+            <div id="leaderboardTableWrap" class="table-wrap"></div><div id="leaderboardStatus" class="form-status" role="status" aria-live="polite"></div>
+          </div>
         </section>
 
         <section id="questionBankSection" class="section-panel">
@@ -580,6 +598,7 @@
       document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active",item.dataset.section === name));
       document.querySelectorAll(".section-panel").forEach(section => section.classList.toggle("active",section.id === name + "Section"));
       if (name === "students") loadStudentPerformance();
+      if (name === "leaderboard") loadPlacementReadinessBoard();
       if (name === "archives") loadArchiveData();
     }
 
@@ -926,6 +945,95 @@
         });
       return Array.from(latestBySubmission.values())
         .sort((left,right) => submittedAtOf(left) - submittedAtOf(right));
+    }
+
+    function placementReadinessArea(rubricType) {
+      const key = workbookRubricKey(rubricType);
+      if (key === "PI") return "PI";
+      if (key === "GD") return "GD";
+      if (key === "MANAGERIAL_COMMUNICATION") return "LUM";
+      return "";
+    }
+
+    function latestReadinessScore(studentUuid, area) {
+      const entries = studentSubmissions(studentPerformanceData,studentUuid)
+        .map(row => ({row,area:placementReadinessArea(row.rubricType),score:scoreOf(row)}))
+        .filter(item => item.area === area && item.score !== null);
+      if (!entries.length) return null;
+      const latest = entries[entries.length - 1];
+      return {score:latest.score,submittedAt:submittedAtOf(latest.row)};
+    }
+
+    function placementReadinessRows() {
+      const currentYear = new Date().getFullYear();
+      const liveBatches = new Set([currentYear,currentYear - 1].map(year => `${year}-${String(year + 2).slice(-2)} PGDM`));
+      const students = cohortData.students.length ? cohortData.students : [];
+      return students.map(student => {
+        const studentUuid = studentUuidOf(student);
+        const rollNo = rollNumberValue(student);
+        const batch = rollNumberCohort(rollNo).batch || studentField(student,["batch","batchName"]);
+        if (!studentUuid || !rollNo || !liveBatches.has(batch)) return null;
+        const lum = latestReadinessScore(studentUuid,"LUM");
+        const gd = latestReadinessScore(studentUuid,"GD");
+        const pi = latestReadinessScore(studentUuid,"PI");
+        if (!lum || !gd || !pi) return null;
+        const readiness = Number(((lum.score + gd.score + pi.score) / 3).toFixed(2));
+        const lowestComponent = Math.min(lum.score,gd.score,pi.score);
+        if (readiness < 8.5 || lowestComponent < 8) return null;
+        return {
+          studentUuid,
+          fullName:studentField(student,["name","fullName"]) || "Student",
+          rollNo,
+          batch,
+          lum:lum.score,
+          gd:gd.score,
+          pi:pi.score,
+          readiness,
+          lastUpdated:Math.max(lum.submittedAt,gd.submittedAt,pi.submittedAt)
+        };
+      }).filter(Boolean).sort((left,right) => right.readiness - left.readiness || right.lastUpdated - left.lastUpdated || left.fullName.localeCompare(right.fullName));
+    }
+
+    let placementBoardRows = [];
+
+    function renderPlacementReadinessBoard() {
+      placementBoardRows = placementReadinessRows().slice(0,10);
+      byId("leaderboardCountLabel").textContent = placementBoardRows.length
+        ? `${placementBoardRows.length} student${placementBoardRows.length === 1 ? "" : "s"} currently qualify.`
+        : "No student currently meets all placement-readiness conditions.";
+      byId("leaderboardTableWrap").innerHTML = placementBoardRows.length
+        ? `<table><thead><tr><th>Rank</th><th>Student</th><th>Roll Number</th><th>Batch</th><th>LUM</th><th>GD</th><th>PI</th><th>Readiness</th></tr></thead><tbody>${placementBoardRows.map((row,index) => `<tr><td><span class="leaderboard-rank">${index + 1}</span></td><td><strong>${escapeHtml(row.fullName)}</strong></td><td>${escapeHtml(row.rollNo)}</td><td>${escapeHtml(row.batch)}</td><td>${escapeHtml(formatNumber(row.lum))}</td><td>${escapeHtml(formatNumber(row.gd))}</td><td>${escapeHtml(formatNumber(row.pi))}</td><td><span class="leaderboard-score">${escapeHtml(formatNumber(row.readiness))}/10</span><div class="leaderboard-qualifies">${Math.round(row.readiness * 10)}%</div></td></tr>`).join("")}</tbody></table>`
+        : `<div class="empty-state">The board will appear when students have current LUM, GD and PI scores that meet the required standard.</div>`;
+    }
+
+    async function loadPlacementReadinessBoard(force=false) {
+      await loadStudentPerformance(force);
+      renderPlacementReadinessBoard();
+    }
+
+    function emailPlacementReadinessBoard() {
+      const recipients = byId("leaderboardEmailRecipient").value.trim();
+      if (!recipients) {
+        setStatus(byId("leaderboardStatus"),"Enter the recipient email address first.","error");
+        return;
+      }
+      if (!placementBoardRows.length) {
+        setStatus(byId("leaderboardStatus"),"There is no qualifying leaderboard to email yet.","error");
+        return;
+      }
+      const lines = placementBoardRows.map((row,index) => `${index + 1}. ${row.fullName} (${row.rollNo}) — ${Math.round(row.readiness * 10)}% | LUM ${formatNumber(row.lum)} | GD ${formatNumber(row.gd)} | PI ${formatNumber(row.pi)}`);
+      const body = [
+        "ASCENT Placement Readiness Board",
+        "",
+        "Students qualify only with latest LUM, GD and PI scores available, an overall readiness score of 85% or more, and no component below 80%.",
+        "",
+        ...lines,
+        "",
+        `Generated on ${new Date().toLocaleString()}.`
+      ].join("\n");
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(recipients)}&su=${encodeURIComponent("ASCENT Placement Readiness Board")}&body=${encodeURIComponent(body)}`;
+      window.open(gmailUrl,"_blank","noopener");
+      setStatus(byId("leaderboardStatus"),"A ready-to-send Gmail draft has opened.","success");
     }
 
     function latestStudentScore(data, studentUuid) {
@@ -3792,6 +3900,8 @@ function formatCriterionFeedback(criterion) {
       byId("refreshDashboardButton").addEventListener("click",() => loadReport("Refreshing dashboard…"));
       byId("refreshTasksButton").addEventListener("click",() => loadReport("Refreshing tasks…"));
       byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results,"dashboard"));
+      byId("refreshLeaderboardButton").addEventListener("click",() => loadPlacementReadinessBoard(true));
+      byId("emailLeaderboardButton").addEventListener("click",emailPlacementReadinessBoard);
       byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows,"results"));
       byId("refreshStudentsButton").addEventListener("click",() => loadStudentPerformance(true));
       byId("doneStudentGroupButton").addEventListener("click",finishStudentGroupCreation);
