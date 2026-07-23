@@ -314,8 +314,9 @@
               <div class="form-group"><label for="rubricType">Rubric</label><select id="rubricType"><option value="MANAGERIAL_COMMUNICATION">Managerial Communication</option><option value="PI">Personal Interview</option><option value="GD">Group Discussion</option></select></div>
               <div class="form-group"><label for="responseSeconds">Main response time</label><select id="responseSeconds"><option value="45">45 seconds</option><option value="60" selected>60 seconds</option><option value="90">90 seconds</option><option value="120">120 seconds</option></select></div>
               <div class="form-group full-width"><div class="inline-row" style="justify-content:space-between"><label for="questionsText" style="margin:0">Questions — one per line</label><span id="questionCount" class="question-count">0 questions</span></div><textarea id="questionsText" placeholder="Paste all questions here. Put each new question on a separate line."></textarea><div class="form-note">Blank lines are ignored. Leading numbers such as “1.” or “2)” are removed automatically.</div></div>
-              <div class="form-group"><label for="targetType">Assign to</label><select id="targetType"><option value="ALL">All active students</option><option value="BATCH">One batch</option><option value="STUDENTS">Selected students</option></select></div>
+              <div class="form-group"><label for="targetType">Assign to</label><select id="targetType"><option value="ALL">All active students</option><option value="BATCH">One batch</option><option value="GROUP">Saved student group</option><option value="STUDENTS">Selected students</option></select></div>
               <div id="targetBatchGroup" class="form-group" hidden><label for="targetBatch">Student batch</label><select id="targetBatch"><option value="">Choose batch</option></select></div>
+              <div id="targetGroupGroup" class="form-group" hidden><label for="targetGroup">Student group</label><select id="targetGroup"><option value="">Choose group</option></select></div>
               <div id="targetStudentsGroup" class="form-group two-wide" hidden><label>Selected students</label><div class="student-picker"><input id="studentSearch" type="search" placeholder="Search by name, ID, email or batch"><div id="studentOptions" class="student-options"></div></div><div id="selectedStudentCount" class="form-note">0 students selected</div></div>
               <div class="form-group"><label for="startAt">First release</label><input id="startAt" type="datetime-local"></div>
               <div class="form-group"><label for="intervalDays">Days between question releases</label><input id="intervalDays" type="number" min="0" max="365" step="1" placeholder="Enter 0, 1, 7…" required><div class="form-note">Enter the exact pace: 0 = all at once, 1 = daily, 7 = weekly. This value is sent unchanged to Supabase.</div></div>
@@ -378,8 +379,7 @@
 
         <section id="studentsSection" class="section-panel">
           <div class="workspace-header"><div><h2>Students</h2><p>Open an individual student record to see question-wise performance, score movement and response completion.</p></div><div class="header-actions"><button id="refreshStudentsButton" class="secondary-button" type="button">Refresh</button></div></div>
-          <div class="panel"><div class="panel-title-row"><div><h3>Student Groups</h3><div class="panel-subtitle">Name a group, choose its students, and save it for later use.</div></div><button id="newStudentGroupButton" class="secondary-button" type="button">New Group</button></div><div class="group-manager-grid"><div><div class="form-group"><label for="studentGroupName">Group name</label><input id="studentGroupName" type="text" maxlength="100" placeholder="e.g. Summer Placement Practice Group"></div><div class="form-group"><label for="studentGroupSearch">Choose students</label><input id="studentGroupSearch" type="search" placeholder="Search by name, roll number or batch"><div id="studentGroupPicker" class="group-picker"></div><div id="studentGroupSelectedCount" class="form-note">0 students selected</div></div><button id="saveStudentGroupButton" class="primary-button" type="button">Save Group</button><div id="studentGroupStatus" class="form-status" role="status" aria-live="polite"></div></div><div><h3 style="margin:0 0 10px;color:var(--navy);font-size:15px">Saved Groups</h3><div id="savedStudentGroups" class="saved-group-list"></div></div></div></div>
-          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle"></div></div></div><div id="studentRollNumberWarning" class="roll-number-warning" hidden role="alert"></div><div id="studentRosterTableWrap" class="table-wrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
+          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle"></div></div><div class="inline-row"><button id="createStudentGroupButton" class="secondary-button" type="button">Create Group</button><button id="doneStudentGroupButton" class="primary-button" type="button" hidden>Done</button></div></div><div id="studentRollNumberWarning" class="roll-number-warning" hidden role="alert"></div><div id="studentRosterTableWrap" class="table-wrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
           <div id="studentProfilePanel" class="panel" hidden></div>
         </section>
 
@@ -466,6 +466,7 @@
     let cohortData = { students:[], groups:[] };
     let editingStudentGroupUuid = null;
     let selectedStudentGroupUuids = new Set();
+    let creatingStudentGroupName = "";
     let reminderData = { isEnabled:false, didNotRespondAfterReminder1:0, didNotRespondAfterReminder2:0, didNotRespondAfterFinalReminder:0, deliveryFailures:0 };
 
     const byId = id => document.getElementById(id);
@@ -684,6 +685,7 @@
       const targetType = byId("targetType").value;
       if (targetType === "ALL") return reportData.students.length;
       if (targetType === "BATCH") return reportData.students.filter(student => String(student.batch || "").trim().toLowerCase() === String(byId("targetBatch").value || "").trim().toLowerCase()).length;
+      if (targetType === "GROUP") return studentUuidsForGroup(byId("targetGroup").value).length;
       return selectedStudentUuids().length;
     }
 
@@ -965,8 +967,8 @@
         .filter(Boolean);
     }
 
-    function populateBankGroupSelect() {
-      const select = byId("bankTargetGroup");
+    function populateGroupSelect(selectId) {
+      const select = byId(selectId);
       const selectedValue = select.value;
       select.innerHTML = `<option value="">Choose group</option>` + cohortData.groups
         .slice()
@@ -976,72 +978,47 @@
       if (Array.from(select.options).some(option => option.value === selectedValue)) select.value = selectedValue;
     }
 
-    function resetStudentGroupEditor() {
-      editingStudentGroupUuid = null;
-      selectedStudentGroupUuids = new Set();
-      byId("studentGroupName").value = "";
-      byId("studentGroupSearch").value = "";
-      byId("saveStudentGroupButton").textContent = "Save Group";
-      setStatus(byId("studentGroupStatus"),"");
-      renderStudentGroupManager();
+    function populateBankGroupSelect() {
+      populateGroupSelect("bankTargetGroup");
+      populateGroupSelect("targetGroup");
     }
 
     function renderStudentGroupManager() {
-      const term = byId("studentGroupSearch").value.trim().toLowerCase();
-      const students = cohortData.students.slice().sort((left,right) => exportText(studentField(left,["name","fullName"])).localeCompare(exportText(studentField(right,["name","fullName"]))));
-      const visibleStudents = students.filter(student => {
-        if (!term) return true;
-        return [rollNumberValue(student),studentField(student,["name","fullName"]),studentField(student,["batch","batchName"]),studentField(student,["emailId","email"])]
-          .join(" ").toLowerCase().includes(term);
-      });
-      byId("studentGroupPicker").innerHTML = visibleStudents.length
-        ? visibleStudents.map(student => {
-          const studentUuid = studentUuidOf(student);
-          return `<label class="group-option"><input class="student-group-check" type="checkbox" value="${escapeHtml(studentUuid)}" ${selectedStudentGroupUuids.has(studentUuid) ? "checked" : ""}><span><strong>${escapeHtml(studentField(student,["name","fullName"]) || "Student")}</strong><br>${escapeHtml(rollNumberValue(student) || "Roll number needed")} · ${escapeHtml(studentField(student,["batch","batchName"]) || "No batch")}</span></label>`;
-        }).join("")
-        : `<div class="empty-state">No students match that search.</div>`;
-      byId("studentGroupSelectedCount").textContent = `${selectedStudentGroupUuids.size} student${selectedStudentGroupUuids.size === 1 ? "" : "s"} selected`;
-      document.querySelectorAll(".student-group-check").forEach(box => box.addEventListener("change",() => {
-        if (box.checked) selectedStudentGroupUuids.add(box.value); else selectedStudentGroupUuids.delete(box.value);
-        byId("studentGroupSelectedCount").textContent = `${selectedStudentGroupUuids.size} student${selectedStudentGroupUuids.size === 1 ? "" : "s"} selected`;
-      }));
-
-      byId("savedStudentGroups").innerHTML = cohortData.groups.length
-        ? cohortData.groups.map(group => `<div class="saved-group"><div><strong>${escapeHtml(group.groupName || "Unnamed group")}</strong><span>${escapeHtml(group.memberCount || 0)} student${Number(group.memberCount) === 1 ? "" : "s"}</span></div><button class="small-button edit-student-group-button" type="button" data-group="${escapeHtml(group.groupUuid)}">Edit</button></div>`).join("")
-        : `<div class="empty-state">No saved groups yet.</div>`;
-      document.querySelectorAll(".edit-student-group-button").forEach(button => button.addEventListener("click",() => editStudentGroup(button.dataset.group)));
       populateBankGroupSelect();
     }
 
-    function editStudentGroup(groupUuid) {
-      const group = cohortData.groups.find(item => item.groupUuid === groupUuid);
-      if (!group) return;
-      editingStudentGroupUuid = groupUuid;
-      selectedStudentGroupUuids = new Set(cohortData.students
-        .filter(student => (student.groups || []).some(item => item.groupUuid === groupUuid))
-        .map(student => studentUuidOf(student))
-        .filter(Boolean));
-      byId("studentGroupName").value = group.groupName || "";
-      byId("saveStudentGroupButton").textContent = "Update Group";
-      setStatus(byId("studentGroupStatus"),`Editing ${group.groupName}.`,"success");
-      renderStudentGroupManager();
+    function startStudentGroupCreation() {
+      const name = window.prompt("Name this student group. For example: PGDM 2026 Placement Practice Group");
+      if (name === null) return;
+      creatingStudentGroupName = name.trim();
+      if (!creatingStudentGroupName) { setStatus(byId("studentsStatus"),"Enter a name for the group.","error"); return; }
+      selectedStudentGroupUuids = new Set();
+      byId("createStudentGroupButton").hidden = true;
+      byId("doneStudentGroupButton").hidden = false;
+      setStatus(byId("studentsStatus"),`Tick the students for “${creatingStudentGroupName}”, then click Done.`,"success");
+      renderStudentRoster();
     }
 
-    async function saveStudentGroup() {
-      const name = byId("studentGroupName").value.trim();
-      if (!name) { setStatus(byId("studentGroupStatus"),"Enter a name for the group.","error"); return; }
-      if (!selectedStudentGroupUuids.size) { setStatus(byId("studentGroupStatus"),"Choose at least one student.","error"); return; }
-      const button = byId("saveStudentGroupButton"); button.disabled = true; button.textContent = "Saving…";
+    async function finishStudentGroupCreation() {
+      if (!creatingStudentGroupName) return;
+      if (!selectedStudentGroupUuids.size) { setStatus(byId("studentsStatus"),"Tick at least one student before clicking Done.","error"); return; }
+      const button = byId("doneStudentGroupButton");
+      button.disabled = true; button.textContent = "Saving…";
       try {
-        const result = await callRpc(RPC.saveStudentGroup,{p_session_token:currentSession.sessionToken,p_group_uuid:editingStudentGroupUuid,p_group_name:name,p_academic_year:null,p_student_uuids:Array.from(selectedStudentGroupUuids)});
+        const result = await callRpc(RPC.saveStudentGroup,{p_session_token:currentSession.sessionToken,p_group_uuid:null,p_group_name:creatingStudentGroupName,p_academic_year:null,p_student_uuids:Array.from(selectedStudentGroupUuids)});
         if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Student group could not be saved.");
+        const savedName = creatingStudentGroupName;
+        creatingStudentGroupName = "";
+        selectedStudentGroupUuids = new Set();
         await loadCohortData();
-        resetStudentGroupEditor();
-        setStatus(byId("studentGroupStatus"),"Student group saved.","success");
+        byId("createStudentGroupButton").hidden = false;
+        button.hidden = true; button.disabled = false; button.textContent = "Done";
+        renderStudentRoster();
+        setStatus(byId("studentsStatus"),`“${savedName}” has been created and is ready in Question Bank and Bulk Questions.`,"success");
       } catch (error) {
         console.error(error);
-        setStatus(byId("studentGroupStatus"),error.message || "Student group could not be saved.","error");
-        button.disabled = false; button.textContent = editingStudentGroupUuid ? "Update Group" : "Save Group";
+        setStatus(byId("studentsStatus"),error.message || "Student group could not be saved.","error");
+        button.disabled = false; button.textContent = "Done";
       }
     }
 
@@ -1099,15 +1076,18 @@
         byId("studentRosterTableWrap").innerHTML = `<div class="empty-state">No student records are available yet.</div>`;
         return;
       }
-      byId("studentRosterTableWrap").innerHTML = `<table><thead><tr><th>Roll Number</th><th>Name</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th></th></tr></thead><tbody>${students.map(student => {
+      byId("studentRosterTableWrap").innerHTML = `<table><thead><tr><th>Roll Number</th><th>Name</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th></th>${creatingStudentGroupName ? `<th>Add to group</th>` : ""}</tr></thead><tbody>${students.map(student => {
         const studentUuid = studentUuidOf(student);
         const lastScore = latestStudentScore(data,studentUuid);
         const storedRoll = studentField(student,["rollNo","studentId","student_id"]);
-        return `<tr><td><input class="student-edit-input student-roll-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(storedRoll || "")}" placeholder="e.g. 26PGDM001" maxlength="11"></td><td><input class="student-edit-input student-name-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["name","fullName"]) || "")}" placeholder="Enter name"><div class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</div></td><td><input class="student-edit-input student-batch-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["batch","batchName"]) || "")}" placeholder="Enter batch"></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="bank-actions"><button class="small-button student-save-button" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button></div></td></tr>`;
+        return `<tr><td><input class="student-edit-input student-roll-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(storedRoll || "")}" placeholder="e.g. 26PGDM001" maxlength="11"></td><td><input class="student-edit-input student-name-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["name","fullName"]) || "")}" placeholder="Enter name"><div class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</div></td><td><input class="student-edit-input student-batch-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["batch","batchName"]) || "")}" placeholder="Enter batch"></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="bank-actions"><button class="small-button student-save-button" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button></div></td>${creatingStudentGroupName ? `<td><input class="student-group-roster-check" type="checkbox" data-student="${escapeHtml(studentUuid)}" ${selectedStudentGroupUuids.has(studentUuid) ? "checked" : ""} aria-label="Add ${escapeHtml(studentField(student,["name","fullName"]) || "student")} to group"></td>` : ""}</tr>`;
       }).join("")}</tbody></table>`;
       document.querySelectorAll(".student-profile-button").forEach(button => button.addEventListener("click",() => renderStudentProfile(button.dataset.student)));
       document.querySelectorAll(".student-save-button").forEach(button => button.addEventListener("click",() => saveStudentDetails(button)));
       document.querySelectorAll(".student-roll-input").forEach(input => input.addEventListener("input",() => { input.value = normaliseRollNumber(input.value); }));
+      document.querySelectorAll(".student-group-roster-check").forEach(box => box.addEventListener("change",() => {
+        if (box.checked) selectedStudentGroupUuids.add(box.dataset.student); else selectedStudentGroupUuids.delete(box.dataset.student);
+      }));
     }
 
     async function saveStudentDetails(button) {
@@ -1614,6 +1594,8 @@
       }
       if (!questions.length) { setStatus(byId("bulkTaskStatus"),"Paste at least one question, with each question on a separate line.","error"); return; }
       if (targetType === "BATCH" && !byId("targetBatch").value) { setStatus(byId("bulkTaskStatus"),"Choose the student batch.","error"); return; }
+      if (targetType === "GROUP" && !byId("targetGroup").value) { setStatus(byId("bulkTaskStatus"),"Choose the student group.","error"); return; }
+      if (targetType === "GROUP" && !studentUuidsForGroup(byId("targetGroup").value).length) { setStatus(byId("bulkTaskStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedStudentUuids().length) { setStatus(byId("bulkTaskStatus"),"Choose at least one student.","error"); return; }
       if (pressureMode === "FIXED_FOLLOW_UP" && !byId("pressurePrompt").value.trim()) { setStatus(byId("bulkTaskStatus"),"Enter the follow-up question.","error"); return; }
       const studentCount = estimatedTargetCount();
@@ -1623,8 +1605,8 @@
         const dueText = byId("dueDays").value.trim();
         const result = await callRpc(RPC.bulk,{
           p_session_token:currentSession.sessionToken, p_questions:questions, p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
-          p_rubric_type:byId("rubricType").value, p_target_type:targetType, p_target_batch:targetType === "BATCH" ? byId("targetBatch").value : null,
-          p_student_uuids:targetType === "STUDENTS" ? selectedStudentUuids() : null, p_start_at:toIsoOrNull(byId("startAt").value),
+          p_rubric_type:byId("rubricType").value, p_target_type:targetType === "GROUP" ? "STUDENTS" : targetType, p_target_batch:targetType === "BATCH" ? byId("targetBatch").value : null,
+          p_student_uuids:targetType === "STUDENTS" ? selectedStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(byId("targetGroup").value) : null, p_start_at:toIsoOrNull(byId("startAt").value),
           p_interval_days:intervalDays, p_due_days:dueText === "" ? null : Number(dueText), p_max_attempts:1,
           p_response_seconds:Number(byId("responseSeconds").value || 60), p_pressure_mode:pressureMode,
           p_pressure_prompt:pressureMode === "FIXED_FOLLOW_UP" ? byId("pressurePrompt").value.trim() : null,
@@ -3573,9 +3555,8 @@ function formatCriterionFeedback(criterion) {
       byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results,"dashboard"));
       byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows,"results"));
       byId("refreshStudentsButton").addEventListener("click",() => loadStudentPerformance(true));
-      byId("newStudentGroupButton").addEventListener("click",resetStudentGroupEditor);
-      byId("studentGroupSearch").addEventListener("input",renderStudentGroupManager);
-      byId("saveStudentGroupButton").addEventListener("click",saveStudentGroup);
+      byId("createStudentGroupButton").addEventListener("click",startStudentGroupCreation);
+      byId("doneStudentGroupButton").addEventListener("click",finishStudentGroupCreation);
       byId("refreshFollowupsButton").addEventListener("click",() => loadReminderDashboard("Refreshing student follow-ups…"));
       byId("toggleFollowupsButton").addEventListener("click",toggleInstitutionalFollowups);
       byId("followupsExportButton").addEventListener("click",downloadFollowupExcel);
@@ -3618,8 +3599,19 @@ function formatCriterionFeedback(criterion) {
       byId("bankAssignmentFollowupMode").addEventListener("change",updateBankAssignmentFollowupControls);
       byId("bankAssignmentForm").addEventListener("submit",assignSelectedBankQuestions);
       byId("questionsText").addEventListener("input",updateQuestionCount);
-      byId("targetType").addEventListener("change",() => { const value=byId("targetType").value; byId("targetBatchGroup").hidden=value!=="BATCH"; byId("targetStudentsGroup").hidden=value!=="STUDENTS"; updateAssignmentEstimate(); });
+      byId("targetType").addEventListener("change",async () => {
+        const value=byId("targetType").value;
+        byId("targetBatchGroup").hidden=value!=="BATCH";
+        byId("targetGroupGroup").hidden=value!=="GROUP";
+        byId("targetStudentsGroup").hidden=value!=="STUDENTS";
+        if (value === "GROUP") {
+          try { await loadCohortData(); populateBankGroupSelect(); }
+          catch (error) { console.error(error); setStatus(byId("bulkTaskStatus"),error.message || "Student groups could not be loaded.","error"); }
+        }
+        updateAssignmentEstimate();
+      });
       byId("targetBatch").addEventListener("change",updateAssignmentEstimate);
+      byId("targetGroup").addEventListener("change",updateAssignmentEstimate);
       byId("intervalDays").addEventListener("input",updateAssignmentEstimate);
       byId("startAt").addEventListener("change",updateAssignmentEstimate);
       byId("studentSearch").addEventListener("input",event => renderStudentPicker(event.target.value));
