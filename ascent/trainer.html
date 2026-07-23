@@ -3306,34 +3306,48 @@ function formatCriterionFeedback(criterion) {
     }
 
     async function addMobileNumbersToWorkbook(workbookData) {
+      let mobileByStudent = new Map();
       try {
         const payload = await callRpc(
           RPC.studentMobileMap,
           {p_session_token:currentSession.sessionToken}
         );
-        const mobileByStudent = mobileNumberMap(payload);
-
-        if (!mobileByStudent.size) return;
-
-        ["students","assignments","submissions"].forEach(function (collection) {
-          const rows = Array.isArray(workbookData[collection])
-            ? workbookData[collection]
-            : [];
-
-          rows.forEach(function (row) {
-            const studentUuid = String(
-              row.studentUuid ?? row.student_uuid ?? ""
-            );
-            const mobileNumber = mobileByStudent.get(studentUuid);
-            if (mobileNumber && !exportText(row.mobileNumber)) {
-              row.mobileNumber = mobileNumber;
-            }
-          });
-        });
+        mobileByStudent = mobileNumberMap(payload);
       } catch (error) {
-        // The workbook remains usable if a historic mobile record cannot be read.
         console.warn("ASCENT mobile number map could not be loaded:",error);
       }
+
+      // The cohort register is the reliable fallback: it already contains the
+      // mobile number supplied during registration.
+      if (!mobileByStudent.size) {
+        try {
+          const roster = await callRpc(
+            RPC.cohortRoster,
+            {p_session_token:currentSession.sessionToken}
+          );
+          mobileByStudent = mobileNumberMap(roster);
+        } catch (error) {
+          console.warn("ASCENT cohort roster could not be used for mobile numbers:",error);
+        }
+      }
+
+      if (!mobileByStudent.size) return;
+
+      ["students","assignments","submissions"].forEach(function (collection) {
+        const rows = Array.isArray(workbookData[collection])
+          ? workbookData[collection]
+          : [];
+
+        rows.forEach(function (row) {
+          const studentUuid = String(
+            row.studentUuid ?? row.student_uuid ?? ""
+          );
+          const mobileNumber = mobileByStudent.get(studentUuid);
+          if (mobileNumber && !exportText(row.mobileNumber)) {
+            row.mobileNumber = mobileNumber;
+          }
+        });
+      });
     }
 
     async function exportExcel(rows, source) {
