@@ -163,28 +163,26 @@
     .completion-ring-copy strong { display:block; font-size:23px; }
     .completion-ring-copy span { display:block; margin-top:3px; color:var(--muted); font-size:11px; font-weight:700; }
     .student-question-table td { vertical-align:top; }
-    .roll-number-warning { margin:0 0 16px; padding:12px 14px; border:1px solid #eab24d; border-radius:11px; background:#fff7db; color:#765000; font-size:13px; font-weight:800; animation:roll-number-pulse 1.3s ease-in-out infinite; }
-    @keyframes roll-number-pulse { 50% { background:#fff0b8; border-color:#c67b00; } }
     .student-edit-input { min-width:130px; width:100%; padding:8px 9px; border:1px solid var(--border); border-radius:8px; color:var(--text); background:#fff; font-size:12px; }
     .student-edit-input:focus { outline:none; border-color:#4d83b5; box-shadow:0 0 0 3px rgba(77,131,181,.13); }
     .batch-folder { margin:0 0 12px; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#fff; }
-    .batch-folder summary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 17px; cursor:pointer; color:var(--navy); font-size:16px; font-weight:800; background:var(--blue-soft); list-style:none; }
+    .batch-folder summary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; cursor:pointer; color:var(--navy); font-family:Arial,sans-serif; font-size:15px; font-weight:600; background:var(--blue-soft); list-style:none; }
     .batch-folder summary::-webkit-details-marker { display:none; }
     .batch-folder summary::after { content:"+"; font-size:20px; line-height:1; }
     .batch-folder[open] summary::after { content:"−"; }
-    .batch-folder-count { color:var(--muted); font-size:12px; font-weight:700; }
+    .batch-folder-count { color:var(--muted); font-family:Arial,sans-serif; font-size:12px; font-weight:500; }
     .batch-folder-body { padding:12px; }
     .subgroup-folder { margin:12px 0 0; border:1px solid #cbdbea; border-radius:9px; background:#f8fbfd; overflow:hidden; }
-    .subgroup-folder summary { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; cursor:pointer; color:var(--navy); font-size:13px; font-weight:800; list-style:none; }
+    .subgroup-folder summary { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; cursor:pointer; color:var(--navy); font-family:Arial,sans-serif; font-size:13px; font-weight:600; list-style:none; }
     .subgroup-folder summary::-webkit-details-marker { display:none; }
     .subgroup-members { margin:0; padding:0 14px 12px 30px; color:var(--text); font-size:12px; line-height:1.65; }
     .batch-folder-actions { display:flex; justify-content:flex-end; margin:0 0 10px; }
-    .student-roster-controls { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin:0 0 14px; color:var(--navy); font-size:12px; font-weight:800; }
+    .student-roster-controls { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin:0 0 14px; color:var(--navy); font-family:Arial,sans-serif; font-size:12px; font-weight:600; }
     .student-roster-controls select { min-width:180px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:#fff; color:var(--text); font:inherit; font-weight:600; }
     .roll-correction-section { margin-top:18px; border:1px solid #e7b347; border-radius:12px; overflow:hidden; background:#fffaf0; }
-    .roll-correction-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 17px; color:#754d00; background:#fff0c4; font-size:15px; font-weight:800; }
+    .roll-correction-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 15px; color:#754d00; background:#fff0c4; font-family:Arial,sans-serif; font-size:14px; font-weight:600; }
     .roll-correction-body { padding:12px; }
-    .roll-correction-note { margin:0 0 10px; color:#754d00; font-size:12px; font-weight:700; }
+    .roll-correction-note { margin:0 0 10px; color:#754d00; font-family:Arial,sans-serif; font-size:12px; font-weight:400; }
     .roll-correction-row td { background:#fffdf7; }
     .group-manager-grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(220px,1fr); gap:18px; }
     .group-picker { max-height:280px; overflow:auto; padding:8px; border:1px solid var(--border); border-radius:10px; background:#fff; }
@@ -401,7 +399,7 @@
 
         <section id="studentsSection" class="section-panel">
           <div class="workspace-header"><div><h2>Students</h2><p>Open an individual student record to see question-wise performance, score movement and response completion.</p></div><div class="header-actions"><button id="refreshStudentsButton" class="secondary-button" type="button">Refresh</button></div></div>
-          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle">Create named subgroups from inside the relevant batch folder.</div></div><div class="inline-row"><button id="doneStudentGroupButton" class="primary-button" type="button" hidden>Done</button></div></div><div id="studentRollNumberWarning" class="roll-number-warning" hidden role="alert"></div><div class="student-roster-controls"><label for="studentRosterSort">Sort students by</label><select id="studentRosterSort"><option value="roll-asc">Roll number: A–Z</option><option value="roll-desc">Roll number: Z–A</option><option value="name-asc">Name: A–Z</option><option value="name-desc">Name: Z–A</option></select></div><div id="studentRosterTableWrap" class="table-wrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
+          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle">Create named subgroups from inside the relevant batch folder.</div></div><div class="inline-row"><button id="doneStudentGroupButton" class="primary-button" type="button" hidden>Done</button></div></div><div class="student-roster-controls"><label for="studentRosterSort">Sort students by</label><select id="studentRosterSort"><option value="roll-asc">Roll number: A–Z</option><option value="roll-desc">Roll number: Z–A</option><option value="name-asc">Name: A–Z</option><option value="name-desc">Name: Z–A</option></select></div><div id="studentRosterTableWrap" class="table-wrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
           <div id="studentProfilePanel" class="panel" hidden></div>
         </section>
 
@@ -1234,6 +1232,12 @@
       return cohort ? cohort.replace(/ PGDM$/,"").trim() : "Roll numbers to be completed";
     }
 
+    function savedBatchFolderName(student) {
+      const savedBatch = String(studentField(student,["batch","batchName"]) || "");
+      const match = savedBatch.match(/(20\d{2})\s*[–-]\s*(\d{2})/);
+      return match ? `${match[1]}-${match[2]}` : batchFolderName(student);
+    }
+
     function renderStudentRoster() {
       const data = studentPerformanceData;
       const students = (cohortData.students.length ? cohortData.students : (data && Array.isArray(data.students) ? data.students : [])).slice();
@@ -1247,11 +1251,6 @@
         return rollComparison || nameComparison;
       });
       const invalidRollStudents = students.filter(student => !isValidRollNumber(rollNumberValue(student)));
-      const rollWarning = byId("studentRollNumberWarning");
-      rollWarning.hidden = invalidRollStudents.length === 0;
-      if (invalidRollStudents.length) {
-        rollWarning.textContent = `Please fill in the roll number for ${invalidRollStudents.length === 1 ? "this student" : "these " + invalidRollStudents.length + " students"}. ASCENT found an email address or another invalid value in the roll-number field.`;
-      }
       if (!students.length) {
         byId("studentRosterTableWrap").innerHTML = `<div class="empty-state">No student records are available yet.</div>`;
         return;
@@ -1259,9 +1258,11 @@
       const folders = new Map();
       const currentYear = new Date().getFullYear();
       [currentYear,currentYear - 1].forEach(year => folders.set(`${year}-${String(year + 2).slice(-2)}`,[]));
+      const newestFolder = `${currentYear}-${String(currentYear + 2).slice(-2)}`;
       students.forEach(student => {
-        const folder = batchFolderName(student);
+        const folder = isValidRollNumber(rollNumberValue(student)) ? batchFolderName(student) : savedBatchFolderName(student);
         if (folders.has(folder)) folders.get(folder).push(student);
+        else if (!isValidRollNumber(rollNumberValue(student))) folders.get(newestFolder).push(student);
       });
       const liveStudentCount = Array.from(folders.values()).reduce((total,folderStudents) => total + folderStudents.length,0);
       byId("studentRosterCount").textContent = `${students.length} students · ${liveStudentCount} in live batches · ${invalidRollStudents.length} need roll-number correction`;
@@ -1271,26 +1272,31 @@
         const members = groupStudents(group.groupUuid);
         return members.length && members.every(student => batchFolderName(student) === batch);
       });
-      const tableForStudents = (folderStudents,batch,isCorrectionSection = false) => `<table><thead><tr><th>Roll Number</th><th>Name</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th></th>${creatingStudentGroupName && creatingStudentGroupBatch === batch ? `<th>Add to group</th>` : ""}</tr></thead><tbody>${sortStudents(folderStudents).map(student => {
+      const tableForStudents = (folderStudents,batch,isCorrectionSection = false) => {
+        const mayAddToGroup = creatingStudentGroupName && creatingStudentGroupBatch === batch && !isCorrectionSection;
+        return `<table><thead><tr><th>Roll Number</th><th>Name</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th></th>${mayAddToGroup ? `<th>Add to group</th>` : ""}</tr></thead><tbody>${sortStudents(folderStudents).map(student => {
         const studentUuid = studentUuidOf(student);
         const lastScore = latestStudentScore(data,studentUuid);
         const storedRoll = studentField(student,["rollNo","studentId","student_id"]);
-        return `<tr${isCorrectionSection ? ` class="roll-correction-row"` : ""}><td><input class="student-edit-input student-roll-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(storedRoll || "")}" placeholder="e.g. 26PGDM001" maxlength="11"></td><td><input class="student-edit-input student-name-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["name","fullName"]) || "")}" placeholder="Enter name"><div class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</div></td><td><input class="student-edit-input student-batch-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["batch","batchName"]) || "")}" placeholder="Enter batch"></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="bank-actions"><button class="small-button student-save-button" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button></div></td>${creatingStudentGroupName && creatingStudentGroupBatch === batch ? `<td><input class="student-group-roster-check" type="checkbox" data-student="${escapeHtml(studentUuid)}" ${selectedStudentGroupUuids.has(studentUuid) ? "checked" : ""} aria-label="Add ${escapeHtml(studentField(student,["name","fullName"]) || "student")} to group"></td>` : ""}</tr>`;
-      }).join("")}</tbody></table>`;
+        return `<tr${isCorrectionSection ? ` class="roll-correction-row"` : ""}><td><input class="student-edit-input student-roll-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(storedRoll || "")}" placeholder="e.g. 26PGDM001" maxlength="11"></td><td><input class="student-edit-input student-name-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["name","fullName"]) || "")}" placeholder="Enter name"><div class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</div></td><td><input class="student-edit-input student-batch-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["batch","batchName"]) || "")}" placeholder="Enter batch"></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="bank-actions"><button class="small-button student-save-button" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button></div></td>${mayAddToGroup ? `<td><input class="student-group-roster-check" type="checkbox" data-student="${escapeHtml(studentUuid)}" ${selectedStudentGroupUuids.has(studentUuid) ? "checked" : ""} aria-label="Add ${escapeHtml(studentField(student,["name","fullName"]) || "student")} to group"></td>` : ""}</tr>`;
+        }).join("")}</tbody></table>`;
+      };
       const batchFoldersHtml = Array.from(folders.entries())
         .sort((left,right) => right[0].localeCompare(left[0]))
         .map(([folder,folderStudents],index) => {
+          const batchStudents = folderStudents.filter(student => isValidRollNumber(rollNumberValue(student)));
+          const correctionStudents = folderStudents.filter(student => !isValidRollNumber(rollNumberValue(student)));
           const groups = groupsForBatch(folder);
           const subgroupFolders = groups.length ? groups.map(group => {
             const members = groupStudents(group.groupUuid);
             return `<details class="subgroup-folder"><summary><span>${escapeHtml(group.groupName || "Unnamed group")}</span><span class="batch-folder-count">${members.length} student${members.length === 1 ? "" : "s"}</span></summary><div class="subgroup-members"><ul>${members.map(student => `<li>${escapeHtml(studentField(student,["name","fullName"]) || "Student")} — ${escapeHtml(rollNumberValue(student) || "Roll number needed")}</li>`).join("")}</ul><button class="small-button delete-student-group-button" type="button" data-group="${escapeHtml(group.groupUuid)}" data-name="${escapeHtml(group.groupName || "this group")}">Delete subgroup</button></div></details>`;
           }).join("") : `<div class="form-note">No named subgroups in this batch yet.</div>`;
           const folderOpen = creatingStudentGroupName && creatingStudentGroupBatch === folder;
-          return `<details class="batch-folder" ${folderOpen ? "open" : ""}><summary><span>${escapeHtml(folder)}</span><span class="batch-folder-count">${folderStudents.length} student${folderStudents.length === 1 ? "" : "s"}</span></summary><div class="batch-folder-body">${creatingStudentGroupName ? "" : `<div class="batch-folder-actions"><button class="secondary-button create-batch-group-button" type="button" data-batch="${escapeHtml(folder)}">Create subgroup</button></div>`}${folderStudents.length ? tableForStudents(folderStudents,folder) : `<div class="empty-state">No students in this batch yet.</div>`}<div style="margin-top:14px"><strong style="color:var(--navy);font-size:13px">Named subgroups</strong>${subgroupFolders}</div></div></details>`;
+          const correctionList = correctionStudents.length ? `<div class="roll-correction-section"><div class="roll-correction-head"><span>Roll number needs correction</span><span>${correctionStudents.length} student${correctionStudents.length === 1 ? "" : "s"}</span></div><div class="roll-correction-body"><p class="roll-correction-note">Please fill in the roll number for ${correctionStudents.length === 1 ? "this student" : "these " + correctionStudents.length + " students"}. ASCENT found an email address or another invalid value in the roll-number field. Once saved, the student will move into the main list above.</p>${tableForStudents(correctionStudents,folder,true)}</div></div>` : "";
+          return `<details class="batch-folder" ${folderOpen ? "open" : ""}><summary><span>${escapeHtml(folder)}</span><span class="batch-folder-count">${folderStudents.length} student${folderStudents.length === 1 ? "" : "s"}</span></summary><div class="batch-folder-body">${creatingStudentGroupName ? "" : `<div class="batch-folder-actions"><button class="secondary-button create-batch-group-button" type="button" data-batch="${escapeHtml(folder)}">Create subgroup</button></div>`}${batchStudents.length ? tableForStudents(batchStudents,folder) : `<div class="empty-state">No students with a completed roll number in this batch yet.</div>`}${correctionList}<div style="margin-top:14px"><strong style="color:var(--navy);font-size:13px">Named subgroups</strong>${subgroupFolders}</div></div></details>`;
         })
         .join("");
-      const correctionHtml = invalidRollStudents.length ? `<div class="roll-correction-section"><div class="roll-correction-head"><span>Roll number needs correction</span><span>${invalidRollStudents.length} student${invalidRollStudents.length === 1 ? "" : "s"}</span></div><div class="roll-correction-body"><p class="roll-correction-note">These students are shown here until you enter and save a proper roll number. They will then move automatically into the correct batch folder.</p>${tableForStudents(invalidRollStudents,"",true)}</div></div>` : "";
-      byId("studentRosterTableWrap").innerHTML = batchFoldersHtml + correctionHtml;
+      byId("studentRosterTableWrap").innerHTML = batchFoldersHtml;
       byId("studentRosterSort").addEventListener("change",event => { studentRosterSort = event.target.value; renderStudentRoster(); });
       document.querySelectorAll(".student-profile-button").forEach(button => button.addEventListener("click",() => renderStudentProfile(button.dataset.student)));
       document.querySelectorAll(".student-save-button").forEach(button => button.addEventListener("click",() => saveStudentDetails(button)));
