@@ -1045,7 +1045,7 @@
         .sort((left,right) => String(left.groupName || "").localeCompare(String(right.groupName || "")))
         .map(group => `<option value="GROUP|${escapeHtml(group.groupUuid)}">${escapeHtml(group.groupName || "Unnamed group")}</option>`)
         .join("");
-      select.innerHTML = `<option value="" selected disabled>Choose batch</option>${groupOptions ? `<optgroup label="Saved student groups">${groupOptions}</optgroup>` : ""}`;
+      select.innerHTML = `<option value="" selected disabled>Choose batch</option>${cohortOptions ? `<optgroup label="Batches">${cohortOptions}</optgroup>` : ""}${groupOptions ? `<optgroup label="Named groups">${groupOptions}</optgroup>` : ""}`;
       if (Array.from(select.options).some(option => option.value === selectedValue)) select.value = selectedValue;
     }
 
