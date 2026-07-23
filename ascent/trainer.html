@@ -191,6 +191,17 @@
     .leaderboard-qualifies { color:var(--success); font-weight:700; }
     .leaderboard-email-row { display:flex; align-items:end; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
     .leaderboard-email-row .form-group { flex:1 1 280px; margin:0; }
+    .leaderboard-batch-board { margin-top:18px; padding:16px; border:1px solid var(--border); border-radius:12px; background:#fff; }
+    .leaderboard-batch-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:13px; flex-wrap:wrap; }
+    .leaderboard-batch-head h3 { margin:0; }
+    .readiness-chart { display:grid; gap:9px; margin:0 0 16px; }
+    .readiness-chart-key { color:var(--muted); font-size:11px; text-align:right; }
+    .readiness-chart-row { display:grid; grid-template-columns:minmax(110px,180px) minmax(140px,1fr) 45px; align-items:center; gap:10px; font-size:12px; }
+    .readiness-chart-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text); font-weight:700; }
+    .readiness-chart-track { position:relative; height:15px; overflow:visible; border-radius:999px; background:#e7eff7; }
+    .readiness-chart-track::after { content:""; position:absolute; left:85%; top:-4px; bottom:-4px; width:1px; background:#be7d00; }
+    .readiness-chart-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--navy),var(--blue)); }
+    .readiness-chart-score { color:var(--navy); text-align:right; font-weight:800; }
     .group-manager-grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(220px,1fr); gap:18px; }
     .group-picker { max-height:280px; overflow:auto; padding:8px; border:1px solid var(--border); border-radius:10px; background:#fff; }
     .group-option { display:flex; align-items:flex-start; gap:8px; padding:8px; border-radius:8px; color:#40586e; font-size:12px; line-height:1.35; }
@@ -267,12 +278,12 @@
         </section>
 
         <section id="leaderboardSection" class="section-panel">
-          <div class="workspace-header"><div><h2>ASCENT Placement Readiness Board</h2><p>Top current students who are consistently ready across LUM, GD and PI.</p></div><div class="header-actions"><button id="refreshLeaderboardButton" class="secondary-button" type="button">Refresh</button></div></div>
+          <div class="workspace-header"><div><h2>ASCENT Placement Readiness Board</h2><p>Top 10 current students in each active batch who are consistently ready across LUM, GD and PI.</p></div><div class="header-actions"><button id="refreshLeaderboardButton" class="secondary-button" type="button">Refresh</button></div></div>
           <div class="panel">
             <div class="leaderboard-rule"><strong>Eligibility:</strong> latest LUM, GD and PI scores must all be available; the readiness score is their average. A student appears only at <strong>8.5/10 (85%) or above</strong>, with no component below <strong>8/10</strong>.</div>
             <div class="leaderboard-email-row"><div class="form-group"><label for="leaderboardEmailRecipient">Email this board to</label><input id="leaderboardEmailRecipient" type="text" inputmode="email" placeholder="Enter one or more email addresses"></div><button id="emailLeaderboardButton" class="primary-button" type="button">Email Board</button></div>
-            <div class="panel-title-row"><div><h3>Top 10 placement-ready students</h3><div id="leaderboardCountLabel" class="panel-subtitle"></div></div></div>
-            <div id="leaderboardTableWrap" class="table-wrap"></div><div id="leaderboardStatus" class="form-status" role="status" aria-live="polite"></div>
+            <div class="panel-title-row"><div><h3>Top 10 placement-ready students per batch</h3><div id="leaderboardCountLabel" class="panel-subtitle"></div></div></div>
+            <div id="leaderboardBoardsWrap"></div><div id="leaderboardStatus" class="form-status" role="status" aria-live="polite"></div>
           </div>
         </section>
 
@@ -964,7 +975,7 @@
       return {score:latest.score,submittedAt:submittedAtOf(latest.row)};
     }
 
-    function placementReadinessRows() {
+    function placementReadinessRows(batchFilter="") {
       const currentYear = new Date().getFullYear();
       const liveBatches = new Set([currentYear,currentYear - 1].map(year => `${year}-${String(year + 2).slice(-2)} PGDM`));
       const students = cohortData.students.length ? cohortData.students : [];
@@ -972,7 +983,7 @@
         const studentUuid = studentUuidOf(student);
         const rollNo = rollNumberValue(student);
         const batch = rollNumberCohort(rollNo).batch || studentField(student,["batch","batchName"]);
-        if (!studentUuid || !rollNo || !liveBatches.has(batch)) return null;
+        if (!studentUuid || !rollNo || !liveBatches.has(batch) || (batchFilter && batch !== batchFilter)) return null;
         const lum = latestReadinessScore(studentUuid,"LUM");
         const gd = latestReadinessScore(studentUuid,"GD");
         const pi = latestReadinessScore(studentUuid,"PI");
@@ -994,16 +1005,31 @@
       }).filter(Boolean).sort((left,right) => right.readiness - left.readiness || right.lastUpdated - left.lastUpdated || left.fullName.localeCompare(right.fullName));
     }
 
-    let placementBoardRows = [];
+    let placementBoardBatches = [];
+
+    function readinessChartHtml(rows) {
+      if (!rows.length) return `<div class="empty-state">No student in this batch currently meets all readiness conditions.</div>`;
+      return `<div class="readiness-chart"><div class="readiness-chart-key">The amber line marks 85%</div>${rows.map((row,index) => `<div class="readiness-chart-row"><div class="readiness-chart-name" title="${escapeHtml(row.fullName)}">${index + 1}. ${escapeHtml(row.fullName)}</div><div class="readiness-chart-track"><div class="readiness-chart-fill" style="width:${Math.min(row.readiness * 10,100)}%"></div></div><div class="readiness-chart-score">${Math.round(row.readiness * 10)}%</div></div>`).join("")}</div>`;
+    }
+
+    function readinessTableHtml(rows) {
+      if (!rows.length) return "";
+      return `<div class="table-wrap"><table><thead><tr><th>Rank</th><th>Student</th><th>Roll Number</th><th>LUM</th><th>GD</th><th>PI</th><th>Readiness</th></tr></thead><tbody>${rows.map((row,index) => `<tr><td><span class="leaderboard-rank">${index + 1}</span></td><td><strong>${escapeHtml(row.fullName)}</strong></td><td>${escapeHtml(row.rollNo)}</td><td>${escapeHtml(formatNumber(row.lum))}</td><td>${escapeHtml(formatNumber(row.gd))}</td><td>${escapeHtml(formatNumber(row.pi))}</td><td><span class="leaderboard-score">${escapeHtml(formatNumber(row.readiness))}/10</span><div class="leaderboard-qualifies">${Math.round(row.readiness * 10)}%</div></td></tr>`).join("")}</tbody></table></div>`;
+    }
 
     function renderPlacementReadinessBoard() {
-      placementBoardRows = placementReadinessRows().slice(0,10);
-      byId("leaderboardCountLabel").textContent = placementBoardRows.length
-        ? `${placementBoardRows.length} student${placementBoardRows.length === 1 ? "" : "s"} currently qualify.`
+      const currentYear = new Date().getFullYear();
+      const batches = [currentYear,currentYear - 1]
+        .map(year => `${year}-${String(year + 2).slice(-2)} PGDM`);
+      placementBoardBatches = batches.map(batch => ({batch,rows:placementReadinessRows(batch).slice(0,10)}));
+      const qualifyingCount = placementBoardBatches.reduce((total,item) => total + item.rows.length,0);
+      byId("leaderboardCountLabel").textContent = qualifyingCount
+        ? `${qualifyingCount} qualifying student${qualifyingCount === 1 ? "" : "s"} shown across the two current batches.`
         : "No student currently meets all placement-readiness conditions.";
-      byId("leaderboardTableWrap").innerHTML = placementBoardRows.length
-        ? `<table><thead><tr><th>Rank</th><th>Student</th><th>Roll Number</th><th>Batch</th><th>LUM</th><th>GD</th><th>PI</th><th>Readiness</th></tr></thead><tbody>${placementBoardRows.map((row,index) => `<tr><td><span class="leaderboard-rank">${index + 1}</span></td><td><strong>${escapeHtml(row.fullName)}</strong></td><td>${escapeHtml(row.rollNo)}</td><td>${escapeHtml(row.batch)}</td><td>${escapeHtml(formatNumber(row.lum))}</td><td>${escapeHtml(formatNumber(row.gd))}</td><td>${escapeHtml(formatNumber(row.pi))}</td><td><span class="leaderboard-score">${escapeHtml(formatNumber(row.readiness))}/10</span><div class="leaderboard-qualifies">${Math.round(row.readiness * 10)}%</div></td></tr>`).join("")}</tbody></table>`
-        : `<div class="empty-state">The board will appear when students have current LUM, GD and PI scores that meet the required standard.</div>`;
+      byId("leaderboardBoardsWrap").innerHTML = placementBoardBatches.map(item => {
+        const label = item.batch.replace(/ PGDM$/,"").trim();
+        return `<div class="leaderboard-batch-board"><div class="leaderboard-batch-head"><div><h3>${escapeHtml(label)}</h3><div class="panel-subtitle">Top 10 placement-ready students in this batch</div></div><div class="panel-subtitle">${item.rows.length} qualifying</div></div>${readinessChartHtml(item.rows)}${readinessTableHtml(item.rows)}</div>`;
+      }).join("");
     }
 
     async function loadPlacementReadinessBoard(force=false) {
@@ -1017,15 +1043,20 @@
         setStatus(byId("leaderboardStatus"),"Enter the recipient email address first.","error");
         return;
       }
-      if (!placementBoardRows.length) {
+      const boardsWithStudents = placementBoardBatches.filter(item => item.rows.length);
+      if (!boardsWithStudents.length) {
         setStatus(byId("leaderboardStatus"),"There is no qualifying leaderboard to email yet.","error");
         return;
       }
-      const lines = placementBoardRows.map((row,index) => `${index + 1}. ${row.fullName} (${row.rollNo}) — ${Math.round(row.readiness * 10)}% | LUM ${formatNumber(row.lum)} | GD ${formatNumber(row.gd)} | PI ${formatNumber(row.pi)}`);
+      const lines = boardsWithStudents.flatMap(item => [
+        item.batch.replace(/ PGDM$/,"").trim(),
+        ...item.rows.map((row,index) => `${index + 1}. ${row.fullName} (${row.rollNo}) — ${Math.round(row.readiness * 10)}% | LUM ${formatNumber(row.lum)} | GD ${formatNumber(row.gd)} | PI ${formatNumber(row.pi)}`),
+        ""
+      ]);
       const body = [
         "ASCENT Placement Readiness Board",
         "",
-        "Students qualify only with latest LUM, GD and PI scores available, an overall readiness score of 85% or more, and no component below 80%.",
+        "Top 10 students are shown separately for each current batch. Students qualify only with latest LUM, GD and PI scores available, an overall readiness score of 85% or more, and no component below 80%.",
         "",
         ...lines,
         "",
