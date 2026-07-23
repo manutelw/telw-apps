@@ -287,8 +287,9 @@
             <div class="bank-selection-strip"><div id="bankSelectedCount" class="bank-selection-text">0 questions selected</div><div class="inline-row"><button id="selectFilteredBankQuestionsButton" class="small-button" type="button">Select Filtered Questions</button><button id="clearBankSelectionButton" class="small-button" type="button">Clear Selection</button></div></div>
             <div class="form-grid">
               <div class="form-group two-wide"><label for="bankAssignmentTitle">Task title prefix</label><input id="bankAssignmentTitle" type="text" value="ASCENT Bank Task" maxlength="100"><div class="form-note">ASCENT adds 01, 02, 03… when several questions are assigned.</div></div>
-              <div class="form-group"><label for="bankTargetType">Assign to</label><select id="bankTargetType"><option value="ALL">All active students</option><option value="BATCH">One batch</option><option value="GROUP">Saved student group</option><option value="STUDENTS">Selected students</option></select></div>
+              <div class="form-group"><label for="bankTargetType">Assign to</label><select id="bankTargetType"><option value="ALL">All active students</option><option value="COHORT">Broad cohort</option><option value="BATCH">One batch</option><option value="GROUP">Saved student group</option><option value="STUDENTS">Selected students</option></select></div>
               <div id="bankTargetBatchGroup" class="form-group" hidden><label for="bankTargetBatch">Student batch</label><select id="bankTargetBatch"><option value="">Choose batch</option></select></div>
+              <div id="bankTargetCohortGroup" class="form-group" hidden><label for="bankTargetCohort">Broad cohort</label><select id="bankTargetCohort"><option value="">Choose cohort</option></select></div>
               <div id="bankTargetGroupGroup" class="form-group" hidden><label for="bankTargetGroup">Student group</label><select id="bankTargetGroup"><option value="">Choose group</option></select></div>
               <div id="bankTargetStudentsGroup" class="form-group two-wide" hidden><label>Selected students</label><div class="student-picker"><input id="bankStudentSearch" type="search" placeholder="Search by name, ID, email or batch"><div id="bankStudentOptions" class="student-options"></div></div><div id="bankSelectedStudentCount" class="form-note">0 students selected</div></div>
               <div class="form-group"><label for="bankStartAt">First release</label><input id="bankStartAt" type="datetime-local"></div>
@@ -314,8 +315,9 @@
               <div class="form-group"><label for="rubricType">Rubric</label><select id="rubricType"><option value="MANAGERIAL_COMMUNICATION">Managerial Communication</option><option value="PI">Personal Interview</option><option value="GD">Group Discussion</option></select></div>
               <div class="form-group"><label for="responseSeconds">Main response time</label><select id="responseSeconds"><option value="45">45 seconds</option><option value="60" selected>60 seconds</option><option value="90">90 seconds</option><option value="120">120 seconds</option></select></div>
               <div class="form-group full-width"><div class="inline-row" style="justify-content:space-between"><label for="questionsText" style="margin:0">Questions — one per line</label><span id="questionCount" class="question-count">0 questions</span></div><textarea id="questionsText" placeholder="Paste all questions here. Put each new question on a separate line."></textarea><div class="form-note">Blank lines are ignored. Leading numbers such as “1.” or “2)” are removed automatically.</div></div>
-              <div class="form-group"><label for="targetType">Assign to</label><select id="targetType"><option value="ALL">All active students</option><option value="BATCH">One batch</option><option value="GROUP">Saved student group</option><option value="STUDENTS">Selected students</option></select></div>
+              <div class="form-group"><label for="targetType">Assign to</label><select id="targetType"><option value="ALL">All active students</option><option value="COHORT">Broad cohort</option><option value="BATCH">One batch</option><option value="GROUP">Saved student group</option><option value="STUDENTS">Selected students</option></select></div>
               <div id="targetBatchGroup" class="form-group" hidden><label for="targetBatch">Student batch</label><select id="targetBatch"><option value="">Choose batch</option></select></div>
+              <div id="targetCohortGroup" class="form-group" hidden><label for="targetCohort">Broad cohort</label><select id="targetCohort"><option value="">Choose cohort</option></select></div>
               <div id="targetGroupGroup" class="form-group" hidden><label for="targetGroup">Student group</label><select id="targetGroup"><option value="">Choose group</option></select></div>
               <div id="targetStudentsGroup" class="form-group two-wide" hidden><label>Selected students</label><div class="student-picker"><input id="studentSearch" type="search" placeholder="Search by name, ID, email or batch"><div id="studentOptions" class="student-options"></div></div><div id="selectedStudentCount" class="form-note">0 students selected</div></div>
               <div class="form-group"><label for="startAt">First release</label><input id="startAt" type="datetime-local"></div>
@@ -685,6 +687,7 @@
       const targetType = byId("targetType").value;
       if (targetType === "ALL") return reportData.students.length;
       if (targetType === "BATCH") return reportData.students.filter(student => String(student.batch || "").trim().toLowerCase() === String(byId("targetBatch").value || "").trim().toLowerCase()).length;
+      if (targetType === "COHORT") return studentUuidsForCohort(byId("targetCohort").value).length;
       if (targetType === "GROUP") return studentUuidsForGroup(byId("targetGroup").value).length;
       return selectedStudentUuids().length;
     }
@@ -967,6 +970,34 @@
         .filter(Boolean);
     }
 
+    function automaticCohorts() {
+      const cohorts = new Map();
+      cohortData.students.forEach(student => {
+        const cohort = rollNumberCohort(rollNumberValue(student)).batch;
+        const studentUuid = studentUuidOf(student);
+        if (!cohort || !studentUuid) return;
+        if (!cohorts.has(cohort)) cohorts.set(cohort, []);
+        cohorts.get(cohort).push(studentUuid);
+      });
+      return Array.from(cohorts.entries())
+        .map(([label,studentUuids]) => ({label,studentUuids}))
+        .sort((left,right) => right.label.localeCompare(left.label));
+    }
+
+    function studentUuidsForCohort(cohortLabel) {
+      const cohort = automaticCohorts().find(item => item.label === cohortLabel);
+      return cohort ? cohort.studentUuids : [];
+    }
+
+    function populateCohortSelect(selectId) {
+      const select = byId(selectId);
+      const selectedValue = select.value;
+      select.innerHTML = `<option value="">Choose cohort</option>` + automaticCohorts()
+        .map(cohort => `<option value="${escapeHtml(cohort.label)}">${escapeHtml(cohort.label)} (${cohort.studentUuids.length})</option>`)
+        .join("");
+      if (Array.from(select.options).some(option => option.value === selectedValue)) select.value = selectedValue;
+    }
+
     function populateGroupSelect(selectId) {
       const select = byId(selectId);
       const selectedValue = select.value;
@@ -981,6 +1012,8 @@
     function populateBankGroupSelect() {
       populateGroupSelect("bankTargetGroup");
       populateGroupSelect("targetGroup");
+      populateCohortSelect("bankTargetCohort");
+      populateCohortSelect("targetCohort");
     }
 
     function renderStudentGroupManager() {
@@ -1196,6 +1229,7 @@
       const targetType = byId("bankTargetType").value;
       if (targetType === "ALL") return reportData.students.length;
       if (targetType === "BATCH") return reportData.students.filter(student => String(student.batch || "").trim().toLowerCase() === String(byId("bankTargetBatch").value || "").trim().toLowerCase()).length;
+      if (targetType === "COHORT") return studentUuidsForCohort(byId("bankTargetCohort").value).length;
       if (targetType === "GROUP") return studentUuidsForGroup(byId("bankTargetGroup").value).length;
       return selectedBankStudentUuids().length;
     }
@@ -1404,6 +1438,8 @@
       }
       if (!questionUuids.length) { setStatus(byId("bankAssignmentStatus"),"Select at least one question from the bank.","error"); return; }
       if (targetType === "BATCH" && !byId("bankTargetBatch").value) { setStatus(byId("bankAssignmentStatus"),"Choose the student batch.","error"); return; }
+      if (targetType === "COHORT" && !byId("bankTargetCohort").value) { setStatus(byId("bankAssignmentStatus"),"Choose the broad cohort.","error"); return; }
+      if (targetType === "COHORT" && !studentUuidsForCohort(byId("bankTargetCohort").value).length) { setStatus(byId("bankAssignmentStatus"),"That broad cohort does not have any active students.","error"); return; }
       if (targetType === "GROUP" && !byId("bankTargetGroup").value) { setStatus(byId("bankAssignmentStatus"),"Choose the student group.","error"); return; }
       if (targetType === "GROUP" && !studentUuidsForGroup(byId("bankTargetGroup").value).length) { setStatus(byId("bankAssignmentStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedBankStudentUuids().length) { setStatus(byId("bankAssignmentStatus"),"Choose at least one student.","error"); return; }
@@ -1417,9 +1453,9 @@
           p_session_token:currentSession.sessionToken,
           p_question_uuids:questionUuids,
           p_title_prefix:byId("bankAssignmentTitle").value.trim() || "ASCENT Bank Task",
-          p_target_type:targetType === "GROUP" ? "STUDENTS" : targetType,
+          p_target_type:targetType === "GROUP" || targetType === "COHORT" ? "STUDENTS" : targetType,
           p_target_batch:targetType === "BATCH" ? byId("bankTargetBatch").value : null,
-          p_student_uuids:targetType === "STUDENTS" ? selectedBankStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(byId("bankTargetGroup").value) : null,
+          p_student_uuids:targetType === "STUDENTS" ? selectedBankStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(byId("bankTargetGroup").value) : targetType === "COHORT" ? studentUuidsForCohort(byId("bankTargetCohort").value) : null,
           p_start_at:toIsoOrNull(byId("bankStartAt").value),
           p_interval_days:intervalDays,
           p_due_days:dueText === "" ? null : Number(dueText),
@@ -1594,6 +1630,8 @@
       }
       if (!questions.length) { setStatus(byId("bulkTaskStatus"),"Paste at least one question, with each question on a separate line.","error"); return; }
       if (targetType === "BATCH" && !byId("targetBatch").value) { setStatus(byId("bulkTaskStatus"),"Choose the student batch.","error"); return; }
+      if (targetType === "COHORT" && !byId("targetCohort").value) { setStatus(byId("bulkTaskStatus"),"Choose the broad cohort.","error"); return; }
+      if (targetType === "COHORT" && !studentUuidsForCohort(byId("targetCohort").value).length) { setStatus(byId("bulkTaskStatus"),"That broad cohort does not have any active students.","error"); return; }
       if (targetType === "GROUP" && !byId("targetGroup").value) { setStatus(byId("bulkTaskStatus"),"Choose the student group.","error"); return; }
       if (targetType === "GROUP" && !studentUuidsForGroup(byId("targetGroup").value).length) { setStatus(byId("bulkTaskStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedStudentUuids().length) { setStatus(byId("bulkTaskStatus"),"Choose at least one student.","error"); return; }
@@ -1605,8 +1643,8 @@
         const dueText = byId("dueDays").value.trim();
         const result = await callRpc(RPC.bulk,{
           p_session_token:currentSession.sessionToken, p_questions:questions, p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
-          p_rubric_type:byId("rubricType").value, p_target_type:targetType === "GROUP" ? "STUDENTS" : targetType, p_target_batch:targetType === "BATCH" ? byId("targetBatch").value : null,
-          p_student_uuids:targetType === "STUDENTS" ? selectedStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(byId("targetGroup").value) : null, p_start_at:toIsoOrNull(byId("startAt").value),
+          p_rubric_type:byId("rubricType").value, p_target_type:targetType === "GROUP" || targetType === "COHORT" ? "STUDENTS" : targetType, p_target_batch:targetType === "BATCH" ? byId("targetBatch").value : null,
+          p_student_uuids:targetType === "STUDENTS" ? selectedStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(byId("targetGroup").value) : targetType === "COHORT" ? studentUuidsForCohort(byId("targetCohort").value) : null, p_start_at:toIsoOrNull(byId("startAt").value),
           p_interval_days:intervalDays, p_due_days:dueText === "" ? null : Number(dueText), p_max_attempts:1,
           p_response_seconds:Number(byId("responseSeconds").value || 60), p_pressure_mode:pressureMode,
           p_pressure_prompt:pressureMode === "FIXED_FOLLOW_UP" ? byId("pressurePrompt").value.trim() : null,
@@ -3583,15 +3621,17 @@ function formatCriterionFeedback(criterion) {
       byId("bankTargetType").addEventListener("change",async () => {
         const value=byId("bankTargetType").value;
         byId("bankTargetBatchGroup").hidden=value!=="BATCH";
+        byId("bankTargetCohortGroup").hidden=value!=="COHORT";
         byId("bankTargetGroupGroup").hidden=value!=="GROUP";
         byId("bankTargetStudentsGroup").hidden=value!=="STUDENTS";
-        if (value === "GROUP") {
+        if (value === "GROUP" || value === "COHORT") {
           try { await loadCohortData(); populateBankGroupSelect(); }
           catch (error) { console.error(error); setStatus(byId("bankAssignmentStatus"),error.message || "Student groups could not be loaded.","error"); }
         }
         updateBankAssignmentEstimate();
       });
       byId("bankTargetBatch").addEventListener("change",updateBankAssignmentEstimate);
+      byId("bankTargetCohort").addEventListener("change",updateBankAssignmentEstimate);
       byId("bankTargetGroup").addEventListener("change",updateBankAssignmentEstimate);
       byId("bankIntervalDays").addEventListener("input",updateBankAssignmentEstimate);
       byId("bankStartAt").addEventListener("change",updateBankAssignmentEstimate);
@@ -3602,15 +3642,17 @@ function formatCriterionFeedback(criterion) {
       byId("targetType").addEventListener("change",async () => {
         const value=byId("targetType").value;
         byId("targetBatchGroup").hidden=value!=="BATCH";
+        byId("targetCohortGroup").hidden=value!=="COHORT";
         byId("targetGroupGroup").hidden=value!=="GROUP";
         byId("targetStudentsGroup").hidden=value!=="STUDENTS";
-        if (value === "GROUP") {
+        if (value === "GROUP" || value === "COHORT") {
           try { await loadCohortData(); populateBankGroupSelect(); }
           catch (error) { console.error(error); setStatus(byId("bulkTaskStatus"),error.message || "Student groups could not be loaded.","error"); }
         }
         updateAssignmentEstimate();
       });
       byId("targetBatch").addEventListener("change",updateAssignmentEstimate);
+      byId("targetCohort").addEventListener("change",updateAssignmentEstimate);
       byId("targetGroup").addEventListener("change",updateAssignmentEstimate);
       byId("intervalDays").addEventListener("input",updateAssignmentEstimate);
       byId("startAt").addEventListener("change",updateAssignmentEstimate);
