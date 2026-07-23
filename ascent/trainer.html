@@ -167,6 +167,18 @@
     @keyframes roll-number-pulse { 50% { background:#fff0b8; border-color:#c67b00; } }
     .student-edit-input { min-width:130px; width:100%; padding:8px 9px; border:1px solid var(--border); border-radius:8px; color:var(--text); background:#fff; font-size:12px; }
     .student-edit-input:focus { outline:none; border-color:#4d83b5; box-shadow:0 0 0 3px rgba(77,131,181,.13); }
+    .batch-folder { margin:0 0 12px; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#fff; }
+    .batch-folder summary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 17px; cursor:pointer; color:var(--navy); font-size:16px; font-weight:800; background:var(--blue-soft); list-style:none; }
+    .batch-folder summary::-webkit-details-marker { display:none; }
+    .batch-folder summary::after { content:"+"; font-size:20px; line-height:1; }
+    .batch-folder[open] summary::after { content:"−"; }
+    .batch-folder-count { color:var(--muted); font-size:12px; font-weight:700; }
+    .batch-folder-body { padding:12px; }
+    .subgroup-folder { margin:12px 0 0; border:1px solid #cbdbea; border-radius:9px; background:#f8fbfd; overflow:hidden; }
+    .subgroup-folder summary { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; cursor:pointer; color:var(--navy); font-size:13px; font-weight:800; list-style:none; }
+    .subgroup-folder summary::-webkit-details-marker { display:none; }
+    .subgroup-members { margin:0; padding:0 14px 12px 30px; color:var(--text); font-size:12px; line-height:1.65; }
+    .batch-folder-actions { display:flex; justify-content:flex-end; margin:0 0 10px; }
     .group-manager-grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(220px,1fr); gap:18px; }
     .group-picker { max-height:280px; overflow:auto; padding:8px; border:1px solid var(--border); border-radius:10px; background:#fff; }
     .group-option { display:flex; align-items:flex-start; gap:8px; padding:8px; border-radius:8px; color:#40586e; font-size:12px; line-height:1.35; }
@@ -382,7 +394,7 @@
 
         <section id="studentsSection" class="section-panel">
           <div class="workspace-header"><div><h2>Students</h2><p>Open an individual student record to see question-wise performance, score movement and response completion.</p></div><div class="header-actions"><button id="refreshStudentsButton" class="secondary-button" type="button">Refresh</button></div></div>
-          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle"></div></div><div class="inline-row"><button id="createStudentGroupButton" class="secondary-button" type="button">Create Group</button><button id="doneStudentGroupButton" class="primary-button" type="button" hidden>Done</button></div></div><div id="studentRollNumberWarning" class="roll-number-warning" hidden role="alert"></div><div id="studentRosterTableWrap" class="table-wrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
+          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle">Create named subgroups from inside the relevant batch folder.</div></div><div class="inline-row"><button id="doneStudentGroupButton" class="primary-button" type="button" hidden>Done</button></div></div><div id="studentRollNumberWarning" class="roll-number-warning" hidden role="alert"></div><div id="studentRosterTableWrap" class="table-wrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
           <div id="studentProfilePanel" class="panel" hidden></div>
         </section>
 
@@ -452,6 +464,7 @@
       setAcademicYear: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_student_academic_year",
       updateStudentDetails: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_update_student_details",
       saveStudentGroup: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_save_student_group",
+      deleteStudentGroup: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_delete_student_group",
       bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
       taskActive: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_task_active",
       createTrainer: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_create_trainer",
@@ -477,6 +490,7 @@
     let editingStudentGroupUuid = null;
     let selectedStudentGroupUuids = new Set();
     let creatingStudentGroupName = "";
+    let creatingStudentGroupBatch = "";
     let reminderData = { isEnabled:false, didNotRespondAfterReminder1:0, didNotRespondAfterReminder2:0, didNotRespondAfterFinalReminder:0, deliveryFailures:0 };
 
     const byId = id => document.getElementById(id);
@@ -1053,15 +1067,15 @@
       populateBankGroupSelect();
     }
 
-    function startStudentGroupCreation() {
+    function startStudentGroupCreation(batch) {
       const name = window.prompt("Name this student group. For example: PGDM 2026 Placement Practice Group");
       if (name === null) return;
       creatingStudentGroupName = name.trim();
       if (!creatingStudentGroupName) { setStatus(byId("studentsStatus"),"Enter a name for the group.","error"); return; }
+      creatingStudentGroupBatch = batch;
       selectedStudentGroupUuids = new Set();
-      byId("createStudentGroupButton").hidden = true;
       byId("doneStudentGroupButton").hidden = false;
-      setStatus(byId("studentsStatus"),`Tick the students for “${creatingStudentGroupName}”, then click Done.`,"success");
+      setStatus(byId("studentsStatus"),`Tick the students in ${batch} for “${creatingStudentGroupName}”, then click Done.`,"success");
       renderStudentRoster();
     }
 
@@ -1075,10 +1089,10 @@
         if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Student group could not be saved.");
         const savedName = creatingStudentGroupName;
         creatingStudentGroupName = "";
+        creatingStudentGroupBatch = "";
         selectedStudentGroupUuids = new Set();
         await loadCohortData();
         populateBankGroupSelect();
-        byId("createStudentGroupButton").hidden = false;
         button.hidden = true; button.disabled = false; button.textContent = "Done";
         renderStudentRoster();
         setStatus(byId("studentsStatus"),`“${savedName}” has been created and is ready in Question Bank and Bulk Questions.`,"success");
@@ -1086,6 +1100,21 @@
         console.error(error);
         setStatus(byId("studentsStatus"),error.message || "Student group could not be saved.","error");
         button.disabled = false; button.textContent = "Done";
+      }
+    }
+
+    async function deleteStudentGroup(groupUuid,groupName) {
+      if (!confirm(`Delete the subgroup “${groupName}”?\n\nStudents and their ASCENT records will not be deleted.`)) return;
+      try {
+        const result = await callRpc(RPC.deleteStudentGroup,{p_session_token:currentSession.sessionToken,p_group_uuid:groupUuid});
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "The subgroup could not be deleted.");
+        await loadCohortData();
+        populateBankGroupSelect();
+        renderStudentRoster();
+        setStatus(byId("studentsStatus"),`“${groupName}” has been deleted. Student records remain unchanged.`,"success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("studentsStatus"),error.message || "The subgroup could not be deleted.","error");
       }
     }
 
@@ -1192,10 +1221,15 @@
       setStatus(byId("archivesStatus"),"Archive register downloaded.","success");
     }
 
+    function batchFolderName(student) {
+      const cohort = rollNumberCohort(rollNumberValue(student)).batch;
+      return cohort ? cohort.replace(/ PGDM$/,"").trim() : "Roll numbers to be completed";
+    }
+
     function renderStudentRoster() {
       const data = studentPerformanceData;
       const students = (cohortData.students.length ? cohortData.students : (data && Array.isArray(data.students) ? data.students : [])).slice()
-        .sort((left,right) => exportText(studentField(left,["batch","batchName"])).localeCompare(exportText(studentField(right,["batch","batchName"]))) || exportText(studentField(left,["name","fullName"])).localeCompare(exportText(studentField(right,["name","fullName"]))));
+        .sort((left,right) => batchFolderName(right).localeCompare(batchFolderName(left)) || exportText(studentField(left,["name","fullName"])).localeCompare(exportText(studentField(right,["name","fullName"]))));
       byId("studentRosterCount").textContent = `${students.length} student${students.length === 1 ? "" : "s"}`;
       const invalidRollStudents = students.filter(student => !rollNumberValue(student));
       const rollWarning = byId("studentRollNumberWarning");
@@ -1207,18 +1241,46 @@
         byId("studentRosterTableWrap").innerHTML = `<div class="empty-state">No student records are available yet.</div>`;
         return;
       }
-      byId("studentRosterTableWrap").innerHTML = `<table><thead><tr><th>Roll Number</th><th>Name</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th></th>${creatingStudentGroupName ? `<th>Add to group</th>` : ""}</tr></thead><tbody>${students.map(student => {
+      const folders = new Map();
+      const currentYear = new Date().getFullYear();
+      [currentYear,currentYear - 1].forEach(year => folders.set(`${year}-${String(year + 2).slice(-2)}`,[]));
+      students.forEach(student => {
+        const folder = batchFolderName(student);
+        if (folders.has(folder)) folders.get(folder).push(student);
+      });
+      const groupStudents = groupUuid => cohortData.students.filter(student => (student.groups || []).some(group => group.groupUuid === groupUuid));
+      const groupsForBatch = batch => cohortData.groups.filter(group => {
+        const members = groupStudents(group.groupUuid);
+        return members.length && members.every(student => batchFolderName(student) === batch);
+      });
+      const tableForStudents = (folderStudents,batch) => `<table><thead><tr><th>Roll Number</th><th>Name</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th></th>${creatingStudentGroupName && creatingStudentGroupBatch === batch ? `<th>Add to group</th>` : ""}</tr></thead><tbody>${folderStudents.map(student => {
         const studentUuid = studentUuidOf(student);
         const lastScore = latestStudentScore(data,studentUuid);
         const storedRoll = studentField(student,["rollNo","studentId","student_id"]);
-        return `<tr><td><input class="student-edit-input student-roll-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(storedRoll || "")}" placeholder="e.g. 26PGDM001" maxlength="11"></td><td><input class="student-edit-input student-name-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["name","fullName"]) || "")}" placeholder="Enter name"><div class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</div></td><td><input class="student-edit-input student-batch-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["batch","batchName"]) || "")}" placeholder="Enter batch"></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="bank-actions"><button class="small-button student-save-button" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button></div></td>${creatingStudentGroupName ? `<td><input class="student-group-roster-check" type="checkbox" data-student="${escapeHtml(studentUuid)}" ${selectedStudentGroupUuids.has(studentUuid) ? "checked" : ""} aria-label="Add ${escapeHtml(studentField(student,["name","fullName"]) || "student")} to group"></td>` : ""}</tr>`;
+        return `<tr><td><input class="student-edit-input student-roll-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(storedRoll || "")}" placeholder="e.g. 26PGDM001" maxlength="11"></td><td><input class="student-edit-input student-name-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["name","fullName"]) || "")}" placeholder="Enter name"><div class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</div></td><td><input class="student-edit-input student-batch-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["batch","batchName"]) || "")}" placeholder="Enter batch"></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="bank-actions"><button class="small-button student-save-button" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button></div></td>${creatingStudentGroupName && creatingStudentGroupBatch === batch ? `<td><input class="student-group-roster-check" type="checkbox" data-student="${escapeHtml(studentUuid)}" ${selectedStudentGroupUuids.has(studentUuid) ? "checked" : ""} aria-label="Add ${escapeHtml(studentField(student,["name","fullName"]) || "student")} to group"></td>` : ""}</tr>`;
       }).join("")}</tbody></table>`;
+      byId("studentRosterTableWrap").innerHTML = Array.from(folders.entries())
+        .sort((left,right) => right[0].localeCompare(left[0]))
+        .map(([folder,folderStudents],index) => {
+          const groups = groupsForBatch(folder);
+          const subgroupFolders = groups.length ? groups.map(group => {
+            const members = groupStudents(group.groupUuid);
+            return `<details class="subgroup-folder"><summary><span>${escapeHtml(group.groupName || "Unnamed group")}</span><span class="batch-folder-count">${members.length} student${members.length === 1 ? "" : "s"}</span></summary><div class="subgroup-members"><ul>${members.map(student => `<li>${escapeHtml(studentField(student,["name","fullName"]) || "Student")} — ${escapeHtml(rollNumberValue(student) || "Roll number needed")}</li>`).join("")}</ul><button class="small-button delete-student-group-button" type="button" data-group="${escapeHtml(group.groupUuid)}" data-name="${escapeHtml(group.groupName || "this group")}">Delete subgroup</button></div></details>`;
+          }).join("") : `<div class="form-note">No named subgroups in this batch yet.</div>`;
+          const folderOpen = creatingStudentGroupName ? creatingStudentGroupBatch === folder : index === 0;
+          return `<details class="batch-folder" ${folderOpen ? "open" : ""}><summary><span>${escapeHtml(folder)}</span><span class="batch-folder-count">${folderStudents.length} student${folderStudents.length === 1 ? "" : "s"}</span></summary><div class="batch-folder-body">${creatingStudentGroupName ? "" : `<div class="batch-folder-actions"><button class="secondary-button create-batch-group-button" type="button" data-batch="${escapeHtml(folder)}">Create subgroup</button></div>`}${folderStudents.length ? tableForStudents(folderStudents,folder) : `<div class="empty-state">No students in this batch yet.</div>`}<div style="margin-top:14px"><strong style="color:var(--navy);font-size:13px">Named subgroups</strong>${subgroupFolders}</div></div></details>`;
+        })
+        .join("");
       document.querySelectorAll(".student-profile-button").forEach(button => button.addEventListener("click",() => renderStudentProfile(button.dataset.student)));
       document.querySelectorAll(".student-save-button").forEach(button => button.addEventListener("click",() => saveStudentDetails(button)));
       document.querySelectorAll(".student-roll-input").forEach(input => input.addEventListener("input",() => { input.value = normaliseRollNumber(input.value); }));
       document.querySelectorAll(".student-group-roster-check").forEach(box => box.addEventListener("change",() => {
         if (box.checked) selectedStudentGroupUuids.add(box.dataset.student); else selectedStudentGroupUuids.delete(box.dataset.student);
       }));
+      document.querySelectorAll(".create-batch-group-button").forEach(button => button.addEventListener("click",event => {
+        event.preventDefault(); event.stopPropagation(); startStudentGroupCreation(button.dataset.batch);
+      }));
+      document.querySelectorAll(".delete-student-group-button").forEach(button => button.addEventListener("click",() => deleteStudentGroup(button.dataset.group,button.dataset.name)));
     }
 
     async function saveStudentDetails(button) {
@@ -3705,7 +3767,6 @@ function formatCriterionFeedback(criterion) {
       byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results,"dashboard"));
       byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows,"results"));
       byId("refreshStudentsButton").addEventListener("click",() => loadStudentPerformance(true));
-      byId("createStudentGroupButton").addEventListener("click",startStudentGroupCreation);
       byId("doneStudentGroupButton").addEventListener("click",finishStudentGroupCreation);
       byId("refreshArchivesButton").addEventListener("click",() => loadArchiveData(true));
       byId("archiveCohortSelect").addEventListener("change",renderArchives);
