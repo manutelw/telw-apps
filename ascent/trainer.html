@@ -170,4 +170,3308 @@
     [hidden] { display:none !important; }
     @media (max-width:1200px) { .card-grid { grid-template-columns:repeat(3,1fr); } .form-grid,.filter-grid { grid-template-columns:repeat(2,1fr); } }
     @media (max-width:860px) {
-      body { padding:12px; } .main-layout { grid-templat
+      body { padding:12px; } .main-layout { grid-template-columns:1fr; } .sidebar { position:static; padding:12px; }
+      .nav-list { grid-template-columns:repeat(3,1fr); } .nav-item { text-align:center; } .workspace { padding:20px; }
+      .dashboard-grid { grid-template-columns:1fr; } .form-group.two-wide { grid-column:1/-1; }
+      .student-detail-grid,.student-progress-grid { grid-template-columns:1fr; }
+    }
+    @media (max-width:560px) {
+      .brand-text p,.user-summary { display:none; } .topbar { padding:13px; } .workspace-header { display:block; }
+      .header-actions { justify-content:flex-start; margin-top:12px; } .nav-list { grid-template-columns:1fr 1fr; }
+      .card-grid,.form-grid,.filter-grid { grid-template-columns:1fr; } .form-group.two-wide,.form-group.full-width { grid-column:auto; }
+      .criterion-row { grid-template-columns:100px 1fr 38px; } .workspace { padding:15px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingOverlay" class="loading-overlay"><div id="loadingText" class="loading-card">Loading ASCENT…</div></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand-wrap" href="../" aria-label="Go to the ClarionPrep homepage"><div class="brand-mark">A</div><div class="brand-text"><h1>ASCENT</h1><p>Trainer &amp; Admin Portal</p></div></a>
+      <div class="topbar-actions"><div id="adminTouchpoint" class="user-summary" role="button" tabindex="0" aria-label="Open admin settings"><div id="trainerName" class="user-name">Trainer</div><div id="trainerRole" class="user-role">Trainer</div></div><button id="logoutButton" class="logout-button" type="button">Log Out</button></div>
+    </header>
+
+    <main class="main-layout">
+      <aside class="sidebar">
+        <div class="sidebar-title">Trainer Workspace</div>
+        <div class="nav-list">
+          <button class="nav-item active" type="button" data-section="dashboard">Dashboard</button>
+          <button id="questionBankNavItem" class="nav-item" type="button" data-section="questionBank">Question Bank</button>
+          <button id="bulkQuestionsNavItem" class="nav-item" type="button" data-section="tasks">Bulk Questions</button>
+          <button class="nav-item" type="button" data-section="assignments">Assignments</button>
+          <button class="nav-item" type="button" data-section="results">Results</button>
+          <button class="nav-item" type="button" data-section="students">Students</button>
+          <button id="followupsNavItem" class="nav-item" type="button" data-section="followups">Student Follow-ups</button>
+          <button id="trainersNavItem" class="nav-item" type="button" data-section="trainers" hidden>Trainers</button>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <section id="dashboardSection" class="section-panel active">
+          <div class="workspace-header">
+            <div><h2>Dashboard</h2><p>Live participation, performance and progress across ASCENT.</p></div>
+            <div class="header-actions"><button id="refreshDashboardButton" class="secondary-button" type="button">Refresh</button><button id="dashboardExportButton" class="primary-button" type="button">Download Excel</button></div>
+          </div>
+          <div class="card-grid">
+            <div class="summary-card"><div class="summary-label">Active Tasks</div><div id="activeTasksValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label">Assigned Students</div><div id="assignedStudentsValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label">Completed</div><div id="completedValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label">Not Attempted</div><div id="notAttemptedValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label">Average Score</div><div id="averageScoreValue" class="summary-value">—</div></div>
+          </div>
+          <div class="dashboard-grid">
+            <div class="panel chart-box"><div class="panel-title-row"><div><h3>Completion</h3><div class="panel-subtitle">Completed, pending and other assignments.</div></div></div><div id="completionChart"></div></div>
+            <div class="panel chart-box"><div class="panel-title-row"><div><h3>Criterion Performance</h3><div class="panel-subtitle">Average of the latest criterion scores.</div></div></div><div id="criterionChart"></div></div>
+            <div class="panel chart-box"><div class="panel-title-row"><div><h3>Score Progress</h3><div class="panel-subtitle">Average latest score by submission date.</div></div></div><div id="progressChart"></div></div>
+          </div>
+          <div id="dashboardStatus" class="form-status" role="status" aria-live="polite"></div>
+        </section>
+
+        <section id="questionBankSection" class="section-panel">
+          <div class="workspace-header">
+            <div><h2>Question Bank</h2><p>Browse the approved LUM, PI, GD and diagnostic banks. The rubric, category, level and difficulty stay attached when a bank question is assigned.</p></div>
+            <div class="header-actions"><button id="refreshQuestionBankButton" class="secondary-button" type="button">Refresh</button><button id="addBankQuestionButton" class="primary-button" type="button" hidden>Add Question</button></div>
+          </div>
+
+          <div id="questionBankReadOnlyNote" class="read-only-note" hidden>CEO access is read-only. You can review the full question bank, categories and difficulty levels, but you cannot add, edit, withdraw or assign questions.</div>
+
+          <div class="panel">
+            <div class="filter-grid">
+              <div class="form-group"><label for="bankTypeFilter">Question bank</label><select id="bankTypeFilter"><option value="">All banks</option><option value="LUM">LUM</option><option value="PI">PI</option><option value="GD">GD</option><option value="DIAGNOSTIC">Diagnostic</option></select></div>
+              <div class="form-group"><label for="bankCategoryFilter">Category / LUM unit</label><select id="bankCategoryFilter"><option value="">All categories</option></select></div>
+              <div class="form-group"><label for="bankDifficultyFilter">Difficulty</label><select id="bankDifficultyFilter"><option value="">All difficulty levels</option><option value="1">1 · Foundation</option><option value="2">2 · Developing</option><option value="3">3 · Applied</option><option value="4">4 · Advanced</option><option value="5">5 · Pressure</option></select></div>
+              <div class="form-group"><label for="bankSearchFilter">Search</label><input id="bankSearchFilter" type="search" placeholder="Question, title, coaching focus or ID"></div>
+              <div id="bankInactiveFilterGroup" class="form-group" hidden><label>Administrator view</label><label class="checkbox-line"><input id="bankIncludeInactive" type="checkbox"> Show withdrawn questions</label></div>
+            </div>
+            <div class="inline-row"><button id="applyBankFiltersButton" class="primary-button" type="button">Apply Filters</button><button id="clearBankFiltersButton" class="secondary-button" type="button">Clear</button></div>
+          </div>
+
+          <form id="bankQuestionEditor" class="panel bank-editor" hidden novalidate>
+            <div class="panel-title-row"><div><h3 id="bankEditorHeading">Add Question</h3><div class="panel-subtitle">Add a new approved question or update the selected record.</div></div><button id="cancelBankEditButton" class="secondary-button" type="button">Cancel</button></div>
+            <input id="bankEditQuestionUuid" type="hidden">
+            <div class="form-grid">
+              <div class="form-group"><label for="bankEditType">Question bank</label><select id="bankEditType"><option value="LUM">LUM</option><option value="PI">PI</option><option value="GD">GD</option><option value="DIAGNOSTIC">Diagnostic</option></select></div>
+              <div class="form-group two-wide"><label for="bankEditCategory">Category / LUM unit</label><select id="bankEditCategory"><option value="">Choose category</option></select></div>
+              <div class="form-group"><label for="bankEditDifficulty">Difficulty</label><select id="bankEditDifficulty"><option value="1">1 · Foundation</option><option value="2">2 · Developing</option><option value="3">3 · Applied</option><option value="4">4 · Advanced</option><option value="5">5 · Pressure</option></select></div>
+              <div class="form-group two-wide"><label for="bankEditTitle">Question title</label><input id="bankEditTitle" type="text" maxlength="180" placeholder="Optional short title"></div>
+              <div class="form-group"><label for="bankEditResponseSeconds">Response time</label><input id="bankEditResponseSeconds" type="number" min="10" max="600" value="60"></div>
+              <div class="form-group"><label for="bankEditPrepSeconds">Preparation time</label><input id="bankEditPrepSeconds" type="number" min="0" max="300" value="10"></div>
+              <div class="form-group full-width"><label for="bankEditQuestion">Question</label><textarea id="bankEditQuestion" class="compact-textarea" placeholder="Enter the complete student-facing question"></textarea></div>
+              <div class="form-group full-width"><label for="bankEditInstructions">Student instructions</label><textarea id="bankEditInstructions" class="compact-textarea" placeholder="Optional response instructions"></textarea></div>
+              <div class="form-group two-wide"><label for="bankEditCoachingFocus">Coaching focus</label><textarea id="bankEditCoachingFocus" class="compact-textarea" placeholder="What this question develops"></textarea></div>
+              <div class="form-group two-wide"><label for="bankEditCanDo">Can-do outcome</label><textarea id="bankEditCanDo" class="compact-textarea" placeholder="What a successful learner can do"></textarea></div>
+              <div class="form-group"><label for="bankEditFollowupMode">Approved follow-up mode</label><select id="bankEditFollowupMode"><option value="NONE">No follow-up</option><option value="FIXED_FOLLOW_UP">Same fixed follow-up</option><option value="SMART_FOLLOW_UP">Smart follow-up bank</option></select></div>
+              <div id="bankEditFixedFollowupGroup" class="form-group two-wide" hidden><label for="bankEditFixedFollowup">Fixed follow-up question</label><input id="bankEditFixedFollowup" type="text" placeholder="Enter the approved fixed follow-up"></div>
+              <div class="form-group"><label for="bankEditFollowupFocus">Smart follow-up weakness groups</label><input id="bankEditFollowupFocus" type="text" placeholder="evidence, ownership, risk"></div>
+              <div class="form-group"><label>Question status</label><label class="checkbox-line"><input id="bankEditActive" type="checkbox" checked> Active</label></div>
+              <div class="form-group"><label>Approval</label><label class="checkbox-line"><input id="bankEditApproved" type="checkbox" checked> Approved</label></div>
+            </div>
+            <button id="saveBankQuestionButton" class="primary-button" type="submit">Save Question</button><div id="bankEditorStatus" class="form-status" role="status" aria-live="polite"></div>
+          </form>
+
+          <form id="bankAssignmentForm" class="panel" novalidate>
+            <div class="panel-title-row"><div><h3>Assign Selected Bank Questions</h3><div class="panel-subtitle">The question bank fixes the rubric. Trainers cannot change PI, GD or Managerial Communication during assignment.</div></div></div>
+            <div class="bank-selection-strip"><div id="bankSelectedCount" class="bank-selection-text">0 questions selected</div><div class="inline-row"><button id="selectFilteredBankQuestionsButton" class="small-button" type="button">Select Filtered Questions</button><button id="clearBankSelectionButton" class="small-button" type="button">Clear Selection</button></div></div>
+            <div class="form-grid">
+              <div class="form-group two-wide"><label for="bankAssignmentTitle">Task title prefix</label><input id="bankAssignmentTitle" type="text" value="ASCENT Bank Task" maxlength="100"><div class="form-note">ASCENT adds 01, 02, 03… when several questions are assigned.</div></div>
+              <div class="form-group"><label for="bankTargetType">Assign to</label><select id="bankTargetType"><option value="ALL">All active students</option><option value="YEAR">First Year or Second Year</option><option value="BATCH">One batch</option><option value="STUDENTS">Selected students</option></select></div>
+              <div id="bankTargetYearGroup" class="form-group" hidden><label for="bankTargetYear">Academic year</label><select id="bankTargetYear"><option value="">Choose year</option><option value="FIRST_YEAR">First Year</option><option value="SECOND_YEAR">Second Year</option></select></div>
+              <div id="bankTargetBatchGroup" class="form-group" hidden><label for="bankTargetBatch">Student batch</label><select id="bankTargetBatch"><option value="">Choose batch</option></select></div>
+              <div id="bankTargetStudentsGroup" class="form-group two-wide" hidden><label>Selected students</label><div class="student-picker"><input id="bankStudentSearch" type="search" placeholder="Search by name, ID, email or batch"><div id="bankStudentOptions" class="student-options"></div></div><div id="bankSelectedStudentCount" class="form-note">0 students selected</div></div>
+              <div class="form-group"><label for="bankStartAt">First release</label><input id="bankStartAt" type="datetime-local"></div>
+              <div class="form-group"><label for="bankIntervalDays">Question sequence</label><input id="bankIntervalDays" type="number" min="0" max="0" step="1" value="0" readonly required><div class="form-note">ASCENT keeps the complete bank ready, but shows each learner only the next unanswered question. The next question appears after submission.</div></div>
+              <div class="form-group"><label for="bankDueDays">Days each question stays open</label><input id="bankDueDays" type="number" min="0" max="365" value="7"><div class="form-note">Leave blank for no deadline. A learner still sees only one unanswered question at a time.</div></div>
+              <div class="form-group"><label for="bankAssignmentFollowupMode">Assignment follow-up</label><select id="bankAssignmentFollowupMode"><option value="NONE">No follow-up</option><option value="FIXED_FOLLOW_UP">Same fixed follow-up</option><option value="SMART_FOLLOW_UP">Smart follow-up from approved bank</option></select></div>
+              <div id="bankAssignmentFixedFollowupGroup" class="form-group two-wide" hidden><label for="bankAssignmentFixedFollowup">Fixed follow-up question</label><input id="bankAssignmentFixedFollowup" type="text" placeholder="This follow-up is used for every selected question"></div><div id="bankAssignmentSmartFollowupNote" class="form-group two-wide" hidden><label>Smart follow-up</label><div class="form-note" style="margin-top:0">ASCENT will choose an approved follow-up from the relevant weakness group: evidence, ownership, decision logic, alternatives, risk or business impact.</div></div>
+              <div id="bankAssignmentPrepGroup" class="form-group" hidden><label for="bankAssignmentPrepSeconds">Follow-up preparation</label><input id="bankAssignmentPrepSeconds" type="number" min="0" max="120" value="5"></div>
+              <div id="bankAssignmentResponseGroup" class="form-group" hidden><label for="bankAssignmentResponseSeconds">Follow-up response</label><input id="bankAssignmentResponseSeconds" type="number" min="10" max="300" value="20"></div>
+            </div>
+            <div class="inline-row"><button id="assignBankQuestionsButton" class="primary-button" type="submit">Create and Assign Selected Questions</button><span id="bankAssignmentEstimate" class="form-note"></span></div>
+            <div id="bankAssignmentStatus" class="form-status" role="status" aria-live="polite"></div>
+          </form>
+
+          <div class="panel"><div class="panel-title-row"><div><h3>Approved Question Records</h3><div id="questionBankCountLabel" class="panel-subtitle"></div></div></div><div id="questionBankTableWrap" class="table-wrap"></div><div id="questionBankStatus" class="form-status" role="status" aria-live="polite"></div></div>
+        </section>
+
+        <section id="tasksSection" class="section-panel">
+          <div class="workspace-header"><div><h2>Bulk Questions</h2><p>Paste a complete batch of questions, choose the release pace, and assign them in one action.</p></div></div>
+          <form id="bulkTaskForm" class="panel" novalidate>
+            <div class="form-grid">
+              <div class="form-group two-wide"><label for="titlePrefix">Task title prefix</label><input id="titlePrefix" type="text" value="ASCENT Task" maxlength="100"><div class="form-note">ASCENT adds 01, 02, 03… when the batch contains several questions.</div></div>
+              <div class="form-group"><label for="rubricType">Rubric</label><select id="rubricType"><option value="MANAGERIAL_COMMUNICATION">Managerial Communication</option><option value="PI">Personal Interview</option><option value="GD">Group Discussion</option></select></div>
+              <div class="form-group"><label for="responseSeconds">Main response time</label><select id="responseSeconds"><option value="45">45 seconds</option><option value="60" selected>60 seconds</option><option value="90">90 seconds</option><option value="120">120 seconds</option></select></div>
+              <div class="form-group full-width"><div class="inline-row" style="justify-content:space-between"><label for="questionsText" style="margin:0">Questions — one per line</label><span id="questionCount" class="question-count">0 questions</span></div><textarea id="questionsText" placeholder="Paste all questions here. Put each new question on a separate line."></textarea><div class="form-note">Blank lines are ignored. Leading numbers such as “1.” or “2)” are removed automatically.</div></div>
+              <div class="form-group"><label for="targetType">Assign to</label><select id="targetType"><option value="ALL">All active students</option><option value="BATCH">One batch</option><option value="STUDENTS">Selected students</option></select></div>
+              <div id="targetBatchGroup" class="form-group" hidden><label for="targetBatch">Student batch</label><select id="targetBatch"><option value="">Choose batch</option></select></div>
+              <div id="targetStudentsGroup" class="form-group two-wide" hidden><label>Selected students</label><div class="student-picker"><input id="studentSearch" type="search" placeholder="Search by name, ID, email or batch"><div id="studentOptions" class="student-options"></div></div><div id="selectedStudentCount" class="form-note">0 students selected</div></div>
+              <div class="form-group"><label for="startAt">First release</label><input id="startAt" type="datetime-local"></div>
+              <div class="form-group"><label for="intervalDays">Days between question releases</label><input id="intervalDays" type="number" min="0" max="365" step="1" placeholder="Enter 0, 1, 7…" required><div class="form-note">Enter the exact pace: 0 = all at once, 1 = daily, 7 = weekly. This value is sent unchanged to Supabase.</div></div>
+              <div class="form-group"><label for="dueDays">Days each released question stays open</label><input id="dueDays" type="number" min="0" max="365" value="7"><div class="form-note">Leave blank for no deadline. If this is longer than the release interval, more than one unanswered question may be open at the same time.</div></div>
+              <div class="form-group"><label for="pressureMode">Follow-up</label><select id="pressureMode"><option value="NONE">No follow-up</option><option value="FIXED_FOLLOW_UP">Use one fixed follow-up</option></select></div>
+              <div id="pressurePromptGroup" class="form-group two-wide" hidden><label for="pressurePrompt">Follow-up question</label><input id="pressurePrompt" type="text" placeholder="Paste the follow-up question"><div class="form-note">This same follow-up is attached to every question in this batch.</div></div>
+              <div id="pressurePrepGroup" class="form-group" hidden><label for="pressurePrepSeconds">Follow-up preparation</label><input id="pressurePrepSeconds" type="number" min="0" max="120" value="5"></div>
+              <div id="pressureResponseGroup" class="form-group" hidden><label for="pressureResponseSeconds">Follow-up response</label><input id="pressureResponseSeconds" type="number" min="10" max="300" value="20"></div>
+            </div>
+            <div class="inline-row"><button id="createBatchButton" class="primary-button" type="submit">Create and Assign Batch</button><span id="assignmentEstimate" class="form-note"></span></div>
+            <div id="bulkTaskStatus" class="form-status" role="status" aria-live="polite"></div>
+          </form>
+          <div class="panel"><div class="panel-title-row"><div><h3>Existing Tasks</h3><div class="panel-subtitle">Withdraw or reactivate an individual task.</div></div><button id="refreshTasksButton" class="secondary-button" type="button">Refresh</button></div><div id="tasksTableWrap" class="table-wrap"></div></div>
+        </section>
+
+        <section id="assignmentsSection" class="section-panel">
+          <div class="workspace-header"><div><h2>Assignments</h2><p>See who received each question, its release time and current status. Each learner may submit once per question.</p></div></div>
+          <div class="panel"><div class="filter-grid">
+            <div class="form-group"><label for="assignmentBatchFilter">Batch</label><select id="assignmentBatchFilter"><option value="">All batches</option></select></div>
+            <div class="form-group"><label for="assignmentStudentFilter">Student</label><select id="assignmentStudentFilter"><option value="">All students</option></select></div>
+            <div class="form-group"><label for="assignmentTaskFilter">Task</label><select id="assignmentTaskFilter"><option value="">All tasks</option></select></div>
+            <div class="form-group"><label for="assignmentStatusFilter">Status</label><select id="assignmentStatusFilter"><option value="">All statuses</option><option value="COMPLETED">Completed</option><option value="NOT_STARTED">Not started</option><option value="NOT_ATTEMPTED">Not attempted</option><option value="SCHEDULED">Scheduled</option><option value="WITHDRAWN">Withdrawn</option></select></div>
+          </div><div class="inline-row"><button id="applyAssignmentFiltersButton" class="primary-button" type="button">Apply Filters</button><button id="clearAssignmentFiltersButton" class="secondary-button" type="button">Clear</button></div></div>
+
+          <div id="testRegisterAdminPanel" class="panel" hidden>
+            <div class="panel-title-row">
+              <div>
+                <h3>Clear Test Register</h3>
+                <div class="panel-subtitle">Administrator-only cleanup for test students. This deletes the selected test student's assignments and submissions, but preserves the student login, tasks and question bank.</div>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-group two-wide">
+                <label for="testStudentClearSelect">Test student</label>
+                <select id="testStudentClearSelect"><option value="">Choose a test student</option></select>
+                <div class="form-note">Only Student IDs beginning with ASCENTTEST are eligible.</div>
+              </div>
+            </div>
+            <div class="inline-row">
+              <button id="clearTestRegisterButton" class="secondary-button danger-button" type="button">Clear Selected Test Register</button>
+            </div>
+            <div id="clearTestRegisterStatus" class="form-status" role="status" aria-live="polite"></div>
+          </div>
+
+          <div class="panel"><div class="panel-title-row"><div><h3>Assignment Register</h3><div id="assignmentCountLabel" class="panel-subtitle"></div></div></div><div id="assignmentsTableWrap" class="table-wrap"></div><div id="assignmentActionStatus" class="form-status" role="status" aria-live="polite"></div></div>
+        </section>
+
+        <section id="resultsSection" class="section-panel">
+          <div class="workspace-header"><div><h2>Results</h2><p>Filter results, compare first and latest scores, and download the complete Excel report.</p></div><div class="header-actions"><button id="resultsExportButton" class="primary-button" type="button">Download Excel</button></div></div>
+          <div class="panel"><div class="filter-grid">
+            <div class="form-group"><label for="resultBatchFilter">Batch</label><select id="resultBatchFilter"><option value="">All batches</option></select></div>
+            <div class="form-group"><label for="resultStudentFilter">Student</label><select id="resultStudentFilter"><option value="">All students</option></select></div>
+            <div class="form-group"><label for="resultTaskFilter">Task</label><select id="resultTaskFilter"><option value="">All tasks</option></select></div>
+            <div class="form-group"><label for="resultStatusFilter">Status</label><select id="resultStatusFilter"><option value="">All statuses</option><option value="COMPLETED">Completed</option><option value="NOT_STARTED">Not started</option><option value="NOT_ATTEMPTED">Not attempted</option><option value="SCHEDULED">Scheduled</option><option value="WITHDRAWN">Withdrawn</option></select></div>
+            <div class="form-group"><label for="resultDateFrom">From date</label><input id="resultDateFrom" type="date"></div>
+            <div class="form-group"><label for="resultDateTo">To date</label><input id="resultDateTo" type="date"></div>
+          </div><div class="inline-row"><button id="applyResultFiltersButton" class="primary-button" type="button">Apply Filters</button><button id="clearResultFiltersButton" class="secondary-button" type="button">Clear</button></div></div>
+          <div class="panel"><div class="panel-title-row"><div><h3>Student Results</h3><div id="resultCountLabel" class="panel-subtitle"></div></div></div><div id="resultsTableWrap" class="table-wrap"></div><div id="resultsStatus" class="form-status"></div></div>
+        </section>
+
+        <section id="studentsSection" class="section-panel">
+          <div class="workspace-header"><div><h2>Students</h2><p>Open an individual student record to see question-wise performance, score movement and response completion.</p></div><div class="header-actions"><button id="refreshStudentsButton" class="secondary-button" type="button">Refresh</button></div></div>
+          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle"></div></div></div><div id="studentRosterTableWrap" class="table-wrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
+          <div id="studentProfilePanel" class="panel" hidden></div>
+        </section>
+
+        <section id="followupsSection" class="section-panel">
+          <div class="workspace-header">
+            <div><h2>Student Follow-ups</h2><p>Control institutional response reminders and monitor the students who remain pending after each 48-hour stage.</p></div>
+            <div class="header-actions"><button id="refreshFollowupsButton" class="secondary-button" type="button">Refresh</button><button id="followupsExportButton" class="primary-button" type="button">Download Student-wise Excel</button></div>
+          </div>
+
+          <div class="panel">
+            <div class="reminder-switch-row">
+              <div>
+                <div class="panel-subtitle">Institutional follow-ups</div>
+                <div id="followupState" class="reminder-state off"><span class="reminder-state-dot"></span><span>OFF</span></div>
+              </div>
+              <button id="toggleFollowupsButton" class="primary-button" type="button">Turn On</button>
+            </div>
+            <div id="followupActivationNote" class="reminder-note">Follow-ups are off. No institutional reminder emails will be sent.</div>
+          </div>
+
+          <div class="card-grid">
+            <div class="summary-card"><div class="summary-label">After Reminder 1</div><div id="afterReminder1Value" class="summary-value">—</div><div class="panel-subtitle">Still pending after the next 48 hours</div></div>
+            <div class="summary-card"><div class="summary-label">After Reminder 2</div><div id="afterReminder2Value" class="summary-value">—</div><div class="panel-subtitle">Still pending after another 48 hours</div></div>
+            <div class="summary-card"><div class="summary-label">After Final Reminder</div><div id="afterFinalReminderValue" class="summary-value">—</div><div class="panel-subtitle">Trainer attention required</div></div>
+            <div class="summary-card"><div class="summary-label">Delivery Failures</div><div id="followupDeliveryFailuresValue" class="summary-value">—</div><div class="panel-subtitle">Email deliveries requiring attention</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title-row"><div><h3>Reminder sequence</h3><div class="panel-subtitle">Each reminder gives the learner a complete 48-hour response window.</div></div></div>
+            <div class="form-note">First reminder: 48 hours after release · Second reminder: 48 hours after Reminder 1 · Final reminder: 48 hours after Reminder 2 · Trainer attention: 48 hours after the final reminder. The sequence stops immediately when a response is submitted.</div>
+          </div>
+          <div id="followupsStatus" class="form-status" role="status" aria-live="polite"></div>
+        </section>
+
+        <section id="trainersSection" class="section-panel">
+          <div class="workspace-header"><div><h2>Add Trainer</h2><p>Create a trainer or administrator login without using SQL.</p></div></div>
+          <form id="addTrainerForm" class="panel" novalidate>
+            <div class="form-grid">
+              <div class="form-group"><label for="newTrainerName">Full name</label><input id="newTrainerName" type="text" autocomplete="name" required></div>
+              <div class="form-group"><label for="newTrainerEmail">Email address</label><input id="newTrainerEmail" type="email" autocomplete="email" required></div>
+              <div class="form-group"><label for="newTrainerPassword">Temporary password</label><input id="newTrainerPassword" type="password" autocomplete="new-password" minlength="8" required></div>
+              <div class="form-group"><label for="newTrainerRole">Access role</label><select id="newTrainerRole"><option value="TRAINER">Trainer</option><option value="ADMIN">Administrator</option></select></div>
+            </div>
+            <button id="addTrainerButton" class="primary-button" type="submit">Add Trainer</button><div id="addTrainerStatus" class="form-status" role="status" aria-live="polite"></div>
+          </form>
+        </section>
+      </section>
+    </main>
+    <div class="footer">Created by Manu Vikraman<br>A separate application within ClarionPrep</div>
+  </div>
+
+  <script>
+    const SESSION_STORAGE_KEY = "ascent_trainer_session";
+    const SUPABASE_URL = "https://vtqatrhwfvzyodiftvkc.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
+    const RPC = {
+      report: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_report_data",
+      workbookExport: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_workbook_export",
+      studentMobileMap: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_student_mobile_map",
+      cohortRoster: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_cohort_roster",
+      setAcademicYear: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_student_academic_year",
+      bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
+      taskActive: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_task_active",
+      createTrainer: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_create_trainer",
+      questionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_question_bank_get",
+      assignQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_assign_question_bank_tasks",
+      upsertQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_upsert_question_bank",
+      questionBankActive: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_set_question_bank_active",
+      clearTestRegister: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_clear_test_student_register",
+      reminderDashboard: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_dashboard",
+      setRemindersEnabled: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_reminders_enabled",
+      reminderExport: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_export"
+    };
+    let currentSession = null;
+    let reportData = { summary:{}, batches:[], students:[], tasks:[], results:[] };
+    let questionBankData = { questions:[], categories:[], difficultyScale:[], totalMatching:0 };
+    let selectedBankQuestions = new Set();
+    let visibleBankQuestions = [];
+    let visibleAssignmentRows = [];
+    let visibleResultRows = [];
+    let studentPerformanceData = null;
+    let cohortData = { students:[], groups:[] };
+    let reminderData = { isEnabled:false, didNotRespondAfterReminder1:0, didNotRespondAfterReminder2:0, didNotRespondAfterFinalReminder:0, deliveryFailures:0 };
+
+    const byId = id => document.getElementById(id);
+    const escapeHtml = value => String(value ?? "").replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
+    const formatNumber = value => value === null || value === undefined || value === "" ? "—" : Number(value).toFixed(Number(value) % 1 ? 2 : 0);
+    const formatDate = value => value ? new Date(value).toLocaleString() : "—";
+    const normaliseRpc = value => Array.isArray(value) && value.length === 1 ? value[0] : value;
+    const setStatus = (element,message,type="") => { element.className = "form-status" + (type ? " " + type : ""); element.textContent = message || ""; };
+    const showLoading = (message="Loading ASCENT…") => { byId("loadingText").textContent = message; byId("loadingOverlay").classList.add("active"); };
+    const hideLoading = () => byId("loadingOverlay").classList.remove("active");
+    const rpcHeaders = () => ({ "apikey":SUPABASE_PUBLISHABLE_KEY, "Authorization":"Bearer " + SUPABASE_PUBLISHABLE_KEY, "Content-Type":"application/json" });
+
+    async function callRpc(url, body) {
+      const response = await fetch(url,{ method:"POST", headers:rpcHeaders(), body:JSON.stringify(body) });
+      const text = await response.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+      if (!response.ok) throw new Error("Request failed " + response.status + ": " + (typeof data === "string" ? data : JSON.stringify(data)));
+      return normaliseRpc(data);
+    }
+
+    function loadTrainerSession() {
+  const raw =
+    localStorage.getItem(
+      SESSION_STORAGE_KEY
+    );
+
+  if (!raw) {
+    window.location.href = "./";
+    return null;
+  }
+
+  try {
+    const session =
+      JSON.parse(raw);
+
+    const role =
+      String(
+        session.role || ""
+      ).toUpperCase();
+
+    const expiryTime =
+      new Date(
+        session.expiresAt
+      ).getTime();
+
+    if (
+      !session.sessionToken ||
+      !session.email ||
+      !Number.isFinite(expiryTime) ||
+      expiryTime <= Date.now()
+    ) {
+      throw new Error(
+        "Incomplete or expired staff session"
+      );
+    }
+
+    if (
+      role !== "ADMIN" &&
+      !session.trainerUuid
+    ) {
+      throw new Error(
+        "Trainer identity is missing"
+      );
+    }
+
+    return session;
+  } catch (error) {
+    console.error(error);
+
+    localStorage.removeItem(
+      SESSION_STORAGE_KEY
+    );
+
+    window.location.href = "./";
+    return null;
+  }
+}
+
+    function showSection(name) {
+      document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active",item.dataset.section === name));
+      document.querySelectorAll(".section-panel").forEach(section => section.classList.toggle("active",section.id === name + "Section"));
+      if (name === "students") loadStudentPerformance();
+    }
+
+    const currentRole = () => String(currentSession && currentSession.role || "TRAINER").toUpperCase();
+    const isAdmin = () => currentRole() === "ADMIN";
+    const isCeo = () => currentRole() === "CEO";
+
+    function applyRoleAccess() {
+      byId("trainersNavItem").hidden = !isAdmin();
+      byId("addBankQuestionButton").hidden = !isAdmin();
+      byId("bankInactiveFilterGroup").hidden = !isAdmin();
+      byId("questionBankReadOnlyNote").hidden = !isCeo();
+      byId("bankAssignmentForm").hidden = isCeo();
+      byId("bulkQuestionsNavItem").hidden = isCeo();
+      byId("testRegisterAdminPanel").hidden = !isAdmin();
+    }
+
+    function normaliseQuestionForAssignment(value) {
+      return String(value || "")
+        .normalize("NFKC")
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}]+/gu, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function cleanQuestions() {
+      const seen = new Set();
+      return byId("questionsText").value
+        .split(/\r?\n/)
+        .map(line => line.trim().replace(/^\s*(?:\d+[.)]|[-•*])\s*/, ""))
+        .filter(Boolean)
+        .filter(function (question) {
+          const key = normaliseQuestionForAssignment(question);
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+    }
+
+    function localDateTimeValue(date) {
+      const pad = n => String(n).padStart(2,"0");
+      return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function setDefaultStartTime() {
+      const d = new Date(Date.now() + 5 * 60000); d.setSeconds(0,0);
+      const value = localDateTimeValue(d);
+      byId("startAt").value = value;
+      byId("bankStartAt").value = value;
+    }
+
+    function toIsoOrNull(value) { if (!value) return null; const d = new Date(value); return Number.isNaN(d.getTime()) ? null : d.toISOString(); }
+
+    function readReleaseInterval(inputId) {
+      const raw = String(byId(inputId).value || "").trim();
+      if (raw === "") {
+        throw new Error("Enter the number of days between question releases.");
+      }
+      const intervalDays = Number(raw);
+      if (!Number.isInteger(intervalDays) || intervalDays < 0 || intervalDays > 365) {
+        throw new Error("Release interval must be a whole number from 0 to 365.");
+      }
+      return intervalDays;
+    }
+
+    function scheduleLabel(intervalDays) {
+      if (intervalDays === 0) return "all questions at once";
+      if (intervalDays === 1) return "one question every day";
+      return `one question every ${intervalDays} days`;
+    }
+
+    function releaseDateFromInput(inputId) {
+      const raw = String(byId(inputId).value || "").trim();
+      const parsed = raw ? new Date(raw) : new Date();
+      return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+    }
+
+    function schedulePreview(questionCount, intervalDays, startInputId) {
+      if (!questionCount) return "";
+      const firstRelease = releaseDateFromInput(startInputId);
+      const lastRelease = new Date(
+        firstRelease.getTime() +
+        Math.max(questionCount - 1, 0) * intervalDays * 86400000
+      );
+      return `${scheduleLabel(intervalDays)} · first ${firstRelease.toLocaleString()} · last ${lastRelease.toLocaleString()}`;
+    }
+
+    function confirmReleaseSchedule(questionCount, studentCount, intervalDays, startInputId, dueInputId) {
+      const firstRelease = releaseDateFromInput(startInputId);
+      const lastRelease = new Date(
+        firstRelease.getTime() +
+        Math.max(questionCount - 1, 0) * intervalDays * 86400000
+      );
+      const dueRaw = String(byId(dueInputId).value || "").trim();
+      const dueDays = dueRaw === "" ? null : Number(dueRaw);
+      const dueLabel = dueDays === null
+        ? "No deadline"
+        : `${dueDays} day${dueDays === 1 ? "" : "s"} after each release`;
+      const overlapWarning =
+        dueDays === null || (intervalDays > 0 && dueDays > intervalDays)
+          ? "\nNote: unanswered questions may overlap because the open period is longer than the release gap."
+          : "";
+
+      return window.confirm(
+        `Please confirm this assignment schedule:\n\n` +
+        `${questionCount} unique question${questionCount === 1 ? "" : "s"}\n` +
+        `${studentCount} student${studentCount === 1 ? "" : "s"}\n` +
+        `Release pace: ${scheduleLabel(intervalDays)}\n` +
+        `Open period: ${dueLabel}\n` +
+        `First release: ${firstRelease.toLocaleString()}\n` +
+        `Last release: ${lastRelease.toLocaleString()}\n` +
+        overlapWarning +
+        `\n\nImportant: this new batch will replace older unanswered assignments for the selected learners. Completed responses and history will remain.\n\n` +
+        `Press OK only if this is exactly what you intend.`
+      );
+    }
+
+    function updateQuestionCount() {
+      const count = cleanQuestions().length;
+      byId("questionCount").textContent = count + (count === 1 ? " question" : " questions");
+      updateAssignmentEstimate();
+    }
+
+    function selectedStudentUuids() { return Array.from(document.querySelectorAll(".student-check:checked")).map(box => box.value); }
+
+    function updateSelectedStudentCount() {
+      const count = selectedStudentUuids().length;
+      byId("selectedStudentCount").textContent = count + (count === 1 ? " student selected" : " students selected");
+      updateAssignmentEstimate();
+    }
+
+    function estimatedTargetCount() {
+      const targetType = byId("targetType").value;
+      if (targetType === "ALL") return reportData.students.length;
+      if (targetType === "BATCH") return reportData.students.filter(student => String(student.batch || "").trim().toLowerCase() === String(byId("targetBatch").value || "").trim().toLowerCase()).length;
+      return selectedStudentUuids().length;
+    }
+
+    function updateAssignmentEstimate() {
+      const questions = cleanQuestions().length;
+      const students = estimatedTargetCount();
+      const rawInterval = String(byId("intervalDays").value || "").trim();
+      if (!questions || !students) {
+        byId("assignmentEstimate").textContent = "";
+        return;
+      }
+      const intervalDays = Number(rawInterval);
+      const schedule = Number.isInteger(intervalDays) && intervalDays >= 0
+        ? ` · ${schedulePreview(questions, intervalDays, "startAt")}`
+        : " · enter the release interval";
+      byId("assignmentEstimate").textContent =
+        `${questions} questions × ${students} students = ${questions * students} assignments${schedule}`;
+    }
+
+    function renderStudentPicker(filter="") {
+      const term = filter.trim().toLowerCase();
+      const selected = new Set(selectedStudentUuids());
+      const list = reportData.students.filter(student => [student.fullName,student.studentId,student.email,student.batch].some(value => String(value || "").toLowerCase().includes(term)));
+      byId("studentOptions").innerHTML = list.length ? list.map(student => `<label class="student-option"><input class="student-check" type="checkbox" value="${escapeHtml(student.studentUuid)}" ${selected.has(student.studentUuid) ? "checked" : ""}><span><strong>${escapeHtml(student.fullName)}</strong><br>${escapeHtml(student.studentId)} · ${escapeHtml(student.batch || "No batch")} · ${escapeHtml(student.email || "")}</span></label>`).join("") : `<div class="empty-state">No matching students.</div>`;
+      document.querySelectorAll(".student-check").forEach(box => box.addEventListener("change",updateSelectedStudentCount));
+      updateSelectedStudentCount();
+    }
+
+    function selectedBankStudentUuids() { return Array.from(document.querySelectorAll(".bank-student-check:checked")).map(box => box.value); }
+
+    function updateBankSelectedStudentCount() {
+      const count = selectedBankStudentUuids().length;
+      byId("bankSelectedStudentCount").textContent = count + (count === 1 ? " student selected" : " students selected");
+      updateBankAssignmentEstimate();
+    }
+
+    function renderBankStudentPicker(filter="") {
+      const term = filter.trim().toLowerCase();
+      const selected = new Set(selectedBankStudentUuids());
+      const list = reportData.students.filter(student => [student.fullName,student.studentId,student.email,student.batch].some(value => String(value || "").toLowerCase().includes(term)));
+      byId("bankStudentOptions").innerHTML = list.length ? list.map(student => `<label class="student-option"><input class="bank-student-check" type="checkbox" value="${escapeHtml(student.studentUuid)}" ${selected.has(student.studentUuid) ? "checked" : ""}><span><strong>${escapeHtml(student.fullName)}</strong><br>${escapeHtml(student.studentId)} · ${escapeHtml(student.batch || "No batch")} · ${escapeHtml(student.email || "")}</span></label>`).join("") : `<div class="empty-state">No matching students.</div>`;
+      document.querySelectorAll(".bank-student-check").forEach(box => box.addEventListener("change",updateBankSelectedStudentCount));
+      updateBankSelectedStudentCount();
+    }
+
+    function fillSelect(selectId, items, valueKey, labelBuilder, firstLabel) {
+      const select = byId(selectId); const current = select.value;
+      select.innerHTML = `<option value="">${escapeHtml(firstLabel)}</option>` + items.map(item => `<option value="${escapeHtml(item[valueKey])}">${escapeHtml(labelBuilder(item))}</option>`).join("");
+      if (Array.from(select.options).some(option => option.value === current)) select.value = current;
+    }
+
+    function populateControls() {
+      const batches = reportData.batches.map(batch => ({value:batch,label:batch}));
+      ["targetBatch","bankTargetBatch","assignmentBatchFilter","resultBatchFilter"].forEach(id => fillSelect(id,batches,"value",item => item.label,["targetBatch","bankTargetBatch"].includes(id) ? "Choose batch" : "All batches"));
+      ["assignmentStudentFilter","resultStudentFilter"].forEach(id => fillSelect(id,reportData.students,"studentUuid",student => `${student.fullName} (${student.studentId})`,"All students"));
+      ["assignmentTaskFilter","resultTaskFilter"].forEach(id => fillSelect(id,reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks"));
+      const testStudents = reportData.students.filter(student => String(student.studentId || "").trim().toUpperCase().startsWith("ASCENTTEST"));
+      fillSelect("testStudentClearSelect",testStudents,"studentUuid",student => `${student.fullName} (${student.studentId})`,"Choose a test student");
+      byId("clearTestRegisterButton").disabled = !testStudents.length;
+      renderStudentPicker(byId("studentSearch").value);
+      renderBankStudentPicker(byId("bankStudentSearch").value);
+    }
+
+    function summaryValue(id,value,suffix="") { byId(id).textContent = value === null || value === undefined ? "—" : formatNumber(value) + suffix; }
+
+    function renderSummary() {
+      const s = reportData.summary || {};
+      summaryValue("activeTasksValue",s.activeTasks || 0); summaryValue("assignedStudentsValue",s.assignedStudents || 0);
+      summaryValue("completedValue",s.completed || 0); summaryValue("notAttemptedValue",s.notAttempted || 0);
+      summaryValue("averageScoreValue",s.averageScore);
+    }
+
+    function renderCompletionChart() {
+      const s = reportData.summary || {}; const total = Number(s.totalAssignments || 0); const completed = Number(s.completed || 0); const pending = Number(s.notAttempted || 0); const other = Math.max(total-completed-pending,0);
+      if (!total) { byId("completionChart").innerHTML = `<div class="line-empty">No assignments yet.</div>`; return; }
+      const pct = value => (value / total * 100).toFixed(2);
+      byId("completionChart").innerHTML = `<div class="completion-bar"><div class="completion-segment completed" style="width:${pct(completed)}%" title="Completed: ${completed}"></div><div class="completion-segment not-attempted" style="width:${pct(pending)}%" title="Not attempted: ${pending}"></div><div class="completion-segment other" style="width:${pct(other)}%" title="Scheduled/withdrawn: ${other}"></div></div><div class="chart-legend"><span><i class="legend-dot completed"></i>Completed: <strong>${completed}</strong></span><span><i class="legend-dot not-attempted"></i>Not attempted: <strong>${pending}</strong></span><span><i class="legend-dot other"></i>Scheduled/withdrawn: <strong>${other}</strong></span></div>`;
+    }
+
+    function collectNumericCriteria(object,prefix="",output={}) {
+      if (!object || typeof object !== "object") return output;
+      Object.entries(object).forEach(([key,value]) => {
+        const name = prefix ? `${prefix} · ${key}` : key;
+        if (typeof value === "number" && Number.isFinite(value)) output[name] = value;
+        else if (value && typeof value === "object" && !Array.isArray(value)) collectNumericCriteria(value,name,output);
+      });
+      return output;
+    }
+
+    function humaniseKey(key) { return key.replace(/_/g," ").replace(/\b\w/g,char => char.toUpperCase()); }
+
+    function criterionAverages(rows) {
+      const totals = {};
+      rows.forEach(row => {
+        const criteria = collectNumericCriteria(row.criterionScores || {});
+        Object.entries(criteria).forEach(([key,value]) => { if (!totals[key]) totals[key] = {sum:0,count:0}; totals[key].sum += Number(value); totals[key].count += 1; });
+      });
+      return Object.entries(totals).map(([key,item]) => ({name:humaniseKey(key),average:item.sum/item.count})).sort((a,b) => b.average-a.average).slice(0,10);
+    }
+
+    function renderCriterionChart() {
+      const data = criterionAverages(reportData.results.filter(row => row.attemptCount > 0));
+      if (!data.length) { byId("criterionChart").innerHTML = `<div class="line-empty">Criterion scores will appear after submissions.</div>`; return; }
+      const max = Math.max(...data.map(item => item.average),1);
+      byId("criterionChart").innerHTML = `<div class="criterion-chart">${data.map(item => `<div class="criterion-row"><div class="criterion-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div><div class="criterion-track"><div class="criterion-fill" style="width:${Math.min(item.average/max*100,100)}%"></div></div><div class="criterion-value">${item.average.toFixed(2)}</div></div>`).join("")}</div>`;
+    }
+
+    function renderLineSvg(containerId,points,emptyMessage) {
+      const container = byId(containerId);
+      if (!points.length) { container.innerHTML = `<div class="line-empty">${escapeHtml(emptyMessage)}</div>`; return; }
+      const width = 600,height = 220,padX = 44,padY = 24; const values = points.map(point => point.value); const max = Math.max(...values,10); const min = Math.min(...values,0); const range = Math.max(max-min,1);
+      const coords = points.map((point,index) => ({x:padX + (points.length === 1 ? (width-2*padX)/2 : index*(width-2*padX)/(points.length-1)), y:height-padY-(point.value-min)*(height-2*padY)/range, ...point}));
+      const polyline = coords.map(point => `${point.x},${point.y}`).join(" ");
+      const dots = coords.map(point => `<circle cx="${point.x}" cy="${point.y}" r="4"><title>${escapeHtml(point.label)}: ${point.value.toFixed(2)}</title></circle>`).join("");
+      const labels = coords.filter((_,index) => points.length <= 6 || index % Math.ceil(points.length/6) === 0 || index === points.length-1).map(point => `<text x="${point.x}" y="${height-4}" text-anchor="middle">${escapeHtml(point.shortLabel || point.label)}</text>`).join("");
+      container.innerHTML = `<svg class="line-chart" viewBox="0 0 ${width} ${height}" role="img"><line x1="${padX}" y1="${height-padY}" x2="${width-padX}" y2="${height-padY}" stroke="#cbd8e4"/><line x1="${padX}" y1="${padY}" x2="${padX}" y2="${height-padY}" stroke="#cbd8e4"/><polyline fill="none" stroke="#27679d" stroke-width="3" points="${polyline}"/><g fill="#143a60">${dots}</g><g font-size="10" fill="#6c7b8d">${labels}</g></svg>`;
+    }
+
+    function renderProgressChart() {
+      const groups = {};
+      reportData.results.filter(row => row.latestSubmittedAt && row.latestScore !== null).forEach(row => { const key = new Date(row.latestSubmittedAt).toISOString().slice(0,10); if (!groups[key]) groups[key] = []; groups[key].push(Number(row.latestScore)); });
+      const points = Object.keys(groups).sort().map(key => ({label:new Date(key+"T00:00:00").toLocaleDateString(),shortLabel:new Date(key+"T00:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}),value:groups[key].reduce((a,b)=>a+b,0)/groups[key].length}));
+      renderLineSvg("progressChart",points,"Scores will appear after submissions.");
+    }
+
+    function statusClass(status) { return "status-" + String(status || "").toLowerCase().replace(/_/g,"-"); }
+
+    function renderTasksTable() {
+      const tasks = reportData.tasks || [];
+      if (!tasks.length) { byId("tasksTableWrap").innerHTML = `<div class="empty-state">No tasks have been created.</div>`; return; }
+      byId("tasksTableWrap").innerHTML = `<table><thead><tr><th>Title</th><th>Question</th><th>Rubric</th><th>Sequence</th><th>Status</th><th>Action</th></tr></thead><tbody>${tasks.map(task => `<tr><td>${escapeHtml(task.title || "—")}</td><td class="question-cell">${escapeHtml(task.question || "—")}</td><td>${escapeHtml(task.rubricType || "—")}</td><td>${escapeHtml(task.sequenceNo || "—")}</td><td><span class="status-badge ${task.isActive ? "status-completed" : "status-withdrawn"}">${task.isActive ? "ACTIVE" : "WITHDRAWN"}</span></td><td>${isCeo() ? "—" : `<button class="small-button ${task.isActive ? "danger-button" : ""} task-toggle" type="button" data-task="${escapeHtml(task.taskUuid)}" data-active="${task.isActive ? "false" : "true"}">${task.isActive ? "Withdraw" : "Reactivate"}</button>`}</td></tr>`).join("")}</tbody></table>`;
+      document.querySelectorAll(".task-toggle").forEach(button => button.addEventListener("click",() => setTaskActive(button.dataset.task,button.dataset.active === "true")));
+    }
+
+    function resultFilter(rows,prefix) {
+      const batch = byId(prefix+"BatchFilter").value; const student = byId(prefix+"StudentFilter").value; const task = byId(prefix+"TaskFilter").value; const status = byId(prefix+"StatusFilter").value;
+      const from = prefix === "result" ? byId("resultDateFrom").value : ""; const to = prefix === "result" ? byId("resultDateTo").value : "";
+      return rows.filter(row => {
+        if (batch && String(row.batch || "") !== batch) return false;
+        if (student && row.studentUuid !== student) return false;
+        if (task && row.taskUuid !== task) return false;
+        if (status && row.status !== status) return false;
+        const dateValue = row.latestSubmittedAt || row.availableAt;
+        if (from && dateValue && new Date(dateValue) < new Date(from+"T00:00:00")) return false;
+        if (to && dateValue && new Date(dateValue) > new Date(to+"T23:59:59")) return false;
+        return true;
+      });
+    }
+
+    function renderAssignmentsTable() {
+      visibleAssignmentRows = resultFilter(reportData.results || [],"assignment");
+      byId("assignmentCountLabel").textContent = `${visibleAssignmentRows.length} assignments shown`;
+      if (!visibleAssignmentRows.length) { byId("assignmentsTableWrap").innerHTML = `<div class="empty-state">No assignments match these filters.</div>`; return; }
+      byId("assignmentsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Available</th><th>Due</th><th>Submitted</th><th>Status</th></tr></thead><tbody>${visibleAssignmentRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td>${escapeHtml(formatDate(row.availableAt))}</td><td>${escapeHtml(formatDate(row.dueAt))}</td><td>${Number(row.attemptCount || 0) > 0 ? "Yes" : "No"}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td></tr>`).join("")}</tbody></table>`;
+    }
+
+    function renderResultsTable() {
+      visibleResultRows = resultFilter(reportData.results || [],"result");
+      byId("resultCountLabel").textContent = `${visibleResultRows.length} result rows shown`;
+      if (!visibleResultRows.length) { byId("resultsTableWrap").innerHTML = `<div class="empty-state">No results match these filters.</div>`; return; }
+      byId("resultsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Status</th><th>Score</th><th>Submitted At</th></tr></thead><tbody>${visibleResultRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}<br>${escapeHtml(row.email || "")}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td><td>${escapeHtml(formatNumber(row.latestScore))}</td><td>${escapeHtml(formatDate(row.latestSubmittedAt))}</td></tr>`).join("")}</tbody></table>`;
+    }
+
+    function studentField(student, keys) {
+      for (const key of keys) {
+        if (student && student[key] !== null && student[key] !== undefined && student[key] !== "") {
+          return student[key];
+        }
+      }
+      return "";
+    }
+
+    function studentUuidOf(row) {
+      return String(studentField(row,["studentUuid","student_uuid","uuid","id"]) || "");
+    }
+
+    function submittedAtOf(row) {
+      const value = studentField(row,["submittedAt","submitted_at","createdAt","created_at"]);
+      const timestamp = Date.parse(value || "");
+      return Number.isFinite(timestamp) ? timestamp : 0;
+    }
+
+    function scoreOf(row) {
+      return exportNumber(row && (row.score ?? row.finalScore ?? row.totalScore ?? row.latestScore));
+    }
+
+    function uniqueStudentAssignments(data, studentUuid) {
+      const latestByTask = new Map();
+      (Array.isArray(data.assignments) ? data.assignments : [])
+        .filter(row => studentUuidOf(row) === studentUuid)
+        .forEach(function (row) {
+          const key = String(row.assignmentUuid || row.taskUuid || row.question || "");
+          latestByTask.set(key,selectedAssignment(latestByTask.get(key),row));
+        });
+      return Array.from(latestByTask.values());
+    }
+
+    function studentSubmissions(data, studentUuid) {
+      const latestBySubmission = new Map();
+      (Array.isArray(data.submissions) ? data.submissions : [])
+        .filter(row => studentUuidOf(row) === studentUuid)
+        .forEach(function (row) {
+          const key = String(row.submissionUuid || row.submission_uuid || row.assignmentUuid || `${row.question || ""}|${submittedAtOf(row)}`);
+          latestBySubmission.set(key,row);
+        });
+      return Array.from(latestBySubmission.values())
+        .sort((left,right) => submittedAtOf(left) - submittedAtOf(right));
+    }
+
+    function latestStudentScore(data, studentUuid) {
+      const scored = studentSubmissions(data,studentUuid)
+        .map(row => ({row,score:scoreOf(row)}))
+        .filter(item => item.score !== null);
+      return scored.length ? scored[scored.length - 1].score : null;
+    }
+
+    function academicYearLabel(value) {
+      return value === "FIRST_YEAR" ? "First Year" : value === "SECOND_YEAR" ? "Second Year" : "Not set";
+    }
+
+    async function loadCohortData() {
+      const data = await callRpc(
+        RPC.cohortRoster,
+        {p_session_token:currentSession.sessionToken}
+      );
+      if (!data || data.ok !== true) {
+        throw new Error(data && data.message ? data.message : "Cohort data could not be loaded.");
+      }
+      cohortData = {
+        students:Array.isArray(data.students) ? data.students : [],
+        groups:Array.isArray(data.groups) ? data.groups : []
+      };
+      return cohortData;
+    }
+
+    function cohortStudentUuidsForYear(year) {
+      return cohortData.students
+        .filter(student => student.academicYear === year)
+        .map(student => studentUuidOf(student))
+        .filter(Boolean);
+    }
+
+    function formatCriteriaInline(row) {
+      const criteria = workbookCriteriaForRubric(
+        row.rubricType,
+        criterionScoreMap(row.criterionScores,row.detailedFeedback)
+      ).filter(item => item.label && item.score !== null);
+      return criteria.length
+        ? criteria.map(item => `${item.label}: ${formatNumber(item.score)}`).join(" · ")
+        : "—";
+    }
+
+    async function loadStudentPerformance(force=false) {
+      if (studentPerformanceData && !force) {
+        renderStudentRoster();
+        return;
+      }
+
+      showLoading("Loading student performance…");
+      try {
+        const [data] = await Promise.all([
+          callRpc(RPC.workbookExport,{p_session_token:currentSession.sessionToken}),
+          loadCohortData()
+        ]);
+        if (!data || data.ok !== true) {
+          throw new Error(data && data.message ? data.message : "Student performance data could not be loaded.");
+        }
+        await addMobileNumbersToWorkbook(data);
+        studentPerformanceData = data;
+        renderStudentRoster();
+        setStatus(byId("studentsStatus"),"Student records updated.","success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("studentsStatus"),error.message || "ASCENT could not load student records.","error");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function renderStudentRoster() {
+      const data = studentPerformanceData;
+      const students = (cohortData.students.length ? cohortData.students : (data && Array.isArray(data.students) ? data.students : [])).slice()
+        .sort((left,right) => exportText(studentField(left,["batch","batchName"])).localeCompare(exportText(studentField(right,["batch","batchName"]))) || exportText(studentField(left,["name","fullName"])).localeCompare(exportText(studentField(right,["name","fullName"]))));
+      byId("studentRosterCount").textContent = `${students.length} student${students.length === 1 ? "" : "s"}`;
+      if (!students.length) {
+        byId("studentRosterTableWrap").innerHTML = `<div class="empty-state">No student records are available yet.</div>`;
+        return;
+      }
+      byId("studentRosterTableWrap").innerHTML = `<table><thead><tr><th>Roll Number</th><th>Name</th><th>Academic Year</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th></th></tr></thead><tbody>${students.map(student => {
+        const studentUuid = studentUuidOf(student);
+        const lastScore = latestStudentScore(data,studentUuid);
+        return `<tr><td>${escapeHtml(studentField(student,["rollNo","studentId","student_id"]) || "—")}</td><td><strong>${escapeHtml(studentField(student,["name","fullName"]) || "—")}</strong><br>${escapeHtml(studentField(student,["emailId","email"]) || "")}</td><td><select class="academic-year-select" data-student="${escapeHtml(studentUuid)}"><option value="">Not set</option><option value="FIRST_YEAR" ${student.academicYear === "FIRST_YEAR" ? "selected" : ""}>First Year</option><option value="SECOND_YEAR" ${student.academicYear === "SECOND_YEAR" ? "selected" : ""}>Second Year</option></select></td><td>${escapeHtml(studentField(student,["batch","batchName"]) || "—")}</td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button></td></tr>`;
+      }).join("")}</tbody></table>`;
+      document.querySelectorAll(".student-profile-button").forEach(button => button.addEventListener("click",() => renderStudentProfile(button.dataset.student)));
+      document.querySelectorAll(".academic-year-select").forEach(select => select.addEventListener("change",async () => {
+        select.disabled = true;
+        try {
+          const result = await callRpc(RPC.setAcademicYear,{p_session_token:currentSession.sessionToken,p_student_uuid:select.dataset.student,p_academic_year:select.value || null});
+          if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Academic year could not be saved.");
+          await loadCohortData();
+          renderStudentRoster();
+          setStatus(byId("studentsStatus"),"Academic year saved.","success");
+        } catch (error) {
+          console.error(error);
+          setStatus(byId("studentsStatus"),error.message || "Academic year could not be saved.","error");
+          select.disabled = false;
+        }
+      }));
+    }
+
+    function renderStudentProfile(studentUuid) {
+      const data = studentPerformanceData;
+      const student = cohortData.students.find(item => studentUuidOf(item) === String(studentUuid)) || (data && Array.isArray(data.students) ? data.students : []).find(item => studentUuidOf(item) === String(studentUuid));
+      if (!student) return;
+      const assignments = uniqueStudentAssignments(data,studentUuid);
+      const submissions = studentSubmissions(data,studentUuid);
+      const scored = submissions.map(row => ({row,score:scoreOf(row)})).filter(item => item.score !== null);
+      const answeredAssignments = assignments.filter(item => Boolean(item.submissionUuid) || submissions.some(submission => String(submission.assignmentUuid || "") === String(item.assignmentUuid || "")));
+      const questionsSent = assignments.length;
+      const grouped = new Map();
+      submissions.forEach(function (row) {
+        const key = `${exportText(row.rubricType)}|${exportText(row.question)}`;
+        if (!grouped.has(key)) grouped.set(key,[]);
+        grouped.get(key).push(row);
+      });
+      const questionRows = Array.from(grouped.values()).map(function (rows) {
+        rows.sort((left,right) => submittedAtOf(left) - submittedAtOf(right));
+        const scoredRows = rows.filter(row => scoreOf(row) !== null);
+        const first = scoredRows[0] || null;
+        const latest = scoredRows[scoredRows.length - 1] || null;
+        return {rubricType:rows[0].rubricType,question:rows[0].question,criteria:latest ? formatCriteriaInline(latest) : "—",firstScore:first ? scoreOf(first) : null,lastScore:latest ? scoreOf(latest) : null};
+      });
+      const profile = byId("studentProfilePanel");
+      profile.hidden = false;
+      profile.innerHTML = `<div class="student-profile"><div class="student-profile-head"><div><h3>${escapeHtml(studentField(student,["name","fullName"]) || "Student")}</h3><div class="panel-subtitle">Individual ASCENT performance record</div></div><button id="closeStudentProfileButton" class="secondary-button" type="button">Close</button></div><div class="student-detail-grid"><div class="student-detail"><strong>Roll Number</strong><span>${escapeHtml(studentField(student,["rollNo","studentId"]) || "—")}</span></div><div class="student-detail"><strong>Academic Year</strong><span>${escapeHtml(academicYearLabel(student.academicYear))}</span></div><div class="student-detail"><strong>Batch</strong><span>${escapeHtml(studentField(student,["batch","batchName"]) || "—")}</span></div><div class="student-detail"><strong>Date of Joining</strong><span>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])))}</span></div><div class="student-detail"><strong>Date Last Accessed</strong><span>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])))}</span></div><div class="student-detail"><strong>Last Score</strong><span>${escapeHtml(formatNumber(scored.length ? scored[scored.length - 1].score : null))}</span></div></div><div class="student-progress-grid"><div class="panel chart-box"><div class="panel-title-row"><div><h3>Score progress</h3><div class="panel-subtitle">Scores in the order responses were submitted.</div></div></div><div id="studentProgressLine"></div></div><div class="panel"><div class="panel-title-row"><div><h3>Response completion</h3><div class="panel-subtitle">Questions sent versus submitted.</div></div></div><div class="completion-ring-wrap"><div id="studentCompletionRing" class="completion-ring"><div class="completion-ring-copy"><strong>${answeredAssignments.length}/${questionsSent}</strong><span>submitted / sent</span></div></div></div></div></div><div class="panel"><div class="panel-title-row"><div><h3>Question-wise performance</h3><div class="panel-subtitle">Criterion scores shown for the latest response to each question.</div></div></div><div class="table-wrap"><table class="student-question-table"><thead><tr><th>Question Type</th><th>Question</th><th>Criterion-wise Scores</th><th>First Score</th><th>Last Score</th></tr></thead><tbody>${questionRows.length ? questionRows.map(row => `<tr><td>${escapeHtml(rubricLabel(row.rubricType))}</td><td class="question-cell">${escapeHtml(row.question || "—")}</td><td>${escapeHtml(row.criteria)}</td><td>${escapeHtml(formatNumber(row.firstScore))}</td><td>${escapeHtml(formatNumber(row.lastScore))}</td></tr>`).join("") : `<tr><td colspan="5" class="empty-state">No submitted responses yet.</td></tr>`}</tbody></table></div></div></div>`;
+      byId("closeStudentProfileButton").addEventListener("click",() => { profile.hidden = true; profile.innerHTML = ""; });
+      const points = scored.map(item => ({label:formatDate(studentField(item.row,["submittedAt","submitted_at"])),shortLabel:String(scored.indexOf(item) + 1),value:item.score}));
+      renderLineSvg("studentProgressLine",points,"Scores will appear after the student submits responses.");
+      const completion = questionsSent ? Math.round(answeredAssignments.length / questionsSent * 100) : 0;
+      byId("studentCompletionRing").style.background = `conic-gradient(#27679d 0 ${completion}%, #e4edf5 ${completion}% 100%)`;
+      profile.scrollIntoView({behavior:"smooth",block:"start"});
+    }
+
+    function bankCategoriesForType(bankType="") {
+      return (questionBankData.categories || []).filter(category => !bankType || category.bankType === bankType);
+    }
+
+    function fillBankCategorySelect(selectId,bankType,firstLabel="All categories",preferredValue=null) {
+      const select = byId(selectId);
+      const current = preferredValue !== null ? preferredValue : select.value;
+      const categories = bankCategoriesForType(bankType);
+      select.innerHTML = `<option value="">${escapeHtml(firstLabel)}</option>` + categories.map(category => `<option value="${escapeHtml(category.categoryCode)}">${escapeHtml(category.categoryCode + " · " + category.categoryName)}</option>`).join("");
+      if (Array.from(select.options).some(option => option.value === current)) select.value = current;
+    }
+
+    function updateBankCategoryControls() {
+      fillBankCategorySelect("bankCategoryFilter",byId("bankTypeFilter").value,"All categories");
+      fillBankCategorySelect("bankEditCategory",byId("bankEditType").value,"Choose category");
+    }
+
+    function filteredQuestionBankRows() {
+      const bankType = byId("bankTypeFilter").value;
+      const categoryCode = byId("bankCategoryFilter").value;
+      const difficulty = byId("bankDifficultyFilter").value;
+      const term = byId("bankSearchFilter").value.trim().toLowerCase();
+      return (questionBankData.questions || []).filter(question => {
+        if (bankType && question.bankType !== bankType) return false;
+        if (categoryCode && question.categoryCode !== categoryCode) return false;
+        if (difficulty && Number(question.difficultyRank) !== Number(difficulty)) return false;
+        if (term) {
+          const haystack = [question.question,question.title,question.coachingFocus,question.sourceIdentifier,question.categoryName].join(" ").toLowerCase();
+          if (!haystack.includes(term)) return false;
+        }
+        return true;
+      });
+    }
+
+    function updateBankSelectedCount() {
+      const count = selectedBankQuestions.size;
+      byId("bankSelectedCount").textContent = count + (count === 1 ? " question selected" : " questions selected");
+      updateBankAssignmentEstimate();
+    }
+
+    function estimatedBankTargetCount() {
+      const targetType = byId("bankTargetType").value;
+      if (targetType === "ALL") return reportData.students.length;
+      if (targetType === "YEAR") return cohortStudentUuidsForYear(byId("bankTargetYear").value).length;
+      if (targetType === "BATCH") return reportData.students.filter(student => String(student.batch || "").trim().toLowerCase() === String(byId("bankTargetBatch").value || "").trim().toLowerCase()).length;
+      return selectedBankStudentUuids().length;
+    }
+
+    function updateBankAssignmentEstimate() {
+      const questions = selectedBankQuestions.size;
+      const students = estimatedBankTargetCount();
+      const rawInterval = String(byId("bankIntervalDays").value || "").trim();
+      if (!questions || !students) {
+        byId("bankAssignmentEstimate").textContent = "";
+        return;
+      }
+      const intervalDays = Number(rawInterval);
+      const schedule = Number.isInteger(intervalDays) && intervalDays >= 0
+        ? ` · ${schedulePreview(questions, intervalDays, "bankStartAt")}`
+        : " · enter the release interval";
+      byId("bankAssignmentEstimate").textContent =
+        `${questions} questions × ${students} students = ${questions * students} assignments${schedule}`;
+    }
+
+    function renderQuestionBankTable() {
+      visibleBankQuestions = filteredQuestionBankRows();
+      byId("questionBankCountLabel").textContent = `${visibleBankQuestions.length} questions shown · ${questionBankData.questions.length} loaded`;
+      if (!visibleBankQuestions.length) {
+        byId("questionBankTableWrap").innerHTML = `<div class="empty-state">No question-bank records match these filters.</div>`;
+        return;
+      }
+      const canSelect = !isCeo();
+      const canEdit = isAdmin();
+      byId("questionBankTableWrap").innerHTML = `<table><thead><tr><th>${canSelect ? "Select" : ""}</th><th>Identifier</th><th>Bank / Category</th><th>Question</th><th>Difficulty</th><th>Rubric</th><th>Time</th><th>Follow-up</th><th>Status</th><th>Action</th></tr></thead><tbody>${visibleBankQuestions.map(question => {
+        const selectable = question.isActive && question.isApproved && question.isSelectable;
+        const checked = selectedBankQuestions.has(question.questionUuid);
+        const actions = canEdit ? `<div class="bank-actions"><button class="small-button bank-edit-button" type="button" data-question="${escapeHtml(question.questionUuid)}">Edit</button><button class="small-button ${question.isActive ? "danger-button" : ""} bank-active-button" type="button" data-question="${escapeHtml(question.questionUuid)}" data-active="${question.isActive ? "false" : "true"}">${question.isActive ? "Withdraw" : "Reactivate"}</button></div>` : "—";
+        return `<tr><td>${canSelect && selectable ? `<input class="bank-question-check" type="checkbox" value="${escapeHtml(question.questionUuid)}" ${checked ? "checked" : ""}>` : ""}</td><td><strong>${escapeHtml(question.sourceIdentifier)}</strong><div class="bank-meta">${escapeHtml(question.sourceSystem || "")}</div></td><td><strong>${escapeHtml(question.bankType)}</strong><br>${escapeHtml(question.categoryCode)} · ${escapeHtml(question.categoryName)}${question.lumUnitNo ? `<div class="bank-meta">LUM Unit ${escapeHtml(question.lumUnitNo)}</div>` : ""}</td><td class="question-cell"><strong>${escapeHtml(question.title || "")}</strong><br>${escapeHtml(question.question)}${question.coachingFocus ? `<div class="bank-meta">Focus: ${escapeHtml(question.coachingFocus)}</div>` : ""}</td><td><span class="difficulty-pill difficulty-${escapeHtml(question.difficultyRank)}">${escapeHtml(question.difficultyRank)} · ${escapeHtml(question.difficultyLabel)}</span></td><td>${escapeHtml(question.rubricType)}</td><td>${escapeHtml(question.responseSeconds)} sec<div class="bank-meta">Prep ${escapeHtml(question.prepSeconds)} sec</div></td><td>${escapeHtml(question.followupMode || "NONE")}</td><td><span class="status-badge ${question.isActive && question.isApproved ? "status-completed" : "status-withdrawn"}">${question.isActive ? (question.isApproved ? "ACTIVE" : "UNAPPROVED") : "WITHDRAWN"}</span></td><td>${actions}</td></tr>`;
+      }).join("")}</tbody></table>`;
+      document.querySelectorAll(".bank-question-check").forEach(box => box.addEventListener("change",() => {
+        if (box.checked) selectedBankQuestions.add(box.value); else selectedBankQuestions.delete(box.value);
+        updateBankSelectedCount();
+      }));
+      document.querySelectorAll(".bank-edit-button").forEach(button => button.addEventListener("click",() => openBankQuestionEditor(button.dataset.question)));
+      document.querySelectorAll(".bank-active-button").forEach(button => button.addEventListener("click",() => setBankQuestionActive(button.dataset.question,button.dataset.active === "true")));
+      updateBankSelectedCount();
+    }
+
+    async function loadQuestionBank(message="Loading question bank…") {
+      showLoading(message);
+      try {
+        const result = await callRpc(RPC.questionBank,{
+          p_session_token:currentSession.sessionToken,
+          p_bank_type:null,
+          p_category_code:null,
+          p_difficulty_rank:null,
+          p_search:null,
+          p_include_inactive:isAdmin() && byId("bankIncludeInactive").checked,
+          p_include_source_duplicates:false,
+          p_limit:1000,
+          p_offset:0
+        });
+        if (!result || result.ok !== true) {
+          if (result && result.error === "invalid_staff_session") { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./trainer-login.html"; return; }
+          throw new Error(result && result.message ? result.message : "Question bank could not be loaded.");
+        }
+        questionBankData = result;
+        const loadedIds = new Set((result.questions || []).filter(question => question.isActive && question.isApproved && question.isSelectable).map(question => question.questionUuid));
+        selectedBankQuestions = new Set(Array.from(selectedBankQuestions).filter(uuid => loadedIds.has(uuid)));
+        updateBankCategoryControls();
+        renderQuestionBankTable();
+        setStatus(byId("questionBankStatus"),`Question bank updated. ${result.totalMatching} records match the current administrator view.`,"success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("questionBankStatus"),"ASCENT could not load the question bank. " + error.message,"error");
+      } finally { hideLoading(); }
+    }
+
+    function resetBankQuestionEditor() {
+      byId("bankQuestionEditor").reset();
+      byId("bankEditQuestionUuid").value = "";
+      byId("bankEditType").value = "LUM";
+      byId("bankEditDifficulty").value = "1";
+      byId("bankEditResponseSeconds").value = "60";
+      byId("bankEditPrepSeconds").value = "10";
+      byId("bankEditFollowupMode").value = "NONE";
+      byId("bankEditActive").checked = true;
+      byId("bankEditApproved").checked = true;
+      byId("bankEditorHeading").textContent = "Add Question";
+      fillBankCategorySelect("bankEditCategory","LUM","Choose category");
+      byId("bankEditFixedFollowupGroup").hidden = true;
+      setStatus(byId("bankEditorStatus"),"","");
+    }
+
+    function openBankQuestionEditor(questionUuid=null) {
+      if (!isAdmin()) return;
+      resetBankQuestionEditor();
+      if (questionUuid) {
+        const question = (questionBankData.questions || []).find(item => item.questionUuid === questionUuid);
+        if (!question) { setStatus(byId("questionBankStatus"),"The selected question is not in the loaded bank view.","error"); return; }
+        byId("bankEditorHeading").textContent = "Edit Question";
+        byId("bankEditQuestionUuid").value = question.questionUuid;
+        byId("bankEditType").value = question.bankType;
+        fillBankCategorySelect("bankEditCategory",question.bankType,"Choose category",question.categoryCode);
+        byId("bankEditTitle").value = question.title || "";
+        byId("bankEditQuestion").value = question.question || "";
+        byId("bankEditInstructions").value = question.instructions || "";
+        byId("bankEditCoachingFocus").value = question.coachingFocus || "";
+        byId("bankEditCanDo").value = question.canDo || "";
+        byId("bankEditDifficulty").value = String(question.difficultyRank || 1);
+        byId("bankEditResponseSeconds").value = String(question.responseSeconds || 60);
+        byId("bankEditPrepSeconds").value = String(question.prepSeconds || 10);
+        byId("bankEditFollowupMode").value = question.followupMode || "NONE";
+        byId("bankEditFixedFollowup").value = question.fixedFollowup || "";
+        byId("bankEditFollowupFocus").value = (question.approvedFollowupFocus || []).join(", ");
+        byId("bankEditActive").checked = Boolean(question.isActive);
+        byId("bankEditApproved").checked = Boolean(question.isApproved);
+        byId("bankEditFixedFollowupGroup").hidden = byId("bankEditFollowupMode").value !== "FIXED_FOLLOW_UP";
+      }
+      byId("bankQuestionEditor").hidden = false;
+      byId("bankQuestionEditor").scrollIntoView({behavior:"smooth",block:"start"});
+    }
+
+    function closeBankQuestionEditor() {
+      byId("bankQuestionEditor").hidden = true;
+      resetBankQuestionEditor();
+    }
+
+    async function saveBankQuestion(event) {
+      event.preventDefault();
+      if (!isAdmin()) return;
+      const bankType = byId("bankEditType").value;
+      const categoryCode = byId("bankEditCategory").value;
+      const question = byId("bankEditQuestion").value.trim();
+      const followupMode = byId("bankEditFollowupMode").value;
+      if (!categoryCode) { setStatus(byId("bankEditorStatus"),"Choose the question category.","error"); return; }
+      if (!question) { setStatus(byId("bankEditorStatus"),"Enter the question.","error"); return; }
+      if (followupMode === "FIXED_FOLLOW_UP" && !byId("bankEditFixedFollowup").value.trim()) { setStatus(byId("bankEditorStatus"),"Enter the fixed follow-up question.","error"); return; }
+      const button = byId("saveBankQuestionButton"); button.disabled = true; button.textContent = "Saving…";
+      try {
+        const focuses = byId("bankEditFollowupFocus").value.split(",").map(value => value.trim().toLowerCase()).filter(Boolean);
+        const result = await callRpc(RPC.upsertQuestionBank,{
+          p_session_token:currentSession.sessionToken,
+          p_question_uuid:byId("bankEditQuestionUuid").value || null,
+          p_bank_type:bankType,
+          p_category_code:categoryCode,
+          p_question:question,
+          p_title:byId("bankEditTitle").value.trim() || null,
+          p_instructions:byId("bankEditInstructions").value.trim() || null,
+          p_coaching_focus:byId("bankEditCoachingFocus").value.trim() || null,
+          p_can_do:byId("bankEditCanDo").value.trim() || null,
+          p_difficulty_rank:Number(byId("bankEditDifficulty").value),
+          p_response_seconds:Number(byId("bankEditResponseSeconds").value || 60),
+          p_prep_seconds:Number(byId("bankEditPrepSeconds").value || 10),
+          p_followup_mode:followupMode,
+          p_fixed_followup:followupMode === "FIXED_FOLLOW_UP" ? byId("bankEditFixedFollowup").value.trim() : null,
+          p_approved_followup_focus:focuses,
+          p_is_active:byId("bankEditActive").checked,
+          p_is_approved:byId("bankEditApproved").checked
+        });
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Question could not be saved.");
+        setStatus(byId("questionBankStatus"),result.message,"success");
+        closeBankQuestionEditor();
+        await loadQuestionBank("Refreshing question bank…");
+      } catch (error) { console.error(error); setStatus(byId("bankEditorStatus"),error.message,"error"); }
+      finally { button.disabled = false; button.textContent = "Save Question"; }
+    }
+
+    async function setBankQuestionActive(questionUuid,isActive) {
+      if (!isAdmin()) return;
+      showLoading(isActive ? "Reactivating bank question…" : "Withdrawing bank question…");
+      try {
+        const result = await callRpc(RPC.questionBankActive,{p_session_token:currentSession.sessionToken,p_question_uuid:questionUuid,p_is_active:isActive});
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Question status could not be changed.");
+        if (!isActive) selectedBankQuestions.delete(questionUuid);
+        await loadQuestionBank("Refreshing question bank…");
+      } catch (error) { console.error(error); setStatus(byId("questionBankStatus"),error.message,"error"); }
+      finally { hideLoading(); }
+    }
+
+    function assignmentResultSummary(result, intervalDays) {
+      const created = Number(result && result.assignmentsCreated || 0);
+      const superseded = Number(result && result.assignmentsSuperseded || 0);
+      const skipped = Number(result && result.assignmentsSkippedAlreadyAnswered || 0);
+      const parts = [
+        `${created} student assignment${created === 1 ? "" : "s"} added`,
+        `release pace: ${scheduleLabel(intervalDays)}`
+      ];
+      if (superseded > 0) {
+        parts.push(`${superseded} older unanswered assignment${superseded === 1 ? "" : "s"} replaced`);
+      }
+      if (skipped > 0) {
+        parts.push(`${skipped} assignment${skipped === 1 ? "" : "s"} skipped because the question was already answered`);
+      }
+      return parts.join(" · ") + ".";
+    }
+
+    async function assignSelectedBankQuestions(event) {
+      event.preventDefault();
+      if (isCeo()) return;
+      const questionUuids = Array.from(selectedBankQuestions);
+      const targetType = byId("bankTargetType").value;
+      const followupMode = byId("bankAssignmentFollowupMode").value;
+      let intervalDays;
+      try {
+        intervalDays = readReleaseInterval("bankIntervalDays");
+      } catch (error) {
+        setStatus(byId("bankAssignmentStatus"),error.message,"error");
+        return;
+      }
+      if (!questionUuids.length) { setStatus(byId("bankAssignmentStatus"),"Select at least one question from the bank.","error"); return; }
+      if (targetType === "YEAR" && !byId("bankTargetYear").value) { setStatus(byId("bankAssignmentStatus"),"Choose First Year or Second Year.","error"); return; }
+      if (targetType === "BATCH" && !byId("bankTargetBatch").value) { setStatus(byId("bankAssignmentStatus"),"Choose the student batch.","error"); return; }
+      if (targetType === "STUDENTS" && !selectedBankStudentUuids().length) { setStatus(byId("bankAssignmentStatus"),"Choose at least one student.","error"); return; }
+      if (followupMode === "FIXED_FOLLOW_UP" && !byId("bankAssignmentFixedFollowup").value.trim()) { setStatus(byId("bankAssignmentStatus"),"Enter the fixed follow-up question.","error"); return; }
+      const bankStudentCount = estimatedBankTargetCount();
+      if (!confirmReleaseSchedule(questionUuids.length, bankStudentCount, intervalDays, "bankStartAt", "bankDueDays")) return;
+      const button = byId("assignBankQuestionsButton"); button.disabled = true; button.textContent = "Assigning…"; setStatus(byId("bankAssignmentStatus"),"","");
+      try {
+        const dueText = byId("bankDueDays").value.trim();
+        const yearStudentUuids = targetType === "YEAR"
+          ? cohortStudentUuidsForYear(byId("bankTargetYear").value)
+          : [];
+        if (targetType === "YEAR" && !yearStudentUuids.length) {
+          throw new Error("No active students are marked as " + academicYearLabel(byId("bankTargetYear").value) + ". Set their academic year in the Students section first.");
+        }
+        const result = await callRpc(RPC.assignQuestionBank,{
+          p_session_token:currentSession.sessionToken,
+          p_question_uuids:questionUuids,
+          p_title_prefix:byId("bankAssignmentTitle").value.trim() || "ASCENT Bank Task",
+          p_target_type:targetType === "YEAR" ? "STUDENTS" : targetType,
+          p_target_batch:targetType === "BATCH" ? byId("bankTargetBatch").value : null,
+          p_student_uuids:targetType === "YEAR" ? yearStudentUuids : targetType === "STUDENTS" ? selectedBankStudentUuids() : null,
+          p_start_at:toIsoOrNull(byId("bankStartAt").value),
+          p_interval_days:intervalDays,
+          p_due_days:dueText === "" ? null : Number(dueText),
+          p_max_attempts:1,
+          p_followup_mode:followupMode,
+          p_fixed_followup:followupMode === "FIXED_FOLLOW_UP" ? byId("bankAssignmentFixedFollowup").value.trim() : null,
+          p_followup_prep_seconds:Number(byId("bankAssignmentPrepSeconds").value || 5),
+          p_followup_response_seconds:Number(byId("bankAssignmentResponseSeconds").value || 20)
+        });
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Bank questions could not be assigned.");
+        setStatus(byId("bankAssignmentStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)} Rubrics were fixed from the Question Bank.`,"success");
+        selectedBankQuestions.clear();
+        renderQuestionBankTable();
+        await loadReport("Refreshing assignments…");
+      } catch (error) { console.error(error); setStatus(byId("bankAssignmentStatus"),error.message,"error"); }
+      finally { button.disabled = false; button.textContent = "Create and Assign Selected Questions"; }
+    }
+
+    function renderReminderDashboard() {
+      const data = reminderData || {};
+      const enabled = data.isEnabled === true;
+      const state = byId("followupState");
+
+      state.className = "reminder-state " + (enabled ? "on" : "off");
+      state.innerHTML = `<span class="reminder-state-dot"></span><span>${enabled ? "ON" : "OFF"}</span>`;
+      byId("toggleFollowupsButton").textContent = enabled ? "Turn Off" : "Turn On";
+      byId("toggleFollowupsButton").classList.toggle("danger-button",enabled);
+      byId("afterReminder1Value").textContent = formatNumber(data.didNotRespondAfterReminder1 || 0);
+      byId("afterReminder2Value").textContent = formatNumber(data.didNotRespondAfterReminder2 || 0);
+      byId("afterFinalReminderValue").textContent = formatNumber(data.didNotRespondAfterFinalReminder || 0);
+      byId("followupDeliveryFailuresValue").textContent = formatNumber(data.deliveryFailures || 0);
+
+      byId("followupActivationNote").textContent = enabled
+        ? `Follow-ups are on for ${data.institutionName || "this institution"}. Only assignments released from ${formatDate(data.enabledAt)} onward are eligible.`
+        : "Follow-ups are off. No institutional reminder emails will be sent.";
+    }
+
+    async function loadReminderDashboard(message="Loading student follow-ups…") {
+      setStatus(byId("followupsStatus"),message,"");
+      try {
+        const result = await callRpc(RPC.reminderDashboard,{p_session_token:currentSession.sessionToken});
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Student follow-ups could not be loaded.");
+        reminderData = result;
+        renderReminderDashboard();
+        setStatus(byId("followupsStatus"),"Student follow-ups updated " + new Date().toLocaleTimeString(),"success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("followupsStatus"),error.message || "Student follow-ups could not be loaded.","error");
+      }
+    }
+
+    async function toggleInstitutionalFollowups() {
+      const enable = reminderData.isEnabled !== true;
+      const confirmation = enable
+        ? "Turn institutional follow-ups ON?\n\nOnly assignments released after activation will be eligible. Existing assignments will not trigger catch-up emails."
+        : "Turn institutional follow-ups OFF?\n\nNo further reminder emails will be sent while follow-ups are off.";
+
+      if (!window.confirm(confirmation)) return;
+
+      const button = byId("toggleFollowupsButton");
+      button.disabled = true;
+      button.textContent = enable ? "Turning On…" : "Turning Off…";
+      setStatus(byId("followupsStatus"),"Saving follow-up setting…","");
+
+      try {
+        const result = await callRpc(RPC.setRemindersEnabled,{
+          p_session_token:currentSession.sessionToken,
+          p_enabled:enable
+        });
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "The follow-up setting could not be changed.");
+        await loadReminderDashboard();
+        setStatus(byId("followupsStatus"),result.message || "Follow-up setting saved.","success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("followupsStatus"),error.message || "The follow-up setting could not be changed.","error");
+      } finally {
+        button.disabled = false;
+        renderReminderDashboard();
+      }
+    }
+
+    async function downloadFollowupExcel() {
+      if (!window.XLSX) {
+        setStatus(byId("followupsStatus"),"The Excel library did not load. Check the internet connection and try again.","error");
+        return;
+      }
+
+      const button = byId("followupsExportButton");
+      button.disabled = true;
+      button.textContent = "Preparing Excel…";
+      setStatus(byId("followupsStatus"),"Preparing student-wise follow-up report…","");
+
+      try {
+        const result = await callRpc(RPC.reminderExport,{p_session_token:currentSession.sessionToken});
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "The follow-up report could not be loaded.");
+
+        const rows = (Array.isArray(result.rows) ? result.rows : []).map(row => ({
+          "Student Name":row.student_name || "",
+          "Student ID":row.student_id || "",
+          "Email":row.email || "",
+          "Batch":row.batch || "",
+          "Task":row.task_title || "",
+          "Question":row.question || "",
+          "Released At":row.release_time ? new Date(row.release_time) : "",
+          "Assignment Due":row.assignment_due_time ? new Date(row.assignment_due_time) : "",
+          "Reminder Stage":row.reminder_stage || "",
+          "Reminder Due":row.reminder_due_time ? new Date(row.reminder_due_time) : "",
+          "Reminder Sent":row.reminder_sent_time ? new Date(row.reminder_sent_time) : "",
+          "Response Time":row.response_time ? new Date(row.response_time) : "",
+          "Current Stage":row.current_stage || "",
+          "Delivery Status":row.delivery_status || "",
+          "Delivery Attempts":row.delivery_attempts || 0,
+          "Delivery Error":row.delivery_error || ""
+        }));
+
+        const headers = ["Student Name","Student ID","Email","Batch","Task","Question","Released At","Assignment Due","Reminder Stage","Reminder Due","Reminder Sent","Response Time","Current Stage","Delivery Status","Delivery Attempts","Delivery Error"];
+        const sheet = rows.length
+          ? XLSX.utils.json_to_sheet(rows,{header:headers,cellDates:true})
+          : XLSX.utils.aoa_to_sheet([headers]);
+
+        sheet["!cols"] = [22,16,28,22,24,52,20,20,16,20,20,20,22,18,16,38].map(width => ({wch:width}));
+        sheet["!autofilter"] = {ref:`A1:P${Math.max(rows.length + 1,1)}`};
+        sheet["!freeze"] = {xSplit:0,ySplit:1};
+
+        headers.forEach((_,index) => {
+          const cell = sheet[XLSX.utils.encode_cell({r:0,c:index})];
+          if (cell) cell.s = {font:{bold:true,color:{rgb:"FFFFFF"}},fill:{fgColor:{rgb:"173F68"}},alignment:{vertical:"center",wrapText:true}};
+        });
+
+        const workbook = XLSX.utils.book_new();
+        workbook.Props = {Title:"Institutional Student Follow-up Report",Subject:"Student-wise reminder delivery and response status",Author:"ClarionPrep",CreatedDate:new Date()};
+        XLSX.utils.book_append_sheet(workbook,sheet,"STUDENT FOLLOW-UPS");
+
+        const institution = String(result.institutionName || "Institution").replace(/[^A-Za-z0-9_-]+/g,"_").replace(/^_+|_+$/g,"") || "Institution";
+        XLSX.writeFile(workbook,`${institution}_Student_Follow-ups_${new Date().toISOString().slice(0,10)}.xlsx`,{cellStyles:true,cellDates:true});
+        setStatus(byId("followupsStatus"),rows.length ? `Excel downloaded with ${rows.length} reminder delivery record${rows.length === 1 ? "" : "s"}.` : "Excel downloaded. No reminder deliveries have occurred yet.","success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("followupsStatus"),error.message || "The follow-up Excel could not be prepared.","error");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Download Student-wise Excel";
+      }
+    }
+
+    function renderAll() {
+      renderSummary(); renderCompletionChart(); renderCriterionChart(); renderProgressChart(); renderTasksTable(); populateControls(); renderAssignmentsTable(); renderResultsTable(); updateAssignmentEstimate();
+    }
+
+    async function loadReport(message="Loading dashboard…") {
+      showLoading(message);
+      try {
+        const data = await callRpc(RPC.report,{ p_session_token:currentSession.sessionToken, p_batch:null, p_student_uuid:null, p_task_uuid:null });
+        if (!data || data.ok !== true) {
+          if (data && data.error === "invalid_trainer_session") { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./trainer-login.html"; return; }
+          throw new Error(data && data.message ? data.message : "Report data could not be loaded.");
+        }
+        reportData = data; renderAll(); setStatus(byId("dashboardStatus"),"Dashboard updated " + new Date().toLocaleTimeString(),"success");
+      } catch (error) { console.error(error); setStatus(byId("dashboardStatus"),"ASCENT could not load the dashboard. " + error.message,"error"); }
+      finally { hideLoading(); }
+    }
+
+    async function createQuestionBatch(event) {
+      event.preventDefault();
+      const questions = cleanQuestions(); const targetType = byId("targetType").value; const pressureMode = byId("pressureMode").value;
+      let intervalDays;
+      try {
+        intervalDays = readReleaseInterval("intervalDays");
+      } catch (error) {
+        setStatus(byId("bulkTaskStatus"),error.message,"error");
+        return;
+      }
+      if (!questions.length) { setStatus(byId("bulkTaskStatus"),"Paste at least one question, with each question on a separate line.","error"); return; }
+      if (targetType === "BATCH" && !byId("targetBatch").value) { setStatus(byId("bulkTaskStatus"),"Choose the student batch.","error"); return; }
+      if (targetType === "STUDENTS" && !selectedStudentUuids().length) { setStatus(byId("bulkTaskStatus"),"Choose at least one student.","error"); return; }
+      if (pressureMode === "FIXED_FOLLOW_UP" && !byId("pressurePrompt").value.trim()) { setStatus(byId("bulkTaskStatus"),"Enter the follow-up question.","error"); return; }
+      const studentCount = estimatedTargetCount();
+      if (!confirmReleaseSchedule(questions.length, studentCount, intervalDays, "startAt", "dueDays")) return;
+      const button = byId("createBatchButton"); button.disabled = true; button.textContent = "Creating Batch…"; setStatus(byId("bulkTaskStatus"),"","");
+      try {
+        const dueText = byId("dueDays").value.trim();
+        const result = await callRpc(RPC.bulk,{
+          p_session_token:currentSession.sessionToken, p_questions:questions, p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
+          p_rubric_type:byId("rubricType").value, p_target_type:targetType, p_target_batch:targetType === "BATCH" ? byId("targetBatch").value : null,
+          p_student_uuids:targetType === "STUDENTS" ? selectedStudentUuids() : null, p_start_at:toIsoOrNull(byId("startAt").value),
+          p_interval_days:intervalDays, p_due_days:dueText === "" ? null : Number(dueText), p_max_attempts:1,
+          p_response_seconds:Number(byId("responseSeconds").value || 60), p_pressure_mode:pressureMode,
+          p_pressure_prompt:pressureMode === "FIXED_FOLLOW_UP" ? byId("pressurePrompt").value.trim() : null,
+          p_pressure_prep_seconds:Number(byId("pressurePrepSeconds").value || 5), p_pressure_response_seconds:Number(byId("pressureResponseSeconds").value || 20)
+        });
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "The batch could not be created.");
+        setStatus(byId("bulkTaskStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)}`,"success");
+        byId("questionsText").value = ""; updateQuestionCount(); await loadReport("Refreshing tasks and assignments…");
+      } catch (error) { console.error(error); setStatus(byId("bulkTaskStatus"),error.message || "ASCENT could not create the question batch.","error"); }
+      finally { button.disabled = false; button.textContent = "Create and Assign Batch"; }
+    }
+
+    async function setTaskActive(taskUuid,isActive) {
+      showLoading(isActive ? "Reactivating task…" : "Withdrawing task…");
+      try { const result = await callRpc(RPC.taskActive,{p_session_token:currentSession.sessionToken,p_task_uuid:taskUuid,p_is_active:isActive}); if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Task update failed."); await loadReport("Refreshing tasks…"); }
+      catch (error) { console.error(error); alert(error.message); }
+      finally { hideLoading(); }
+    }
+
+    function exportText(value) {
+      if (value === null || value === undefined) return "";
+      return String(value).replace(/\s+/g," ").trim();
+    }
+
+    function exportNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : null;
+    }
+
+   function criterionMeaning(criterion) {
+  const key = normaliseCriterionKey(
+    criterion &&
+    (
+      criterion.key ||
+      criterion.name ||
+      criterion.criterion_name
+    )
+  );
+
+  const meanings = {
+    structure_and_clarity:
+      "This shows whether the listener can follow your answer easily. A clear order makes your main point easier to understand and remember.",
+
+    content_depth_and_evidence:
+      "This shows whether your answer is supported by real details. Specific examples make your claims believable.",
+
+    business_thinking:
+      "This shows whether you can explain reasons, options, risks and impact. It makes your answer practical and manager-like.",
+
+    communication_and_professionalism:
+      "This shows whether your language is clear, respectful and suitable for an interview. It affects how mature and workplace-ready you sound.",
+
+    composure_under_pressure:
+      "This shows whether you can stay calm and think clearly when challenged. A steady response builds trust in your judgement.",
+
+    entry_and_clarity:
+      "This shows whether you can enter the discussion at the right time with a clear point. A strong entry helps others notice and understand your contribution.",
+
+    reasoning_content_and_logic:
+      "This shows whether your point is supported by clear reasons and examples. Good logic makes your contribution convincing.",
+
+    listening_and_response:
+      "This shows whether you listen to others and respond to what they actually said. It makes the discussion connected rather than a set of separate speeches.",
+
+    leadership_moves:
+      "This shows whether you help the group organise ideas and move forward. Useful leadership makes the discussion more focused and productive.",
+
+    language_control:
+      "This shows whether your sentences are correct and easy to understand. Clear language keeps attention on your idea instead of your mistakes.",
+
+    confidence_and_delivery:
+      "This shows how steady and controlled you sound. Good pace, pauses and voice control make the listener more confident in you.",
+
+    professionalism:
+      "This shows whether your words and tone fit a workplace setting. Professional language makes you sound mature, dependable and ready for responsibility."
+  };
+
+  return (
+    meanings[key] ||
+    "This shows how effectively this part of your communication helps the listener understand and trust your message."
+  );
+}
+
+
+function formatCriterionFeedback(criterion) {
+  if (!criterion || typeof criterion !== "object") {
+    return "";
+  }
+
+  const lines = [];
+
+  const name = exportText(
+    criterion.name ||
+    criterion.criterion_name ||
+    criterion.key ||
+    "Criterion"
+  );
+
+  const score = exportNumber(
+    criterion.score
+  );
+
+  const level = exportNumber(
+    criterion.level
+  );
+
+  const status = exportText(
+    criterion.status
+  ).toLowerCase();
+
+  let heading = name;
+
+  if (score !== null) {
+    heading +=
+      ` — ${score.toFixed(1)} / 2`;
+  }
+
+  if (level !== null) {
+    heading +=
+      ` (Level ${level})`;
+  }
+
+  lines.push(heading);
+
+  lines.push(
+    "Why this matters: " +
+    criterionMeaning(criterion)
+  );
+
+  const notAssessedReason = exportText(
+    criterion.not_assessed_reason ||
+    criterion.notAssessedReason
+  );
+
+  if (
+    status === "not_assessed" ||
+    notAssessedReason
+  ) {
+    lines.push(
+      "Not assessed: " +
+      (
+        notAssessedReason ||
+        "The required evidence was not available."
+      )
+    );
+
+    return lines.join("\n");
+  }
+
+  const rawPraise = exportText(
+    criterion.praise
+  );
+
+  const usefulPraise =
+    rawPraise.toLowerCase() ===
+    "this criterion did not have a separate material weakness."
+      ? ""
+      : rawPraise;
+
+  const evidence = exportText(
+    criterion.evidence_quote ||
+    criterion.evidenceQuote
+  );
+
+  const weakLine = exportText(
+    criterion.weak_line ||
+    criterion.weakLine
+  );
+
+  const explanation = exportText(
+    criterion.explanation
+  );
+
+  const correctedVersion = exportText(
+    criterion.corrected_version ||
+    criterion.correctedVersion
+  );
+
+  if (usefulPraise) {
+    lines.push(
+      "What you did well: " +
+      usefulPraise
+    );
+  }
+
+  if (level === 5) {
+    if (evidence) {
+      lines.push(
+        "Your strong line: “" +
+        evidence +
+        "”"
+      );
+    }
+
+    return lines.join("\n");
+  }
+
+  if (weakLine) {
+    lines.push(
+      "Your line: “" +
+      weakLine +
+      "”"
+    );
+
+    if (explanation) {
+      lines.push(
+        "Why this weakens your answer: " +
+        explanation
+      );
+    }
+
+    if (correctedVersion) {
+      lines.push(
+        "Use this instead: " +
+        correctedVersion
+      );
+    }
+  } else {
+    if (
+      usefulPraise &&
+      evidence
+    ) {
+      lines.push(
+        "Your strong line: “" +
+        evidence +
+        "”"
+      );
+    }
+
+    if (explanation) {
+      lines.push(
+        "What to improve: " +
+        explanation
+      );
+    }
+
+    if (correctedVersion) {
+      lines.push(
+        "Use this instead: " +
+        correctedVersion
+      );
+    }
+  }
+
+  return lines.join("\n");
+}
+
+    function formatOtherIssues(issues) {
+      if (!Array.isArray(issues) || !issues.length) return "";
+
+      const lines = ["OTHER ISSUES"];
+
+      issues.forEach(function (issue) {
+        if (!issue || typeof issue !== "object") return;
+
+        const label = exportText(issue.label || "Other issue");
+        const evidence = exportText(
+          issue.evidence_quote ||
+          issue.evidenceQuote
+        );
+        const explanation = exportText(issue.explanation);
+
+        let line = "• " + label;
+        if (evidence) line += " — “" + evidence + "”";
+        if (explanation) line += ": " + explanation;
+        lines.push(line);
+      });
+
+      return lines.length > 1 ? lines.join("\n") : "";
+    }
+
+    function formatDetailedFeedback(value) {
+      if (value === null || value === undefined || value === "") return "";
+
+      let feedback = value;
+
+      if (typeof feedback === "string") {
+        const clean = feedback.trim();
+        if (!clean) return "";
+
+        try {
+          feedback = JSON.parse(clean);
+        } catch {
+          return clean;
+        }
+      }
+
+      if (!feedback || typeof feedback !== "object") {
+        return exportText(feedback);
+      }
+
+      const sections = [];
+      const overall = exportText(
+        feedback.overall_comment ||
+        feedback.overallComment
+      );
+
+      if (overall) sections.push("OVERALL\n" + overall);
+
+      if (Array.isArray(feedback.criteria) && feedback.criteria.length) {
+        const criteria = feedback.criteria
+          .map(formatCriterionFeedback)
+          .filter(Boolean);
+
+        if (criteria.length) {
+          sections.push(
+            "DETAILED CRITERION FEEDBACK\n" +
+            criteria.join("\n\n")
+          );
+        }
+      }
+
+      const otherIssues = formatOtherIssues(
+        feedback.other_issues ||
+        feedback.otherIssues
+      );
+
+      if (otherIssues) sections.push(otherIssues);
+
+      if (sections.length) return sections.join("\n\n");
+
+      try {
+        return JSON.stringify(feedback);
+      } catch {
+        return "";
+      }
+    }
+
+    const WORKBOOK_CRITERIA = [
+      {key:"structure_and_clarity",label:"Structure & Clarity"},
+      {key:"content_depth_and_evidence",label:"Content Depth & Evidence"},
+      {key:"business_thinking",label:"Business Thinking"},
+      {key:"communication_and_professionalism",label:"Communication & Professionalism"},
+      {key:"composure_under_pressure",label:"Composure Under Pressure"},
+      {key:"entry_and_clarity",label:"Entry & Clarity"},
+      {key:"reasoning_content_and_logic",label:"Reasoning (Content + Logic)"},
+      {key:"listening_and_response",label:"Listening & Response"},
+      {key:"leadership_moves",label:"Leadership Moves"},
+      {key:"language_control",label:"Language Control"},
+      {key:"confidence_and_delivery",label:"Confidence & Delivery"},
+      {key:"professionalism",label:"Professionalism"}
+    ];
+
+    const WORKBOOK_CRITERION_LABELS = new Map(
+      WORKBOOK_CRITERIA.map(item => [item.key,item.label])
+    );
+
+    function normaliseExportObject(value, fallback) {
+      if (value === null || value === undefined || value === "") return fallback;
+      if (typeof value === "object") return value;
+
+      try {
+        return JSON.parse(String(value));
+      } catch {
+        return fallback;
+      }
+    }
+
+    function exportDate(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      return Number.isFinite(date.getTime()) ? date : "";
+    }
+
+    function exportBoolean(value) {
+      return value === true || String(value).toLowerCase() === "true" ? "Yes" : "No";
+    }
+
+    function normaliseCriterionKey(value) {
+      const key = exportText(value)
+        .trim()
+        .toLowerCase()
+        .replace(/&/g," and ")
+        .replace(/\+/g," and ")
+        .replace(/[^a-z0-9]+/g,"_")
+        .replace(/^_+|_+$/g,"");
+
+      const aliases = {
+        reasoning_content_logic:"reasoning_content_and_logic",
+        communication_professionalism:"communication_and_professionalism"
+      };
+
+      return aliases[key] || key;
+    }
+
+    function criterionScoreMap(value, detailedFeedback=null) {
+      const source = normaliseExportObject(value, {});
+      const scores = new Map();
+
+      function storeScore(keyValue, rawValue) {
+        const key = normaliseCriterionKey(
+          rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)
+            ? rawValue.key || rawValue.name || keyValue
+            : keyValue
+        );
+
+        if (!key) return;
+
+        const score = rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)
+          ? exportNumber(
+              rawValue.score ??
+              rawValue.value ??
+              rawValue.points ??
+              rawValue.level_score
+            )
+          : exportNumber(rawValue);
+
+        if (score !== null) scores.set(key,score);
+      }
+
+      if (Array.isArray(source)) {
+        source.forEach(function (item,index) {
+          storeScore(item && (item.key || item.name) || String(index),item);
+        });
+      } else if (source && typeof source === "object") {
+        const nestedCriteria = source.criteria;
+
+        if (Array.isArray(nestedCriteria)) {
+          nestedCriteria.forEach(function (item,index) {
+            storeScore(item && (item.key || item.name) || String(index),item);
+          });
+        } else if (nestedCriteria && typeof nestedCriteria === "object") {
+          Object.entries(nestedCriteria).forEach(function ([key,rawValue]) {
+            storeScore(key,rawValue);
+          });
+        } else {
+          Object.entries(source).forEach(function ([key,rawValue]) {
+            storeScore(key,rawValue);
+          });
+        }
+      }
+
+      if (!scores.size) {
+        const feedback = normaliseExportObject(detailedFeedback, {});
+        const feedbackCriteria = feedback && Array.isArray(feedback.criteria)
+          ? feedback.criteria
+          : [];
+
+        feedbackCriteria.forEach(function (item,index) {
+          storeScore(item && (item.key || item.name) || String(index),item);
+        });
+      }
+
+      return scores;
+    }
+
+    function criterionFeedbackText(value, detailedFeedback) {
+      let criteria = normaliseExportObject(value, []);
+
+      if (!Array.isArray(criteria)) {
+        const detailed = normaliseExportObject(detailedFeedback, {});
+        criteria = Array.isArray(detailed.criteria) ? detailed.criteria : [];
+      }
+
+      return criteria
+        .map(formatCriterionFeedback)
+        .filter(Boolean)
+        .join("\n\n");
+    }
+
+    function otherIssuesText(value, detailedFeedback) {
+      let issues = normaliseExportObject(value, []);
+
+      if (!Array.isArray(issues)) {
+        const detailed = normaliseExportObject(detailedFeedback, {});
+        issues = Array.isArray(detailed.other_issues)
+          ? detailed.other_issues
+          : Array.isArray(detailed.otherIssues)
+            ? detailed.otherIssues
+            : [];
+      }
+
+      return formatOtherIssues(issues);
+    }
+
+    function scoreOrAssignmentStatus(assignment) {
+      const score = exportNumber(
+        assignment.finalScore ??
+        assignment.totalScore
+      );
+
+      if (score !== null) return score;
+
+      const submissionStatus = exportText(
+        assignment.submissionStatus
+      ).toUpperCase();
+
+      if (submissionStatus === "COMPLETED") return "Pending Evaluation";
+      if (submissionStatus === "NOT AVAILABLE") return "Not Available";
+      if (submissionStatus === "NOT ANSWERED") return "Not Answered";
+      if (submissionStatus === "EXPIRED") return "Expired";
+      if (submissionStatus === "WITHDRAWN") return "Withdrawn";
+
+      return submissionStatus;
+    }
+
+    function questionSortValue(question) {
+      const release = Date.parse(question.firstReleaseAt || "");
+      return [
+        Number.isFinite(release) ? release : Number.MAX_SAFE_INTEGER,
+        exportText(question.questionBatchUuid),
+        exportNumber(question.sequenceNo) ?? Number.MAX_SAFE_INTEGER,
+        exportText(question.taskUuid)
+      ];
+    }
+
+    function compareQuestionRows(left, right) {
+      const a = questionSortValue(left);
+      const b = questionSortValue(right);
+
+      for (let index=0; index<a.length; index+=1) {
+        if (a[index] < b[index]) return -1;
+        if (a[index] > b[index]) return 1;
+      }
+
+      return 0;
+    }
+
+    function selectedAssignment(existing, candidate) {
+      if (!existing) return candidate;
+
+      const existingHasScore = exportNumber(existing.finalScore ?? existing.totalScore) !== null;
+      const candidateHasScore = exportNumber(candidate.finalScore ?? candidate.totalScore) !== null;
+
+      if (candidateHasScore && !existingHasScore) return candidate;
+      if (existingHasScore && !candidateHasScore) return existing;
+
+      const existingSubmitted = Date.parse(existing.submittedAt || "");
+      const candidateSubmitted = Date.parse(candidate.submittedAt || "");
+
+      if (Number.isFinite(candidateSubmitted) &&
+          (!Number.isFinite(existingSubmitted) || candidateSubmitted > existingSubmitted)) {
+        return candidate;
+      }
+
+      const existingRelease = Date.parse(existing.releaseAt || "");
+      const candidateRelease = Date.parse(candidate.releaseAt || "");
+
+      return Number.isFinite(candidateRelease) &&
+        (!Number.isFinite(existingRelease) || candidateRelease > existingRelease)
+          ? candidate
+          : existing;
+    }
+
+    function setWorkbookCellLink(sheet, address, target) {
+      if (!target || !/^https?:\/\//i.test(target) || !sheet[address]) return;
+      sheet[address].l = {Target:target,Tooltip:"Open audio or Drive file"};
+    }
+
+    const WORKBOOK_STYLE = {
+      title:"334E5C",
+      titleSoft:"F3F6F7",
+      identity:"687A8A",
+      identitySoft:"F1F4F6",
+      snapshot:"718071",
+      snapshotSoft:"F1F5F1",
+      score:"687E92",
+      scoreSoft:"EEF3F7",
+      scoreStrong:"DDE7EF",
+      activity:"8A7C67",
+      activitySoft:"F6F2EB",
+      feedback:"7B7183",
+      feedbackSoft:"F4F1F6",
+      followup:"617F7C",
+      followupSoft:"EEF5F4",
+      recording:"6F7E86",
+      recordingSoft:"F0F4F5",
+      audit:"85888C",
+      auditSoft:"F3F3F3",
+      green:"3D7258",
+      greenSoft:"EAF3ED",
+      red:"9B514B",
+      redSoft:"F7ECEA",
+      amber:"8A6E37",
+      amberSoft:"F6F0E3",
+      blue:"5F768B",
+      blueSoft:"EDF2F6",
+      grey:"6F7780",
+      greySoft:"F0F2F4",
+      white:"FFFFFF",
+      text:"2E3E4C",
+      border:"D8DEE3"
+    };
+
+    const WORKBOOK_RUBRIC_CRITERIA = {
+      MANAGERIAL_COMMUNICATION:[
+        "structure_and_clarity",
+        "business_thinking",
+        "language_control",
+        "confidence_and_delivery",
+        "professionalism"
+      ],
+      PI:[
+        "structure_and_clarity",
+        "content_depth_and_evidence",
+        "business_thinking",
+        "communication_and_professionalism",
+        "composure_under_pressure"
+      ],
+      GD:[
+        "entry_and_clarity",
+        "reasoning_content_and_logic",
+        "listening_and_response",
+        "leadership_moves",
+        "composure_under_pressure"
+      ]
+    };
+
+    function workbookRubricKey(value) {
+      const key = exportText(value)
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g,"_")
+        .replace(/^_+|_+$/g,"");
+
+      const aliases = {
+        LUM:"MANAGERIAL_COMMUNICATION",
+        MANAGERIAL:"MANAGERIAL_COMMUNICATION",
+        MANAGERIAL_COMMUNICATION_RUBRIC:"MANAGERIAL_COMMUNICATION",
+        PERSONAL_INTERVIEW:"PI",
+        INTERVIEW:"PI",
+        GROUP_DISCUSSION:"GD"
+      };
+
+      return aliases[key] || key;
+    }
+
+    function workbookCriterionLabel(key) {
+      if (WORKBOOK_CRITERION_LABELS.has(key)) {
+        return WORKBOOK_CRITERION_LABELS.get(key);
+      }
+
+      return exportText(key)
+        .replace(/_/g," ")
+        .replace(/\b\w/g,letter => letter.toUpperCase());
+    }
+
+    function workbookCriteriaForRubric(rubricType, scoreMap) {
+      const rubricKey = workbookRubricKey(rubricType);
+      const preferred = WORKBOOK_RUBRIC_CRITERIA[rubricKey] || [];
+      const ordered = [];
+      const seen = new Set();
+
+      preferred.forEach(function (key) {
+        ordered.push({
+          key,
+          label:workbookCriterionLabel(key),
+          score:scoreMap.has(key) ? scoreMap.get(key) : null
+        });
+        seen.add(key);
+      });
+
+      scoreMap.forEach(function (score,key) {
+        if (seen.has(key) || ordered.length >= 5) return;
+        ordered.push({key,label:workbookCriterionLabel(key),score});
+        seen.add(key);
+      });
+
+      while (ordered.length < 5) {
+        ordered.push({key:"",label:"",score:null});
+      }
+
+      return ordered.slice(0,5);
+    }
+
+    function workbookFill(rgb) {
+      return {patternType:"solid",fgColor:{rgb}};
+    }
+
+    function workbookBorder() {
+      const side = {style:"thin",color:{rgb:WORKBOOK_STYLE.border}};
+      return {top:side,bottom:side,left:side,right:side};
+    }
+
+    function workbookStyle(fillRgb, fontRgb, bold, horizontal, wrapText=true, fontSize=10) {
+      return {
+        fill:workbookFill(fillRgb),
+        font:{
+          name:"Arial",
+          sz:fontSize,
+          bold:Boolean(bold),
+          color:{rgb:fontRgb}
+        },
+        alignment:{
+          vertical:"center",
+          horizontal:horizontal || "left",
+          wrapText:Boolean(wrapText)
+        },
+        border:workbookBorder()
+      };
+    }
+
+    function ensureWorkbookCell(sheet,row,column) {
+      const address = XLSX.utils.encode_cell({r:row,c:column});
+      if (!sheet[address]) sheet[address] = {t:"s",v:""};
+      return sheet[address];
+    }
+
+    function applyWorkbookStyle(sheet,row,column,style) {
+      ensureWorkbookCell(sheet,row,column).s = style;
+    }
+
+    function applyWorkbookStyleRange(sheet,rowStart,rowEnd,columnStart,columnEnd,style) {
+      for (let row=rowStart; row<=rowEnd; row+=1) {
+        for (let column=columnStart; column<=columnEnd; column+=1) {
+          applyWorkbookStyle(sheet,row,column,style);
+        }
+      }
+    }
+
+    function workbookStatusStyle(value, type) {
+      const status = exportText(value).trim().toUpperCase();
+
+      if (type === "progress") {
+        if (status === "IMPROVED") return workbookStyle(WORKBOOK_STYLE.greenSoft,WORKBOOK_STYLE.green,true,"center");
+        if (status === "DECLINED") return workbookStyle(WORKBOOK_STYLE.redSoft,WORKBOOK_STYLE.red,true,"center");
+        if (status === "STABLE" || status === "BASELINE ONLY") return workbookStyle(WORKBOOK_STYLE.amberSoft,WORKBOOK_STYLE.amber,true,"center");
+        return workbookStyle(WORKBOOK_STYLE.greySoft,WORKBOOK_STYLE.grey,true,"center");
+      }
+
+      if (type === "timeliness") {
+        if (status === "ON TIME") return workbookStyle(WORKBOOK_STYLE.greenSoft,WORKBOOK_STYLE.green,true,"center");
+        if (status === "MISSED" || status === "LATE" || status === "EXPIRED") return workbookStyle(WORKBOOK_STYLE.redSoft,WORKBOOK_STYLE.red,true,"center");
+        return workbookStyle(WORKBOOK_STYLE.greySoft,WORKBOOK_STYLE.grey,true,"center");
+      }
+
+      if (type === "yesno") {
+        if (status === "YES") return workbookStyle(WORKBOOK_STYLE.greenSoft,WORKBOOK_STYLE.green,true,"center");
+        return workbookStyle(WORKBOOK_STYLE.greySoft,WORKBOOK_STYLE.grey,true,"center");
+      }
+
+      if (status === "COMPLETED" || status === "EVALUATED") {
+        return workbookStyle(WORKBOOK_STYLE.greenSoft,WORKBOOK_STYLE.green,true,"center");
+      }
+      if (status === "EXPIRED" || status === "MISSED") {
+        return workbookStyle(WORKBOOK_STYLE.redSoft,WORKBOOK_STYLE.red,true,"center");
+      }
+      if (status === "NOT ANSWERED" || status === "NOT STARTED" || status === "PENDING EVALUATION") {
+        return workbookStyle(WORKBOOK_STYLE.amberSoft,WORKBOOK_STYLE.amber,true,"center");
+      }
+      if (status === "NOT AVAILABLE" || status === "SCHEDULED" || status === "WITHDRAWN" || status === "NO COMPLETED RESPONSE") {
+        return workbookStyle(WORKBOOK_STYLE.greySoft,WORKBOOK_STYLE.grey,true,"center");
+      }
+
+      return workbookStyle(WORKBOOK_STYLE.blueSoft,WORKBOOK_STYLE.blue,true,"center");
+    }
+
+    function workbookChangeStyle(value) {
+      const number = exportNumber(value);
+      if (number === null) return workbookStyle(WORKBOOK_STYLE.greySoft,WORKBOOK_STYLE.grey,false,"center");
+      if (number > 0) return workbookStyle(WORKBOOK_STYLE.greenSoft,WORKBOOK_STYLE.green,true,"center");
+      if (number < 0) return workbookStyle(WORKBOOK_STYLE.redSoft,WORKBOOK_STYLE.red,true,"center");
+      return workbookStyle(WORKBOOK_STYLE.amberSoft,WORKBOOK_STYLE.amber,true,"center");
+    }
+
+    function workbookScoreBar(value, maximum=10, width=10) {
+      const score = exportNumber(value);
+      if (score === null) return "";
+      const safeMaximum = Math.max(Number(maximum) || 10,1);
+      const filled = Math.max(0,Math.min(width,Math.round(score / safeMaximum * width)));
+      return `${"█".repeat(filled)}${"░".repeat(width - filled)} ${score.toFixed(2)}`;
+    }
+
+    function workbookCompletionBar(answered, released, width=10) {
+      const total = Math.max(Number(released) || 0,0);
+      const completed = Math.max(Math.min(Number(answered) || 0,total),0);
+      if (!total) return "No released questions";
+      const filled = Math.max(0,Math.min(width,Math.round(completed / total * width)));
+      return `${"█".repeat(filled)}${"░".repeat(width - filled)} ${completed}/${total}`;
+    }
+
+    function workbookScoreTrend(values) {
+      const scores = (Array.isArray(values) ? values : [])
+        .map(exportNumber)
+        .filter(value => value !== null);
+      if (!scores.length) return "";
+      const blocks = "▁▂▃▄▅▆▇█";
+      return scores.map(function (score) {
+        const position = Math.max(0,Math.min(blocks.length - 1,Math.round(score / 10 * (blocks.length - 1))));
+        return blocks[position];
+      }).join("");
+    }
+
+    function workbookChangeIndicator(value) {
+      const change = exportNumber(value);
+      if (change === null) return "";
+      if (change > 0) return `▲ +${change.toFixed(2)}`;
+      if (change < 0) return `▼ ${change.toFixed(2)}`;
+      return "● 0.00";
+    }
+
+    function workbookAssignmentIsReleased(assignment) {
+      if (!assignment) return false;
+      if (assignment.submissionUuid) return true;
+      const status = exportText(assignment.submissionStatus).trim().toUpperCase();
+      if (["NOT AVAILABLE","SCHEDULED","WITHDRAWN"].includes(status)) return false;
+      const releaseAt = Date.parse(assignment.releaseAt || "");
+      return !Number.isFinite(releaseAt) || releaseAt <= Date.now();
+    }
+
+    function appendQuestionReference(sheet, startRow, questions, questionNumberByTask) {
+      if (!questions.length) return;
+      const rows = [
+        ["QUESTION REFERENCE","", ""],
+        ["Question","Rubric","Question text"],
+        ...questions.map(function (question) {
+          return [
+            `Q${questionNumberByTask.get(String(question.taskUuid || "")) || ""}`,
+            exportText(question.rubricType),
+            exportText(question.question)
+          ];
+        })
+      ];
+      XLSX.utils.sheet_add_aoa(sheet,rows,{origin:{r:startRow,c:0}});
+      if (!Array.isArray(sheet["!merges"])) sheet["!merges"] = [];
+      sheet["!merges"].push({s:{r:startRow,c:0},e:{r:startRow,c:2}});
+      applyWorkbookStyleRange(
+        sheet,startRow,startRow,0,2,
+        workbookStyle(WORKBOOK_STYLE.score,WORKBOOK_STYLE.white,true,"left",true,10)
+      );
+      applyWorkbookStyleRange(
+        sheet,startRow + 1,startRow + 1,0,2,
+        workbookStyle(WORKBOOK_STYLE.score,WORKBOOK_STYLE.white,true,"center",true,9)
+      );
+      for (let row=startRow + 2; row<startRow + rows.length; row+=1) {
+        applyWorkbookStyleRange(
+          sheet,row,row,0,2,
+          workbookStyle(WORKBOOK_STYLE.scoreSoft,WORKBOOK_STYLE.text,false,row === startRow + 2 ? "left" : "left",true,9)
+        );
+        ensureWorkbookCell(sheet,row,0).s.alignment.horizontal = "center";
+      }
+      if (!Array.isArray(sheet["!rows"])) sheet["!rows"] = [];
+      sheet["!rows"][startRow] = {hpt:23};
+      sheet["!rows"][startRow + 1] = {hpt:24};
+      for (let row=startRow + 2; row<startRow + rows.length; row+=1) {
+        sheet["!rows"][row] = {hpt:34};
+      }
+    }
+
+    function makeStyledWorksheet(rows, headers, widths, options={}) {
+      const title = options.title || "ASCENT REPORT";
+      const subtitle = options.subtitle || "";
+      const dataRows = rows.map(function (row) {
+        return headers.map(function (header) {
+          const value = row[header];
+          return value === undefined || value === null ? "" : value;
+        });
+      });
+
+      const worksheetRows = [
+        [title],
+        [subtitle],
+        Array(headers.length).fill(""),
+        headers,
+        ...dataRows
+      ];
+
+      const sheet = XLSX.utils.aoa_to_sheet(worksheetRows,{cellDates:true});
+      const finalColumn = Math.max(headers.length - 1,0);
+      const finalDataRow = Math.max(rows.length + 4,4);
+      const freezeColumns = Math.max(Number(options.freezeColumns || 0),0);
+      const hiddenColumns = new Set(options.hiddenColumns || []);
+      const groups = Array.isArray(options.groups) ? options.groups : [];
+      const bodyFillByColumn = new Map();
+      const headerFillByColumn = new Map();
+
+      groups.forEach(function (group) {
+        for (let column=group.start; column<=group.end; column+=1) {
+          bodyFillByColumn.set(column,group.bodyFill || WORKBOOK_STYLE.white);
+          headerFillByColumn.set(column,group.fill || WORKBOOK_STYLE.identity);
+        }
+      });
+
+      sheet["!merges"] = [
+        {s:{r:0,c:0},e:{r:0,c:finalColumn}},
+        {s:{r:1,c:0},e:{r:1,c:finalColumn}}
+      ];
+      sheet["!cols"] = widths.map(function (width,index) {
+        return {wch:width,hidden:hiddenColumns.has(index)};
+      });
+      sheet["!rows"] = [
+        {hpt:28},
+        {hpt:25},
+        {hpt:22},
+        {hpt:36},
+        ...rows.map(() => ({hpt:Number(options.dataRowHeight || 32)}))
+      ];
+      sheet["!autofilter"] = {
+        ref:`A4:${XLSX.utils.encode_col(finalColumn)}${finalDataRow}`
+      };
+      sheet["!freeze"] = {
+        xSplit:freezeColumns,
+        ySplit:4,
+        topLeftCell:XLSX.utils.encode_cell({r:4,c:freezeColumns}),
+        activePane:freezeColumns ? "bottomRight" : "bottomLeft",
+        state:"frozen"
+      };
+
+      applyWorkbookStyleRange(
+        sheet,0,0,0,finalColumn,
+        workbookStyle(WORKBOOK_STYLE.title,WORKBOOK_STYLE.white,true,"left",true,15)
+      );
+      applyWorkbookStyleRange(
+        sheet,1,1,0,finalColumn,
+        workbookStyle(WORKBOOK_STYLE.titleSoft,WORKBOOK_STYLE.text,false,"left",true,10)
+      );
+
+      groups.forEach(function (group) {
+        if (group.start > group.end || group.start < 0 || group.end > finalColumn) return;
+        const cell = ensureWorkbookCell(sheet,2,group.start);
+        cell.v = group.label;
+        cell.t = "s";
+        if (group.end > group.start) {
+          sheet["!merges"].push({s:{r:2,c:group.start},e:{r:2,c:group.end}});
+        }
+        applyWorkbookStyleRange(
+          sheet,2,2,group.start,group.end,
+          workbookStyle(group.fill || WORKBOOK_STYLE.identity,WORKBOOK_STYLE.white,true,"center",true,9)
+        );
+        applyWorkbookStyleRange(
+          sheet,3,3,group.start,group.end,
+          workbookStyle(group.fill || WORKBOOK_STYLE.identity,WORKBOOK_STYLE.white,true,"center",true,9)
+        );
+      });
+
+      for (let column=0; column<=finalColumn; column+=1) {
+        if (headerFillByColumn.has(column)) continue;
+        applyWorkbookStyle(
+          sheet,3,column,
+          workbookStyle(WORKBOOK_STYLE.identity,WORKBOOK_STYLE.white,true,"center",true,9)
+        );
+      }
+
+      const wrapColumns = new Set(options.wrapColumns || []);
+      const centerColumns = new Set(options.centerColumns || []);
+      const scoreColumns = new Set(options.scoreColumns || []);
+      const dateColumns = new Set(options.dateColumns || []);
+      const linkColumns = new Set(options.linkColumns || []);
+      const changeColumns = new Set(options.changeColumns || []);
+      const questionMatrixColumns = new Set(options.questionMatrixColumns || []);
+      const emphasisScoreColumns = new Set(options.emphasisScoreColumns || []);
+      const statusColumns = options.statusColumns || {};
+
+      rows.forEach(function (_,dataIndex) {
+        const rowIndex = dataIndex + 4;
+
+        headers.forEach(function (_,columnIndex) {
+          const cell = ensureWorkbookCell(sheet,rowIndex,columnIndex);
+          const horizontal = centerColumns.has(columnIndex) ? "center" : "left";
+          const columnFill = bodyFillByColumn.get(columnIndex) || WORKBOOK_STYLE.white;
+          cell.s = workbookStyle(
+            columnFill,
+            WORKBOOK_STYLE.text,
+            false,
+            horizontal,
+            wrapColumns.has(columnIndex),
+            10
+          );
+
+          if (scoreColumns.has(columnIndex) && typeof cell.v === "number") {
+            cell.z = "0.00";
+          }
+
+          if (dateColumns.has(columnIndex) && cell.v instanceof Date) {
+            cell.z = "dd-mmm-yyyy hh:mm";
+            cell.s.alignment.horizontal = "center";
+          }
+
+          if (emphasisScoreColumns.has(columnIndex) && typeof cell.v === "number") {
+            cell.s = workbookStyle(WORKBOOK_STYLE.scoreStrong,WORKBOOK_STYLE.title,true,"center");
+            cell.z = "0.00";
+          }
+
+          if (questionMatrixColumns.has(columnIndex)) {
+            if (typeof cell.v === "number") {
+              cell.s = workbookStyle(WORKBOOK_STYLE.scoreSoft,WORKBOOK_STYLE.title,true,"center");
+              cell.z = "0.00";
+            } else if (exportText(cell.v)) {
+              cell.s = workbookStatusStyle(cell.v,"submission");
+            }
+          }
+
+          if (changeColumns.has(columnIndex)) {
+            cell.s = workbookChangeStyle(cell.v);
+            if (typeof cell.v === "number") cell.z = "+0.00;-0.00;0.00";
+          }
+
+          if (Object.prototype.hasOwnProperty.call(statusColumns,columnIndex)) {
+            cell.s = workbookStatusStyle(cell.v,statusColumns[columnIndex]);
+          }
+
+          if (linkColumns.has(columnIndex)) {
+            const target = exportText(cell.v);
+            setWorkbookCellLink(sheet,XLSX.utils.encode_cell({r:rowIndex,c:columnIndex}),target);
+            if (/^https?:\/\//i.test(target)) {
+              cell.v = "Open recording";
+              cell.t = "s";
+              cell.s = workbookStyle(columnFill,WORKBOOK_STYLE.blue,true,"center");
+              cell.s.font.underline = true;
+            }
+          }
+        });
+      });
+
+      return sheet;
+    }
+
+    function buildIndividualPerformanceSheet(workbookData, questions, questionNumberByTask) {
+      const students = (Array.isArray(workbookData.students) ? workbookData.students : [])
+        .slice()
+        .sort(function (left,right) {
+          return exportText(left.batch).localeCompare(exportText(right.batch)) ||
+            exportText(left.name).localeCompare(exportText(right.name)) ||
+            exportText(left.rollNo).localeCompare(exportText(right.rollNo));
+        });
+      const assignments = Array.isArray(workbookData.assignments) ? workbookData.assignments : [];
+      const assignmentByStudentAndTask = new Map();
+      const assignmentsByStudent = new Map();
+
+      assignments.forEach(function (assignment) {
+        const studentKey = String(assignment.studentUuid || "");
+        const taskKey = String(assignment.taskUuid || "");
+        const key = `${studentKey}::${taskKey}`;
+        assignmentByStudentAndTask.set(
+          key,
+          selectedAssignment(assignmentByStudentAndTask.get(key),assignment)
+        );
+      });
+
+      assignmentByStudentAndTask.forEach(function (assignment) {
+        const key = String(assignment.studentUuid || "");
+        if (!assignmentsByStudent.has(key)) assignmentsByStudent.set(key,[]);
+        assignmentsByStudent.get(key).push(assignment);
+      });
+
+      const questionHeaders = questions.map(function (question) {
+        return `Q${questionNumberByTask.get(String(question.taskUuid || "")) || ""}`;
+      });
+      const snapshotHeaders = [
+        "Questions Released",
+        "Questions Answered",
+        "Completion",
+        "Average Score",
+        "Latest Score",
+        "Score Trend"
+      ];
+      const headers = [
+        "Roll No",
+        "Name",
+        "Email ID",
+        "Mobile Number",
+        ...snapshotHeaders,
+        ...questionHeaders,
+        "Detailed Feedback"
+      ];
+
+      const rows = students.map(function (student) {
+        const studentKey = String(student.studentUuid || "");
+        const allStudentAssignments = assignmentsByStudent.get(studentKey) || [];
+        const releasedAssignments = allStudentAssignments.filter(workbookAssignmentIsReleased);
+        const answeredAssignments = releasedAssignments.filter(item => Boolean(item.submissionUuid));
+        const scoredAssignments = answeredAssignments
+          .map(function (assignment) {
+            return {
+              assignment,
+              score:exportNumber(assignment.finalScore ?? assignment.totalScore),
+              submittedAt:Date.parse(assignment.submittedAt || "")
+            };
+          })
+          .filter(item => item.score !== null)
+          .sort(function (left,right) {
+            const a = Number.isFinite(left.submittedAt) ? left.submittedAt : 0;
+            const b = Number.isFinite(right.submittedAt) ? right.submittedAt : 0;
+            return a - b;
+          });
+        const latest = scoredAssignments.length ? scoredAssignments[scoredAssignments.length - 1] : null;
+        const average = scoredAssignments.length
+          ? scoredAssignments.reduce((sum,item) => sum + item.score,0) / scoredAssignments.length
+          : null;
+        const row = {
+          "Roll No":exportText(student.rollNo),
+          "Name":exportText(student.name),
+          "Email ID":exportText(student.emailId),
+          "Mobile Number":exportText(student.mobileNumber),
+          "Questions Released":releasedAssignments.length,
+          "Questions Answered":answeredAssignments.length,
+          "Completion":workbookCompletionBar(answeredAssignments.length,releasedAssignments.length),
+          "Average Score":average === null ? "" : Number(average.toFixed(2)),
+          "Latest Score":latest ? latest.score : "",
+          "Score Trend":workbookScoreTrend(scoredAssignments.map(item => item.score))
+        };
+        const feedbackSections = [];
+
+        questions.forEach(function (question) {
+          const questionNumber = questionNumberByTask.get(String(question.taskUuid || "")) || "";
+          const column = `Q${questionNumber}`;
+          const assignment = assignmentByStudentAndTask.get(`${studentKey}::${question.taskUuid || ""}`);
+          row[column] = assignment ? scoreOrAssignmentStatus(assignment) : "";
+
+          if (assignment && assignment.submissionUuid) {
+            const formattedFeedback = formatDetailedFeedback(assignment.detailedFeedback);
+            feedbackSections.push(
+              `${column}: ${formattedFeedback || "Feedback was not stored for this response."}`
+            );
+          }
+        });
+
+        row["Detailed Feedback"] = feedbackSections.join("\n\n");
+        return row;
+      });
+
+      const snapshotStart = 4;
+      const questionStart = snapshotStart + snapshotHeaders.length;
+      const questionEnd = questionStart + questionHeaders.length - 1;
+      const feedbackColumn = headers.length - 1;
+      const groups = [
+        {label:"STUDENT DETAILS",start:0,end:3,fill:WORKBOOK_STYLE.identity,bodyFill:WORKBOOK_STYLE.identitySoft},
+        {label:"PERFORMANCE SNAPSHOT",start:snapshotStart,end:snapshotStart + snapshotHeaders.length - 1,fill:WORKBOOK_STYLE.snapshot,bodyFill:WORKBOOK_STYLE.snapshotSoft},
+        ...(questionHeaders.length ? [{label:"ATTEMPTED QUESTION SCORES",start:questionStart,end:questionEnd,fill:WORKBOOK_STYLE.score,bodyFill:WORKBOOK_STYLE.scoreSoft}] : []),
+        {label:"FEEDBACK",start:feedbackColumn,end:feedbackColumn,fill:WORKBOOK_STYLE.feedback,bodyFill:WORKBOOK_STYLE.feedbackSoft}
+      ];
+
+      const sheet = makeStyledWorksheet(
+        rows,
+        headers,
+        [15,24,30,17,14,14,22,13,13,16,...questionHeaders.map(() => 8),68],
+        {
+          title:"INDIVIDUAL STUDENT PERFORMANCE",
+          subtitle:`${exportText(workbookData.institutionName)} | Only questions with at least one stored response appear as Q columns. New columns are added automatically as learners answer new questions.`,
+          groups,
+          freezeColumns:4,
+          wrapColumns:[feedbackColumn],
+          centerColumns:[
+            0,3,
+            snapshotStart,
+            snapshotStart + 1,
+            snapshotStart + 2,
+            snapshotStart + 3,
+            snapshotStart + 4,
+            snapshotStart + 5,
+            ...questionHeaders.map((_,index) => questionStart + index)
+          ],
+          scoreColumns:[
+            snapshotStart + 3,
+            snapshotStart + 4,
+            ...questionHeaders.map((_,index) => questionStart + index)
+          ],
+          emphasisScoreColumns:[snapshotStart + 3,snapshotStart + 4],
+          questionMatrixColumns:questionHeaders.map((_,index) => questionStart + index),
+          dataRowHeight:48
+        }
+      );
+
+      appendQuestionReference(sheet,rows.length + 6,questions,questionNumberByTask);
+      return sheet;
+    }
+
+    function buildDetailedResultsSheet(workbookData, questionNumberByTask) {
+      const assignments = (Array.isArray(workbookData.assignments) ? workbookData.assignments : [])
+        .filter(function (assignment) {
+          return Boolean(assignment.submissionUuid);
+        })
+        .slice()
+        .sort(function (left,right) {
+          return exportText(left.batch).localeCompare(exportText(right.batch)) ||
+            exportText(left.name).localeCompare(exportText(right.name)) ||
+            Number(questionNumberByTask.get(String(left.taskUuid || "")) || 0) - Number(questionNumberByTask.get(String(right.taskUuid || "")) || 0) ||
+            Number(exportNumber(left.attemptNumber) || 0) - Number(exportNumber(right.attemptNumber) || 0);
+        });
+
+      const criterionHeaders = [];
+      for (let index=1; index<=5; index+=1) {
+        criterionHeaders.push(`Criterion ${index}`,`C${index} Score`);
+      }
+
+      const headers = [
+        "Roll No",
+        "Student Name",
+        "Student Batch / Cohort",
+        "Email ID",
+        "Mobile Number",
+        "Question Number",
+        "Question Text",
+        "Rubric Type",
+        "Submitted At",
+        "Submission Status",
+        "Timeliness Status",
+        "Attempt Number",
+        "Final Score",
+        "Score Bar",
+        ...criterionHeaders,
+        "Transcript",
+        "Criterion-wise Feedback",
+        "Other Issues",
+        "Follow-up Mode",
+        "Follow-up Question",
+        "Follow-up Completed",
+        "Follow-up Score",
+        "Audio / Drive Link",
+        "Assigned At",
+        "Release At",
+        "Due At",
+        "Follow-up Transcript",
+        "Follow-up Submitted At",
+        "Institution",
+        "Weekly Question-Batch Identifier",
+        "Audio File Name",
+        "Evaluation Status",
+        "Assignment UUID",
+        "Submission UUID",
+        "Task UUID",
+        "Question Batch UUID"
+      ];
+
+      const rows = assignments.map(function (assignment) {
+        const scoreMap = criterionScoreMap(assignment.criterionScores,assignment.detailedFeedback);
+        const criteria = workbookCriteriaForRubric(assignment.rubricType,scoreMap);
+        const finalScore = exportNumber(assignment.finalScore ?? assignment.totalScore);
+        const row = {
+          "Roll No":exportText(assignment.rollNo),
+          "Student Name":exportText(assignment.name),
+          "Student Batch / Cohort":exportText(assignment.batch),
+          "Email ID":exportText(assignment.emailId),
+          "Mobile Number":exportText(assignment.mobileNumber),
+          "Question Number":questionNumberByTask.get(String(assignment.taskUuid || "")) || "",
+          "Question Text":exportText(assignment.question),
+          "Rubric Type":exportText(assignment.rubricType),
+          "Submitted At":exportDate(assignment.submittedAt),
+          "Submission Status":exportText(assignment.submissionStatus),
+          "Timeliness Status":exportText(assignment.timelinessStatus),
+          "Attempt Number":exportNumber(assignment.attemptNumber) ?? "",
+          "Final Score":finalScore ?? "",
+          "Score Bar":workbookScoreBar(finalScore),
+          "Transcript":exportText(assignment.transcript),
+          "Criterion-wise Feedback":criterionFeedbackText(assignment.criterionFeedback,assignment.detailedFeedback),
+          "Other Issues":otherIssuesText(assignment.otherIssues,assignment.detailedFeedback),
+          "Follow-up Mode":exportText(assignment.followupMode),
+          "Follow-up Question":exportText(assignment.followupQuestion),
+          "Follow-up Completed":exportBoolean(assignment.followupCompleted),
+          "Follow-up Score":exportNumber(assignment.followupScore) ?? "",
+          "Audio / Drive Link":exportText(assignment.audioLink),
+          "Assigned At":exportDate(assignment.assignedAt),
+          "Release At":exportDate(assignment.releaseAt),
+          "Due At":exportDate(assignment.dueAt),
+          "Follow-up Transcript":exportText(assignment.followupTranscript),
+          "Follow-up Submitted At":exportDate(assignment.followupSubmittedAt),
+          "Institution":exportText(assignment.institution || workbookData.institutionName),
+          "Weekly Question-Batch Identifier":exportText(assignment.weeklyQuestionBatchIdentifier),
+          "Audio File Name":exportText(assignment.audioFileName),
+          "Evaluation Status":exportText(assignment.evaluationStatus),
+          "Assignment UUID":exportText(assignment.assignmentUuid),
+          "Submission UUID":exportText(assignment.submissionUuid),
+          "Task UUID":exportText(assignment.taskUuid),
+          "Question Batch UUID":exportText(assignment.questionBatchUuid)
+        };
+
+        criteria.forEach(function (criterion,index) {
+          row[`Criterion ${index + 1}`] = criterion.label;
+          row[`C${index + 1} Score`] = criterion.score ?? "";
+        });
+
+        return row;
+      });
+
+      const scoreStart = headers.indexOf("Final Score");
+      const scoreEnd = headers.indexOf("C5 Score");
+      const responseStart = headers.indexOf("Transcript");
+      const responseEnd = headers.indexOf("Other Issues");
+      const followupStart = headers.indexOf("Follow-up Mode");
+      const followupEnd = headers.indexOf("Follow-up Score");
+      const linkColumn = headers.indexOf("Audio / Drive Link");
+      const auditStart = headers.indexOf("Assigned At");
+      const auditEnd = headers.length - 1;
+      const scoreColumns = [headers.indexOf("Final Score"),headers.indexOf("Follow-up Score")];
+      for (let index=1; index<=5; index+=1) scoreColumns.push(headers.indexOf(`C${index} Score`));
+
+      return makeStyledWorksheet(
+        rows,
+        headers,
+        headers.map(function (header) {
+          if (["Question Text","Transcript","Criterion-wise Feedback","Other Issues","Follow-up Question","Follow-up Transcript"].includes(header)) return 40;
+          if (header === "Score Bar") return 20;
+          if (["Email ID","Audio / Drive Link"].includes(header)) return 28;
+          if (["Weekly Question-Batch Identifier","Assignment UUID","Submission UUID","Task UUID","Question Batch UUID"].includes(header)) return 34;
+          if (header.startsWith("Criterion ")) return 22;
+          if (/^C[1-5] Score$/.test(header)) return 11;
+          if (header.endsWith(" At")) return 19;
+          return 15;
+        }),
+        {
+          title:"DETAILED RESULTS",
+          subtitle:`${exportText(workbookData.institutionName)} | One row per stored response. Future and unanswered assignments are excluded; this sheet grows only when learners submit.`,
+          groups:[
+            {label:"STUDENT",start:0,end:4,fill:WORKBOOK_STYLE.identity,bodyFill:WORKBOOK_STYLE.identitySoft},
+            {label:"ATTEMPT SNAPSHOT",start:5,end:11,fill:WORKBOOK_STYLE.activity,bodyFill:WORKBOOK_STYLE.activitySoft},
+            {label:"SCORES",start:scoreStart,end:scoreEnd,fill:WORKBOOK_STYLE.score,bodyFill:WORKBOOK_STYLE.scoreSoft},
+            {label:"RESPONSE & FEEDBACK",start:responseStart,end:responseEnd,fill:WORKBOOK_STYLE.feedback,bodyFill:WORKBOOK_STYLE.feedbackSoft},
+            {label:"FOLLOW-UP",start:followupStart,end:followupEnd,fill:WORKBOOK_STYLE.followup,bodyFill:WORKBOOK_STYLE.followupSoft},
+            {label:"RECORDING",start:linkColumn,end:linkColumn,fill:WORKBOOK_STYLE.recording,bodyFill:WORKBOOK_STYLE.recordingSoft},
+            {label:"AUDIT FIELDS",start:auditStart,end:auditEnd,fill:WORKBOOK_STYLE.audit,bodyFill:WORKBOOK_STYLE.auditSoft}
+          ],
+          freezeColumns:3,
+          wrapColumns:[
+            headers.indexOf("Question Text"),
+            headers.indexOf("Transcript"),
+            headers.indexOf("Criterion-wise Feedback"),
+            headers.indexOf("Other Issues"),
+            headers.indexOf("Follow-up Question"),
+            headers.indexOf("Follow-up Transcript")
+          ],
+          centerColumns:[
+            headers.indexOf("Question Number"),
+            headers.indexOf("Rubric Type"),
+            headers.indexOf("Attempt Number"),
+            headers.indexOf("Submission Status"),
+            headers.indexOf("Timeliness Status"),
+            headers.indexOf("Follow-up Mode"),
+            headers.indexOf("Follow-up Completed"),
+            headers.indexOf("Score Bar"),
+            ...scoreColumns
+          ],
+          dateColumns:[
+            headers.indexOf("Submitted At"),
+            headers.indexOf("Assigned At"),
+            headers.indexOf("Release At"),
+            headers.indexOf("Due At"),
+            headers.indexOf("Follow-up Submitted At")
+          ],
+          scoreColumns,
+          emphasisScoreColumns:[headers.indexOf("Final Score")],
+          statusColumns:{
+            [headers.indexOf("Submission Status")]:"submission",
+            [headers.indexOf("Timeliness Status")]:"timeliness",
+            [headers.indexOf("Follow-up Completed")]:"yesno"
+          },
+          linkColumns:[linkColumn],
+          hiddenColumns:Array.from({length:auditEnd - auditStart + 1},(_,index) => auditStart + index),
+          dataRowHeight:46
+        }
+      );
+    }
+
+    function workbookProgressSummary(first, latest, firstScore, latestScore, scoreChange, criteria) {
+      if (!first || !latest || firstScore === null || latestScore === null) {
+        return "No completed response is available yet.";
+      }
+
+      if (first.submissionUuid === latest.submissionUuid) {
+        return `Baseline recorded at ${firstScore.toFixed(2)}. A later response under the same rubric is needed to measure progress.`;
+      }
+
+      const movements = criteria
+        .filter(item => item.change !== null)
+        .sort((left,right) => right.change - left.change);
+      const strongestGain = movements.find(item => item.change > 0);
+      const largestDrop = movements.slice().reverse().find(item => item.change < 0);
+      const signed = scoreChange > 0 ? `+${scoreChange.toFixed(2)}` : scoreChange.toFixed(2);
+      let summary = `Overall score moved from ${firstScore.toFixed(2)} to ${latestScore.toFixed(2)} (${signed}).`;
+
+      if (strongestGain) {
+        summary += ` Strongest gain: ${strongestGain.label} (+${strongestGain.change.toFixed(2)}).`;
+      }
+      if (largestDrop) {
+        summary += ` Watch: ${largestDrop.label} (${largestDrop.change.toFixed(2)}).`;
+      }
+      if (!strongestGain && !largestDrop) {
+        summary += " Criterion scores were unchanged.";
+      }
+
+      return summary;
+    }
+
+    function buildFirstVsLatestSheet(workbookData, questionNumberByTask) {
+      const students = (Array.isArray(workbookData.students) ? workbookData.students : [])
+        .slice()
+        .sort(function (left,right) {
+          return exportText(left.batch).localeCompare(exportText(right.batch)) ||
+            exportText(left.name).localeCompare(exportText(right.name)) ||
+            exportText(left.rollNo).localeCompare(exportText(right.rollNo));
+        });
+      const submissions = Array.isArray(workbookData.submissions) ? workbookData.submissions : [];
+      const submissionsByStudent = new Map();
+
+      submissions.forEach(function (submission) {
+        if (exportNumber(submission.score ?? submission.finalScore) === null) return;
+        const key = String(submission.studentUuid || "");
+        if (!submissionsByStudent.has(key)) submissionsByStudent.set(key,[]);
+        submissionsByStudent.get(key).push(submission);
+      });
+
+      submissionsByStudent.forEach(function (items) {
+        items.sort(function (left,right) {
+          const a = Date.parse(left.submittedAt || "");
+          const b = Date.parse(right.submittedAt || "");
+          if (Number.isFinite(a) && Number.isFinite(b) && a !== b) return a - b;
+          return exportText(left.submissionUuid).localeCompare(exportText(right.submissionUuid));
+        });
+      });
+
+      const criterionHeaders = [];
+      for (let index=1; index<=5; index+=1) {
+        criterionHeaders.push(
+          `Criterion ${index}`,
+          `C${index} First`,
+          `C${index} Latest`,
+          `C${index} Change`
+        );
+      }
+
+      const headers = [
+        "Roll No",
+        "Student Name",
+        "Student Batch / Cohort",
+        "Rubric Compared",
+        "Responses Compared",
+        "First Score",
+        "Latest Score",
+        "Score Change",
+        "Change Indicator",
+        "Improvement Status",
+        "Score Trend",
+        "First Score Bar",
+        "Latest Score Bar",
+        "Overall Progress Summary",
+        ...criterionHeaders,
+        "First Submitted At",
+        "First Question Number",
+        "First Question",
+        "First Audio / Drive Link",
+        "First Transcript",
+        "Latest Submitted At",
+        "Latest Question Number",
+        "Latest Question",
+        "Latest Audio / Drive Link",
+        "Latest Transcript",
+        "First Assignment UUID",
+        "First Submission UUID",
+        "Latest Assignment UUID",
+        "Latest Submission UUID"
+      ];
+
+      const rows = students.map(function (student) {
+        const completed = submissionsByStudent.get(String(student.studentUuid || "")) || [];
+        if (!completed.length) return null;
+        const latestCompleted = completed[completed.length - 1];
+        const latestRubric = exportText(latestCompleted.rubricType);
+        const comparable = completed.filter(item => workbookRubricKey(item.rubricType) === workbookRubricKey(latestRubric));
+        const first = comparable.length ? comparable[0] : null;
+        const latest = comparable.length ? comparable[comparable.length - 1] : null;
+        const firstScore = first ? exportNumber(first.score ?? first.finalScore) : null;
+        const latestScore = latest ? exportNumber(latest.score ?? latest.finalScore) : null;
+        const scoreChange = firstScore !== null && latestScore !== null
+          ? Number((latestScore - firstScore).toFixed(2))
+          : null;
+        const firstCriteriaMap = criterionScoreMap(
+          first ? first.criterionScores : null,
+          first ? first.detailedFeedback : null
+        );
+        const latestCriteriaMap = criterionScoreMap(
+          latest ? latest.criterionScores : null,
+          latest ? latest.detailedFeedback : null
+        );
+        const criteriaTemplate = workbookCriteriaForRubric(latestRubric,latestCriteriaMap.size ? latestCriteriaMap : firstCriteriaMap);
+        const criteria = criteriaTemplate.map(function (criterion) {
+          const firstCriterionScore = criterion.key && firstCriteriaMap.has(criterion.key)
+            ? firstCriteriaMap.get(criterion.key)
+            : null;
+          const latestCriterionScore = criterion.key && latestCriteriaMap.has(criterion.key)
+            ? latestCriteriaMap.get(criterion.key)
+            : null;
+          const change = firstCriterionScore !== null && latestCriterionScore !== null
+            ? Number((latestCriterionScore - firstCriterionScore).toFixed(2))
+            : null;
+          return {
+            ...criterion,
+            first:firstCriterionScore,
+            latest:latestCriterionScore,
+            change
+          };
+        });
+
+        let improvementStatus = "Baseline Only";
+        if (first && latest && first.submissionUuid !== latest.submissionUuid) {
+          if (scoreChange !== null && scoreChange > 0) improvementStatus = "Improved";
+          else if (scoreChange !== null && scoreChange < 0) improvementStatus = "Declined";
+          else improvementStatus = "Stable";
+        }
+
+        const row = {
+          "Roll No":exportText(student.rollNo),
+          "Student Name":exportText(student.name),
+          "Student Batch / Cohort":exportText(student.batch),
+          "Rubric Compared":latestRubric,
+          "Responses Compared":comparable.length,
+          "First Score":firstScore ?? "",
+          "Latest Score":latestScore ?? "",
+          "Score Change":scoreChange ?? "",
+          "Change Indicator":workbookChangeIndicator(scoreChange),
+          "Improvement Status":improvementStatus,
+          "Score Trend":workbookScoreTrend(comparable.map(item => item.score ?? item.finalScore)),
+          "First Score Bar":workbookScoreBar(firstScore),
+          "Latest Score Bar":workbookScoreBar(latestScore),
+          "Overall Progress Summary":workbookProgressSummary(first,latest,firstScore,latestScore,scoreChange,criteria),
+          "First Submitted At":first ? exportDate(first.submittedAt) : "",
+          "First Question Number":first ? questionNumberByTask.get(String(first.taskUuid || "")) || "" : "",
+          "First Question":first ? exportText(first.question) : "",
+          "First Audio / Drive Link":first ? exportText(first.audioLink) : "",
+          "First Transcript":first ? exportText(first.transcript) : "",
+          "Latest Submitted At":latest ? exportDate(latest.submittedAt) : "",
+          "Latest Question Number":latest ? questionNumberByTask.get(String(latest.taskUuid || "")) || "" : "",
+          "Latest Question":latest ? exportText(latest.question) : "",
+          "Latest Audio / Drive Link":latest ? exportText(latest.audioLink) : "",
+          "Latest Transcript":latest ? exportText(latest.transcript) : "",
+          "First Assignment UUID":first ? exportText(first.assignmentUuid) : "",
+          "First Submission UUID":first ? exportText(first.submissionUuid) : "",
+          "Latest Assignment UUID":latest ? exportText(latest.assignmentUuid) : "",
+          "Latest Submission UUID":latest ? exportText(latest.submissionUuid) : ""
+        };
+
+        criteria.forEach(function (criterion,index) {
+          const number = index + 1;
+          row[`Criterion ${number}`] = criterion.label;
+          row[`C${number} First`] = criterion.first ?? "";
+          row[`C${number} Latest`] = criterion.latest ?? "";
+          row[`C${number} Change`] = criterion.change ?? "";
+        });
+
+        return row;
+      }).filter(Boolean);
+
+      const criterionStart = headers.indexOf("Criterion 1");
+      const firstResponseStart = headers.indexOf("First Submitted At");
+      const latestResponseStart = headers.indexOf("Latest Submitted At");
+      const auditStart = headers.indexOf("First Assignment UUID");
+      const auditEnd = headers.length - 1;
+      const changeColumns = [headers.indexOf("Score Change")];
+      const emphasisScoreColumns = [headers.indexOf("First Score"),headers.indexOf("Latest Score")];
+      const scoreColumns = [...emphasisScoreColumns,...changeColumns];
+      const groups = [
+        {label:"STUDENT",start:0,end:2,fill:WORKBOOK_STYLE.identity,bodyFill:WORKBOOK_STYLE.identitySoft},
+        {label:"PROGRESS SNAPSHOT",start:3,end:13,fill:WORKBOOK_STYLE.snapshot,bodyFill:WORKBOOK_STYLE.snapshotSoft}
+      ];
+
+      for (let index=0; index<5; index+=1) {
+        const start = criterionStart + index * 4;
+        groups.push({label:`CRITERION ${index + 1}`,start,end:start + 3,fill:WORKBOOK_STYLE.score,bodyFill:WORKBOOK_STYLE.scoreSoft});
+        scoreColumns.push(start + 1,start + 2,start + 3);
+        emphasisScoreColumns.push(start + 1,start + 2);
+        changeColumns.push(start + 3);
+      }
+
+      groups.push(
+        {label:"FIRST RESPONSE",start:firstResponseStart,end:firstResponseStart + 4,fill:WORKBOOK_STYLE.activity,bodyFill:WORKBOOK_STYLE.activitySoft},
+        {label:"LATEST RESPONSE",start:latestResponseStart,end:latestResponseStart + 4,fill:WORKBOOK_STYLE.followup,bodyFill:WORKBOOK_STYLE.followupSoft},
+        {label:"AUDIT FIELDS",start:auditStart,end:auditEnd,fill:WORKBOOK_STYLE.audit,bodyFill:WORKBOOK_STYLE.auditSoft}
+      );
+
+      return makeStyledWorksheet(
+        rows,
+        headers,
+        headers.map(function (header) {
+          if (header === "Overall Progress Summary") return 46;
+          if (["First Question","Latest Question","First Transcript","Latest Transcript"].includes(header)) return 38;
+          if (["First Audio / Drive Link","Latest Audio / Drive Link"].includes(header)) return 20;
+          if (["First Score Bar","Latest Score Bar"].includes(header)) return 20;
+          if (header === "Score Trend") return 15;
+          if (header.includes("UUID")) return 34;
+          if (header.startsWith("Criterion ")) return 22;
+          if (/^C[1-5] /.test(header)) return 11;
+          if (header.endsWith(" At")) return 19;
+          return 15;
+        }),
+        {
+          title:"FIRST VS LATEST PROGRESS",
+          subtitle:`${exportText(workbookData.institutionName)} | Only learners with a completed response appear. Bars and the compact trend line show movement without requiring a chart.`,
+          groups,
+          freezeColumns:3,
+          wrapColumns:[
+            headers.indexOf("Overall Progress Summary"),
+            headers.indexOf("First Question"),
+            headers.indexOf("First Transcript"),
+            headers.indexOf("Latest Question"),
+            headers.indexOf("Latest Transcript")
+          ],
+          centerColumns:[
+            headers.indexOf("Rubric Compared"),
+            headers.indexOf("Responses Compared"),
+            headers.indexOf("First Score"),
+            headers.indexOf("Latest Score"),
+            headers.indexOf("Score Change"),
+            headers.indexOf("Change Indicator"),
+            headers.indexOf("Improvement Status"),
+            headers.indexOf("Score Trend"),
+            headers.indexOf("First Score Bar"),
+            headers.indexOf("Latest Score Bar"),
+            headers.indexOf("First Question Number"),
+            headers.indexOf("Latest Question Number"),
+            ...scoreColumns
+          ],
+          dateColumns:[headers.indexOf("First Submitted At"),headers.indexOf("Latest Submitted At")],
+          scoreColumns,
+          emphasisScoreColumns,
+          changeColumns,
+          statusColumns:{[headers.indexOf("Improvement Status")]:"progress"},
+          linkColumns:[headers.indexOf("First Audio / Drive Link"),headers.indexOf("Latest Audio / Drive Link")],
+          hiddenColumns:Array.from({length:auditEnd - auditStart + 1},(_,index) => auditStart + index),
+          dataRowHeight:48
+        }
+      );
+    }
+
+    function mobileNumberMap(payload) {
+      const map = new Map();
+      const root = normaliseRpc(payload) || {};
+      const candidates = Array.isArray(root)
+        ? [root]
+        : [
+            root.students,
+            root.mobileNumbers,
+            root.mobile_numbers,
+            root.studentMobileMap,
+            root.student_mobile_map,
+            root.rows,
+            root.data
+          ];
+
+      function add(studentUuid, mobileNumber) {
+        const key = String(studentUuid || "").trim();
+        const value = exportText(mobileNumber);
+        if (key && value) map.set(key,value);
+      }
+
+      candidates.forEach(function (candidate) {
+        if (Array.isArray(candidate)) {
+          candidate.forEach(function (item) {
+            if (!item || typeof item !== "object") return;
+            add(
+              item.studentUuid ?? item.student_uuid ?? item.uuid ?? item.id,
+              item.mobileNumber ?? item.mobile_number ?? item.mobile ?? item.phone
+            );
+          });
+          return;
+        }
+
+        if (!candidate || typeof candidate !== "object") return;
+        Object.entries(candidate).forEach(function ([key,value]) {
+          if (value && typeof value === "object") {
+            add(
+              value.studentUuid ?? value.student_uuid ?? value.uuid ?? value.id ?? key,
+              value.mobileNumber ?? value.mobile_number ?? value.mobile ?? value.phone
+            );
+          } else {
+            add(key,value);
+          }
+        });
+      });
+
+      return map;
+    }
+
+    async function addMobileNumbersToWorkbook(workbookData) {
+      try {
+        const payload = await callRpc(
+          RPC.studentMobileMap,
+          {p_session_token:currentSession.sessionToken}
+        );
+        const mobileByStudent = mobileNumberMap(payload);
+
+        if (!mobileByStudent.size) return;
+
+        ["students","assignments","submissions"].forEach(function (collection) {
+          const rows = Array.isArray(workbookData[collection])
+            ? workbookData[collection]
+            : [];
+
+          rows.forEach(function (row) {
+            const studentUuid = String(
+              row.studentUuid ?? row.student_uuid ?? ""
+            );
+            const mobileNumber = mobileByStudent.get(studentUuid);
+            if (mobileNumber && !exportText(row.mobileNumber)) {
+              row.mobileNumber = mobileNumber;
+            }
+          });
+        });
+      } catch (error) {
+        // The workbook remains usable if a historic mobile record cannot be read.
+        console.warn("ASCENT mobile number map could not be loaded:",error);
+      }
+    }
+
+    async function exportExcel(rows, source) {
+      const statusElement =
+        source === "dashboard"
+          ? byId("dashboardStatus")
+          : byId("resultsStatus");
+
+      const button =
+        source === "dashboard"
+          ? byId("dashboardExportButton")
+          : byId("resultsExportButton");
+
+      if (!window.XLSX) {
+        setStatus(
+          statusElement,
+          "The Excel library did not load. Check the internet connection and try again.",
+          "error"
+        );
+        return;
+      }
+
+      const originalButtonText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Preparing Excel…";
+      setStatus(statusElement,"","");
+
+      try {
+        const workbookData = await callRpc(
+          RPC.workbookExport,
+          {p_session_token:currentSession.sessionToken}
+        );
+
+        if (!workbookData || workbookData.ok !== true) {
+          throw new Error(
+            workbookData && workbookData.message
+              ? workbookData.message
+              : "The complete workbook data could not be loaded."
+          );
+        }
+
+        await addMobileNumbersToWorkbook(workbookData);
+
+        const allQuestions = (Array.isArray(workbookData.questions) ? workbookData.questions : [])
+          .slice()
+          .sort(compareQuestionRows);
+        const assignments = Array.isArray(workbookData.assignments) ? workbookData.assignments : [];
+        const attemptedTaskIds = new Set(
+          assignments
+            .filter(assignment => Boolean(assignment.submissionUuid))
+            .map(assignment => String(assignment.taskUuid || ""))
+            .filter(Boolean)
+        );
+        const attemptedQuestions = allQuestions.filter(
+          question => attemptedTaskIds.has(String(question.taskUuid || ""))
+        );
+        const questionNumberByTask = new Map(
+          attemptedQuestions.map((question,index) => [String(question.taskUuid || ""),index + 1])
+        );
+
+        const individualSheet = buildIndividualPerformanceSheet(
+          workbookData,
+          attemptedQuestions,
+          questionNumberByTask
+        );
+        const detailedSheet = buildDetailedResultsSheet(
+          workbookData,
+          questionNumberByTask
+        );
+        const progressSheet = buildFirstVsLatestSheet(
+          workbookData,
+          questionNumberByTask
+        );
+
+        const workbook = XLSX.utils.book_new();
+        workbook.Props = {
+          Title:"ASCENT Trainer Performance Report",
+          Subject:"Institution-scoped student performance, detailed results and progress",
+          Author:"ASCENT",
+          CreatedDate:new Date()
+        };
+
+        XLSX.utils.book_append_sheet(
+          workbook,
+          individualSheet,
+          "INDIVIDUAL STUDENT PERFORMANCE"
+        );
+        XLSX.utils.book_append_sheet(
+          workbook,
+          detailedSheet,
+          "DETAILED RESULTS"
+        );
+        XLSX.utils.book_append_sheet(
+          workbook,
+          progressSheet,
+          "FIRST VS LATEST PROGRESS"
+        );
+
+        const institutionName = exportText(workbookData.institutionName)
+          .replace(/[^A-Za-z0-9_-]+/g,"_")
+          .replace(/^_+|_+$/g,"") || "Institution";
+
+        XLSX.writeFile(
+          workbook,
+          `ASCENT_${institutionName}_Trainer_Report_${new Date().toISOString().slice(0,10)}.xlsx`,
+          {cellStyles:true,cellDates:true}
+        );
+
+        setStatus(
+          statusElement,
+          "Excel downloaded with progressive attempted-question columns, subdued data-group colours and compact visual score bars.",
+          "success"
+        );
+      } catch (error) {
+        console.error(error);
+        setStatus(
+          statusElement,
+          error.message || "ASCENT could not prepare the Excel report.",
+          "error"
+        );
+      } finally {
+        button.disabled = false;
+        button.textContent = originalButtonText;
+      }
+    }
+
+    async function clearSelectedTestRegister() {
+      if (!isAdmin()) {
+        setStatus(byId("clearTestRegisterStatus"),"Only an administrator can clear test assignment records.","error");
+        return;
+      }
+
+      const studentUuid = byId("testStudentClearSelect").value;
+      const student = reportData.students.find(item => item.studentUuid === studentUuid);
+
+      if (!studentUuid || !student) {
+        setStatus(byId("clearTestRegisterStatus"),"Choose the test student whose register must be cleared.","error");
+        return;
+      }
+
+      const studentId = String(student.studentId || "").trim().toUpperCase();
+      if (!studentId.startsWith("ASCENTTEST")) {
+        setStatus(byId("clearTestRegisterStatus"),"For safety, only Student IDs beginning with ASCENTTEST can be cleared here.","error");
+        return;
+      }
+
+      const confirmation = window.prompt(
+        `This will permanently delete all assignments and submissions for ${student.fullName} (${student.studentId}).\n\n` +
+        `The student login, tasks and question bank will remain.\n\n` +
+        `Type CLEAR TEST DATA to continue.`
+      );
+
+      if (confirmation === null) return;
+
+      if (String(confirmation).trim().toUpperCase() !== "CLEAR TEST DATA") {
+        setStatus(byId("clearTestRegisterStatus"),"Nothing was deleted. The confirmation text did not match.","warning");
+        return;
+      }
+
+      const button = byId("clearTestRegisterButton");
+      button.disabled = true;
+      button.textContent = "Clearing Test Register…";
+      setStatus(byId("clearTestRegisterStatus"),"","");
+
+      try {
+        const result = await callRpc(RPC.clearTestRegister,{
+          p_session_token:currentSession.sessionToken,
+          p_student_uuid:studentUuid,
+          p_confirmation:"CLEAR TEST DATA"
+        });
+
+        if (!result || result.ok !== true) {
+          throw new Error(result && result.message ? result.message : "The test register could not be cleared.");
+        }
+
+        setStatus(
+          byId("clearTestRegisterStatus"),
+          `${result.message} ${result.assignmentsDeleted || 0} assignments and ${result.submissionsDeleted || 0} submissions were deleted. The student login was preserved.`,
+          "success"
+        );
+
+        await loadReport("Refreshing the Assignment Register…");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("clearTestRegisterStatus"),error.message || "ASCENT could not clear the test register.","error");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Clear Selected Test Register";
+      }
+    }
+
+    async function createTrainer(event) {
+      event.preventDefault();
+      const name = byId("newTrainerName").value.trim(), email = byId("newTrainerEmail").value.trim().toLowerCase(), password = byId("newTrainerPassword").value, role = byId("newTrainerRole").value;
+      if (!name || !email || password.length < 8) { setStatus(byId("addTrainerStatus"),"Enter the name, email and a password of at least eight characters.","error"); return; }
+      const button = byId("addTrainerButton"); button.disabled = true; button.textContent = "Adding Trainer…";
+      try { const result = await callRpc(RPC.createTrainer,{p_session_token:currentSession.sessionToken,p_full_name:name,p_email:email,p_password:password,p_role:role}); const outcome = normaliseRpc(result); if (!outcome || outcome.ok !== true) throw new Error(outcome && outcome.message ? outcome.message : "Trainer could not be created."); setStatus(byId("addTrainerStatus"),outcome.message,"success"); byId("addTrainerForm").reset(); byId("newTrainerRole").value="TRAINER"; }
+      catch (error) { console.error(error); setStatus(byId("addTrainerStatus"),error.message,"error"); }
+      finally { button.disabled=false; button.textContent="Add Trainer"; }
+    }
+
+    function clearFilters(prefix) {
+      ["BatchFilter","StudentFilter","TaskFilter","StatusFilter"].forEach(suffix => { const element = byId(prefix+suffix); if (element) element.value=""; });
+      if (prefix === "result") { byId("resultDateFrom").value=""; byId("resultDateTo").value=""; renderResultsTable(); } else renderAssignmentsTable();
+    }
+
+    function initialiseAdminTouchpoint() {
+      const touchpoint = byId("adminTouchpoint");
+      if (!touchpoint) return;
+
+      let clickCount = 0;
+      let resetTimer = null;
+
+      const registerTouch = () => {
+        if (!isAdmin()) return;
+
+        clickCount += 1;
+        window.clearTimeout(resetTimer);
+
+        if (clickCount >= 5) {
+          clickCount = 0;
+          window.location.href = "./admin-settings.html";
+          return;
+        }
+
+        resetTimer = window.setTimeout(() => {
+          clickCount = 0;
+        }, 5000);
+      };
+
+      touchpoint.addEventListener("click",registerTouch);
+      touchpoint.addEventListener("keydown",event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          registerTouch();
+        }
+      });
+    }
+
+    function updateBankAssignmentFollowupControls() {
+      const mode = byId("bankAssignmentFollowupMode").value;
+      const fixed = mode === "FIXED_FOLLOW_UP";
+      const smart = mode === "SMART_FOLLOW_UP";
+      const timed = fixed || smart;
+
+      byId("bankAssignmentFixedFollowupGroup").hidden = !fixed;
+      byId("bankAssignmentSmartFollowupNote").hidden = !smart;
+      byId("bankAssignmentPrepGroup").hidden = !timed;
+      byId("bankAssignmentResponseGroup").hidden = !timed;
+    }
+
+    function wireEvents() {
+      document.querySelectorAll(".nav-item").forEach(item => item.addEventListener("click",() => showSection(item.dataset.section)));
+      byId("logoutButton").addEventListener("click",() => { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href="./trainer-login.html"; });
+      byId("refreshDashboardButton").addEventListener("click",() => loadReport("Refreshing dashboard…"));
+      byId("refreshTasksButton").addEventListener("click",() => loadReport("Refreshing tasks…"));
+      byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results,"dashboard"));
+      byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows,"results"));
+      byId("refreshStudentsButton").addEventListener("click",() => loadStudentPerformance(true));
+      byId("refreshFollowupsButton").addEventListener("click",() => loadReminderDashboard("Refreshing student follow-ups…"));
+      byId("toggleFollowupsButton").addEventListener("click",toggleInstitutionalFollowups);
+      byId("followupsExportButton").addEventListener("click",downloadFollowupExcel);
+      byId("refreshQuestionBankButton").addEventListener("click",() => loadQuestionBank("Refreshing question bank…"));
+      byId("addBankQuestionButton").addEventListener("click",() => openBankQuestionEditor());
+      byId("cancelBankEditButton").addEventListener("click",closeBankQuestionEditor);
+      byId("bankQuestionEditor").addEventListener("submit",saveBankQuestion);
+      byId("bankEditType").addEventListener("change",() => fillBankCategorySelect("bankEditCategory",byId("bankEditType").value,"Choose category"));
+      byId("bankEditFollowupMode").addEventListener("change",() => { byId("bankEditFixedFollowupGroup").hidden = byId("bankEditFollowupMode").value !== "FIXED_FOLLOW_UP"; });
+      byId("bankTypeFilter").addEventListener("change",() => { fillBankCategorySelect("bankCategoryFilter",byId("bankTypeFilter").value,"All categories"); renderQuestionBankTable(); });
+      byId("bankCategoryFilter").addEventListener("change",renderQuestionBankTable);
+      byId("bankDifficultyFilter").addEventListener("change",renderQuestionBankTable);
+      byId("bankSearchFilter").addEventListener("input",renderQuestionBankTable);
+      byId("applyBankFiltersButton").addEventListener("click",renderQuestionBankTable);
+      byId("clearBankFiltersButton").addEventListener("click",() => { byId("bankTypeFilter").value=""; fillBankCategorySelect("bankCategoryFilter","","All categories"); byId("bankDifficultyFilter").value=""; byId("bankSearchFilter").value=""; renderQuestionBankTable(); });
+      byId("bankIncludeInactive").addEventListener("change",() => loadQuestionBank("Updating administrator view…"));
+      byId("selectFilteredBankQuestionsButton").addEventListener("click",() => {
+        filteredQuestionBankRows()
+          .filter(question => question.isActive && question.isApproved && question.isSelectable)
+          .forEach(question => selectedBankQuestions.add(question.questionUuid));
+        renderQuestionBankTable();
+      });
+      byId("clearBankSelectionButton").addEventListener("click",() => { selectedBankQuestions.clear(); renderQuestionBankTable(); });
+      byId("bankTargetType").addEventListener("change",async () => { const value=byId("bankTargetType").value; byId("bankTargetYearGroup").hidden=value!=="YEAR"; byId("bankTargetBatchGroup").hidden=value!=="BATCH"; byId("bankTargetStudentsGroup").hidden=value!=="STUDENTS"; if (value === "YEAR" && !cohortData.students.length) { try { await loadCohortData(); } catch (error) { setStatus(byId("bankAssignmentStatus"),error.message || "ASCENT could not load cohort data.","error"); } } updateBankAssignmentEstimate(); });
+      byId("bankTargetYear").addEventListener("change",updateBankAssignmentEstimate);
+      byId("bankTargetBatch").addEventListener("change",updateBankAssignmentEstimate);
+      byId("bankIntervalDays").addEventListener("input",updateBankAssignmentEstimate);
+      byId("bankStartAt").addEventListener("change",updateBankAssignmentEstimate);
+      byId("bankStudentSearch").addEventListener("input",event => renderBankStudentPicker(event.target.value));
+      byId("bankAssignmentFollowupMode").addEventListener("change",updateBankAssignmentFollowupControls);
+      byId("bankAssignmentForm").addEventListener("submit",assignSelectedBankQuestions);
+      byId("questionsText").addEventListener("input",updateQuestionCount);
+      byId("targetType").addEventListener("change",() => { const value=byId("targetType").value; byId("targetBatchGroup").hidden=value!=="BATCH"; byId("targetStudentsGroup").hidden=value!=="STUDENTS"; updateAssignmentEstimate(); });
+      byId("targetBatch").addEventListener("change",updateAssignmentEstimate);
+      byId("intervalDays").addEventListener("input",updateAssignmentEstimate);
+      byId("startAt").addEventListener("change",updateAssignmentEstimate);
+      byId("studentSearch").addEventListener("input",event => renderStudentPicker(event.target.value));
+      byId("pressureMode").addEventListener("change",() => { const show=byId("pressureMode").value==="FIXED_FOLLOW_UP"; byId("pressurePromptGroup").hidden=!show; byId("pressurePrepGroup").hidden=!show; byId("pressureResponseGroup").hidden=!show; });
+      byId("bulkTaskForm").addEventListener("submit",createQuestionBatch);
+      byId("applyAssignmentFiltersButton").addEventListener("click",renderAssignmentsTable);
+      byId("clearAssignmentFiltersButton").addEventListener("click",() => clearFilters("assignment"));
+      byId("clearTestRegisterButton").addEventListener("click",clearSelectedTestRegister);
+      byId("applyResultFiltersButton").addEventListener("click",renderResultsTable);
+      byId("clearResultFiltersButton").addEventListener("click",() => clearFilters("result"));
+      byId("addTrainerForm").addEventListener("submit",createTrainer);
+    }
+
+    async function initialise() {
+      currentSession = loadTrainerSession(); if (!currentSession) return;
+      byId("trainerName").textContent = currentSession.fullName || currentSession.email;
+      byId("trainerRole").textContent = currentSession.role || "TRAINER";
+      applyRoleAccess(); setDefaultStartTime(); wireEvents(); initialiseAdminTouchpoint(); updateBankAssignmentFollowupControls(); updateQuestionCount(); resetBankQuestionEditor();
+      await loadReport();
+      await loadQuestionBank();
+      await loadReminderDashboard();
+    }
+    initialise();
+  </script>
+</body>
+</html>
