@@ -875,7 +875,6 @@ body {
         name="studentIdentity"
         type="text"
         autocomplete="username"
-        placeholder="Enter email or student ID"
         required
       >
     </div>
@@ -1894,8 +1893,9 @@ accessForm.addEventListener(
     identityLabel.textContent =
       "Email address or Student ID";
 
-    identityInput.placeholder =
-      "Enter email or student ID";
+    identityInput.removeAttribute(
+      "placeholder"
+    );
 
     loginButton.textContent =
       "Log in as Student";
