@@ -214,6 +214,7 @@
           <button class="nav-item" type="button" data-section="assignments">Assignments</button>
           <button class="nav-item" type="button" data-section="results">Results</button>
           <button class="nav-item" type="button" data-section="students">Students</button>
+          <button class="nav-item" type="button" data-section="archives">Archives</button>
           <button id="followupsNavItem" class="nav-item" type="button" data-section="followups">Student Follow-ups</button>
           <button id="trainersNavItem" class="nav-item" type="button" data-section="trainers" hidden>Trainers</button>
         </div>
@@ -385,6 +386,11 @@
           <div id="studentProfilePanel" class="panel" hidden></div>
         </section>
 
+        <section id="archivesSection" class="section-panel">
+          <div class="workspace-header"><div><h2>Archives</h2><p>Read-only records for completed FIIB cohorts. Archived students cannot receive new ASCENT questions.</p></div><div class="header-actions"><button id="refreshArchivesButton" class="secondary-button" type="button">Refresh</button><button id="archiveExportButton" class="primary-button" type="button">Download Excel</button></div></div>
+          <div class="panel"><div class="form-grid"><div class="form-group"><label for="archiveCohortSelect">Archived cohort</label><select id="archiveCohortSelect"><option value="">Choose archived cohort</option></select></div></div><div id="archivesTableWrap" class="table-wrap"></div><div id="archivesStatus" class="form-status" role="status" aria-live="polite"></div></div>
+        </section>
+
         <section id="followupsSection" class="section-panel">
           <div class="workspace-header">
             <div><h2>Student Follow-ups</h2><p>Control institutional response reminders and monitor the students who remain pending after each 48-hour stage.</p></div>
@@ -442,6 +448,7 @@
       workbookExport: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_workbook_export",
       studentMobileMap: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_student_mobile_map",
       cohortRoster: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_cohort_roster",
+      archiveRoster: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_archive_roster",
       setAcademicYear: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_student_academic_year",
       updateStudentDetails: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_update_student_details",
       saveStudentGroup: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_save_student_group",
@@ -466,6 +473,7 @@
     let visibleResultRows = [];
     let studentPerformanceData = null;
     let cohortData = { students:[], groups:[] };
+    let archiveData = { archives:[], students:[] };
     let editingStudentGroupUuid = null;
     let selectedStudentGroupUuids = new Set();
     let creatingStudentGroupName = "";
@@ -552,6 +560,7 @@
       document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active",item.dataset.section === name));
       document.querySelectorAll(".section-panel").forEach(section => section.classList.toggle("active",section.id === name + "Section"));
       if (name === "students") loadStudentPerformance();
+      if (name === "archives") loadArchiveData();
     }
 
     const currentRole = () => String(currentSession && currentSession.role || "TRAINER").toUpperCase();
@@ -1092,6 +1101,70 @@
       } finally {
         hideLoading();
       }
+    }
+
+    function selectedArchiveStudents() {
+      const archiveLabel = byId("archiveCohortSelect").value;
+      return (archiveData.students || []).filter(student => student.archiveLabel === archiveLabel);
+    }
+
+    function renderArchives() {
+      const select = byId("archiveCohortSelect");
+      const selectedValue = select.value;
+      const archives = Array.isArray(archiveData.archives) ? archiveData.archives : [];
+      select.innerHTML = `<option value="">Choose archived cohort</option>` + archives
+        .map(archive => `<option value="${escapeHtml(archive.archiveLabel)}">${escapeHtml(archive.cohortLabel)} — archived ${escapeHtml(formatDate(archive.archivedAt))}</option>`)
+        .join("");
+      if (archives.some(archive => archive.archiveLabel === selectedValue)) select.value = selectedValue;
+      if (!select.value && archives.length === 1) select.value = archives[0].archiveLabel;
+
+      const students = selectedArchiveStudents();
+      if (!archives.length) {
+        byId("archivesTableWrap").innerHTML = `<div class="empty-state">No FIIB cohorts have been archived yet.</div>`;
+        return;
+      }
+      if (!select.value) {
+        byId("archivesTableWrap").innerHTML = `<div class="empty-state">Choose an archived cohort to open its student register.</div>`;
+        return;
+      }
+      byId("archivesTableWrap").innerHTML = `<table><thead><tr><th>Roll Number</th><th>Name</th><th>Email</th><th>Mobile Number</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th></tr></thead><tbody>${students.length ? students.map(student => `<tr><td>${escapeHtml(student.rollNo || "—")}</td><td>${escapeHtml(student.fullName || "—")}</td><td>${escapeHtml(student.email || "—")}</td><td>${escapeHtml(student.mobileNumber || "—")}</td><td>${escapeHtml(student.batch || "—")}</td><td>${escapeHtml(formatDate(student.dateJoined))}</td><td>${escapeHtml(formatDate(student.lastAccessedAt))}</td></tr>`).join("") : `<tr><td colspan="7" class="empty-state">No archived students are available for this cohort.</td></tr>`}</tbody></table>`;
+    }
+
+    async function loadArchiveData(force=false) {
+      if (archiveData.archives.length && !force) { renderArchives(); return; }
+      try {
+        const data = await callRpc(RPC.archiveRoster,{p_session_token:currentSession.sessionToken});
+        if (!data || data.ok !== true) throw new Error(data && data.message ? data.message : "Archives could not be loaded.");
+        archiveData = {
+          archives:Array.isArray(data.archives) ? data.archives : [],
+          students:Array.isArray(data.students) ? data.students : []
+        };
+        renderArchives();
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("archivesStatus"),error.message || "Archives could not be loaded.","error");
+      }
+    }
+
+    function exportArchivedRoster() {
+      const archiveLabel = byId("archiveCohortSelect").value;
+      const students = selectedArchiveStudents();
+      if (!archiveLabel) { setStatus(byId("archivesStatus"),"Choose an archived cohort first.","error"); return; }
+      if (!students.length) { setStatus(byId("archivesStatus"),"There are no archived students to download for this cohort.","error"); return; }
+      const rows = students.map(student => ({
+        "Roll Number":student.rollNo || "",
+        "Name":student.fullName || "",
+        "Email":student.email || "",
+        "Mobile Number":student.mobileNumber || "",
+        "Batch":student.batch || "",
+        "Date of Joining":formatDate(student.dateJoined),
+        "Date Last Accessed":formatDate(student.lastAccessedAt),
+        "Archive":archiveLabel
+      }));
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook,XLSX.utils.json_to_sheet(rows),"Archived Students");
+      XLSX.writeFile(workbook,`${archiveLabel.replace(/[^a-z0-9]+/gi,"_")}_Archive.xlsx`);
+      setStatus(byId("archivesStatus"),"Archive register downloaded.","success");
     }
 
     function renderStudentRoster() {
@@ -3609,6 +3682,9 @@ function formatCriterionFeedback(criterion) {
       byId("refreshStudentsButton").addEventListener("click",() => loadStudentPerformance(true));
       byId("createStudentGroupButton").addEventListener("click",startStudentGroupCreation);
       byId("doneStudentGroupButton").addEventListener("click",finishStudentGroupCreation);
+      byId("refreshArchivesButton").addEventListener("click",() => loadArchiveData(true));
+      byId("archiveCohortSelect").addEventListener("change",renderArchives);
+      byId("archiveExportButton").addEventListener("click",exportArchivedRoster);
       byId("refreshFollowupsButton").addEventListener("click",() => loadReminderDashboard("Refreshing student follow-ups…"));
       byId("toggleFollowupsButton").addEventListener("click",toggleInstitutionalFollowups);
       byId("followupsExportButton").addEventListener("click",downloadFollowupExcel);
