@@ -693,11 +693,12 @@
     }
 
     function estimatedTargetCount() {
-      const targetType = byId("targetType").value;
+      const target = assignmentTarget(byId("targetType").value);
+      const targetType = target.type;
       if (targetType === "ALL") return reportData.students.length;
       if (targetType === "BATCH") return reportData.students.filter(student => String(student.batch || "").trim().toLowerCase() === String(byId("targetBatch").value || "").trim().toLowerCase()).length;
-      if (targetType === "COHORT") return studentUuidsForCohort(byId("targetCohort").value).length;
-      if (targetType === "GROUP") return studentUuidsForGroup(byId("targetGroup").value).length;
+      if (targetType === "COHORT") return studentUuidsForCohort(target.value).length;
+      if (targetType === "GROUP") return studentUuidsForGroup(target.value).length;
       return selectedStudentUuids().length;
     }
 
@@ -1023,6 +1024,29 @@
       populateGroupSelect("targetGroup");
       populateCohortSelect("bankTargetCohort");
       populateCohortSelect("targetCohort");
+      ["bankTargetType","targetType"].forEach(populateDirectAssignmentTargets);
+    }
+
+    function assignmentTarget(value) {
+      const text = String(value || "");
+      if (text.startsWith("COHORT|")) return {type:"COHORT", value:text.slice(7)};
+      if (text.startsWith("GROUP|")) return {type:"GROUP", value:text.slice(6)};
+      return {type:text, value:""};
+    }
+
+    function populateDirectAssignmentTargets(selectId) {
+      const select = byId(selectId);
+      const selectedValue = select.value;
+      const cohortOptions = automaticCohorts()
+        .map(cohort => `<option value="COHORT|${escapeHtml(cohort.label)}">${escapeHtml(cohort.label)}</option>`)
+        .join("");
+      const groupOptions = cohortData.groups
+        .slice()
+        .sort((left,right) => String(left.groupName || "").localeCompare(String(right.groupName || "")))
+        .map(group => `<option value="GROUP|${escapeHtml(group.groupUuid)}">${escapeHtml(group.groupName || "Unnamed group")}</option>`)
+        .join("");
+      select.innerHTML = `<option value="ALL">All active students</option>${cohortOptions ? `<optgroup label="Broad cohorts">${cohortOptions}</optgroup>` : ""}${groupOptions ? `<optgroup label="Saved student groups">${groupOptions}</optgroup>` : ""}<option value="BATCH">One batch</option><option value="STUDENTS">Selected students</option>`;
+      if (Array.from(select.options).some(option => option.value === selectedValue)) select.value = selectedValue;
     }
 
     function renderStudentGroupManager() {
@@ -1053,6 +1077,7 @@
         creatingStudentGroupName = "";
         selectedStudentGroupUuids = new Set();
         await loadCohortData();
+        populateBankGroupSelect();
         byId("createStudentGroupButton").hidden = false;
         button.hidden = true; button.disabled = false; button.textContent = "Done";
         renderStudentRoster();
@@ -1299,11 +1324,12 @@
     }
 
     function estimatedBankTargetCount() {
-      const targetType = byId("bankTargetType").value;
+      const target = assignmentTarget(byId("bankTargetType").value);
+      const targetType = target.type;
       if (targetType === "ALL") return reportData.students.length;
       if (targetType === "BATCH") return reportData.students.filter(student => String(student.batch || "").trim().toLowerCase() === String(byId("bankTargetBatch").value || "").trim().toLowerCase()).length;
-      if (targetType === "COHORT") return studentUuidsForCohort(byId("bankTargetCohort").value).length;
-      if (targetType === "GROUP") return studentUuidsForGroup(byId("bankTargetGroup").value).length;
+      if (targetType === "COHORT") return studentUuidsForCohort(target.value).length;
+      if (targetType === "GROUP") return studentUuidsForGroup(target.value).length;
       return selectedBankStudentUuids().length;
     }
 
@@ -1500,7 +1526,8 @@
       event.preventDefault();
       if (isCeo()) return;
       const questionUuids = Array.from(selectedBankQuestions);
-      const targetType = byId("bankTargetType").value;
+      const target = assignmentTarget(byId("bankTargetType").value);
+      const targetType = target.type;
       const followupMode = byId("bankAssignmentFollowupMode").value;
       let intervalDays;
       try {
@@ -1511,10 +1538,8 @@
       }
       if (!questionUuids.length) { setStatus(byId("bankAssignmentStatus"),"Select at least one question from the bank.","error"); return; }
       if (targetType === "BATCH" && !byId("bankTargetBatch").value) { setStatus(byId("bankAssignmentStatus"),"Choose the student batch.","error"); return; }
-      if (targetType === "COHORT" && !byId("bankTargetCohort").value) { setStatus(byId("bankAssignmentStatus"),"Choose the broad cohort.","error"); return; }
-      if (targetType === "COHORT" && !studentUuidsForCohort(byId("bankTargetCohort").value).length) { setStatus(byId("bankAssignmentStatus"),"That broad cohort does not have any active students.","error"); return; }
-      if (targetType === "GROUP" && !byId("bankTargetGroup").value) { setStatus(byId("bankAssignmentStatus"),"Choose the student group.","error"); return; }
-      if (targetType === "GROUP" && !studentUuidsForGroup(byId("bankTargetGroup").value).length) { setStatus(byId("bankAssignmentStatus"),"That student group does not have any students.","error"); return; }
+      if (targetType === "COHORT" && !studentUuidsForCohort(target.value).length) { setStatus(byId("bankAssignmentStatus"),"That broad cohort does not have any active students.","error"); return; }
+      if (targetType === "GROUP" && !studentUuidsForGroup(target.value).length) { setStatus(byId("bankAssignmentStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedBankStudentUuids().length) { setStatus(byId("bankAssignmentStatus"),"Choose at least one student.","error"); return; }
       if (followupMode === "FIXED_FOLLOW_UP" && !byId("bankAssignmentFixedFollowup").value.trim()) { setStatus(byId("bankAssignmentStatus"),"Enter the fixed follow-up question.","error"); return; }
       const bankStudentCount = estimatedBankTargetCount();
@@ -1528,7 +1553,7 @@
           p_title_prefix:byId("bankAssignmentTitle").value.trim() || "ASCENT Bank Task",
           p_target_type:targetType === "GROUP" || targetType === "COHORT" ? "STUDENTS" : targetType,
           p_target_batch:targetType === "BATCH" ? byId("bankTargetBatch").value : null,
-          p_student_uuids:targetType === "STUDENTS" ? selectedBankStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(byId("bankTargetGroup").value) : targetType === "COHORT" ? studentUuidsForCohort(byId("bankTargetCohort").value) : null,
+          p_student_uuids:targetType === "STUDENTS" ? selectedBankStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(target.value) : targetType === "COHORT" ? studentUuidsForCohort(target.value) : null,
           p_start_at:toIsoOrNull(byId("bankStartAt").value),
           p_interval_days:intervalDays,
           p_due_days:dueText === "" ? null : Number(dueText),
@@ -1693,7 +1718,7 @@
 
     async function createQuestionBatch(event) {
       event.preventDefault();
-      const questions = cleanQuestions(); const targetType = byId("targetType").value; const pressureMode = byId("pressureMode").value;
+      const questions = cleanQuestions(); const target = assignmentTarget(byId("targetType").value); const targetType = target.type; const pressureMode = byId("pressureMode").value;
       let intervalDays;
       try {
         intervalDays = readReleaseInterval("intervalDays");
@@ -1703,10 +1728,8 @@
       }
       if (!questions.length) { setStatus(byId("bulkTaskStatus"),"Paste at least one question, with each question on a separate line.","error"); return; }
       if (targetType === "BATCH" && !byId("targetBatch").value) { setStatus(byId("bulkTaskStatus"),"Choose the student batch.","error"); return; }
-      if (targetType === "COHORT" && !byId("targetCohort").value) { setStatus(byId("bulkTaskStatus"),"Choose the broad cohort.","error"); return; }
-      if (targetType === "COHORT" && !studentUuidsForCohort(byId("targetCohort").value).length) { setStatus(byId("bulkTaskStatus"),"That broad cohort does not have any active students.","error"); return; }
-      if (targetType === "GROUP" && !byId("targetGroup").value) { setStatus(byId("bulkTaskStatus"),"Choose the student group.","error"); return; }
-      if (targetType === "GROUP" && !studentUuidsForGroup(byId("targetGroup").value).length) { setStatus(byId("bulkTaskStatus"),"That student group does not have any students.","error"); return; }
+      if (targetType === "COHORT" && !studentUuidsForCohort(target.value).length) { setStatus(byId("bulkTaskStatus"),"That broad cohort does not have any active students.","error"); return; }
+      if (targetType === "GROUP" && !studentUuidsForGroup(target.value).length) { setStatus(byId("bulkTaskStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedStudentUuids().length) { setStatus(byId("bulkTaskStatus"),"Choose at least one student.","error"); return; }
       if (pressureMode === "FIXED_FOLLOW_UP" && !byId("pressurePrompt").value.trim()) { setStatus(byId("bulkTaskStatus"),"Enter the follow-up question.","error"); return; }
       const studentCount = estimatedTargetCount();
@@ -1717,7 +1740,7 @@
         const result = await callRpc(RPC.bulk,{
           p_session_token:currentSession.sessionToken, p_questions:questions, p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
           p_rubric_type:byId("rubricType").value, p_target_type:targetType === "GROUP" || targetType === "COHORT" ? "STUDENTS" : targetType, p_target_batch:targetType === "BATCH" ? byId("targetBatch").value : null,
-          p_student_uuids:targetType === "STUDENTS" ? selectedStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(byId("targetGroup").value) : targetType === "COHORT" ? studentUuidsForCohort(byId("targetCohort").value) : null, p_start_at:toIsoOrNull(byId("startAt").value),
+          p_student_uuids:targetType === "STUDENTS" ? selectedStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(target.value) : targetType === "COHORT" ? studentUuidsForCohort(target.value) : null, p_start_at:toIsoOrNull(byId("startAt").value),
           p_interval_days:intervalDays, p_due_days:dueText === "" ? null : Number(dueText), p_max_attempts:1,
           p_response_seconds:Number(byId("responseSeconds").value || 60), p_pressure_mode:pressureMode,
           p_pressure_prompt:pressureMode === "FIXED_FOLLOW_UP" ? byId("pressurePrompt").value.trim() : null,
@@ -3708,16 +3731,12 @@ function formatCriterionFeedback(criterion) {
         renderQuestionBankTable();
       });
       byId("clearBankSelectionButton").addEventListener("click",() => { selectedBankQuestions.clear(); renderQuestionBankTable(); });
-      byId("bankTargetType").addEventListener("change",async () => {
-        const value=byId("bankTargetType").value;
+      byId("bankTargetType").addEventListener("change",() => {
+        const value=assignmentTarget(byId("bankTargetType").value).type;
         byId("bankTargetBatchGroup").hidden=value!=="BATCH";
-        byId("bankTargetCohortGroup").hidden=value!=="COHORT";
-        byId("bankTargetGroupGroup").hidden=value!=="GROUP";
+        byId("bankTargetCohortGroup").hidden=true;
+        byId("bankTargetGroupGroup").hidden=true;
         byId("bankTargetStudentsGroup").hidden=value!=="STUDENTS";
-        if (value === "GROUP" || value === "COHORT") {
-          try { await loadCohortData(); populateBankGroupSelect(); }
-          catch (error) { console.error(error); setStatus(byId("bankAssignmentStatus"),error.message || "Student groups could not be loaded.","error"); }
-        }
         updateBankAssignmentEstimate();
       });
       byId("bankTargetBatch").addEventListener("change",updateBankAssignmentEstimate);
@@ -3729,16 +3748,12 @@ function formatCriterionFeedback(criterion) {
       byId("bankAssignmentFollowupMode").addEventListener("change",updateBankAssignmentFollowupControls);
       byId("bankAssignmentForm").addEventListener("submit",assignSelectedBankQuestions);
       byId("questionsText").addEventListener("input",updateQuestionCount);
-      byId("targetType").addEventListener("change",async () => {
-        const value=byId("targetType").value;
+      byId("targetType").addEventListener("change",() => {
+        const value=assignmentTarget(byId("targetType").value).type;
         byId("targetBatchGroup").hidden=value!=="BATCH";
-        byId("targetCohortGroup").hidden=value!=="COHORT";
-        byId("targetGroupGroup").hidden=value!=="GROUP";
+        byId("targetCohortGroup").hidden=true;
+        byId("targetGroupGroup").hidden=true;
         byId("targetStudentsGroup").hidden=value!=="STUDENTS";
-        if (value === "GROUP" || value === "COHORT") {
-          try { await loadCohortData(); populateBankGroupSelect(); }
-          catch (error) { console.error(error); setStatus(byId("bulkTaskStatus"),error.message || "Student groups could not be loaded.","error"); }
-        }
         updateAssignmentEstimate();
       });
       byId("targetBatch").addEventListener("change",updateAssignmentEstimate);
@@ -3763,6 +3778,8 @@ function formatCriterionFeedback(criterion) {
       byId("trainerRole").textContent = currentSession.role || "TRAINER";
       applyRoleAccess(); setDefaultStartTime(); wireEvents(); initialiseAdminTouchpoint(); updateBankAssignmentFollowupControls(); updateQuestionCount(); resetBankQuestionEditor();
       await loadReport();
+      await loadCohortData();
+      populateBankGroupSelect();
       await loadQuestionBank();
       await loadReminderDashboard();
     }
