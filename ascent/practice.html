@@ -3174,6 +3174,36 @@ const otherIssuesList =
             );
           });
 
+        // A question bank is practised in sequence. The complete batch may be
+        // assigned at once, but a learner sees only the earliest unanswered
+        // question. Once it is submitted, the next question becomes available.
+        activeAssignments =
+          activeAssignments
+            .slice()
+            .sort(function (left, right) {
+              const leftSequence = Number(
+                left.sequenceNo ?? left.sequence_no ?? 0
+              );
+              const rightSequence = Number(
+                right.sequenceNo ?? right.sequence_no ?? 0
+              );
+
+              if (leftSequence !== rightSequence) {
+                return leftSequence - rightSequence;
+              }
+
+              const leftAssigned = Date.parse(
+                String(left.assignedAt || left.availableAt || "")
+              );
+              const rightAssigned = Date.parse(
+                String(right.assignedAt || right.availableAt || "")
+              );
+
+              return (Number.isFinite(leftAssigned) ? leftAssigned : 0) -
+                (Number.isFinite(rightAssigned) ? rightAssigned : 0);
+            })
+            .slice(0, 1);
+
         questionBank =
           normalisePracticeArray(
             result.question_bank
