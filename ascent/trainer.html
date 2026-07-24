@@ -375,7 +375,7 @@
               <div id="pressurePromptGroup" class="form-group two-wide" hidden><label for="pressurePrompt">Follow-up question</label><input id="pressurePrompt" type="text" placeholder="Paste the follow-up question"><div class="form-note">This same follow-up is attached to every question in this batch.</div></div>
               <div id="pressurePrepGroup" class="form-group" hidden><label for="pressurePrepSeconds">Follow-up preparation</label><input id="pressurePrepSeconds" type="number" min="0" max="120" value="5"></div>
               <div id="pressureResponseGroup" class="form-group" hidden><label for="pressureResponseSeconds">Follow-up response</label><input id="pressureResponseSeconds" type="number" min="10" max="300" value="20"></div>
-              <div class="form-group two-wide"><label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input id="emailBulkRelease" type="checkbox" style="width:auto;margin-top:3px"><span>Email students when this batch is released<div class="form-note" style="margin-top:4px">One email is sent when the first question becomes available. Question Bank releases do not send emails.</div></span></label></div>
+              <div class="form-group two-wide"><label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input id="emailBulkRelease" type="checkbox" style="width:auto;margin-top:3px"><span>Email students when each Bulk Question is released<div class="form-note" style="margin-top:4px">Each student receives one email when their next scheduled Bulk Question becomes available. Question Bank releases do not send emails.</div></span></label></div>
             </div>
             <div class="inline-row"><button id="createBatchButton" class="primary-button" type="submit">Create and Assign Batch</button><span id="assignmentEstimate" class="form-note"></span></div>
             <div id="bulkTaskStatus" class="form-status" role="status" aria-live="polite"></div>
@@ -2078,9 +2078,9 @@
             const emailResult = await callRpc(RPC.queueBulkReleaseEmail,{
               p_session_token:currentSession.sessionToken,
               p_student_uuids:targetStudentUuids,
-              p_task_title:byId("titlePrefix").value.trim() || "ASCENT Task",
-              p_question_count:questions.length,
-              p_first_question:questions[0],
+              p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
+              p_questions:questions,
+              p_interval_days:intervalDays,
               p_release_at:releaseAt
             });
             if (!emailResult || emailResult.ok !== true) throw new Error(emailResult && emailResult.message ? emailResult.message : "The release email could not be queued.");
