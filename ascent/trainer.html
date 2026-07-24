@@ -756,7 +756,7 @@
       const target = assignmentTarget(byId("targetType").value);
       const targetType = target.type;
       if (targetType === "ALL") return reportData.students.length;
-      if (targetType === "BATCH") return reportData.students.filter(student => String(student.batch || "").trim().toLowerCase() === String(byId("targetBatch").value || "").trim().toLowerCase()).length;
+      if (targetType === "BATCH") return studentUuidsForBatch(byId("targetBatch").value).length;
       if (targetType === "COHORT") return studentUuidsForCohort(target.value).length;
       if (targetType === "GROUP") return studentUuidsForGroup(target.value).length;
       return selectedStudentUuids().length;
@@ -811,7 +811,7 @@
     }
 
     function populateControls() {
-      const batches = reportData.batches.map(batch => ({value:batch,label:batch}));
+      const batches = liveAscentBatches().map(batch => ({value:batch,label:batch}));
       ["targetBatch","bankTargetBatch","assignmentBatchFilter","resultBatchFilter"].forEach(id => fillSelect(id,batches,"value",item => item.label,["targetBatch","bankTargetBatch"].includes(id) ? "Choose batch" : "All batches"));
       ["assignmentStudentFilter","resultStudentFilter"].forEach(id => fillSelect(id,reportData.students,"studentUuid",student => `${student.fullName} (${student.studentId})`,"All students"));
       ["assignmentTaskFilter","resultTaskFilter"].forEach(id => fillSelect(id,reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks"));
@@ -1106,6 +1106,11 @@
       return /^(\d{2})(?:PGDM|PGDMFM)\d{3}$/.test(normaliseRollNumber(value));
     }
 
+    function liveAscentBatches() {
+      const year = new Date().getFullYear();
+      return [year,year - 1].map(startYear => `${startYear}-${String(startYear + 2).slice(-2)} PGDM`);
+    }
+
     function rollNumberCohort(rollNo) {
       const match = String(rollNo || "").trim().match(/^(\d{2})PGDM/i);
       if (!match) return {batch:null};
@@ -1121,8 +1126,15 @@
       const hasEditedBatch = savedBatch && !/default\s*batch/i.test(savedBatch);
       return {
         ...student,
-        batch:hasEditedBatch ? savedBatch : (derived.batch || student.batch)
+        batch:derived.batch || (hasEditedBatch ? savedBatch : "No batch")
       };
+    }
+
+    function studentUuidsForBatch(batchLabel) {
+      return reportData.students
+        .filter(student => String(student.batch || "") === String(batchLabel || ""))
+        .map(student => String(student.studentUuid || ""))
+        .filter(Boolean);
     }
 
     async function loadCohortData() {
@@ -1626,7 +1638,7 @@
       const target = assignmentTarget(byId("bankTargetType").value);
       const targetType = target.type;
       if (targetType === "ALL") return reportData.students.length;
-      if (targetType === "BATCH") return reportData.students.filter(student => String(student.batch || "").trim().toLowerCase() === String(byId("bankTargetBatch").value || "").trim().toLowerCase()).length;
+      if (targetType === "BATCH") return studentUuidsForBatch(byId("bankTargetBatch").value).length;
       if (targetType === "COHORT") return studentUuidsForCohort(target.value).length;
       if (targetType === "GROUP") return studentUuidsForGroup(target.value).length;
       return selectedBankStudentUuids().length;
@@ -1838,6 +1850,7 @@
       if (!questionUuids.length) { setStatus(byId("bankAssignmentStatus"),"Select at least one question from the bank.","error"); return; }
       if (!targetType) { setStatus(byId("bankAssignmentStatus"),"Choose batch.","error"); return; }
       if (targetType === "BATCH" && !byId("bankTargetBatch").value) { setStatus(byId("bankAssignmentStatus"),"Choose the student batch.","error"); return; }
+      if (targetType === "BATCH" && !studentUuidsForBatch(byId("bankTargetBatch").value).length) { setStatus(byId("bankAssignmentStatus"),"This batch has no students with valid roll numbers yet.","error"); return; }
       if (targetType === "COHORT" && !studentUuidsForCohort(target.value).length) { setStatus(byId("bankAssignmentStatus"),"That broad cohort does not have any active students.","error"); return; }
       if (targetType === "GROUP" && !studentUuidsForGroup(target.value).length) { setStatus(byId("bankAssignmentStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedBankStudentUuids().length) { setStatus(byId("bankAssignmentStatus"),"Choose at least one student.","error"); return; }
@@ -1851,9 +1864,9 @@
           p_session_token:currentSession.sessionToken,
           p_question_uuids:questionUuids,
           p_title_prefix:byId("bankAssignmentTitle").value.trim() || "ASCENT Bank Task",
-          p_target_type:targetType === "GROUP" || targetType === "COHORT" ? "STUDENTS" : targetType,
-          p_target_batch:targetType === "BATCH" ? byId("bankTargetBatch").value : null,
-          p_student_uuids:targetType === "STUDENTS" ? selectedBankStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(target.value) : targetType === "COHORT" ? studentUuidsForCohort(target.value) : null,
+          p_target_type:targetType === "GROUP" || targetType === "COHORT" || targetType === "BATCH" ? "STUDENTS" : targetType,
+          p_target_batch:null,
+          p_student_uuids:targetType === "STUDENTS" ? selectedBankStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(target.value) : targetType === "COHORT" ? studentUuidsForCohort(target.value) : targetType === "BATCH" ? studentUuidsForBatch(byId("bankTargetBatch").value) : null,
           p_start_at:toIsoOrNull(byId("bankStartAt").value),
           p_interval_days:intervalDays,
           p_due_days:dueText === "" ? null : Number(dueText),
@@ -2011,7 +2024,13 @@
           if (data && data.error === "invalid_trainer_session") { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./trainer-login.html"; return; }
           throw new Error(data && data.message ? data.message : "Report data could not be loaded.");
         }
-        reportData = data; renderAll(); setStatus(byId("dashboardStatus"),"Dashboard updated " + new Date().toLocaleTimeString(),"success");
+        reportData = {
+          ...data,
+          batches:liveAscentBatches(),
+          students:Array.isArray(data.students) ? data.students.map(withDerivedCohortDetails) : [],
+          results:Array.isArray(data.results) ? data.results.map(withDerivedCohortDetails) : []
+        };
+        renderAll(); setStatus(byId("dashboardStatus"),"Dashboard updated " + new Date().toLocaleTimeString(),"success");
       } catch (error) { console.error(error); setStatus(byId("dashboardStatus"),"ASCENT could not load the dashboard. " + error.message,"error"); }
       finally { hideLoading(); }
     }
@@ -2029,6 +2048,7 @@
       if (!questions.length) { setStatus(byId("bulkTaskStatus"),"Paste at least one question, with each question on a separate line.","error"); return; }
       if (!targetType) { setStatus(byId("bulkTaskStatus"),"Choose batch.","error"); return; }
       if (targetType === "BATCH" && !byId("targetBatch").value) { setStatus(byId("bulkTaskStatus"),"Choose the student batch.","error"); return; }
+      if (targetType === "BATCH" && !studentUuidsForBatch(byId("targetBatch").value).length) { setStatus(byId("bulkTaskStatus"),"This batch has no students with valid roll numbers yet.","error"); return; }
       if (targetType === "COHORT" && !studentUuidsForCohort(target.value).length) { setStatus(byId("bulkTaskStatus"),"That broad cohort does not have any active students.","error"); return; }
       if (targetType === "GROUP" && !studentUuidsForGroup(target.value).length) { setStatus(byId("bulkTaskStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedStudentUuids().length) { setStatus(byId("bulkTaskStatus"),"Choose at least one student.","error"); return; }
@@ -2040,8 +2060,8 @@
         const dueText = byId("dueDays").value.trim();
         const result = await callRpc(RPC.bulk,{
           p_session_token:currentSession.sessionToken, p_questions:questions, p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
-          p_rubric_type:byId("rubricType").value, p_target_type:targetType === "GROUP" || targetType === "COHORT" ? "STUDENTS" : targetType, p_target_batch:targetType === "BATCH" ? byId("targetBatch").value : null,
-          p_student_uuids:targetType === "STUDENTS" ? selectedStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(target.value) : targetType === "COHORT" ? studentUuidsForCohort(target.value) : null, p_start_at:toIsoOrNull(byId("startAt").value),
+          p_rubric_type:byId("rubricType").value, p_target_type:targetType === "GROUP" || targetType === "COHORT" || targetType === "BATCH" ? "STUDENTS" : targetType, p_target_batch:null,
+          p_student_uuids:targetType === "STUDENTS" ? selectedStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(target.value) : targetType === "COHORT" ? studentUuidsForCohort(target.value) : targetType === "BATCH" ? studentUuidsForBatch(byId("targetBatch").value) : null, p_start_at:toIsoOrNull(byId("startAt").value),
           p_interval_days:intervalDays, p_due_days:dueText === "" ? null : Number(dueText), p_max_attempts:1,
           p_response_seconds:Number(byId("responseSeconds").value || 60), p_pressure_mode:pressureMode,
           p_pressure_prompt:pressureMode === "FIXED_FOLLOW_UP" ? byId("pressurePrompt").value.trim() : null,
