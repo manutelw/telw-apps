@@ -375,6 +375,7 @@
               <div id="pressurePromptGroup" class="form-group two-wide" hidden><label for="pressurePrompt">Follow-up question</label><input id="pressurePrompt" type="text" placeholder="Paste the follow-up question"><div class="form-note">This same follow-up is attached to every question in this batch.</div></div>
               <div id="pressurePrepGroup" class="form-group" hidden><label for="pressurePrepSeconds">Follow-up preparation</label><input id="pressurePrepSeconds" type="number" min="0" max="120" value="5"></div>
               <div id="pressureResponseGroup" class="form-group" hidden><label for="pressureResponseSeconds">Follow-up response</label><input id="pressureResponseSeconds" type="number" min="10" max="300" value="20"></div>
+              <div class="form-group two-wide"><label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input id="emailBulkRelease" type="checkbox" style="width:auto;margin-top:3px"><span>Email students when this batch is released<div class="form-note" style="margin-top:4px">One email is sent when the first question becomes available. Question Bank releases do not send emails.</div></span></label></div>
             </div>
             <div class="inline-row"><button id="createBatchButton" class="primary-button" type="submit">Create and Assign Batch</button><span id="assignmentEstimate" class="form-note"></span></div>
             <div id="bulkTaskStatus" class="form-status" role="status" aria-live="polite"></div>
@@ -508,6 +509,7 @@
       saveStudentGroup: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_save_student_group",
       deleteStudentGroup: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_delete_student_group",
       bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
+      queueBulkReleaseEmail: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_queue_bulk_release_email",
       taskActive: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_task_active",
       createTrainer: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_create_trainer",
       questionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_question_bank_get",
@@ -2058,17 +2060,37 @@
       const button = byId("createBatchButton"); button.disabled = true; button.textContent = "Creating Batch…"; setStatus(byId("bulkTaskStatus"),"","");
       try {
         const dueText = byId("dueDays").value.trim();
+        const targetStudentUuids = targetType === "STUDENTS" ? selectedStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(target.value) : targetType === "COHORT" ? studentUuidsForCohort(target.value) : targetType === "BATCH" ? studentUuidsForBatch(byId("targetBatch").value) : null;
+        const releaseAt = toIsoOrNull(byId("startAt").value);
         const result = await callRpc(RPC.bulk,{
           p_session_token:currentSession.sessionToken, p_questions:questions, p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
           p_rubric_type:byId("rubricType").value, p_target_type:targetType === "GROUP" || targetType === "COHORT" || targetType === "BATCH" ? "STUDENTS" : targetType, p_target_batch:null,
-          p_student_uuids:targetType === "STUDENTS" ? selectedStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(target.value) : targetType === "COHORT" ? studentUuidsForCohort(target.value) : targetType === "BATCH" ? studentUuidsForBatch(byId("targetBatch").value) : null, p_start_at:toIsoOrNull(byId("startAt").value),
+          p_student_uuids:targetStudentUuids, p_start_at:releaseAt,
           p_interval_days:intervalDays, p_due_days:dueText === "" ? null : Number(dueText), p_max_attempts:1,
           p_response_seconds:Number(byId("responseSeconds").value || 60), p_pressure_mode:pressureMode,
           p_pressure_prompt:pressureMode === "FIXED_FOLLOW_UP" ? byId("pressurePrompt").value.trim() : null,
           p_pressure_prep_seconds:Number(byId("pressurePrepSeconds").value || 5), p_pressure_response_seconds:Number(byId("pressureResponseSeconds").value || 20)
         });
         if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "The batch could not be created.");
-        setStatus(byId("bulkTaskStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)}`,"success");
+        let emailNote = "";
+        if (byId("emailBulkRelease").checked && Array.isArray(targetStudentUuids) && targetStudentUuids.length) {
+          try {
+            const emailResult = await callRpc(RPC.queueBulkReleaseEmail,{
+              p_session_token:currentSession.sessionToken,
+              p_student_uuids:targetStudentUuids,
+              p_task_title:byId("titlePrefix").value.trim() || "ASCENT Task",
+              p_question_count:questions.length,
+              p_first_question:questions[0],
+              p_release_at:releaseAt
+            });
+            if (!emailResult || emailResult.ok !== true) throw new Error(emailResult && emailResult.message ? emailResult.message : "The release email could not be queued.");
+            emailNote = ` ${emailResult.message}`;
+          } catch (emailError) {
+            console.error(emailError);
+            emailNote = ` The questions were created, but the release email was not queued: ${emailError.message || "unknown error"}.`;
+          }
+        }
+        setStatus(byId("bulkTaskStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)}${emailNote}`,"success");
         byId("questionsText").value = ""; updateQuestionCount(); await loadReport("Refreshing tasks and assignments…");
       } catch (error) { console.error(error); setStatus(byId("bulkTaskStatus"),error.message || "ASCENT could not create the question batch.","error"); }
       finally { button.disabled = false; button.textContent = "Create and Assign Batch"; }
