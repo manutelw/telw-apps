@@ -432,7 +432,7 @@
 
         <section id="studentsSection" class="section-panel">
           <div class="workspace-header"><div><h2>Students</h2><p>Open an individual student record to see question-wise performance, score movement and response completion.</p></div><div class="header-actions"><button id="refreshStudentsButton" class="secondary-button" type="button">Refresh</button></div></div>
-          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle">Create named subgroups from inside the relevant batch folder.</div></div><div class="inline-row"><button id="doneStudentGroupButton" class="primary-button" type="button" hidden>Done</button></div></div><div class="student-roster-controls"><label for="studentRosterSort">Sort students by</label><select id="studentRosterSort"><option value="roll-asc">Roll number: A–Z</option><option value="roll-desc">Roll number: Z–A</option><option value="name-asc">Name: A–Z</option><option value="name-desc">Name: Z–A</option></select></div><div id="studentRosterTableWrap" class="table-wrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
+          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle">Create named subgroups from inside the relevant batch folder.</div></div><div class="inline-row"><button id="doneStudentGroupButton" class="primary-button" type="button" hidden>Done</button></div></div><div class="student-roster-controls"><label for="studentRosterSort">Sort students by</label><select id="studentRosterSort"><option value="roll-asc">Roll number: A–Z</option><option value="roll-desc">Roll number: Z–A</option><option value="name-asc">Name: A–Z</option><option value="name-desc">Name: Z–A</option><option value="joined-desc">Date joined: newest first</option><option value="joined-asc">Date joined: oldest first</option><option value="access-desc">Last access: most recent first</option><option value="access-asc">Last access: oldest first</option><option value="score-desc">Last score: highest first</option><option value="score-asc">Last score: lowest first</option></select></div><div id="studentRosterTableWrap" class="table-wrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
           <div id="studentProfilePanel" class="panel" hidden></div>
         </section>
 
@@ -496,6 +496,7 @@
 
   <script>
     const SESSION_STORAGE_KEY = "ascent_trainer_session";
+    const ACTIVE_SECTION_STORAGE_KEY = "ascent_trainer_active_section";
     const SUPABASE_URL = "https://vtqatrhwfvzyodiftvkc.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
     const RPC = {
@@ -562,10 +563,19 @@
     }
 
     function loadTrainerSession() {
-  const raw =
+  const localSession =
     localStorage.getItem(
       SESSION_STORAGE_KEY
     );
+
+  const olderTabSession =
+    sessionStorage.getItem(
+      SESSION_STORAGE_KEY
+    );
+
+  const raw =
+    localSession ||
+    olderTabSession;
 
   if (!raw) {
     window.location.href = "./";
@@ -573,13 +583,30 @@
   }
 
   try {
-    const session =
+    const storedSession =
       JSON.parse(raw);
 
     const role =
       String(
-        session.role || ""
+        storedSession.role || ""
       ).toUpperCase();
+
+    const session = {
+      ...storedSession,
+      sessionToken:
+        storedSession.sessionToken ||
+        storedSession.session_token,
+      trainerUuid:
+        storedSession.trainerUuid ||
+        storedSession.trainer_uuid,
+      fullName:
+        storedSession.fullName ||
+        storedSession.full_name,
+      expiresAt:
+        storedSession.expiresAt ||
+        storedSession.expires_at,
+      role:role
+    };
 
     const expiryTime =
       new Date(
@@ -606,6 +633,15 @@
       );
     }
 
+    localStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify(session)
+    );
+
+    sessionStorage.removeItem(
+      SESSION_STORAGE_KEY
+    );
+
     return session;
   } catch (error) {
     console.error(error);
@@ -619,13 +655,45 @@
   }
 }
 
-    function showSection(name) {
-      document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active",item.dataset.section === name));
-      document.querySelectorAll(".section-panel").forEach(section => section.classList.toggle("active",section.id === name + "Section"));
-      if (name === "students") loadStudentPerformance();
-      if (name === "leaderboard") loadPlacementReadinessBoard();
-      if (name === "archives") loadArchiveData();
-      if (name === "audioFiling") loadAudioFilingData();
+    function showSection(name,options={}) {
+      const remember = options.remember !== false;
+      const loadSectionData = options.load !== false;
+      const availableItem = Array.from(document.querySelectorAll(".nav-item")).find(
+        item => item.dataset.section === name && !item.hidden
+      );
+      const availableSection = byId(name + "Section");
+      const safeName = availableItem && availableSection ? name : "dashboard";
+
+      document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active",item.dataset.section === safeName));
+      document.querySelectorAll(".section-panel").forEach(section => section.classList.toggle("active",section.id === safeName + "Section"));
+
+      if (remember) {
+        localStorage.setItem(
+          ACTIVE_SECTION_STORAGE_KEY,
+          safeName
+        );
+      }
+
+      if (!loadSectionData) return;
+      if (safeName === "students") loadStudentPerformance();
+      if (safeName === "leaderboard") loadPlacementReadinessBoard();
+      if (safeName === "archives") loadArchiveData();
+      if (safeName === "audioFiling") loadAudioFilingData();
+    }
+
+    function restoreTrainerSection(loadSectionData=false) {
+      const savedSection =
+        localStorage.getItem(
+          ACTIVE_SECTION_STORAGE_KEY
+        ) || "dashboard";
+
+      showSection(
+        savedSection,
+        {
+          remember:false,
+          load:loadSectionData
+        }
+      );
     }
 
     const currentRole = () => String(currentSession && currentSession.role || "TRAINER").toUpperCase();
@@ -1486,9 +1554,38 @@
       const sortStudents = list => list.slice().sort((left,right) => {
         const rollComparison = collator.compare(rollNumberValue(left),rollNumberValue(right));
         const nameComparison = collator.compare(exportText(studentField(left,["name","fullName"])),exportText(studentField(right,["name","fullName"])));
+        const compareOptionalNumbers = (leftValue,rightValue,direction) => {
+          const leftMissing = leftValue === null || leftValue === undefined || !Number.isFinite(Number(leftValue));
+          const rightMissing = rightValue === null || rightValue === undefined || !Number.isFinite(Number(rightValue));
+          if (leftMissing && rightMissing) return 0;
+          if (leftMissing) return 1;
+          if (rightMissing) return -1;
+          return direction * (Number(leftValue) - Number(rightValue));
+        };
+        const joinedComparison = direction => compareOptionalNumbers(
+          Date.parse(studentField(left,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])),
+          Date.parse(studentField(right,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])),
+          direction
+        );
+        const accessComparison = direction => compareOptionalNumbers(
+          Date.parse(studentField(left,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])),
+          Date.parse(studentField(right,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])),
+          direction
+        );
+        const scoreComparison = direction => compareOptionalNumbers(
+          latestStudentScore(data,studentUuidOf(left)),
+          latestStudentScore(data,studentUuidOf(right)),
+          direction
+        );
         if (studentRosterSort === "roll-desc") return -rollComparison || nameComparison;
         if (studentRosterSort === "name-asc") return nameComparison || rollComparison;
         if (studentRosterSort === "name-desc") return -nameComparison || rollComparison;
+        if (studentRosterSort === "joined-desc") return joinedComparison(-1) || rollComparison || nameComparison;
+        if (studentRosterSort === "joined-asc") return joinedComparison(1) || rollComparison || nameComparison;
+        if (studentRosterSort === "access-desc") return accessComparison(-1) || rollComparison || nameComparison;
+        if (studentRosterSort === "access-asc") return accessComparison(1) || rollComparison || nameComparison;
+        if (studentRosterSort === "score-desc") return scoreComparison(-1) || rollComparison || nameComparison;
+        if (studentRosterSort === "score-asc") return scoreComparison(1) || rollComparison || nameComparison;
         return rollComparison || nameComparison;
       });
       const invalidRollStudents = students.filter(student => !isValidRollNumber(rollNumberValue(student)));
@@ -1719,7 +1816,6 @@
           p_offset:0
         });
         if (!result || result.ok !== true) {
-          if (result && result.error === "invalid_staff_session") { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./trainer-login.html"; return; }
           throw new Error(result && result.message ? result.message : "Question bank could not be loaded.");
         }
         questionBankData = result;
@@ -2041,7 +2137,6 @@
       try {
         const data = await callRpc(RPC.report,{ p_session_token:currentSession.sessionToken, p_batch:null, p_student_uuid:null, p_task_uuid:null });
         if (!data || data.ok !== true) {
-          if (data && data.error === "invalid_trainer_session") { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./trainer-login.html"; return; }
           throw new Error(data && data.message ? data.message : "Report data could not be loaded.");
         }
         reportData = {
@@ -4166,11 +4261,13 @@ function formatCriterionFeedback(criterion) {
       byId("trainerName").textContent = currentSession.fullName || currentSession.email;
       byId("trainerRole").textContent = currentSession.role || "TRAINER";
       applyRoleAccess(); setDefaultStartTime(); wireEvents(); initialiseAdminTouchpoint(); updateBankAssignmentFollowupControls(); updateQuestionCount(); resetBankQuestionEditor();
+      restoreTrainerSection(false);
       await loadReport();
       await loadCohortData();
       populateBankGroupSelect();
       await loadQuestionBank();
       await loadReminderDashboard();
+      restoreTrainerSection(true);
     }
     initialise();
   </script>
