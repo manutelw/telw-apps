@@ -1552,6 +1552,7 @@
       try {
         const result = await callRpc(RPC.updateStudentDetails,{p_session_token:currentSession.sessionToken,p_student_uuid:studentUuid,p_roll_no:rollNo,p_full_name:fullName,p_batch:batch || null});
         if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Student details could not be saved.");
+        await loadCohortData();
         studentPerformanceData = null;
         await loadStudentPerformance(true);
         setStatus(byId("studentsStatus"),"Student details saved.","success");
