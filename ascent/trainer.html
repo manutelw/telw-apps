@@ -1177,9 +1177,8 @@
         if (!cohorts.has(cohort)) cohorts.set(cohort, []);
         cohorts.get(cohort).push(studentUuid);
       });
-      return Array.from(cohorts.entries())
-        .map(([label,studentUuids]) => ({label,studentUuids}))
-        .sort((left,right) => right.label.localeCompare(left.label));
+      return liveAscentBatches()
+        .map(label => ({label,studentUuids:cohorts.get(label) || []}));
     }
 
     function studentUuidsForCohort(cohortLabel) {
