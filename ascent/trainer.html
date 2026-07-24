@@ -150,6 +150,69 @@
     .status-scheduled { background:var(--blue-soft); color:var(--blue); }
     .status-withdrawn { background:var(--danger-soft); color:var(--danger); }
     .empty-state { padding:28px; text-align:center; color:var(--muted); font-size:13px; }
+    .student-profile { display:grid; gap:18px; }
+    .student-profile-head { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; flex-wrap:wrap; }
+    .student-profile-head h3 { margin:0 0 5px; color:var(--navy); font-size:23px; }
+    .student-detail-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .student-detail { padding:11px 12px; border:1px solid var(--border); border-radius:10px; background:#f8fbfd; }
+    .student-detail strong { display:block; margin-bottom:4px; color:var(--muted); font-size:10px; letter-spacing:.45px; text-transform:uppercase; }
+    .student-detail span { color:var(--navy); font-size:13px; font-weight:700; }
+    .student-progress-grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(180px,1fr); gap:18px; }
+    .completion-ring-wrap { display:grid; place-items:center; min-height:190px; }
+    .completion-ring { width:160px; height:160px; border-radius:50%; display:grid; place-items:center; position:relative; }
+    .completion-ring::after { content:""; width:112px; height:112px; border-radius:50%; background:#fff; position:absolute; }
+    .completion-ring-copy { position:relative; z-index:1; text-align:center; color:var(--navy); font-weight:800; }
+    .completion-ring-copy strong { display:block; font-size:23px; }
+    .completion-ring-copy span { display:block; margin-top:3px; color:var(--muted); font-size:11px; font-weight:700; }
+    .student-question-table td { vertical-align:top; }
+    .student-edit-input { min-width:130px; width:100%; padding:8px 9px; border:1px solid var(--border); border-radius:8px; color:var(--text); background:#fff; font-size:12px; }
+    .student-edit-input:focus { outline:none; border-color:#4d83b5; box-shadow:0 0 0 3px rgba(77,131,181,.13); }
+    .batch-folder { margin:0 0 12px; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#fff; }
+    .batch-folder summary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; cursor:pointer; color:var(--navy); font-family:Arial,sans-serif; font-size:15px; font-weight:600; background:var(--blue-soft); list-style:none; }
+    .batch-folder summary::-webkit-details-marker { display:none; }
+    .batch-folder summary::after { content:"+"; font-size:20px; line-height:1; }
+    .batch-folder[open] summary::after { content:"−"; }
+    .batch-folder-count { color:var(--muted); font-family:Arial,sans-serif; font-size:12px; font-weight:500; }
+    .batch-folder-body { padding:12px; }
+    .subgroup-folder { margin:12px 0 0; border:1px solid #cbdbea; border-radius:9px; background:#f8fbfd; overflow:hidden; }
+    .subgroup-folder summary { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; cursor:pointer; color:var(--navy); font-family:Arial,sans-serif; font-size:13px; font-weight:600; list-style:none; }
+    .subgroup-folder summary::-webkit-details-marker { display:none; }
+    .subgroup-members { margin:0; padding:0 14px 12px 30px; color:var(--text); font-size:12px; line-height:1.65; }
+    .batch-folder-actions { display:flex; justify-content:flex-end; margin:0 0 10px; }
+    .student-roster-controls { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin:0 0 14px; color:var(--navy); font-family:Arial,sans-serif; font-size:12px; font-weight:600; }
+    .student-roster-controls select { min-width:180px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:#fff; color:var(--text); font:inherit; font-weight:600; }
+    .roll-correction-section { margin-top:18px; border:1px solid #e7b347; border-radius:12px; overflow:hidden; background:#fffaf0; }
+    .roll-correction-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 15px; color:#754d00; background:#fff0c4; font-family:Arial,sans-serif; font-size:14px; font-weight:600; }
+    .roll-correction-body { padding:12px; }
+    .roll-correction-note { margin:0 0 10px; color:#754d00; font-family:Arial,sans-serif; font-size:12px; font-weight:400; }
+    .roll-correction-row td { background:#fffdf7; }
+    .leaderboard-rule { margin:0 0 16px; padding:12px 14px; border:1px solid #cbdbea; border-radius:10px; background:#f7fbff; color:#40586e; font-size:13px; line-height:1.5; }
+    .leaderboard-rule strong { color:var(--navy); }
+    .leaderboard-score { color:var(--navy); font-weight:800; white-space:nowrap; }
+    .leaderboard-rank { color:var(--navy); font-size:16px; font-weight:800; }
+    .leaderboard-qualifies { color:var(--success); font-weight:700; }
+    .leaderboard-email-row { display:flex; align-items:end; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+    .leaderboard-email-row .form-group { flex:1 1 280px; margin:0; }
+    .leaderboard-batch-board { margin-top:18px; padding:16px; border:1px solid var(--border); border-radius:12px; background:#fff; }
+    .leaderboard-batch-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:13px; flex-wrap:wrap; }
+    .leaderboard-batch-head h3 { margin:0; }
+    .readiness-chart { display:grid; gap:9px; margin:0 0 16px; }
+    .readiness-chart-key { color:var(--muted); font-size:11px; text-align:right; }
+    .readiness-chart-row { display:grid; grid-template-columns:minmax(110px,180px) minmax(140px,1fr) 45px; align-items:center; gap:10px; font-size:12px; }
+    .readiness-chart-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text); font-weight:700; }
+    .readiness-chart-track { position:relative; height:15px; overflow:visible; border-radius:999px; background:#e7eff7; }
+    .readiness-chart-track::after { content:""; position:absolute; left:85%; top:-4px; bottom:-4px; width:1px; background:#be7d00; }
+    .readiness-chart-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--navy),var(--blue)); }
+    .readiness-chart-score { color:var(--navy); text-align:right; font-weight:800; }
+    .group-manager-grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(220px,1fr); gap:18px; }
+    .group-picker { max-height:280px; overflow:auto; padding:8px; border:1px solid var(--border); border-radius:10px; background:#fff; }
+    .group-option { display:flex; align-items:flex-start; gap:8px; padding:8px; border-radius:8px; color:#40586e; font-size:12px; line-height:1.35; }
+    .group-option:hover { background:var(--blue-soft); }
+    .group-option input { margin-top:2px; }
+    .saved-group-list { display:grid; gap:9px; }
+    .saved-group { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; border:1px solid var(--border); border-radius:10px; background:#fff; }
+    .saved-group strong { display:block; color:var(--navy); font-size:13px; }
+    .saved-group span { color:var(--muted); font-size:11px; }
     .loading-overlay { display:none; position:fixed; inset:0; z-index:999; background:rgba(11,35,58,.35); place-items:center; }
     .loading-overlay.active { display:grid; }
     .loading-card { padding:20px 24px; border-radius:14px; background:#fff; color:var(--navy); font-weight:800; box-shadow:var(--shadow); }
@@ -160,6 +223,7 @@
       body { padding:12px; } .main-layout { grid-template-columns:1fr; } .sidebar { position:static; padding:12px; }
       .nav-list { grid-template-columns:repeat(3,1fr); } .nav-item { text-align:center; } .workspace { padding:20px; }
       .dashboard-grid { grid-template-columns:1fr; } .form-group.two-wide { grid-column:1/-1; }
+      .student-detail-grid,.student-progress-grid { grid-template-columns:1fr; }
     }
     @media (max-width:560px) {
       .brand-text p,.user-summary { display:none; } .topbar { padding:13px; } .workspace-header { display:block; }
@@ -182,10 +246,14 @@
         <div class="sidebar-title">Trainer Workspace</div>
         <div class="nav-list">
           <button class="nav-item active" type="button" data-section="dashboard">Dashboard</button>
+          <button class="nav-item" type="button" data-section="leaderboard">Placement Readiness Board</button>
           <button id="questionBankNavItem" class="nav-item" type="button" data-section="questionBank">Question Bank</button>
           <button id="bulkQuestionsNavItem" class="nav-item" type="button" data-section="tasks">Bulk Questions</button>
           <button class="nav-item" type="button" data-section="assignments">Assignments</button>
           <button class="nav-item" type="button" data-section="results">Results</button>
+          <button class="nav-item" type="button" data-section="students">Students</button>
+          <button class="nav-item" type="button" data-section="archives">Archives</button>
+          <button class="nav-item" type="button" data-section="audioFiling">Audio Filing</button>
           <button id="followupsNavItem" class="nav-item" type="button" data-section="followups">Student Follow-ups</button>
           <button id="trainersNavItem" class="nav-item" type="button" data-section="trainers" hidden>Trainers</button>
         </div>
@@ -210,6 +278,16 @@
             <div class="panel chart-box"><div class="panel-title-row"><div><h3>Score Progress</h3><div class="panel-subtitle">Average latest score by submission date.</div></div></div><div id="progressChart"></div></div>
           </div>
           <div id="dashboardStatus" class="form-status" role="status" aria-live="polite"></div>
+        </section>
+
+        <section id="leaderboardSection" class="section-panel">
+          <div class="workspace-header"><div><h2>ASCENT Placement Readiness Board</h2><p>Top 10 current students in each active batch who are consistently ready across LUM, GD and PI.</p></div><div class="header-actions"><button id="refreshLeaderboardButton" class="secondary-button" type="button">Refresh</button></div></div>
+          <div class="panel">
+            <div class="leaderboard-rule"><strong>Eligibility:</strong> latest LUM, GD and PI scores must all be available; the readiness score is their average. A student appears only at <strong>8.5/10 (85%) or above</strong>, with no component below <strong>8/10</strong>.</div>
+            <div class="leaderboard-email-row"><div class="form-group"><label for="leaderboardEmailRecipient">Email this board to</label><input id="leaderboardEmailRecipient" type="text" inputmode="email" placeholder="Enter one or more email addresses"></div><div class="form-group"><label for="leaderboardEmailSubject">Subject after “ZIP Ahead –”</label><input id="leaderboardEmailSubject" type="text" value="ASCENT Placement Readiness Board" maxlength="120"></div><button id="emailLeaderboardButton" class="primary-button" type="button">Email Board</button></div>
+            <div class="panel-title-row"><div><h3>Top 10 placement-ready students per batch</h3><div id="leaderboardCountLabel" class="panel-subtitle"></div></div></div>
+            <div id="leaderboardBoardsWrap"></div><div id="leaderboardStatus" class="form-status" role="status" aria-live="polite"></div>
+          </div>
         </section>
 
         <section id="questionBankSection" class="section-panel">
@@ -256,15 +334,17 @@
 
           <form id="bankAssignmentForm" class="panel" novalidate>
             <div class="panel-title-row"><div><h3>Assign Selected Bank Questions</h3><div class="panel-subtitle">The question bank fixes the rubric. Trainers cannot change PI, GD or Managerial Communication during assignment.</div></div></div>
-            <div class="bank-selection-strip"><div id="bankSelectedCount" class="bank-selection-text">0 questions selected</div><button id="clearBankSelectionButton" class="small-button" type="button">Clear Selection</button></div>
+            <div class="bank-selection-strip"><div id="bankSelectedCount" class="bank-selection-text">0 questions selected</div><div class="inline-row"><button id="selectFilteredBankQuestionsButton" class="small-button" type="button">Select Filtered Questions</button><button id="clearBankSelectionButton" class="small-button" type="button">Clear Selection</button></div></div>
             <div class="form-grid">
               <div class="form-group two-wide"><label for="bankAssignmentTitle">Task title prefix</label><input id="bankAssignmentTitle" type="text" value="ASCENT Bank Task" maxlength="100"><div class="form-note">ASCENT adds 01, 02, 03… when several questions are assigned.</div></div>
-              <div class="form-group"><label for="bankTargetType">Assign to</label><select id="bankTargetType"><option value="ALL">All active students</option><option value="BATCH">One batch</option><option value="STUDENTS">Selected students</option></select></div>
+              <div class="form-group"><label for="bankTargetType">Assign to</label><select id="bankTargetType"><option value="" selected disabled>Choose batch</option></select></div>
               <div id="bankTargetBatchGroup" class="form-group" hidden><label for="bankTargetBatch">Student batch</label><select id="bankTargetBatch"><option value="">Choose batch</option></select></div>
+              <div id="bankTargetCohortGroup" class="form-group" hidden><label for="bankTargetCohort">Broad cohort</label><select id="bankTargetCohort"><option value="">Choose cohort</option></select></div>
+              <div id="bankTargetGroupGroup" class="form-group" hidden><label for="bankTargetGroup">Student group</label><select id="bankTargetGroup"><option value="">Choose group</option></select></div>
               <div id="bankTargetStudentsGroup" class="form-group two-wide" hidden><label>Selected students</label><div class="student-picker"><input id="bankStudentSearch" type="search" placeholder="Search by name, ID, email or batch"><div id="bankStudentOptions" class="student-options"></div></div><div id="bankSelectedStudentCount" class="form-note">0 students selected</div></div>
               <div class="form-group"><label for="bankStartAt">First release</label><input id="bankStartAt" type="datetime-local"></div>
-              <div class="form-group"><label for="bankIntervalDays">Days between question releases</label><input id="bankIntervalDays" type="number" min="0" max="365" step="1" placeholder="Enter 0, 1, 7…" required><div class="form-note">Enter the exact pace: 0 = all at once, 1 = daily, 7 = weekly. This value is sent unchanged to Supabase.</div></div>
-              <div class="form-group"><label for="bankDueDays">Days each released question stays open</label><input id="bankDueDays" type="number" min="0" max="365" value="7"><div class="form-note">Leave blank for no deadline. If this is longer than the release interval, more than one unanswered question may be open at the same time.</div></div>
+              <div class="form-group"><label for="bankIntervalDays">Question sequence</label><input id="bankIntervalDays" type="number" min="0" max="0" step="1" value="0" readonly required><div class="form-note">ASCENT keeps the complete bank ready, but shows each learner only the next unanswered question. The next question appears after submission.</div></div>
+              <div class="form-group"><label for="bankDueDays">Days each question stays open</label><input id="bankDueDays" type="number" min="0" max="365" value="7"><div class="form-note">Leave blank for no deadline. A learner still sees only one unanswered question at a time.</div></div>
               <div class="form-group"><label for="bankAssignmentFollowupMode">Assignment follow-up</label><select id="bankAssignmentFollowupMode"><option value="NONE">No follow-up</option><option value="FIXED_FOLLOW_UP">Same fixed follow-up</option><option value="SMART_FOLLOW_UP">Smart follow-up from approved bank</option></select></div>
               <div id="bankAssignmentFixedFollowupGroup" class="form-group two-wide" hidden><label for="bankAssignmentFixedFollowup">Fixed follow-up question</label><input id="bankAssignmentFixedFollowup" type="text" placeholder="This follow-up is used for every selected question"></div><div id="bankAssignmentSmartFollowupNote" class="form-group two-wide" hidden><label>Smart follow-up</label><div class="form-note" style="margin-top:0">ASCENT will choose an approved follow-up from the relevant weakness group: evidence, ownership, decision logic, alternatives, risk or business impact.</div></div>
               <div id="bankAssignmentPrepGroup" class="form-group" hidden><label for="bankAssignmentPrepSeconds">Follow-up preparation</label><input id="bankAssignmentPrepSeconds" type="number" min="0" max="120" value="5"></div>
@@ -285,8 +365,10 @@
               <div class="form-group"><label for="rubricType">Rubric</label><select id="rubricType"><option value="MANAGERIAL_COMMUNICATION">Managerial Communication</option><option value="PI">Personal Interview</option><option value="GD">Group Discussion</option></select></div>
               <div class="form-group"><label for="responseSeconds">Main response time</label><select id="responseSeconds"><option value="45">45 seconds</option><option value="60" selected>60 seconds</option><option value="90">90 seconds</option><option value="120">120 seconds</option></select></div>
               <div class="form-group full-width"><div class="inline-row" style="justify-content:space-between"><label for="questionsText" style="margin:0">Questions — one per line</label><span id="questionCount" class="question-count">0 questions</span></div><textarea id="questionsText" placeholder="Paste all questions here. Put each new question on a separate line."></textarea><div class="form-note">Blank lines are ignored. Leading numbers such as “1.” or “2)” are removed automatically.</div></div>
-              <div class="form-group"><label for="targetType">Assign to</label><select id="targetType"><option value="ALL">All active students</option><option value="BATCH">One batch</option><option value="STUDENTS">Selected students</option></select></div>
+              <div class="form-group"><label for="targetType">Assign to</label><select id="targetType"><option value="" selected disabled>Choose batch</option></select></div>
               <div id="targetBatchGroup" class="form-group" hidden><label for="targetBatch">Student batch</label><select id="targetBatch"><option value="">Choose batch</option></select></div>
+              <div id="targetCohortGroup" class="form-group" hidden><label for="targetCohort">Broad cohort</label><select id="targetCohort"><option value="">Choose cohort</option></select></div>
+              <div id="targetGroupGroup" class="form-group" hidden><label for="targetGroup">Student group</label><select id="targetGroup"><option value="">Choose group</option></select></div>
               <div id="targetStudentsGroup" class="form-group two-wide" hidden><label>Selected students</label><div class="student-picker"><input id="studentSearch" type="search" placeholder="Search by name, ID, email or batch"><div id="studentOptions" class="student-options"></div></div><div id="selectedStudentCount" class="form-note">0 students selected</div></div>
               <div class="form-group"><label for="startAt">First release</label><input id="startAt" type="datetime-local"></div>
               <div class="form-group"><label for="intervalDays">Days between question releases</label><input id="intervalDays" type="number" min="0" max="365" step="1" placeholder="Enter 0, 1, 7…" required><div class="form-note">Enter the exact pace: 0 = all at once, 1 = daily, 7 = weekly. This value is sent unchanged to Supabase.</div></div>
@@ -295,6 +377,7 @@
               <div id="pressurePromptGroup" class="form-group two-wide" hidden><label for="pressurePrompt">Follow-up question</label><input id="pressurePrompt" type="text" placeholder="Paste the follow-up question"><div class="form-note">This same follow-up is attached to every question in this batch.</div></div>
               <div id="pressurePrepGroup" class="form-group" hidden><label for="pressurePrepSeconds">Follow-up preparation</label><input id="pressurePrepSeconds" type="number" min="0" max="120" value="5"></div>
               <div id="pressureResponseGroup" class="form-group" hidden><label for="pressureResponseSeconds">Follow-up response</label><input id="pressureResponseSeconds" type="number" min="10" max="300" value="20"></div>
+              <div class="form-group two-wide"><label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input id="emailBulkRelease" type="checkbox" style="width:auto;margin-top:3px"><span>Email students when each Bulk Question is released<div class="form-note" style="margin-top:4px">Each student receives one email when their next scheduled Bulk Question becomes available. Question Bank releases do not send emails.</div></span></label></div>
             </div>
             <div class="inline-row"><button id="createBatchButton" class="primary-button" type="submit">Create and Assign Batch</button><span id="assignmentEstimate" class="form-note"></span></div>
             <div id="bulkTaskStatus" class="form-status" role="status" aria-live="polite"></div>
@@ -347,6 +430,22 @@
           <div class="panel"><div class="panel-title-row"><div><h3>Student Results</h3><div id="resultCountLabel" class="panel-subtitle"></div></div></div><div id="resultsTableWrap" class="table-wrap"></div><div id="resultsStatus" class="form-status"></div></div>
         </section>
 
+        <section id="studentsSection" class="section-panel">
+          <div class="workspace-header"><div><h2>Students</h2><p>Open an individual student record to see question-wise performance, score movement and response completion.</p></div><div class="header-actions"><button id="refreshStudentsButton" class="secondary-button" type="button">Refresh</button></div></div>
+          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle">Create named subgroups from inside the relevant batch folder.</div></div><div class="inline-row"><button id="doneStudentGroupButton" class="primary-button" type="button" hidden>Done</button></div></div><div class="student-roster-controls"><label for="studentRosterSort">Sort students by</label><select id="studentRosterSort"><option value="roll-asc">Roll number: A–Z</option><option value="roll-desc">Roll number: Z–A</option><option value="name-asc">Name: A–Z</option><option value="name-desc">Name: Z–A</option></select></div><div id="studentRosterTableWrap" class="table-wrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
+          <div id="studentProfilePanel" class="panel" hidden></div>
+        </section>
+
+        <section id="archivesSection" class="section-panel">
+          <div class="workspace-header"><div><h2>Archives</h2><p>Read-only records for completed FIIB cohorts. Archived students cannot receive new ASCENT questions.</p></div><div class="header-actions"><button id="refreshArchivesButton" class="secondary-button" type="button">Refresh</button><button id="archiveExportButton" class="primary-button" type="button">Download Excel</button></div></div>
+          <div class="panel"><div class="form-grid"><div class="form-group"><label for="archiveCohortSelect">Archived cohort</label><select id="archiveCohortSelect"><option value="">Choose archived cohort</option></select></div></div><div id="archivesTableWrap" class="table-wrap"></div><div id="archivesStatus" class="form-status" role="status" aria-live="polite"></div></div>
+        </section>
+
+        <section id="audioFilingSection" class="section-panel">
+          <div class="workspace-header"><div><h2>Audio Filing</h2><p>Choose the active term for each live FIIB batch. ASCENT files new recordings in the correct Google Drive term folder.</p></div><div class="header-actions"><button id="refreshAudioFilingButton" class="secondary-button" type="button">Refresh</button></div></div>
+          <div class="panel"><div class="form-note">At the start of a term, choose the term and activate it. If its Google Drive folder does not exist yet, ASCENT creates it automatically when the first recording is submitted.</div><div id="audioFilingRows" style="display:grid;gap:16px;margin-top:18px"></div><div id="audioFilingStatus" class="form-status" role="status" aria-live="polite"></div></div>
+        </section>
+
         <section id="followupsSection" class="section-panel">
           <div class="workspace-header">
             <div><h2>Student Follow-ups</h2><p>Control institutional response reminders and monitor the students who remain pending after each 48-hour stage.</p></div>
@@ -392,7 +491,7 @@
         </section>
       </section>
     </main>
-    <div class="footer">Created by Manu Vikraman<br>A separate application within ClarionPrep</div>
+    <div class="footer" style="background:#143a60;color:#fff;padding:18px 16px;font-size:14px;line-height:1.6;text-align:center"><strong style="display:block;font-size:15px">A Manu Vikraman Career-Readiness Product</strong><span>manuvikraman.com | clarionprep.com</span></div>
   </div>
 
   <script>
@@ -403,7 +502,16 @@
       report: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_report_data",
       workbookExport: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_workbook_export",
       studentMobileMap: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_student_mobile_map",
+      cohortRoster: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_cohort_roster",
+      archiveRoster: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_archive_roster",
+      audioFiling: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_audio_filing",
+      activateAudioTerm: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_activate_audio_term",
+      setAcademicYear: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_student_academic_year",
+      updateStudentDetails: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_update_student_details",
+      saveStudentGroup: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_save_student_group",
+      deleteStudentGroup: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_delete_student_group",
       bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
+      queueBulkReleaseEmail: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_queue_bulk_release_email",
       taskActive: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_task_active",
       taskRemove: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_remove_task",
       createTrainer: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_create_trainer",
@@ -423,6 +531,15 @@
     let visibleBankQuestions = [];
     let visibleAssignmentRows = [];
     let visibleResultRows = [];
+    let studentPerformanceData = null;
+    let cohortData = { students:[], groups:[] };
+    let archiveData = { archives:[], students:[] };
+    let audioFilingData = { cohorts:[] };
+    let editingStudentGroupUuid = null;
+    let selectedStudentGroupUuids = new Set();
+    let creatingStudentGroupName = "";
+    let creatingStudentGroupBatch = "";
+    let studentRosterSort = "roll-asc";
     let reminderData = { isEnabled:false, didNotRespondAfterReminder1:0, didNotRespondAfterReminder2:0, didNotRespondAfterFinalReminder:0, deliveryFailures:0 };
 
     const byId = id => document.getElementById(id);
@@ -505,6 +622,10 @@
     function showSection(name) {
       document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active",item.dataset.section === name));
       document.querySelectorAll(".section-panel").forEach(section => section.classList.toggle("active",section.id === name + "Section"));
+      if (name === "students") loadStudentPerformance();
+      if (name === "leaderboard") loadPlacementReadinessBoard();
+      if (name === "archives") loadArchiveData();
+      if (name === "audioFiling") loadAudioFilingData();
     }
 
     const currentRole = () => String(currentSession && currentSession.role || "TRAINER").toUpperCase();
@@ -637,9 +758,12 @@
     }
 
     function estimatedTargetCount() {
-      const targetType = byId("targetType").value;
+      const target = assignmentTarget(byId("targetType").value);
+      const targetType = target.type;
       if (targetType === "ALL") return reportData.students.length;
-      if (targetType === "BATCH") return reportData.students.filter(student => String(student.batch || "").trim().toLowerCase() === String(byId("targetBatch").value || "").trim().toLowerCase()).length;
+      if (targetType === "BATCH") return studentUuidsForBatch(byId("targetBatch").value).length;
+      if (targetType === "COHORT") return studentUuidsForCohort(target.value).length;
+      if (targetType === "GROUP") return studentUuidsForGroup(target.value).length;
       return selectedStudentUuids().length;
     }
 
@@ -692,7 +816,7 @@
     }
 
     function populateControls() {
-      const batches = reportData.batches.map(batch => ({value:batch,label:batch}));
+      const batches = liveAscentBatches().map(batch => ({value:batch,label:batch}));
       ["targetBatch","bankTargetBatch","assignmentBatchFilter","resultBatchFilter"].forEach(id => fillSelect(id,batches,"value",item => item.label,["targetBatch","bankTargetBatch"].includes(id) ? "Choose batch" : "All batches"));
       ["assignmentStudentFilter","resultStudentFilter"].forEach(id => fillSelect(id,reportData.students,"studentUuid",student => `${student.fullName} (${student.studentId})`,"All students"));
       ["assignmentTaskFilter","resultTaskFilter"].forEach(id => fillSelect(id,reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks"));
@@ -818,6 +942,678 @@
       byId("resultsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Status</th><th>Score</th><th>Submitted At</th></tr></thead><tbody>${visibleResultRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}<br>${escapeHtml(row.email || "")}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td><td>${escapeHtml(formatNumber(row.latestScore))}</td><td>${escapeHtml(formatDate(row.latestSubmittedAt))}</td></tr>`).join("")}</tbody></table>`;
     }
 
+    function studentField(student, keys) {
+      for (const key of keys) {
+        if (student && student[key] !== null && student[key] !== undefined && student[key] !== "") {
+          return student[key];
+        }
+      }
+      return "";
+    }
+
+    function studentUuidOf(row) {
+      return String(studentField(row,["studentUuid","student_uuid","uuid","id"]) || "");
+    }
+
+    function submittedAtOf(row) {
+      const value = studentField(row,["submittedAt","submitted_at","createdAt","created_at"]);
+      const timestamp = Date.parse(value || "");
+      return Number.isFinite(timestamp) ? timestamp : 0;
+    }
+
+    function scoreOf(row) {
+      return exportNumber(row && (row.score ?? row.finalScore ?? row.totalScore ?? row.latestScore));
+    }
+
+    function uniqueStudentAssignments(data, studentUuid) {
+      const latestByTask = new Map();
+      (Array.isArray(data.assignments) ? data.assignments : [])
+        .filter(row => studentUuidOf(row) === studentUuid)
+        .forEach(function (row) {
+          const key = String(row.assignmentUuid || row.taskUuid || row.question || "");
+          latestByTask.set(key,selectedAssignment(latestByTask.get(key),row));
+        });
+      return Array.from(latestByTask.values());
+    }
+
+    function studentSubmissions(data, studentUuid) {
+      const latestBySubmission = new Map();
+      (Array.isArray(data.submissions) ? data.submissions : [])
+        .filter(row => studentUuidOf(row) === studentUuid)
+        .forEach(function (row) {
+          const key = String(row.submissionUuid || row.submission_uuid || row.assignmentUuid || `${row.question || ""}|${submittedAtOf(row)}`);
+          latestBySubmission.set(key,row);
+        });
+      return Array.from(latestBySubmission.values())
+        .sort((left,right) => submittedAtOf(left) - submittedAtOf(right));
+    }
+
+    function placementReadinessArea(rubricType) {
+      const key = workbookRubricKey(rubricType);
+      if (key === "PI") return "PI";
+      if (key === "GD") return "GD";
+      if (key === "MANAGERIAL_COMMUNICATION") return "LUM";
+      return "";
+    }
+
+    function latestReadinessScore(studentUuid, area) {
+      const entries = studentSubmissions(studentPerformanceData,studentUuid)
+        .map(row => ({row,area:placementReadinessArea(row.rubricType),score:scoreOf(row)}))
+        .filter(item => item.area === area && item.score !== null);
+      if (!entries.length) return null;
+      const latest = entries[entries.length - 1];
+      return {score:latest.score,submittedAt:submittedAtOf(latest.row)};
+    }
+
+    function placementReadinessRows(batchFilter="") {
+      const currentYear = new Date().getFullYear();
+      const liveBatches = new Set([currentYear,currentYear - 1].map(year => `${year}-${String(year + 2).slice(-2)} PGDM`));
+      const students = cohortData.students.length ? cohortData.students : [];
+      return students.map(student => {
+        const studentUuid = studentUuidOf(student);
+        const rollNo = rollNumberValue(student);
+        const batch = rollNumberCohort(rollNo).batch || studentField(student,["batch","batchName"]);
+        if (!studentUuid || !rollNo || !liveBatches.has(batch) || (batchFilter && batch !== batchFilter)) return null;
+        const lum = latestReadinessScore(studentUuid,"LUM");
+        const gd = latestReadinessScore(studentUuid,"GD");
+        const pi = latestReadinessScore(studentUuid,"PI");
+        if (!lum || !gd || !pi) return null;
+        const readiness = Number(((lum.score + gd.score + pi.score) / 3).toFixed(2));
+        const lowestComponent = Math.min(lum.score,gd.score,pi.score);
+        if (readiness < 8.5 || lowestComponent < 8) return null;
+        return {
+          studentUuid,
+          fullName:studentField(student,["name","fullName"]) || "Student",
+          rollNo,
+          batch,
+          lum:lum.score,
+          gd:gd.score,
+          pi:pi.score,
+          readiness,
+          lastUpdated:Math.max(lum.submittedAt,gd.submittedAt,pi.submittedAt)
+        };
+      }).filter(Boolean).sort((left,right) => right.readiness - left.readiness || right.lastUpdated - left.lastUpdated || left.fullName.localeCompare(right.fullName));
+    }
+
+    let placementBoardBatches = [];
+
+    function readinessChartHtml(rows) {
+      if (!rows.length) return `<div class="empty-state">No student in this batch currently meets all readiness conditions.</div>`;
+      return `<div class="readiness-chart"><div class="readiness-chart-key">The amber line marks 85%</div>${rows.map((row,index) => `<div class="readiness-chart-row"><div class="readiness-chart-name" title="${escapeHtml(row.fullName)}">${index + 1}. ${escapeHtml(row.fullName)}</div><div class="readiness-chart-track"><div class="readiness-chart-fill" style="width:${Math.min(row.readiness * 10,100)}%"></div></div><div class="readiness-chart-score">${Math.round(row.readiness * 10)}%</div></div>`).join("")}</div>`;
+    }
+
+    function readinessTableHtml(rows) {
+      if (!rows.length) return "";
+      return `<div class="table-wrap"><table><thead><tr><th>Rank</th><th>Student</th><th>Roll Number</th><th>LUM</th><th>GD</th><th>PI</th><th>Readiness</th></tr></thead><tbody>${rows.map((row,index) => `<tr><td><span class="leaderboard-rank">${index + 1}</span></td><td><strong>${escapeHtml(row.fullName)}</strong></td><td>${escapeHtml(row.rollNo)}</td><td>${escapeHtml(formatNumber(row.lum))}</td><td>${escapeHtml(formatNumber(row.gd))}</td><td>${escapeHtml(formatNumber(row.pi))}</td><td><span class="leaderboard-score">${escapeHtml(formatNumber(row.readiness))}/10</span><div class="leaderboard-qualifies">${Math.round(row.readiness * 10)}%</div></td></tr>`).join("")}</tbody></table></div>`;
+    }
+
+    function renderPlacementReadinessBoard() {
+      const currentYear = new Date().getFullYear();
+      const batches = [currentYear,currentYear - 1]
+        .map(year => `${year}-${String(year + 2).slice(-2)} PGDM`);
+      placementBoardBatches = batches.map(batch => ({batch,rows:placementReadinessRows(batch).slice(0,10)}));
+      const qualifyingCount = placementBoardBatches.reduce((total,item) => total + item.rows.length,0);
+      byId("leaderboardCountLabel").textContent = qualifyingCount
+        ? `${qualifyingCount} qualifying student${qualifyingCount === 1 ? "" : "s"} shown across the two current batches.`
+        : "No student currently meets all placement-readiness conditions.";
+      byId("leaderboardBoardsWrap").innerHTML = placementBoardBatches.map(item => {
+        const label = item.batch.replace(/ PGDM$/,"").trim();
+        return `<div class="leaderboard-batch-board"><div class="leaderboard-batch-head"><div><h3>${escapeHtml(label)}</h3><div class="panel-subtitle">Top 10 placement-ready students in this batch</div></div><div class="panel-subtitle">${item.rows.length} qualifying</div></div>${readinessChartHtml(item.rows)}${readinessTableHtml(item.rows)}</div>`;
+      }).join("");
+    }
+
+    async function loadPlacementReadinessBoard(force=false) {
+      await loadStudentPerformance(force);
+      renderPlacementReadinessBoard();
+    }
+
+    function emailPlacementReadinessBoard() {
+      const recipients = byId("leaderboardEmailRecipient").value.trim();
+      const subjectText = byId("leaderboardEmailSubject").value.trim();
+      if (!recipients) {
+        setStatus(byId("leaderboardStatus"),"Enter the recipient email address first.","error");
+        return;
+      }
+      if (!subjectText) {
+        setStatus(byId("leaderboardStatus"),"Enter the email subject after “ZIP Ahead –”.","error");
+        return;
+      }
+      const boardsWithStudents = placementBoardBatches.filter(item => item.rows.length);
+      if (!boardsWithStudents.length) {
+        setStatus(byId("leaderboardStatus"),"There is no qualifying leaderboard to email yet.","error");
+        return;
+      }
+      const lines = boardsWithStudents.flatMap(item => [
+        item.batch.replace(/ PGDM$/,"").trim(),
+        ...item.rows.map((row,index) => `${index + 1}. ${row.fullName} (${row.rollNo}) — ${Math.round(row.readiness * 10)}% | LUM ${formatNumber(row.lum)} | GD ${formatNumber(row.gd)} | PI ${formatNumber(row.pi)}`),
+        ""
+      ]);
+      const body = [
+        "ASCENT Placement Readiness Board",
+        "",
+        "Top 10 students are shown separately for each current batch. Students qualify only with latest LUM, GD and PI scores available, an overall readiness score of 85% or more, and no component below 80%.",
+        "",
+        ...lines,
+        "",
+        `Generated on ${new Date().toLocaleString()}.`
+      ].join("\n");
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(recipients)}&su=${encodeURIComponent(`ZIP Ahead – ${subjectText}`)}&body=${encodeURIComponent(body)}`;
+      window.open(gmailUrl,"_blank","noopener");
+      setStatus(byId("leaderboardStatus"),"A ready-to-send Gmail draft has opened.","success");
+    }
+
+    function latestStudentScore(data, studentUuid) {
+      const scored = studentSubmissions(data,studentUuid)
+        .map(row => ({row,score:scoreOf(row)}))
+        .filter(item => item.score !== null);
+      return scored.length ? scored[scored.length - 1].score : null;
+    }
+
+    function academicYearLabel(value) {
+      return value === "FIRST_YEAR" ? "First Year" : value === "SECOND_YEAR" ? "Second Year" : "Not set";
+    }
+
+    function rollNumberValue(student) {
+      const rollNo = normaliseRollNumber(studentField(student,["rollNo","studentId","student_id"]));
+      return /^(\d{2})(?:PGDM|PGDMFM)\d{3}$/.test(rollNo) ? rollNo : "";
+    }
+
+    function normaliseRollNumber(value) {
+      return String(value || "").trim().toUpperCase();
+    }
+
+    function isValidRollNumber(value) {
+      return /^(\d{2})(?:PGDM|PGDMFM)\d{3}$/.test(normaliseRollNumber(value));
+    }
+
+    function liveAscentBatches() {
+      const year = new Date().getFullYear();
+      return [year,year - 1].map(startYear => `${startYear}-${String(startYear + 2).slice(-2)} PGDM`);
+    }
+
+    function rollNumberCohort(rollNo) {
+      const match = String(rollNo || "").trim().match(/^(\d{2})PGDM/i);
+      if (!match) return {batch:null};
+      const startYear = 2000 + Number(match[1]);
+      return {
+        batch:`${startYear}-${String(startYear + 2).slice(-2)} PGDM`
+      };
+    }
+
+    function withDerivedCohortDetails(student) {
+      const derived = rollNumberCohort(rollNumberValue(student));
+      const savedBatch = String(student.batch || "").trim();
+      const hasEditedBatch = savedBatch && !/default\s*batch/i.test(savedBatch);
+      return {
+        ...student,
+        batch:derived.batch || (hasEditedBatch ? savedBatch : "No batch")
+      };
+    }
+
+    function studentUuidsForBatch(batchLabel) {
+      return reportData.students
+        .filter(student => String(student.batch || "") === String(batchLabel || ""))
+        .map(student => String(student.studentUuid || ""))
+        .filter(Boolean);
+    }
+
+    async function loadCohortData() {
+      const data = await callRpc(
+        RPC.cohortRoster,
+        {p_session_token:currentSession.sessionToken}
+      );
+      if (!data || data.ok !== true) {
+        throw new Error(data && data.message ? data.message : "Cohort data could not be loaded.");
+      }
+      cohortData = {
+        students:Array.isArray(data.students) ? data.students.map(withDerivedCohortDetails) : [],
+        groups:Array.isArray(data.groups) ? data.groups : []
+      };
+      return cohortData;
+    }
+
+    function cohortStudentUuidsForYear(year) {
+      return cohortData.students
+        .filter(student => student.academicYear === year)
+        .map(student => studentUuidOf(student))
+        .filter(Boolean);
+    }
+
+    function studentUuidsForGroup(groupUuid) {
+      return cohortData.students
+        .filter(student => (student.groups || []).some(group => group.groupUuid === groupUuid))
+        .map(student => studentUuidOf(student))
+        .filter(Boolean);
+    }
+
+    function automaticCohorts() {
+      const cohorts = new Map();
+      cohortData.students.forEach(student => {
+        const cohort = rollNumberCohort(rollNumberValue(student)).batch;
+        const studentUuid = studentUuidOf(student);
+        if (!cohort || !studentUuid) return;
+        if (!cohorts.has(cohort)) cohorts.set(cohort, []);
+        cohorts.get(cohort).push(studentUuid);
+      });
+      return liveAscentBatches()
+        .map(label => ({label,studentUuids:cohorts.get(label) || []}));
+    }
+
+    function studentUuidsForCohort(cohortLabel) {
+      const cohort = automaticCohorts().find(item => item.label === cohortLabel);
+      return cohort ? cohort.studentUuids : [];
+    }
+
+    function populateCohortSelect(selectId) {
+      const select = byId(selectId);
+      const selectedValue = select.value;
+      select.innerHTML = `<option value="">Choose cohort</option>` + automaticCohorts()
+        .map(cohort => `<option value="${escapeHtml(cohort.label)}">${escapeHtml(cohort.label)} (${cohort.studentUuids.length})</option>`)
+        .join("");
+      if (Array.from(select.options).some(option => option.value === selectedValue)) select.value = selectedValue;
+    }
+
+    function populateGroupSelect(selectId) {
+      const select = byId(selectId);
+      const selectedValue = select.value;
+      select.innerHTML = `<option value="">Choose group</option>` + cohortData.groups
+        .slice()
+        .sort((left,right) => String(left.groupName || "").localeCompare(String(right.groupName || "")))
+        .map(group => `<option value="${escapeHtml(group.groupUuid)}">${escapeHtml(group.groupName || "Unnamed group")} (${Number(group.memberCount || 0)})</option>`)
+        .join("");
+      if (Array.from(select.options).some(option => option.value === selectedValue)) select.value = selectedValue;
+    }
+
+    function populateBankGroupSelect() {
+      populateGroupSelect("bankTargetGroup");
+      populateGroupSelect("targetGroup");
+      populateCohortSelect("bankTargetCohort");
+      populateCohortSelect("targetCohort");
+      ["bankTargetType","targetType"].forEach(populateDirectAssignmentTargets);
+    }
+
+    function assignmentTarget(value) {
+      const text = String(value || "");
+      if (text.startsWith("COHORT|")) return {type:"COHORT", value:text.slice(7)};
+      if (text.startsWith("GROUP|")) return {type:"GROUP", value:text.slice(6)};
+      return {type:text, value:""};
+    }
+
+    function populateDirectAssignmentTargets(selectId) {
+      const select = byId(selectId);
+      const selectedValue = select.value;
+      const cohortOptions = automaticCohorts()
+        .map(cohort => `<option value="COHORT|${escapeHtml(cohort.label)}">${escapeHtml(cohort.label)}</option>`)
+        .join("");
+      const groupOptions = cohortData.groups
+        .slice()
+        .sort((left,right) => String(left.groupName || "").localeCompare(String(right.groupName || "")))
+        .map(group => `<option value="GROUP|${escapeHtml(group.groupUuid)}">${escapeHtml(group.groupName || "Unnamed group")}</option>`)
+        .join("");
+      select.innerHTML = `<option value="" selected disabled>Choose batch</option>${cohortOptions ? `<optgroup label="Batches">${cohortOptions}</optgroup>` : ""}${groupOptions ? `<optgroup label="Named groups">${groupOptions}</optgroup>` : ""}`;
+      if (Array.from(select.options).some(option => option.value === selectedValue)) select.value = selectedValue;
+    }
+
+    function renderStudentGroupManager() {
+      populateBankGroupSelect();
+    }
+
+    function startStudentGroupCreation(batch) {
+      const name = window.prompt("Name this student group. For example: PGDM 2026 Placement Practice Group");
+      if (name === null) return;
+      creatingStudentGroupName = name.trim();
+      if (!creatingStudentGroupName) { setStatus(byId("studentsStatus"),"Enter a name for the group.","error"); return; }
+      creatingStudentGroupBatch = batch;
+      selectedStudentGroupUuids = new Set();
+      byId("doneStudentGroupButton").hidden = false;
+      setStatus(byId("studentsStatus"),`Tick the students in ${batch} for “${creatingStudentGroupName}”, then click Done.`,"success");
+      renderStudentRoster();
+    }
+
+    async function finishStudentGroupCreation() {
+      if (!creatingStudentGroupName) return;
+      if (!selectedStudentGroupUuids.size) { setStatus(byId("studentsStatus"),"Tick at least one student before clicking Done.","error"); return; }
+      const button = byId("doneStudentGroupButton");
+      button.disabled = true; button.textContent = "Saving…";
+      try {
+        const result = await callRpc(RPC.saveStudentGroup,{p_session_token:currentSession.sessionToken,p_group_uuid:null,p_group_name:creatingStudentGroupName,p_academic_year:null,p_student_uuids:Array.from(selectedStudentGroupUuids)});
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Student group could not be saved.");
+        const savedName = creatingStudentGroupName;
+        creatingStudentGroupName = "";
+        creatingStudentGroupBatch = "";
+        selectedStudentGroupUuids = new Set();
+        await loadCohortData();
+        populateBankGroupSelect();
+        button.hidden = true; button.disabled = false; button.textContent = "Done";
+        renderStudentRoster();
+        setStatus(byId("studentsStatus"),`“${savedName}” has been created and is ready in Question Bank and Bulk Questions.`,"success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("studentsStatus"),error.message || "Student group could not be saved.","error");
+        button.disabled = false; button.textContent = "Done";
+      }
+    }
+
+    async function deleteStudentGroup(groupUuid,groupName) {
+      if (!confirm(`Delete the subgroup “${groupName}”?\n\nStudents and their ASCENT records will not be deleted.`)) return;
+      try {
+        const result = await callRpc(RPC.deleteStudentGroup,{p_session_token:currentSession.sessionToken,p_group_uuid:groupUuid});
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "The subgroup could not be deleted.");
+        await loadCohortData();
+        populateBankGroupSelect();
+        renderStudentRoster();
+        setStatus(byId("studentsStatus"),`“${groupName}” has been deleted. Student records remain unchanged.`,"success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("studentsStatus"),error.message || "The subgroup could not be deleted.","error");
+      }
+    }
+
+    function formatCriteriaInline(row) {
+      const criteria = workbookCriteriaForRubric(
+        row.rubricType,
+        criterionScoreMap(row.criterionScores,row.detailedFeedback)
+      ).filter(item => item.label && item.score !== null);
+      return criteria.length
+        ? criteria.map(item => `${item.label}: ${formatNumber(item.score)}`).join(" · ")
+        : "—";
+    }
+
+    async function loadStudentPerformance(force=false) {
+      if (studentPerformanceData && !force) {
+        renderStudentRoster();
+        renderStudentGroupManager();
+        return;
+      }
+
+      showLoading("Loading student performance…");
+      try {
+        const [data] = await Promise.all([
+          callRpc(RPC.workbookExport,{p_session_token:currentSession.sessionToken}),
+          loadCohortData()
+        ]);
+        if (!data || data.ok !== true) {
+          throw new Error(data && data.message ? data.message : "Student performance data could not be loaded.");
+        }
+        await addMobileNumbersToWorkbook(data);
+        studentPerformanceData = data;
+        renderStudentRoster();
+        renderStudentGroupManager();
+        setStatus(byId("studentsStatus"),"Student records updated.","success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("studentsStatus"),error.message || "ASCENT could not load student records.","error");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function selectedArchiveStudents() {
+      const archiveLabel = byId("archiveCohortSelect").value;
+      return (archiveData.students || []).filter(student => student.archiveLabel === archiveLabel);
+    }
+
+    function renderArchives() {
+      const select = byId("archiveCohortSelect");
+      const selectedValue = select.value;
+      const archives = Array.isArray(archiveData.archives) ? archiveData.archives : [];
+      select.innerHTML = `<option value="">Choose archived cohort</option>` + archives
+        .map(archive => `<option value="${escapeHtml(archive.archiveLabel)}">${escapeHtml(archive.cohortLabel)} — archived ${escapeHtml(formatDate(archive.archivedAt))}</option>`)
+        .join("");
+      if (archives.some(archive => archive.archiveLabel === selectedValue)) select.value = selectedValue;
+      if (!select.value && archives.length === 1) select.value = archives[0].archiveLabel;
+
+      const students = selectedArchiveStudents();
+      if (!archives.length) {
+        byId("archivesTableWrap").innerHTML = `<div class="empty-state">No FIIB cohorts have been archived yet.</div>`;
+        return;
+      }
+      if (!select.value) {
+        byId("archivesTableWrap").innerHTML = `<div class="empty-state">Choose an archived cohort to open its student register.</div>`;
+        return;
+      }
+      byId("archivesTableWrap").innerHTML = `<table><thead><tr><th>Roll Number</th><th>Name</th><th>Email</th><th>Mobile Number</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th></tr></thead><tbody>${students.length ? students.map(student => `<tr><td>${escapeHtml(student.rollNo || "—")}</td><td>${escapeHtml(student.fullName || "—")}</td><td>${escapeHtml(student.email || "—")}</td><td>${escapeHtml(student.mobileNumber || "—")}</td><td>${escapeHtml(student.batch || "—")}</td><td>${escapeHtml(formatDate(student.dateJoined))}</td><td>${escapeHtml(formatDate(student.lastAccessedAt))}</td></tr>`).join("") : `<tr><td colspan="7" class="empty-state">No archived students are available for this cohort.</td></tr>`}</tbody></table>`;
+    }
+
+    async function loadArchiveData(force=false) {
+      if (archiveData.archives.length && !force) { renderArchives(); return; }
+      try {
+        const data = await callRpc(RPC.archiveRoster,{p_session_token:currentSession.sessionToken});
+        if (!data || data.ok !== true) throw new Error(data && data.message ? data.message : "Archives could not be loaded.");
+        archiveData = {
+          archives:Array.isArray(data.archives) ? data.archives : [],
+          students:Array.isArray(data.students) ? data.students : []
+        };
+        renderArchives();
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("archivesStatus"),error.message || "Archives could not be loaded.","error");
+      }
+    }
+
+    function audioTermOptions(activeTerm) {
+      return Array.from({length:6},(_,index) => {
+        const value = `Term ${index + 1}`;
+        return `<option value="${value}" ${value === activeTerm ? "selected" : ""}>${value}</option>`;
+      }).join("");
+    }
+
+    function renderAudioFiling() {
+      const rows = Array.isArray(audioFilingData.cohorts) ? audioFilingData.cohorts : [];
+      const wrap = byId("audioFilingRows");
+      if (!rows.length) {
+        wrap.innerHTML = `<div class="empty-state">No live FIIB batches are available for audio filing yet.</div>`;
+        return;
+      }
+      wrap.innerHTML = rows.map(item => {
+        const cohort = String(item.cohortLabel || "");
+        const activeTerm = String(item.activeTerm || "");
+        const folderNote = activeTerm
+          ? (item.folderReady ? `Google Drive folder: ${escapeHtml(item.folderName || `${cohort.replace(/ PGDM$/,"")} ${activeTerm}`)}` : "The folder will be created when the first recording is submitted.")
+          : "No term is active. Select the current term before students submit recordings.";
+        return `<div class="panel" style="margin:0"><div class="panel-title-row"><div><h3>${escapeHtml(cohort)}</h3><div class="panel-subtitle">${folderNote}</div></div><div class="form-group" style="min-width:180px;margin:0"><label for="audio-term-${escapeHtml(cohort)}">Active term</label><select id="audio-term-${escapeHtml(cohort)}">${audioTermOptions(activeTerm)}</select></div><button class="primary-button activate-audio-term-button" type="button" data-cohort="${escapeHtml(cohort)}">Activate term</button></div></div>`;
+      }).join("");
+      document.querySelectorAll(".activate-audio-term-button").forEach(button => button.addEventListener("click",() => activateAudioTerm(button.dataset.cohort)));
+    }
+
+    async function loadAudioFilingData(force=false) {
+      if (audioFilingData.cohorts.length && !force) { renderAudioFiling(); return; }
+      try {
+        const data = await callRpc(RPC.audioFiling,{p_session_token:currentSession.sessionToken});
+        if (!data || data.ok !== true) throw new Error(data && data.message ? data.message : "Audio filing could not be loaded.");
+        audioFilingData = { cohorts:Array.isArray(data.cohorts) ? data.cohorts : [] };
+        renderAudioFiling();
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("audioFilingStatus"),error.message || "Audio filing could not be loaded.","error");
+      }
+    }
+
+    async function activateAudioTerm(cohort) {
+      const select = byId(`audio-term-${cohort}`);
+      const term = select ? select.value : "";
+      if (!cohort || !term) return;
+      const confirmed = window.confirm(`Activate ${term} for ${cohort}? New recordings for this batch will be filed in that term.`);
+      if (!confirmed) return;
+      try {
+        const data = await callRpc(RPC.activateAudioTerm,{p_session_token:currentSession.sessionToken,p_cohort_label:cohort,p_term_label:term});
+        if (!data || data.ok !== true) throw new Error(data && data.message ? data.message : "The term could not be activated.");
+        setStatus(byId("audioFilingStatus"),data.message || "Term activated.","success");
+        audioFilingData = { cohorts:[] };
+        await loadAudioFilingData(true);
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("audioFilingStatus"),error.message || "The term could not be activated.","error");
+      }
+    }
+
+    function exportArchivedRoster() {
+      const archiveLabel = byId("archiveCohortSelect").value;
+      const students = selectedArchiveStudents();
+      if (!archiveLabel) { setStatus(byId("archivesStatus"),"Choose an archived cohort first.","error"); return; }
+      if (!students.length) { setStatus(byId("archivesStatus"),"There are no archived students to download for this cohort.","error"); return; }
+      const rows = students.map(student => ({
+        "Roll Number":student.rollNo || "",
+        "Name":student.fullName || "",
+        "Email":student.email || "",
+        "Mobile Number":student.mobileNumber || "",
+        "Batch":student.batch || "",
+        "Date of Joining":formatDate(student.dateJoined),
+        "Date Last Accessed":formatDate(student.lastAccessedAt),
+        "Archive":archiveLabel
+      }));
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook,XLSX.utils.json_to_sheet(rows),"Archived Students");
+      XLSX.writeFile(workbook,`${archiveLabel.replace(/[^a-z0-9]+/gi,"_")}_Archive.xlsx`);
+      setStatus(byId("archivesStatus"),"Archive register downloaded.","success");
+    }
+
+    function batchFolderName(student) {
+      const cohort = rollNumberCohort(rollNumberValue(student)).batch;
+      return cohort ? cohort.replace(/ PGDM$/,"").trim() : "Roll numbers to be completed";
+    }
+
+    function savedBatchFolderName(student) {
+      const savedBatch = String(studentField(student,["batch","batchName"]) || "");
+      const match = savedBatch.match(/(20\d{2})\s*[–-]\s*(\d{2})/);
+      return match ? `${match[1]}-${match[2]}` : batchFolderName(student);
+    }
+
+    function renderStudentRoster() {
+      const data = studentPerformanceData;
+      const students = (cohortData.students.length ? cohortData.students : (data && Array.isArray(data.students) ? data.students : [])).slice();
+      const collator = new Intl.Collator(undefined,{numeric:true,sensitivity:"base"});
+      const sortStudents = list => list.slice().sort((left,right) => {
+        const rollComparison = collator.compare(rollNumberValue(left),rollNumberValue(right));
+        const nameComparison = collator.compare(exportText(studentField(left,["name","fullName"])),exportText(studentField(right,["name","fullName"])));
+        if (studentRosterSort === "roll-desc") return -rollComparison || nameComparison;
+        if (studentRosterSort === "name-asc") return nameComparison || rollComparison;
+        if (studentRosterSort === "name-desc") return -nameComparison || rollComparison;
+        return rollComparison || nameComparison;
+      });
+      const invalidRollStudents = students.filter(student => !isValidRollNumber(rollNumberValue(student)));
+      if (!students.length) {
+        byId("studentRosterTableWrap").innerHTML = `<div class="empty-state">No student records are available yet.</div>`;
+        return;
+      }
+      const folders = new Map();
+      const currentYear = new Date().getFullYear();
+      [currentYear,currentYear - 1].forEach(year => folders.set(`${year}-${String(year + 2).slice(-2)}`,[]));
+      const newestFolder = `${currentYear}-${String(currentYear + 2).slice(-2)}`;
+      students.forEach(student => {
+        const folder = isValidRollNumber(rollNumberValue(student)) ? batchFolderName(student) : savedBatchFolderName(student);
+        if (folders.has(folder)) folders.get(folder).push(student);
+        else if (!isValidRollNumber(rollNumberValue(student))) folders.get(newestFolder).push(student);
+      });
+      const liveStudentCount = Array.from(folders.values()).reduce((total,folderStudents) => total + folderStudents.length,0);
+      byId("studentRosterCount").textContent = `${students.length} students · ${liveStudentCount} in live batches · ${invalidRollStudents.length} need roll-number correction`;
+      byId("studentRosterSort").value = studentRosterSort;
+      const groupStudents = groupUuid => cohortData.students.filter(student => (student.groups || []).some(group => group.groupUuid === groupUuid));
+      const groupsForBatch = batch => cohortData.groups.filter(group => {
+        const members = groupStudents(group.groupUuid);
+        return members.length && members.every(student => batchFolderName(student) === batch);
+      });
+      const tableForStudents = (folderStudents,batch,isCorrectionSection = false) => {
+        const mayAddToGroup = creatingStudentGroupName && creatingStudentGroupBatch === batch && !isCorrectionSection;
+        return `<table><thead><tr><th>Roll Number</th><th>Name</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th></th>${mayAddToGroup ? `<th>Add to group</th>` : ""}</tr></thead><tbody>${sortStudents(folderStudents).map(student => {
+        const studentUuid = studentUuidOf(student);
+        const lastScore = latestStudentScore(data,studentUuid);
+        const storedRoll = studentField(student,["rollNo","studentId","student_id"]);
+        return `<tr${isCorrectionSection ? ` class="roll-correction-row"` : ""}><td><input class="student-edit-input student-roll-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(storedRoll || "")}" placeholder="e.g. 26PGDM001" maxlength="11"></td><td><input class="student-edit-input student-name-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["name","fullName"]) || "")}" placeholder="Enter name"><div class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</div></td><td><input class="student-edit-input student-batch-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["batch","batchName"]) || "")}" placeholder="Enter batch"></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="bank-actions"><button class="small-button student-save-button" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button></div></td>${mayAddToGroup ? `<td><input class="student-group-roster-check" type="checkbox" data-student="${escapeHtml(studentUuid)}" ${selectedStudentGroupUuids.has(studentUuid) ? "checked" : ""} aria-label="Add ${escapeHtml(studentField(student,["name","fullName"]) || "student")} to group"></td>` : ""}</tr>`;
+        }).join("")}</tbody></table>`;
+      };
+      const batchFoldersHtml = Array.from(folders.entries())
+        .sort((left,right) => right[0].localeCompare(left[0]))
+        .map(([folder,folderStudents],index) => {
+          const batchStudents = folderStudents.filter(student => isValidRollNumber(rollNumberValue(student)));
+          const correctionStudents = folderStudents.filter(student => !isValidRollNumber(rollNumberValue(student)));
+          const groups = groupsForBatch(folder);
+          const subgroupFolders = groups.length ? groups.map(group => {
+            const members = groupStudents(group.groupUuid);
+            return `<details class="subgroup-folder"><summary><span>${escapeHtml(group.groupName || "Unnamed group")}</span><span class="batch-folder-count">${members.length} student${members.length === 1 ? "" : "s"}</span></summary><div class="subgroup-members"><ul>${members.map(student => `<li>${escapeHtml(studentField(student,["name","fullName"]) || "Student")} — ${escapeHtml(rollNumberValue(student) || "Roll number needed")}</li>`).join("")}</ul><button class="small-button delete-student-group-button" type="button" data-group="${escapeHtml(group.groupUuid)}" data-name="${escapeHtml(group.groupName || "this group")}">Delete subgroup</button></div></details>`;
+          }).join("") : `<div class="form-note">No named subgroups in this batch yet.</div>`;
+          const folderOpen = creatingStudentGroupName && creatingStudentGroupBatch === folder;
+          const correctionList = correctionStudents.length ? `<div class="roll-correction-section"><div class="roll-correction-head"><span>Roll number needs correction</span><span>${correctionStudents.length} student${correctionStudents.length === 1 ? "" : "s"}</span></div><div class="roll-correction-body"><p class="roll-correction-note">Please fill in the roll number for ${correctionStudents.length === 1 ? "this student" : "these " + correctionStudents.length + " students"}. ASCENT found an email address or another invalid value in the roll-number field. Once saved, the student will move into the main list above.</p>${tableForStudents(correctionStudents,folder,true)}</div></div>` : "";
+          return `<details class="batch-folder" ${folderOpen ? "open" : ""}><summary><span>${escapeHtml(folder)}</span><span class="batch-folder-count">${folderStudents.length} student${folderStudents.length === 1 ? "" : "s"}</span></summary><div class="batch-folder-body">${creatingStudentGroupName ? "" : `<div class="batch-folder-actions"><button class="secondary-button create-batch-group-button" type="button" data-batch="${escapeHtml(folder)}">Create subgroup</button></div>`}${batchStudents.length ? tableForStudents(batchStudents,folder) : `<div class="empty-state">No students with a completed roll number in this batch yet.</div>`}${correctionList}<div style="margin-top:14px"><strong style="color:var(--navy);font-size:13px">Named subgroups</strong>${subgroupFolders}</div></div></details>`;
+        })
+        .join("");
+      byId("studentRosterTableWrap").innerHTML = batchFoldersHtml;
+      byId("studentRosterSort").addEventListener("change",event => { studentRosterSort = event.target.value; renderStudentRoster(); });
+      document.querySelectorAll(".student-profile-button").forEach(button => button.addEventListener("click",() => renderStudentProfile(button.dataset.student)));
+      document.querySelectorAll(".student-save-button").forEach(button => button.addEventListener("click",() => saveStudentDetails(button)));
+      document.querySelectorAll(".student-roll-input").forEach(input => input.addEventListener("input",() => { input.value = normaliseRollNumber(input.value); }));
+      document.querySelectorAll(".student-group-roster-check").forEach(box => box.addEventListener("change",() => {
+        if (box.checked) selectedStudentGroupUuids.add(box.dataset.student); else selectedStudentGroupUuids.delete(box.dataset.student);
+      }));
+      document.querySelectorAll(".create-batch-group-button").forEach(button => button.addEventListener("click",event => {
+        event.preventDefault(); event.stopPropagation(); startStudentGroupCreation(button.dataset.batch);
+      }));
+      document.querySelectorAll(".delete-student-group-button").forEach(button => button.addEventListener("click",() => deleteStudentGroup(button.dataset.group,button.dataset.name)));
+    }
+
+    async function saveStudentDetails(button) {
+      const studentUuid = button.dataset.student;
+      const input = selector => document.querySelector(`${selector}[data-student="${CSS.escape(studentUuid)}"]`);
+      const rollNo = normaliseRollNumber(input(".student-roll-input").value);
+      const fullName = input(".student-name-input").value.trim();
+      const batch = input(".student-batch-input").value.trim();
+      input(".student-roll-input").value = rollNo;
+      if (!rollNo || !fullName) {
+        setStatus(byId("studentsStatus"),"Enter both the roll number and student name before saving.","error");
+        return;
+      }
+      if (!isValidRollNumber(rollNo)) {
+        setStatus(byId("studentsStatus"),"Enter proper roll number","error");
+        return;
+      }
+      button.disabled = true; button.textContent = "Saving…";
+      try {
+        const result = await callRpc(RPC.updateStudentDetails,{p_session_token:currentSession.sessionToken,p_student_uuid:studentUuid,p_roll_no:rollNo,p_full_name:fullName,p_batch:batch || null});
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Student details could not be saved.");
+        await loadCohortData();
+        studentPerformanceData = null;
+        await loadStudentPerformance(true);
+        setStatus(byId("studentsStatus"),"Student details saved.","success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("studentsStatus"),error.message || "Student details could not be saved.","error");
+        button.disabled = false; button.textContent = "Save";
+      }
+    }
+
+    function renderStudentProfile(studentUuid) {
+      const data = studentPerformanceData;
+      const student = cohortData.students.find(item => studentUuidOf(item) === String(studentUuid)) || (data && Array.isArray(data.students) ? data.students : []).find(item => studentUuidOf(item) === String(studentUuid));
+      if (!student) return;
+      const assignments = uniqueStudentAssignments(data,studentUuid);
+      const submissions = studentSubmissions(data,studentUuid);
+      const scored = submissions.map(row => ({row,score:scoreOf(row)})).filter(item => item.score !== null);
+      const answeredAssignments = assignments.filter(item => Boolean(item.submissionUuid) || submissions.some(submission => String(submission.assignmentUuid || "") === String(item.assignmentUuid || "")));
+      const questionsSent = assignments.length;
+      const grouped = new Map();
+      submissions.forEach(function (row) {
+        const key = `${exportText(row.rubricType)}|${exportText(row.question)}`;
+        if (!grouped.has(key)) grouped.set(key,[]);
+        grouped.get(key).push(row);
+      });
+      const questionRows = Array.from(grouped.values()).map(function (rows) {
+        rows.sort((left,right) => submittedAtOf(left) - submittedAtOf(right));
+        const scoredRows = rows.filter(row => scoreOf(row) !== null);
+        const first = scoredRows[0] || null;
+        const latest = scoredRows[scoredRows.length - 1] || null;
+        return {rubricType:rows[0].rubricType,question:rows[0].question,criteria:latest ? formatCriteriaInline(latest) : "—",firstScore:first ? scoreOf(first) : null,lastScore:latest ? scoreOf(latest) : null};
+      });
+      const profile = byId("studentProfilePanel");
+      profile.hidden = false;
+      profile.innerHTML = `<div class="student-profile"><div class="student-profile-head"><div><h3>${escapeHtml(studentField(student,["name","fullName"]) || "Student")}</h3><div class="panel-subtitle">Individual ASCENT performance record</div></div><button id="closeStudentProfileButton" class="secondary-button" type="button">Close</button></div><div class="student-detail-grid"><div class="student-detail"><strong>Roll Number</strong><span>${escapeHtml(rollNumberValue(student) || "—")}</span></div><div class="student-detail"><strong>Batch</strong><span>${escapeHtml(studentField(student,["batch","batchName"]) || "—")}</span></div><div class="student-detail"><strong>Date of Joining</strong><span>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])))}</span></div><div class="student-detail"><strong>Date Last Accessed</strong><span>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])))}</span></div><div class="student-detail"><strong>Last Score</strong><span>${escapeHtml(formatNumber(scored.length ? scored[scored.length - 1].score : null))}</span></div></div><div class="student-progress-grid"><div class="panel chart-box"><div class="panel-title-row"><div><h3>Score progress</h3><div class="panel-subtitle">Scores in the order responses were submitted.</div></div></div><div id="studentProgressLine"></div></div><div class="panel"><div class="panel-title-row"><div><h3>Response completion</h3><div class="panel-subtitle">Questions sent versus submitted.</div></div></div><div class="completion-ring-wrap"><div id="studentCompletionRing" class="completion-ring"><div class="completion-ring-copy"><strong>${answeredAssignments.length}/${questionsSent}</strong><span>submitted / sent</span></div></div></div></div></div><div class="panel"><div class="panel-title-row"><div><h3>Question-wise performance</h3><div class="panel-subtitle">Criterion scores shown for the latest response to each question.</div></div></div><div class="table-wrap"><table class="student-question-table"><thead><tr><th>Question Type</th><th>Question</th><th>Criterion-wise Scores</th><th>First Score</th><th>Last Score</th></tr></thead><tbody>${questionRows.length ? questionRows.map(row => `<tr><td>${escapeHtml(rubricLabel(row.rubricType))}</td><td class="question-cell">${escapeHtml(row.question || "—")}</td><td>${escapeHtml(row.criteria)}</td><td>${escapeHtml(formatNumber(row.firstScore))}</td><td>${escapeHtml(formatNumber(row.lastScore))}</td></tr>`).join("") : `<tr><td colspan="5" class="empty-state">No submitted responses yet.</td></tr>`}</tbody></table></div></div></div>`;
+      byId("closeStudentProfileButton").addEventListener("click",() => { profile.hidden = true; profile.innerHTML = ""; });
+      const points = scored.map(item => ({label:formatDate(studentField(item.row,["submittedAt","submitted_at"])),shortLabel:String(scored.indexOf(item) + 1),value:item.score}));
+      renderLineSvg("studentProgressLine",points,"Scores will appear after the student submits responses.");
+      const completion = questionsSent ? Math.round(answeredAssignments.length / questionsSent * 100) : 0;
+      byId("studentCompletionRing").style.background = `conic-gradient(#27679d 0 ${completion}%, #e4edf5 ${completion}% 100%)`;
+      profile.scrollIntoView({behavior:"smooth",block:"start"});
+    }
+
     function bankCategoriesForType(bankType="") {
       return (questionBankData.categories || []).filter(category => !bankType || category.bankType === bankType);
     }
@@ -859,9 +1655,12 @@
     }
 
     function estimatedBankTargetCount() {
-      const targetType = byId("bankTargetType").value;
+      const target = assignmentTarget(byId("bankTargetType").value);
+      const targetType = target.type;
       if (targetType === "ALL") return reportData.students.length;
-      if (targetType === "BATCH") return reportData.students.filter(student => String(student.batch || "").trim().toLowerCase() === String(byId("bankTargetBatch").value || "").trim().toLowerCase()).length;
+      if (targetType === "BATCH") return studentUuidsForBatch(byId("bankTargetBatch").value).length;
+      if (targetType === "COHORT") return studentUuidsForCohort(target.value).length;
+      if (targetType === "GROUP") return studentUuidsForGroup(target.value).length;
       return selectedBankStudentUuids().length;
     }
 
@@ -1058,7 +1857,8 @@
       event.preventDefault();
       if (isCeo()) return;
       const questionUuids = Array.from(selectedBankQuestions);
-      const targetType = byId("bankTargetType").value;
+      const target = assignmentTarget(byId("bankTargetType").value);
+      const targetType = target.type;
       const followupMode = byId("bankAssignmentFollowupMode").value;
       let intervalDays;
       try {
@@ -1068,7 +1868,11 @@
         return;
       }
       if (!questionUuids.length) { setStatus(byId("bankAssignmentStatus"),"Select at least one question from the bank.","error"); return; }
+      if (!targetType) { setStatus(byId("bankAssignmentStatus"),"Choose batch.","error"); return; }
       if (targetType === "BATCH" && !byId("bankTargetBatch").value) { setStatus(byId("bankAssignmentStatus"),"Choose the student batch.","error"); return; }
+      if (targetType === "BATCH" && !studentUuidsForBatch(byId("bankTargetBatch").value).length) { setStatus(byId("bankAssignmentStatus"),"This batch has no students with valid roll numbers yet.","error"); return; }
+      if (targetType === "COHORT" && !studentUuidsForCohort(target.value).length) { setStatus(byId("bankAssignmentStatus"),"That broad cohort does not have any active students.","error"); return; }
+      if (targetType === "GROUP" && !studentUuidsForGroup(target.value).length) { setStatus(byId("bankAssignmentStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedBankStudentUuids().length) { setStatus(byId("bankAssignmentStatus"),"Choose at least one student.","error"); return; }
       if (followupMode === "FIXED_FOLLOW_UP" && !byId("bankAssignmentFixedFollowup").value.trim()) { setStatus(byId("bankAssignmentStatus"),"Enter the fixed follow-up question.","error"); return; }
       const bankStudentCount = estimatedBankTargetCount();
@@ -1080,9 +1884,9 @@
           p_session_token:currentSession.sessionToken,
           p_question_uuids:questionUuids,
           p_title_prefix:byId("bankAssignmentTitle").value.trim() || "ASCENT Bank Task",
-          p_target_type:targetType,
-          p_target_batch:targetType === "BATCH" ? byId("bankTargetBatch").value : null,
-          p_student_uuids:targetType === "STUDENTS" ? selectedBankStudentUuids() : null,
+          p_target_type:targetType === "GROUP" || targetType === "COHORT" || targetType === "BATCH" ? "STUDENTS" : targetType,
+          p_target_batch:null,
+          p_student_uuids:targetType === "STUDENTS" ? selectedBankStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(target.value) : targetType === "COHORT" ? studentUuidsForCohort(target.value) : targetType === "BATCH" ? studentUuidsForBatch(byId("bankTargetBatch").value) : null,
           p_start_at:toIsoOrNull(byId("bankStartAt").value),
           p_interval_days:intervalDays,
           p_due_days:dueText === "" ? null : Number(dueText),
@@ -1240,14 +2044,20 @@
           if (data && data.error === "invalid_trainer_session") { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href = "./trainer-login.html"; return; }
           throw new Error(data && data.message ? data.message : "Report data could not be loaded.");
         }
-        reportData = data; renderAll(); setStatus(byId("dashboardStatus"),"Dashboard updated " + new Date().toLocaleTimeString(),"success");
+        reportData = {
+          ...data,
+          batches:liveAscentBatches(),
+          students:Array.isArray(data.students) ? data.students.map(withDerivedCohortDetails) : [],
+          results:Array.isArray(data.results) ? data.results.map(withDerivedCohortDetails) : []
+        };
+        renderAll(); setStatus(byId("dashboardStatus"),"Dashboard updated " + new Date().toLocaleTimeString(),"success");
       } catch (error) { console.error(error); setStatus(byId("dashboardStatus"),"ASCENT could not load the dashboard. " + error.message,"error"); }
       finally { hideLoading(); }
     }
 
     async function createQuestionBatch(event) {
       event.preventDefault();
-      const questions = cleanQuestions(); const targetType = byId("targetType").value; const pressureMode = byId("pressureMode").value;
+      const questions = cleanQuestions(); const target = assignmentTarget(byId("targetType").value); const targetType = target.type; const pressureMode = byId("pressureMode").value;
       let intervalDays;
       try {
         intervalDays = readReleaseInterval("intervalDays");
@@ -1256,7 +2066,11 @@
         return;
       }
       if (!questions.length) { setStatus(byId("bulkTaskStatus"),"Paste at least one question, with each question on a separate line.","error"); return; }
+      if (!targetType) { setStatus(byId("bulkTaskStatus"),"Choose batch.","error"); return; }
       if (targetType === "BATCH" && !byId("targetBatch").value) { setStatus(byId("bulkTaskStatus"),"Choose the student batch.","error"); return; }
+      if (targetType === "BATCH" && !studentUuidsForBatch(byId("targetBatch").value).length) { setStatus(byId("bulkTaskStatus"),"This batch has no students with valid roll numbers yet.","error"); return; }
+      if (targetType === "COHORT" && !studentUuidsForCohort(target.value).length) { setStatus(byId("bulkTaskStatus"),"That broad cohort does not have any active students.","error"); return; }
+      if (targetType === "GROUP" && !studentUuidsForGroup(target.value).length) { setStatus(byId("bulkTaskStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedStudentUuids().length) { setStatus(byId("bulkTaskStatus"),"Choose at least one student.","error"); return; }
       if (pressureMode === "FIXED_FOLLOW_UP" && !byId("pressurePrompt").value.trim()) { setStatus(byId("bulkTaskStatus"),"Enter the follow-up question.","error"); return; }
       const studentCount = estimatedTargetCount();
@@ -1264,17 +2078,37 @@
       const button = byId("createBatchButton"); button.disabled = true; button.textContent = "Creating Batch…"; setStatus(byId("bulkTaskStatus"),"","");
       try {
         const dueText = byId("dueDays").value.trim();
+        const targetStudentUuids = targetType === "STUDENTS" ? selectedStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(target.value) : targetType === "COHORT" ? studentUuidsForCohort(target.value) : targetType === "BATCH" ? studentUuidsForBatch(byId("targetBatch").value) : null;
+        const releaseAt = toIsoOrNull(byId("startAt").value);
         const result = await callRpc(RPC.bulk,{
           p_session_token:currentSession.sessionToken, p_questions:questions, p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
-          p_rubric_type:byId("rubricType").value, p_target_type:targetType, p_target_batch:targetType === "BATCH" ? byId("targetBatch").value : null,
-          p_student_uuids:targetType === "STUDENTS" ? selectedStudentUuids() : null, p_start_at:toIsoOrNull(byId("startAt").value),
+          p_rubric_type:byId("rubricType").value, p_target_type:targetType === "GROUP" || targetType === "COHORT" || targetType === "BATCH" ? "STUDENTS" : targetType, p_target_batch:null,
+          p_student_uuids:targetStudentUuids, p_start_at:releaseAt,
           p_interval_days:intervalDays, p_due_days:dueText === "" ? null : Number(dueText), p_max_attempts:1,
           p_response_seconds:Number(byId("responseSeconds").value || 60), p_pressure_mode:pressureMode,
           p_pressure_prompt:pressureMode === "FIXED_FOLLOW_UP" ? byId("pressurePrompt").value.trim() : null,
           p_pressure_prep_seconds:Number(byId("pressurePrepSeconds").value || 5), p_pressure_response_seconds:Number(byId("pressureResponseSeconds").value || 20)
         });
         if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "The batch could not be created.");
-        setStatus(byId("bulkTaskStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)}`,"success");
+        let emailNote = "";
+        if (byId("emailBulkRelease").checked && Array.isArray(targetStudentUuids) && targetStudentUuids.length) {
+          try {
+            const emailResult = await callRpc(RPC.queueBulkReleaseEmail,{
+              p_session_token:currentSession.sessionToken,
+              p_student_uuids:targetStudentUuids,
+              p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
+              p_questions:questions,
+              p_interval_days:intervalDays,
+              p_release_at:releaseAt
+            });
+            if (!emailResult || emailResult.ok !== true) throw new Error(emailResult && emailResult.message ? emailResult.message : "The release email could not be queued.");
+            emailNote = ` ${emailResult.message}`;
+          } catch (emailError) {
+            console.error(emailError);
+            emailNote = ` The questions were created, but the release email was not queued: ${emailError.message || "unknown error"}.`;
+          }
+        }
+        setStatus(byId("bulkTaskStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)}${emailNote}`,"success");
         byId("questionsText").value = ""; updateQuestionCount(); await loadReport("Refreshing tasks and assignments…");
       } catch (error) { console.error(error); setStatus(byId("bulkTaskStatus"),error.message || "ASCENT could not create the question batch.","error"); }
       finally { button.disabled = false; button.textContent = "Create and Assign Batch"; }
@@ -2905,6 +3739,100 @@ function formatCriterionFeedback(criterion) {
       );
     }
 
+    function mobileNumberMap(payload) {
+      const map = new Map();
+      const root = normaliseRpc(payload) || {};
+      const candidates = Array.isArray(root)
+        ? [root]
+        : [
+            root.students,
+            root.mobileNumbers,
+            root.mobile_numbers,
+            root.studentMobileMap,
+            root.student_mobile_map,
+            root.rows,
+            root.data
+          ];
+
+      function add(studentUuid, mobileNumber) {
+        const key = String(studentUuid || "").trim();
+        const value = exportText(mobileNumber);
+        if (key && value) map.set(key,value);
+      }
+
+      candidates.forEach(function (candidate) {
+        if (Array.isArray(candidate)) {
+          candidate.forEach(function (item) {
+            if (!item || typeof item !== "object") return;
+            add(
+              item.studentUuid ?? item.student_uuid ?? item.uuid ?? item.id,
+              item.mobileNumber ?? item.mobile_number ?? item.mobile ?? item.phone
+            );
+          });
+          return;
+        }
+
+        if (!candidate || typeof candidate !== "object") return;
+        Object.entries(candidate).forEach(function ([key,value]) {
+          if (value && typeof value === "object") {
+            add(
+              value.studentUuid ?? value.student_uuid ?? value.uuid ?? value.id ?? key,
+              value.mobileNumber ?? value.mobile_number ?? value.mobile ?? value.phone
+            );
+          } else {
+            add(key,value);
+          }
+        });
+      });
+
+      return map;
+    }
+
+    async function addMobileNumbersToWorkbook(workbookData) {
+      let mobileByStudent = new Map();
+      try {
+        const payload = await callRpc(
+          RPC.studentMobileMap,
+          {p_session_token:currentSession.sessionToken}
+        );
+        mobileByStudent = mobileNumberMap(payload);
+      } catch (error) {
+        console.warn("ASCENT mobile number map could not be loaded:",error);
+      }
+
+      // The cohort register is the reliable fallback: it already contains the
+      // mobile number supplied during registration.
+      if (!mobileByStudent.size) {
+        try {
+          const roster = await callRpc(
+            RPC.cohortRoster,
+            {p_session_token:currentSession.sessionToken}
+          );
+          mobileByStudent = mobileNumberMap(roster);
+        } catch (error) {
+          console.warn("ASCENT cohort roster could not be used for mobile numbers:",error);
+        }
+      }
+
+      if (!mobileByStudent.size) return;
+
+      ["students","assignments","submissions"].forEach(function (collection) {
+        const rows = Array.isArray(workbookData[collection])
+          ? workbookData[collection]
+          : [];
+
+        rows.forEach(function (row) {
+          const studentUuid = String(
+            row.studentUuid ?? row.student_uuid ?? ""
+          );
+          const mobileNumber = mobileByStudent.get(studentUuid);
+          if (mobileNumber && !exportText(row.mobileNumber)) {
+            row.mobileNumber = mobileNumber;
+          }
+        });
+      });
+    }
+
     async function exportExcel(rows, source) {
       const statusElement =
         source === "dashboard"
@@ -2943,6 +3871,8 @@ function formatCriterionFeedback(criterion) {
               : "The complete workbook data could not be loaded."
           );
         }
+
+        await addMobileNumbersToWorkbook(workbookData);
 
         const allQuestions = (Array.isArray(workbookData.questions) ? workbookData.questions : [])
           .slice()
@@ -3158,7 +4088,15 @@ function formatCriterionFeedback(criterion) {
       byId("refreshDashboardButton").addEventListener("click",() => loadReport("Refreshing dashboard…"));
       byId("refreshTasksButton").addEventListener("click",() => loadReport("Refreshing tasks…"));
       byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results,"dashboard"));
+      byId("refreshLeaderboardButton").addEventListener("click",() => loadPlacementReadinessBoard(true));
+      byId("emailLeaderboardButton").addEventListener("click",emailPlacementReadinessBoard);
       byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows,"results"));
+      byId("refreshStudentsButton").addEventListener("click",() => loadStudentPerformance(true));
+      byId("doneStudentGroupButton").addEventListener("click",finishStudentGroupCreation);
+      byId("refreshArchivesButton").addEventListener("click",() => loadArchiveData(true));
+      byId("archiveCohortSelect").addEventListener("change",renderArchives);
+      byId("archiveExportButton").addEventListener("click",exportArchivedRoster);
+      byId("refreshAudioFilingButton").addEventListener("click",() => loadAudioFilingData(true));
       byId("refreshFollowupsButton").addEventListener("click",() => loadReminderDashboard("Refreshing student follow-ups…"));
       byId("toggleFollowupsButton").addEventListener("click",toggleInstitutionalFollowups);
       byId("followupsExportButton").addEventListener("click",downloadFollowupExcel);
@@ -3175,17 +4113,41 @@ function formatCriterionFeedback(criterion) {
       byId("applyBankFiltersButton").addEventListener("click",renderQuestionBankTable);
       byId("clearBankFiltersButton").addEventListener("click",() => { byId("bankTypeFilter").value=""; fillBankCategorySelect("bankCategoryFilter","","All categories"); byId("bankDifficultyFilter").value=""; byId("bankSearchFilter").value=""; renderQuestionBankTable(); });
       byId("bankIncludeInactive").addEventListener("change",() => loadQuestionBank("Updating administrator view…"));
+      byId("selectFilteredBankQuestionsButton").addEventListener("click",() => {
+        filteredQuestionBankRows()
+          .filter(question => question.isActive && question.isApproved && question.isSelectable)
+          .forEach(question => selectedBankQuestions.add(question.questionUuid));
+        renderQuestionBankTable();
+      });
       byId("clearBankSelectionButton").addEventListener("click",() => { selectedBankQuestions.clear(); renderQuestionBankTable(); });
-      byId("bankTargetType").addEventListener("change",() => { const value=byId("bankTargetType").value; byId("bankTargetBatchGroup").hidden=value!=="BATCH"; byId("bankTargetStudentsGroup").hidden=value!=="STUDENTS"; updateBankAssignmentEstimate(); });
+      byId("bankTargetType").addEventListener("change",() => {
+        const value=assignmentTarget(byId("bankTargetType").value).type;
+        byId("bankTargetBatchGroup").hidden=value!=="BATCH";
+        byId("bankTargetCohortGroup").hidden=true;
+        byId("bankTargetGroupGroup").hidden=true;
+        byId("bankTargetStudentsGroup").hidden=value!=="STUDENTS";
+        updateBankAssignmentEstimate();
+      });
       byId("bankTargetBatch").addEventListener("change",updateBankAssignmentEstimate);
+      byId("bankTargetCohort").addEventListener("change",updateBankAssignmentEstimate);
+      byId("bankTargetGroup").addEventListener("change",updateBankAssignmentEstimate);
       byId("bankIntervalDays").addEventListener("input",updateBankAssignmentEstimate);
       byId("bankStartAt").addEventListener("change",updateBankAssignmentEstimate);
       byId("bankStudentSearch").addEventListener("input",event => renderBankStudentPicker(event.target.value));
       byId("bankAssignmentFollowupMode").addEventListener("change",updateBankAssignmentFollowupControls);
       byId("bankAssignmentForm").addEventListener("submit",assignSelectedBankQuestions);
       byId("questionsText").addEventListener("input",updateQuestionCount);
-      byId("targetType").addEventListener("change",() => { const value=byId("targetType").value; byId("targetBatchGroup").hidden=value!=="BATCH"; byId("targetStudentsGroup").hidden=value!=="STUDENTS"; updateAssignmentEstimate(); });
+      byId("targetType").addEventListener("change",() => {
+        const value=assignmentTarget(byId("targetType").value).type;
+        byId("targetBatchGroup").hidden=value!=="BATCH";
+        byId("targetCohortGroup").hidden=true;
+        byId("targetGroupGroup").hidden=true;
+        byId("targetStudentsGroup").hidden=value!=="STUDENTS";
+        updateAssignmentEstimate();
+      });
       byId("targetBatch").addEventListener("change",updateAssignmentEstimate);
+      byId("targetCohort").addEventListener("change",updateAssignmentEstimate);
+      byId("targetGroup").addEventListener("change",updateAssignmentEstimate);
       byId("intervalDays").addEventListener("input",updateAssignmentEstimate);
       byId("startAt").addEventListener("change",updateAssignmentEstimate);
       byId("studentSearch").addEventListener("input",event => renderStudentPicker(event.target.value));
@@ -3205,6 +4167,8 @@ function formatCriterionFeedback(criterion) {
       byId("trainerRole").textContent = currentSession.role || "TRAINER";
       applyRoleAccess(); setDefaultStartTime(); wireEvents(); initialiseAdminTouchpoint(); updateBankAssignmentFollowupControls(); updateQuestionCount(); resetBankQuestionEditor();
       await loadReport();
+      await loadCohortData();
+      populateBankGroupSelect();
       await loadQuestionBank();
       await loadReminderDashboard();
     }
