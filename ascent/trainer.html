@@ -251,6 +251,7 @@
           <button class="nav-item" type="button" data-section="results">Results</button>
           <button class="nav-item" type="button" data-section="students">Students</button>
           <button class="nav-item" type="button" data-section="archives">Archives</button>
+          <button class="nav-item" type="button" data-section="audioFiling">Audio Filing</button>
           <button id="followupsNavItem" class="nav-item" type="button" data-section="followups">Student Follow-ups</button>
           <button id="trainersNavItem" class="nav-item" type="button" data-section="trainers" hidden>Trainers</button>
         </div>
@@ -281,7 +282,7 @@
           <div class="workspace-header"><div><h2>ASCENT Placement Readiness Board</h2><p>Top 10 current students in each active batch who are consistently ready across LUM, GD and PI.</p></div><div class="header-actions"><button id="refreshLeaderboardButton" class="secondary-button" type="button">Refresh</button></div></div>
           <div class="panel">
             <div class="leaderboard-rule"><strong>Eligibility:</strong> latest LUM, GD and PI scores must all be available; the readiness score is their average. A student appears only at <strong>8.5/10 (85%) or above</strong>, with no component below <strong>8/10</strong>.</div>
-            <div class="leaderboard-email-row"><div class="form-group"><label for="leaderboardEmailRecipient">Email this board to</label><input id="leaderboardEmailRecipient" type="text" inputmode="email" placeholder="Enter one or more email addresses"></div><button id="emailLeaderboardButton" class="primary-button" type="button">Email Board</button></div>
+            <div class="leaderboard-email-row"><div class="form-group"><label for="leaderboardEmailRecipient">Email this board to</label><input id="leaderboardEmailRecipient" type="text" inputmode="email" placeholder="Enter one or more email addresses"></div><div class="form-group"><label for="leaderboardEmailSubject">Subject after “ZIP Ahead –”</label><input id="leaderboardEmailSubject" type="text" value="ASCENT Placement Readiness Board" maxlength="120"></div><button id="emailLeaderboardButton" class="primary-button" type="button">Email Board</button></div>
             <div class="panel-title-row"><div><h3>Top 10 placement-ready students per batch</h3><div id="leaderboardCountLabel" class="panel-subtitle"></div></div></div>
             <div id="leaderboardBoardsWrap"></div><div id="leaderboardStatus" class="form-status" role="status" aria-live="polite"></div>
           </div>
@@ -437,6 +438,11 @@
           <div class="panel"><div class="form-grid"><div class="form-group"><label for="archiveCohortSelect">Archived cohort</label><select id="archiveCohortSelect"><option value="">Choose archived cohort</option></select></div></div><div id="archivesTableWrap" class="table-wrap"></div><div id="archivesStatus" class="form-status" role="status" aria-live="polite"></div></div>
         </section>
 
+        <section id="audioFilingSection" class="section-panel">
+          <div class="workspace-header"><div><h2>Audio Filing</h2><p>Choose the active term for each live FIIB batch. ASCENT files new recordings in the correct Google Drive term folder.</p></div><div class="header-actions"><button id="refreshAudioFilingButton" class="secondary-button" type="button">Refresh</button></div></div>
+          <div class="panel"><div class="form-note">At the start of a term, choose the term and activate it. If its Google Drive folder does not exist yet, ASCENT creates it automatically when the first recording is submitted.</div><div id="audioFilingRows" style="display:grid;gap:16px;margin-top:18px"></div><div id="audioFilingStatus" class="form-status" role="status" aria-live="polite"></div></div>
+        </section>
+
         <section id="followupsSection" class="section-panel">
           <div class="workspace-header">
             <div><h2>Student Follow-ups</h2><p>Control institutional response reminders and monitor the students who remain pending after each 48-hour stage.</p></div>
@@ -495,6 +501,8 @@
       studentMobileMap: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_student_mobile_map",
       cohortRoster: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_cohort_roster",
       archiveRoster: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_archive_roster",
+      audioFiling: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_audio_filing",
+      activateAudioTerm: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_activate_audio_term",
       setAcademicYear: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_student_academic_year",
       updateStudentDetails: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_update_student_details",
       saveStudentGroup: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_save_student_group",
@@ -521,6 +529,7 @@
     let studentPerformanceData = null;
     let cohortData = { students:[], groups:[] };
     let archiveData = { archives:[], students:[] };
+    let audioFilingData = { cohorts:[] };
     let editingStudentGroupUuid = null;
     let selectedStudentGroupUuids = new Set();
     let creatingStudentGroupName = "";
@@ -611,6 +620,7 @@
       if (name === "students") loadStudentPerformance();
       if (name === "leaderboard") loadPlacementReadinessBoard();
       if (name === "archives") loadArchiveData();
+      if (name === "audioFiling") loadAudioFilingData();
     }
 
     const currentRole = () => String(currentSession && currentSession.role || "TRAINER").toUpperCase();
@@ -1039,8 +1049,13 @@
 
     function emailPlacementReadinessBoard() {
       const recipients = byId("leaderboardEmailRecipient").value.trim();
+      const subjectText = byId("leaderboardEmailSubject").value.trim();
       if (!recipients) {
         setStatus(byId("leaderboardStatus"),"Enter the recipient email address first.","error");
+        return;
+      }
+      if (!subjectText) {
+        setStatus(byId("leaderboardStatus"),"Enter the email subject after “ZIP Ahead –”.","error");
         return;
       }
       const boardsWithStudents = placementBoardBatches.filter(item => item.rows.length);
@@ -1062,7 +1077,7 @@
         "",
         `Generated on ${new Date().toLocaleString()}.`
       ].join("\n");
-      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(recipients)}&su=${encodeURIComponent("ASCENT Placement Readiness Board")}&body=${encodeURIComponent(body)}`;
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(recipients)}&su=${encodeURIComponent(`ZIP Ahead – ${subjectText}`)}&body=${encodeURIComponent(body)}`;
       window.open(gmailUrl,"_blank","noopener");
       setStatus(byId("leaderboardStatus"),"A ready-to-send Gmail draft has opened.","success");
     }
@@ -1342,6 +1357,62 @@
       } catch (error) {
         console.error(error);
         setStatus(byId("archivesStatus"),error.message || "Archives could not be loaded.","error");
+      }
+    }
+
+    function audioTermOptions(activeTerm) {
+      return Array.from({length:6},(_,index) => {
+        const value = `Term ${index + 1}`;
+        return `<option value="${value}" ${value === activeTerm ? "selected" : ""}>${value}</option>`;
+      }).join("");
+    }
+
+    function renderAudioFiling() {
+      const rows = Array.isArray(audioFilingData.cohorts) ? audioFilingData.cohorts : [];
+      const wrap = byId("audioFilingRows");
+      if (!rows.length) {
+        wrap.innerHTML = `<div class="empty-state">No live FIIB batches are available for audio filing yet.</div>`;
+        return;
+      }
+      wrap.innerHTML = rows.map(item => {
+        const cohort = String(item.cohortLabel || "");
+        const activeTerm = String(item.activeTerm || "");
+        const folderNote = activeTerm
+          ? (item.folderReady ? `Google Drive folder: ${escapeHtml(item.folderName || `${cohort.replace(/ PGDM$/,"")} ${activeTerm}`)}` : "The folder will be created when the first recording is submitted.")
+          : "No term is active. Select the current term before students submit recordings.";
+        return `<div class="panel" style="margin:0"><div class="panel-title-row"><div><h3>${escapeHtml(cohort)}</h3><div class="panel-subtitle">${folderNote}</div></div><div class="form-group" style="min-width:180px;margin:0"><label for="audio-term-${escapeHtml(cohort)}">Active term</label><select id="audio-term-${escapeHtml(cohort)}">${audioTermOptions(activeTerm)}</select></div><button class="primary-button activate-audio-term-button" type="button" data-cohort="${escapeHtml(cohort)}">Activate term</button></div></div>`;
+      }).join("");
+      document.querySelectorAll(".activate-audio-term-button").forEach(button => button.addEventListener("click",() => activateAudioTerm(button.dataset.cohort)));
+    }
+
+    async function loadAudioFilingData(force=false) {
+      if (audioFilingData.cohorts.length && !force) { renderAudioFiling(); return; }
+      try {
+        const data = await callRpc(RPC.audioFiling,{p_session_token:currentSession.sessionToken});
+        if (!data || data.ok !== true) throw new Error(data && data.message ? data.message : "Audio filing could not be loaded.");
+        audioFilingData = { cohorts:Array.isArray(data.cohorts) ? data.cohorts : [] };
+        renderAudioFiling();
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("audioFilingStatus"),error.message || "Audio filing could not be loaded.","error");
+      }
+    }
+
+    async function activateAudioTerm(cohort) {
+      const select = byId(`audio-term-${cohort}`);
+      const term = select ? select.value : "";
+      if (!cohort || !term) return;
+      const confirmed = window.confirm(`Activate ${term} for ${cohort}? New recordings for this batch will be filed in that term.`);
+      if (!confirmed) return;
+      try {
+        const data = await callRpc(RPC.activateAudioTerm,{p_session_token:currentSession.sessionToken,p_cohort_label:cohort,p_term_label:term});
+        if (!data || data.ok !== true) throw new Error(data && data.message ? data.message : "The term could not be activated.");
+        setStatus(byId("audioFilingStatus"),data.message || "Term activated.","success");
+        audioFilingData = { cohorts:[] };
+        await loadAudioFilingData(true);
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("audioFilingStatus"),error.message || "The term could not be activated.","error");
       }
     }
 
@@ -3939,6 +4010,7 @@ function formatCriterionFeedback(criterion) {
       byId("refreshArchivesButton").addEventListener("click",() => loadArchiveData(true));
       byId("archiveCohortSelect").addEventListener("change",renderArchives);
       byId("archiveExportButton").addEventListener("click",exportArchivedRoster);
+      byId("refreshAudioFilingButton").addEventListener("click",() => loadAudioFilingData(true));
       byId("refreshFollowupsButton").addEventListener("click",() => loadReminderDashboard("Refreshing student follow-ups…"));
       byId("toggleFollowupsButton").addEventListener("click",toggleInstitutionalFollowups);
       byId("followupsExportButton").addEventListener("click",downloadFollowupExcel);
