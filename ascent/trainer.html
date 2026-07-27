@@ -238,7 +238,7 @@
   <div class="app-shell">
     <header class="topbar">
       <a class="brand-wrap" href="../" aria-label="Go to the ClarionPrep homepage"><div class="brand-mark">A</div><div class="brand-text"><h1>ASCENT</h1><p>Trainer &amp; Admin Portal</p></div></a>
-      <div class="topbar-actions"><div id="adminTouchpoint" class="user-summary" role="button" tabindex="0" aria-label="Open admin settings"><div id="trainerName" class="user-name">Trainer</div><div id="trainerRole" class="user-role">Trainer</div></div><button id="logoutButton" class="logout-button" type="button">Log Out</button></div>
+      <div class="topbar-actions"><button id="returnToAdminButton" class="logout-button" type="button" hidden>Return to Admin</button><div id="adminTouchpoint" class="user-summary" role="button" tabindex="0" aria-label="Open admin settings"><div id="trainerName" class="user-name">Trainer</div><div id="trainerRole" class="user-role">Trainer</div></div><button id="logoutButton" class="logout-button" type="button">Log Out</button></div>
     </header>
 
     <main class="main-layout">
@@ -517,6 +517,7 @@
 
   <script>
     const SESSION_STORAGE_KEY = "ascent_trainer_session";
+    const ADMIN_MASTER_SESSION_KEY = "ascent_admin_master_session";
     const ACTIVE_SECTION_STORAGE_KEY = "ascent_trainer_active_section";
     const SUPABASE_URL = "https://vtqatrhwfvzyodiftvkc.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
@@ -706,10 +707,19 @@
     }
 
     function restoreTrainerSection(loadSectionData=false) {
+      const requestedSection =
+        String(
+          new URLSearchParams(
+            window.location.search
+          ).get("section") || ""
+        ).trim();
+
       const savedSection =
+        requestedSection ||
         localStorage.getItem(
           ACTIVE_SECTION_STORAGE_KEY
-        ) || "dashboard";
+        ) ||
+        "dashboard";
 
       showSection(
         savedSection,
@@ -4386,6 +4396,52 @@ function formatCriterionFeedback(criterion) {
       });
     }
 
+    function initialiseAdminReturn() {
+      const button = byId("returnToAdminButton");
+      if (!button) return;
+
+      let masterSession = null;
+      try {
+        masterSession = JSON.parse(
+          localStorage.getItem(
+            ADMIN_MASTER_SESSION_KEY
+          ) || "null"
+        );
+      } catch {
+        masterSession = null;
+      }
+
+      const masterExpiry = Date.parse(
+        String(
+          masterSession &&
+          masterSession.expiresAt || ""
+        )
+      );
+
+      if (
+        !masterSession ||
+        !masterSession.sessionToken ||
+        String(
+          masterSession.role || ""
+        ).toUpperCase() !== "ADMIN" ||
+        !Number.isFinite(masterExpiry) ||
+        masterExpiry <= Date.now()
+      ) {
+        button.hidden = true;
+        return;
+      }
+
+      button.hidden = false;
+      button.addEventListener("click",() => {
+        localStorage.setItem(
+          SESSION_STORAGE_KEY,
+          JSON.stringify(masterSession)
+        );
+        window.location.href =
+          "./admin-settings.html";
+      });
+    }
+
     function updateBankAssignmentFollowupControls() {
       const mode = byId("bankAssignmentFollowupMode").value;
       const fixed = mode === "FIXED_FOLLOW_UP";
@@ -4485,7 +4541,7 @@ function formatCriterionFeedback(criterion) {
       currentSession = loadTrainerSession(); if (!currentSession) return;
       byId("trainerName").textContent = currentSession.fullName || currentSession.email;
       byId("trainerRole").textContent = currentSession.role || "TRAINER";
-      applyRoleAccess(); setDefaultStartTime(); wireEvents(); initialiseAdminTouchpoint(); updateBankAssignmentFollowupControls(); updateQuestionCount(); resetBankQuestionEditor();
+      applyRoleAccess(); setDefaultStartTime(); wireEvents(); initialiseAdminTouchpoint(); initialiseAdminReturn(); updateBankAssignmentFollowupControls(); updateQuestionCount(); resetBankQuestionEditor();
       restoreTrainerSection(false);
       await loadReport();
       await loadCohortData();
