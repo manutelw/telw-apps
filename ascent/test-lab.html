@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ASCENT Zero-Storage Test Lab</title>
+  <style>
+    :root {
+      --navy:#123b62;
+      --blue:#24679d;
+      --pale:#eef5fb;
+      --line:#cbdcea;
+      --ink:#17324d;
+      --muted:#567089;
+      --green:#147a4a;
+      --red:#b42318;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      min-height:100vh;
+      font-family:Arial, Helvetica, sans-serif;
+      color:var(--ink);
+      background:linear-gradient(135deg,#0d2e4d,#245579);
+    }
+    button,input,select { font:inherit; }
+    .shell {
+      width:min(1040px,calc(100% - 32px));
+      margin:24px auto;
+      background:#fff;
+      border-radius:20px;
+      overflow:hidden;
+      box-shadow:0 18px 55px rgba(0,0,0,.22);
+    }
+    .header {
+      padding:26px 32px;
+      color:#fff;
+      background:var(--navy);
+    }
+    .eyebrow {
+      display:inline-block;
+      padding:7px 12px;
+      border:1px solid rgba(255,255,255,.35);
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:1px;
+    }
+    h1 { margin:12px 0 4px; font-size:34px; }
+    .header p { margin:0; color:#dceaf5; }
+    main { padding:28px 32px 36px; }
+    .warning {
+      padding:14px 16px;
+      border:1px solid #f0cf82;
+      border-radius:12px;
+      color:#6c4b00;
+      background:#fff8e7;
+      line-height:1.5;
+    }
+    .grid {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:18px;
+      margin-top:22px;
+    }
+    .card {
+      padding:20px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+    }
+    .full { grid-column:1/-1; }
+    h2,h3 { margin:0 0 8px; }
+    .note { color:var(--muted); font-size:14px; line-height:1.5; }
+    label {
+      display:block;
+      margin:14px 0 7px;
+      font-size:14px;
+      font-weight:700;
+    }
+    input,select {
+      width:100%;
+      padding:12px 13px;
+      border:1px solid #adc5d8;
+      border-radius:9px;
+      color:var(--ink);
+      background:#fff;
+    }
+    button {
+      padding:12px 17px;
+      border:0;
+      border-radius:9px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .primary { color:#fff; background:var(--blue); }
+    .secondary { color:var(--navy); background:#e8f1f8; }
+    .danger { color:#fff; background:var(--red); }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    .badge {
+      display:inline-block;
+      margin-top:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:700;
+      color:var(--green);
+      background:#e9f8f0;
+    }
+    .question {
+      margin-top:16px;
+      padding:18px;
+      border-left:5px solid var(--blue);
+      border-radius:10px;
+      background:var(--pale);
+    }
+    .question-meta {
+      margin-bottom:8px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.35px;
+    }
+    .question-text { font-size:18px; line-height:1.5; }
+    .status { min-height:20px; margin-top:12px; font-size:14px; }
+    .status.success { color:var(--green); }
+    .status.error { color:var(--red); }
+    [hidden] { display:none !important; }
+    .footer {
+      padding:18px;
+      text-align:center;
+      color:#fff;
+      background:var(--navy);
+      line-height:1.5;
+    }
+    @media (max-width:700px) {
+      .grid { grid-template-columns:1fr; }
+      .full { grid-column:auto; }
+      main,.header { padding-left:20px; padding-right:20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="header">
+      <span class="eyebrow">CLARIONPREP.COM · TEST LAB</span>
+      <h1>ASCENT Zero-Storage Test Learner</h1>
+      <p>Test sequencing and learner modes without creating a live student record.</p>
+    </header>
+
+    <main>
+      <div class="warning">
+        <strong>Isolated test:</strong> this page makes no Supabase request and
+        writes nothing to the student register, assignments, submissions,
+        results, audio storage or reports. Refreshing or closing this tab clears
+        the test session.
+      </div>
+
+      <section id="loginCard" class="card" style="margin-top:22px">
+        <h2>Open the test learner</h2>
+        <p class="note">Use the fixed test ID shown below. This is not a real student account.</p>
+        <label for="testId">Student ID</label>
+        <input id="testId" value="ASCENTTEST001" autocomplete="off">
+        <label for="accessCode">Test access code</label>
+        <input id="accessCode" value="ASCENT-SMOKE-2026" autocomplete="off">
+        <div class="actions">
+          <button id="openLabButton" class="primary" type="button">Open Test Lab</button>
+        </div>
+        <div id="loginStatus" class="status" role="status"></div>
+      </section>
+
+      <section id="lab" hidden>
+        <div class="grid">
+          <div class="card">
+            <h3>Test identity</h3>
+            <div class="badge">ASCENTTEST001 · TEMPORARY</div>
+            <p class="note">No email, password, institution or entitlement record exists.</p>
+          </div>
+
+          <div class="card">
+            <h3>Learner mode</h3>
+            <label for="modeSelect">Simulate</label>
+            <select id="modeSelect">
+              <option value="FIIB">FIIB institutional learner</option>
+              <option value="INSTITUTION">Other institutional learner</option>
+              <option value="PAID_SELF">Paid learner · Self-Guided</option>
+              <option value="PAID_TRAINER">Paid learner · Trainer-Guided</option>
+            </select>
+          </div>
+
+          <div id="selfGuidedControls" class="card full" hidden>
+            <h3>Choose My Own Practice</h3>
+            <p class="note">The learner chooses only the bank and category. ASCENT chooses the next unanswered difficulty.</p>
+            <div class="grid">
+              <div>
+                <label for="bankSelect">Question bank</label>
+                <select id="bankSelect">
+                  <option value="LUM">Language Use and Mechanics (LUM)</option>
+                  <option value="PI">Personal Interview (PI)</option>
+                  <option value="GD">Group Discussion (GD)</option>
+                </select>
+              </div>
+              <div>
+                <label for="categorySelect">Category / LUM unit</label>
+                <select id="categorySelect"></select>
+              </div>
+            </div>
+          </div>
+
+          <div id="guidedControls" class="card full">
+            <h3 id="guidedHeading">Institution-Guided path</h3>
+            <p id="guidedNote" class="note"></p>
+          </div>
+
+          <div class="card full">
+            <h3>Question presented to the learner</h3>
+            <div id="questionBox" class="question"></div>
+            <div class="actions">
+              <button id="completeButton" class="primary" type="button">Simulate Completed Response</button>
+              <button id="resetButton" class="secondary" type="button">Clear This Test Session</button>
+              <button id="closeButton" class="danger" type="button">Close Test Lab</button>
+            </div>
+            <div id="practiceStatus" class="status" role="status"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <strong>A Manu Vikraman Career-Readiness Product</strong><br>
+      manuvikraman.com · clarionprep.com
+    </footer>
+  </div>
+
+  <script>
+    const TEST_ID = "ASCENTTEST001";
+    const TEST_CODE = "ASCENT-SMOKE-2026";
+    const SESSION_KEY = "ascent_zero_storage_test";
+
+    const categories = {
+      LUM: ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5"],
+      PI: ["Category 1", "Category 2", "Category 3", "Category 4", "Category 5"],
+      GD: ["Category 1", "Category 2", "Category 3", "Category 4", "Category 5"]
+    };
+
+    const sampleQuestions = {
+      LUM: "Explain one workplace idea clearly and support it with a relevant example.",
+      PI: "Tell the interviewer about a decision you made and explain your reasoning.",
+      GD: "State your view, respond to another speaker, and move the discussion forward."
+    };
+
+    const guidedPath = [];
+    ["LUM", "PI", "GD"].forEach(function (bank) {
+      for (let difficulty = 1; difficulty <= 5; difficulty += 1) {
+        categories[bank].forEach(function (category, categoryIndex) {
+          guidedPath.push({
+            bank,
+            category,
+            categoryIndex: categoryIndex + 1,
+            difficulty,
+            text: sampleQuestions[bank]
+          });
+        });
+      }
+    });
+
+    const byId = id => document.getElementById(id);
+    let state = {
+      open:false,
+      mode:"FIIB",
+      completed:{}
+    };
+
+    function saveState() {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(state));
+    }
+
+    function wipeState() {
+      sessionStorage.removeItem(SESSION_KEY);
+      state = { open:false, mode:"FIIB", completed:{} };
+    }
+
+    function selectedSelfGuidedQuestion() {
+      const bank = byId("bankSelect").value;
+      const category = byId("categorySelect").value;
+      return guidedPath.find(function (item) {
+        const key = [state.mode, bank, category, item.difficulty].join("|");
+        return item.bank === bank &&
+          item.category === category &&
+          state.completed[key] !== true;
+      }) || null;
+    }
+
+    function selectedGuidedQuestion() {
+      const path = guidedPath.filter(function (item) {
+        return state.mode === "FIIB"
+          ? item.bank === "LUM"
+          : state.mode === "INSTITUTION"
+            ? item.bank === "GD"
+            : item.bank === "PI";
+      });
+
+      return path.find(function (item) {
+        const key = [
+          state.mode,
+          item.bank,
+          item.category,
+          item.difficulty
+        ].join("|");
+        return state.completed[key] !== true;
+      }) || null;
+    }
+
+    function selectedQuestion() {
+      return state.mode === "PAID_SELF"
+        ? selectedSelfGuidedQuestion()
+        : selectedGuidedQuestion();
+    }
+
+    function questionKey(question) {
+      return [
+        state.mode,
+        question.bank,
+        question.category,
+        question.difficulty
+      ].join("|");
+    }
+
+    function fillCategories() {
+      const bank = byId("bankSelect").value;
+      const previous = byId("categorySelect").value;
+      byId("categorySelect").innerHTML =
+        categories[bank].map(function (category) {
+          return `<option value="${category}">${category}</option>`;
+        }).join("");
+      if (categories[bank].includes(previous)) {
+        byId("categorySelect").value = previous;
+      }
+    }
+
+    function renderQuestion() {
+      const question = selectedQuestion();
+      const box = byId("questionBox");
+      const button = byId("completeButton");
+
+      if (!question) {
+        box.innerHTML =
+          '<div class="question-meta">Path complete</div>' +
+          '<div class="question-text">All simulated questions in this path have been completed.</div>';
+        button.disabled = true;
+        return;
+      }
+
+      box.innerHTML =
+        `<div class="question-meta">${question.bank} · Difficulty ${question.difficulty} · ${question.category}</div>` +
+        `<div class="question-text">${question.text}</div>`;
+      button.disabled = false;
+    }
+
+    function renderMode() {
+      state.mode = byId("modeSelect").value;
+      const selfGuided = state.mode === "PAID_SELF";
+      const paidGuided = state.mode === "PAID_TRAINER";
+
+      byId("selfGuidedControls").hidden = !selfGuided;
+      byId("guidedControls").hidden = selfGuided;
+      byId("guidedHeading").textContent = paidGuided
+        ? "Trainer-Guided paid path"
+        : "Institution-Guided path";
+      byId("guidedNote").textContent = paidGuided
+        ? "Self-selection is paused. Only the trainer-assigned PI path is shown."
+        : state.mode === "FIIB"
+          ? "Only the FIIB-assigned LUM path is shown."
+          : "Only the institution-assigned GD path is shown.";
+
+      saveState();
+      renderQuestion();
+      byId("practiceStatus").textContent = "";
+    }
+
+    function openLab() {
+      const id = byId("testId").value.trim().toUpperCase();
+      const code = byId("accessCode").value.trim();
+      if (id !== TEST_ID || code !== TEST_CODE) {
+        byId("loginStatus").className = "status error";
+        byId("loginStatus").textContent = "The test ID or access code is incorrect.";
+        return;
+      }
+
+      wipeState();
+      state.open = true;
+      saveState();
+      byId("loginCard").hidden = true;
+      byId("lab").hidden = false;
+      fillCategories();
+      renderMode();
+    }
+
+    function simulateCompletion() {
+      const question = selectedQuestion();
+      if (!question) return;
+      state.completed[questionKey(question)] = true;
+      saveState();
+      byId("practiceStatus").className = "status success";
+      byId("practiceStatus").textContent =
+        "Simulated response discarded. The next question has been shown.";
+      renderQuestion();
+    }
+
+    function resetTest() {
+      const mode = state.mode;
+      wipeState();
+      state.open = true;
+      state.mode = mode;
+      byId("modeSelect").value = mode;
+      saveState();
+      renderMode();
+      byId("practiceStatus").className = "status success";
+      byId("practiceStatus").textContent = "This tab’s temporary test progress has been cleared.";
+    }
+
+    function closeLab() {
+      wipeState();
+      byId("lab").hidden = true;
+      byId("loginCard").hidden = false;
+      byId("loginStatus").className = "status success";
+      byId("loginStatus").textContent = "The temporary test session has been erased.";
+    }
+
+    byId("openLabButton").addEventListener("click", openLab);
+    byId("modeSelect").addEventListener("change", renderMode);
+    byId("bankSelect").addEventListener("change", function () {
+      fillCategories();
+      renderQuestion();
+    });
+    byId("categorySelect").addEventListener("change", renderQuestion);
+    byId("completeButton").addEventListener("click", simulateCompletion);
+    byId("resetButton").addEventListener("click", resetTest);
+    byId("closeButton").addEventListener("click", closeLab);
+
+    window.addEventListener("beforeunload", function () {
+      sessionStorage.removeItem(SESSION_KEY);
+    });
+  </script>
+</body>
+</html>
