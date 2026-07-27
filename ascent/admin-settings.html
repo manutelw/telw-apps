@@ -318,53 +318,57 @@
       line-height:1.55;
     }
 
-    .page-grid {
-      display:grid;
-      grid-template-columns:
-        repeat(2,minmax(0,1fr));
-      gap:12px;
-    }
-
-    .page-card {
-      min-height:116px;
-      padding:17px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
+    .plain-links {
+      overflow:hidden;
       border:1px solid var(--border);
-      border-radius:15px;
-      background:#fbfdff;
-      transition:
-        transform .15s ease,
-        border-color .15s ease,
-        box-shadow .15s ease;
+      border-radius:13px;
+      background:#fff;
     }
 
-    .page-card:hover,
-    .page-card:focus-visible {
-      transform:translateY(-2px);
-      border-color:#9bb9d2;
-      box-shadow:0 12px 28px rgba(20,58,96,.11);
-    }
-
-    .page-card strong {
+    .plain-link,
+    .trainer-entry-button {
+      width:100%;
+      min-height:48px;
+      display:block;
+      padding:14px 16px;
+      border:0;
+      border-bottom:1px solid var(--border);
       color:var(--navy);
-      font-size:16px;
+      background:#fff;
+      font:inherit;
+      font-size:15px;
+      font-weight:800;
+      text-align:left;
+      cursor:pointer;
     }
 
-    .page-card span {
-      margin-top:7px;
+    .plain-link:last-child,
+    .trainer-entry-button:last-child {
+      border-bottom:0;
+    }
+
+    .plain-link:hover,
+    .plain-link:focus-visible,
+    .trainer-entry-button:hover,
+    .trainer-entry-button:focus-visible {
+      background:var(--blue-soft);
+    }
+
+    .trainer-entry-button span {
+      color:var(--muted);
+      font-size:12px;
+      font-weight:600;
+    }
+
+    .admin-status {
+      min-height:20px;
+      margin-top:12px;
       color:var(--muted);
       font-size:13px;
-      line-height:1.45;
     }
 
-    .page-card small {
-      margin-top:14px;
-      color:var(--blue);
-      font-size:12px;
-      font-weight:800;
-    }
+    .admin-status.error { color:#b42318; }
+    .admin-status.success { color:#18794e; }
 
     .footer {
       padding:20px 0 4px;
@@ -401,8 +405,7 @@
         padding:19px;
       }
 
-      .payment-grid,
-      .page-grid {
+      .payment-grid {
         grid-template-columns:1fr;
       }
 
@@ -575,115 +578,27 @@
           </p>
         </div>
 
-        <div class="page-grid">
-          <a
-            class="page-card"
-            href="../"
-          >
-            <div>
-              <strong>Main homepage</strong>
-              <span>Open the public ASCENT landing page.</span>
-            </div>
-
-            <small>Open page →</small>
-          </a>
-
-          <a
-            class="page-card"
-            href="./"
-          >
-            <div>
-              <strong>ASCENT login</strong>
-              <span>Open the student, trainer and institution login page.</span>
-            </div>
-
-            <small>Open page →</small>
-          </a>
-
-          <a
-            class="page-card"
-            href="./trainer.html"
-          >
-            <div>
-              <strong>Trainer portal</strong>
-              <span>Open tasks, assignments, results and reports.</span>
-            </div>
-
-            <small>Open without a new login →</small>
-          </a>
-
-          <a
-            class="page-card"
-            href="./institution.html?slug=fiib"
-          >
-            <div>
-              <strong>Institution portal</strong>
-              <span>Open FIIB participation and performance reports.</span>
-            </div>
-
-            <small>Open portal →</small>
-          </a>
-
-          <a
-            class="page-card"
-            href="../fiib/"
-          >
-            <div>
-              <strong>FIIB entrance</strong>
-              <span>Open the direct FIIB portal entrance.</span>
-            </div>
-
-            <small>Open page →</small>
-          </a>
-
-          <a
-            class="page-card"
-            href="./register.html"
-          >
-            <div>
-              <strong>Student registration</strong>
-              <span>Open the account creation page.</span>
-            </div>
-
-            <small>Open page →</small>
-          </a>
-
-          <a
-            class="page-card"
-            href="./forgot-password.html"
-          >
-            <div>
-              <strong>Password reset</strong>
-              <span>Open the password recovery page.</span>
-            </div>
-
-            <small>Open page →</small>
-          </a>
-
-          <a
-            class="page-card"
-            href="./practice.html?admin_preview=1"
-          >
-            <div>
-              <strong>Student practice preview</strong>
-              <span>View the student recording and practice page.</span>
-            </div>
-
-            <small>Open preview →</small>
-          </a>
-
-          <a
-            class="page-card"
-            href="./dashboard.html?admin_preview=1"
-          >
-            <div>
-              <strong>Student performance preview</strong>
-              <span>View the student scores and progress page.</span>
-            </div>
-
-            <small>Open preview →</small>
-          </a>
+        <div class="plain-links">
+          <a class="plain-link" href="../">Main homepage</a>
+          <a class="plain-link" href="./">ASCENT login</a>
+          <a class="plain-link" href="./trainer.html">Administrator’s trainer portal</a>
+          <a class="plain-link" href="./trainer.html?section=students">Students review</a>
+          <a class="plain-link" href="./institution.html?slug=fiib">FIIB institution portal</a>
+          <a class="plain-link" href="../fiib/">FIIB entrance</a>
+          <a class="plain-link" href="./register.html">Student registration</a>
+          <a class="plain-link" href="./forgot-password.html">Password reset</a>
         </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Enter a trainer portal</h2>
+          <p>Click the trainer’s name. ASCENT opens that trainer’s portal without asking for the trainer’s password.</p>
+        </div>
+        <div id="trainerEntryList" class="plain-links">
+          <div class="plain-link">Loading trainers…</div>
+        </div>
+        <div id="trainerEntryStatus" class="admin-status" role="status" aria-live="polite"></div>
       </section>
     </div>
 
@@ -694,8 +609,28 @@
     const SESSION_STORAGE_KEY =
       "ascent_trainer_session";
 
+    const ADMIN_MASTER_SESSION_KEY =
+      "ascent_admin_master_session";
+
+    const SUPABASE_URL =
+      "https://vtqatrhwfvzyodiftvkc.supabase.co";
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
+
+    const TRAINER_ENTRY_LIST_URL =
+      SUPABASE_URL +
+      "/rest/v1/rpc/ascent_admin_trainer_entry_list";
+
+    const ENTER_TRAINER_URL =
+      SUPABASE_URL +
+      "/rest/v1/rpc/ascent_admin_enter_trainer_portal";
+
     function loadAdminSession() {
       const raw =
+        localStorage.getItem(
+          ADMIN_MASTER_SESSION_KEY
+        ) ||
         localStorage.getItem(
           SESSION_STORAGE_KEY
         );
@@ -730,10 +665,20 @@
           );
         }
 
+        localStorage.setItem(
+          ADMIN_MASTER_SESSION_KEY,
+          JSON.stringify(session)
+        );
+
+        localStorage.setItem(
+          SESSION_STORAGE_KEY,
+          JSON.stringify(session)
+        );
+
         return session;
       } catch (error) {
         localStorage.removeItem(
-          SESSION_STORAGE_KEY
+          ADMIN_MASTER_SESSION_KEY
         );
 
         window.location.replace("./");
@@ -743,6 +688,157 @@
 
     const session =
       loadAdminSession();
+
+    function setTrainerEntryStatus(message,type="") {
+      const element =
+        document.getElementById(
+          "trainerEntryStatus"
+        );
+
+      element.className =
+        "admin-status" +
+        (type ? " " + type : "");
+
+      element.textContent = message || "";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    async function callAdminRpc(url,body) {
+      const response = await fetch(url,{
+        method:"POST",
+        headers:{
+          "apikey":SUPABASE_PUBLISHABLE_KEY,
+          "Authorization":
+            "Bearer " +
+            SUPABASE_PUBLISHABLE_KEY,
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify(body)
+      });
+
+      const payload = await response.json();
+      const result =
+        Array.isArray(payload)
+          ? payload[0]
+          : payload;
+
+      if (
+        !response.ok ||
+        !result ||
+        result.ok !== true
+      ) {
+        throw new Error(
+          result && result.message
+            ? result.message
+            : "The administrator request failed."
+        );
+      }
+
+      return result;
+    }
+
+    async function enterTrainerPortal(
+      trainerUuid,
+      accessPointUuid
+    ) {
+      setTrainerEntryStatus(
+        "Opening trainer portal…"
+      );
+
+      try {
+        const result = await callAdminRpc(
+          ENTER_TRAINER_URL,
+          {
+            p_session_token:
+              session.sessionToken,
+            p_target_trainer_uuid:
+              trainerUuid,
+            p_access_point_uuid:
+              accessPointUuid
+          }
+        );
+
+        localStorage.setItem(
+          ADMIN_MASTER_SESSION_KEY,
+          JSON.stringify(session)
+        );
+
+        localStorage.setItem(
+          SESSION_STORAGE_KEY,
+          JSON.stringify(result)
+        );
+
+        window.location.href =
+          "./trainer.html";
+      } catch (error) {
+        setTrainerEntryStatus(
+          error.message ||
+          "The trainer portal could not be opened.",
+          "error"
+        );
+      }
+    }
+
+    async function loadTrainerEntries() {
+      const list =
+        document.getElementById(
+          "trainerEntryList"
+        );
+
+      try {
+        const result = await callAdminRpc(
+          TRAINER_ENTRY_LIST_URL,
+          {
+            p_session_token:
+              session.sessionToken
+          }
+        );
+
+        const trainers =
+          Array.isArray(result.trainers)
+            ? result.trainers
+            : [];
+
+        if (!trainers.length) {
+          list.innerHTML =
+            '<div class="plain-link">No active trainer portals are available.</div>';
+          return;
+        }
+
+        list.innerHTML = trainers.map(
+          trainer =>
+            `<button class="trainer-entry-button" type="button" data-trainer="${escapeHtml(trainer.trainerUuid)}" data-access="${escapeHtml(trainer.accessPointUuid)}">${escapeHtml(trainer.fullName)} <span>· ${escapeHtml(trainer.accessPointName)}</span></button>`
+        ).join("");
+
+        list.querySelectorAll(
+          ".trainer-entry-button"
+        ).forEach(button => {
+          button.addEventListener(
+            "click",
+            () => enterTrainerPortal(
+              button.dataset.trainer,
+              button.dataset.access
+            )
+          );
+        });
+      } catch (error) {
+        list.innerHTML =
+          '<div class="plain-link">Trainer portals could not be loaded.</div>';
+
+        setTrainerEntryStatus(
+          error.message,
+          "error"
+        );
+      }
+    }
 
     if (session) {
       document
@@ -765,9 +861,15 @@
               SESSION_STORAGE_KEY
             );
 
+            localStorage.removeItem(
+              ADMIN_MASTER_SESSION_KEY
+            );
+
             window.location.replace("./");
           }
         );
+
+      loadTrainerEntries();
     }
   </script>
 </body>
