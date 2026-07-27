@@ -1268,15 +1268,13 @@
                     class="practice-label"
                     for="questionBankSearch"
                   >
-                    Search the question bank
+                    Question bank
                   </label>
 
-                  <input
+                  <select
                     id="questionBankSearch"
-                    class="practice-input"
-                    type="search"
-                    placeholder="Search by title, question or category"
-                  >
+                    class="practice-select"
+                  ></select>
                 </div>
 
                 <div class="practice-field">
@@ -1284,14 +1282,13 @@
                     class="practice-label"
                     for="questionBankRubricFilter"
                   >
-                    Rubric
+                    Category / LUM unit
                   </label>
 
                   <select
                     id="questionBankRubricFilter"
                     class="practice-select"
                   >
-                    <option value="">All rubrics</option>
                   </select>
                 </div>
               </div>
@@ -1300,7 +1297,7 @@
                 class="practice-label"
                 for="questionBankSelect"
               >
-                Question-bank task
+                Your next question
               </label>
 
               <select
@@ -1643,6 +1640,10 @@
       SUPABASE_URL +
       "/rest/v1/rpc/ascent_get_student_practice_context";
 
+    const PAID_PRACTICE_CONTROL_URL =
+      SUPABASE_URL +
+      "/rest/v1/rpc/ascent_get_paid_practice_control";
+
     const SINGLE_ATTEMPT_HISTORY_URL =
       SUPABASE_URL +
       "/rest/v1/rpc/ascent_student_single_attempt_history";
@@ -1871,6 +1872,7 @@ const otherIssuesList =
     let recordingLimitSeconds = null;
     let recordingAutoStopTriggered = false;
     let practiceContext = null;
+    let paidPracticeControl = null;
     let activeAssignments = [];
     let questionBank = [];
     let filteredQuestionBank = [];
@@ -2647,46 +2649,58 @@ const otherIssuesList =
         questionBankRubricFilter
       );
 
-      const allOption =
-        document.createElement("option");
+      const selectedBank =
+        String(questionBankSearch.value || "");
 
-      allOption.value = "";
-      allOption.textContent =
-        "All rubrics";
-
-      questionBankRubricFilter.appendChild(
-        allOption
-      );
-
-      const rubricTypes =
+      const categories =
         [
-          ...new Set(
+          ...new Map(
             questionBank
-              .map(function (item) {
-                return String(
-                  item.rubricType || ""
-                );
+              .filter(function (item) {
+                return String(item.bankType || "") === selectedBank;
               })
-              .filter(Boolean)
-          )
+              .map(function (item) {
+                const code = String(
+                  item.categoryCode ||
+                  item.category ||
+                  item.categoryName ||
+                  ""
+                );
+                return [
+                  code,
+                  {
+                    code,
+                    name: String(
+                      item.categoryName ||
+                      item.category ||
+                      code
+                    ),
+                    sequence: Number(
+                      item.categorySequence || 999
+                    )
+                  }
+                ];
+              })
+              .filter(function (entry) {
+                return Boolean(entry[0]);
+              })
+          ).values()
         ];
 
-      rubricTypes
+      categories
         .sort(function (left, right) {
-          return rubricLabel(left)
-            .localeCompare(
-              rubricLabel(right)
-            );
+          return left.sequence - right.sequence ||
+            left.name.localeCompare(right.name);
         })
-        .forEach(function (rubricType) {
+        .forEach(function (category) {
           const option =
             document.createElement(
               "option"
             );
 
-          option.value = rubricType;
+          option.value = category.code;
           option.textContent =
-            rubricLabel(rubricType);
+            category.name;
 
           questionBankRubricFilter
             .appendChild(option);
@@ -2695,19 +2709,10 @@ const otherIssuesList =
 
 
     function populateQuestionBank() {
-      const previousValue =
-        String(
-          questionBankSelect.value || ""
-        );
+      const bankValue =
+        String(questionBankSearch.value || "");
 
-      const searchValue =
-        String(
-          questionBankSearch.value || ""
-        )
-          .trim()
-          .toLowerCase();
-
-      const rubricValue =
+      const categoryValue =
         String(
           questionBankRubricFilter
             .value || ""
@@ -2716,39 +2721,30 @@ const otherIssuesList =
       filteredQuestionBank =
         questionBank.filter(
           function (item) {
-            const searchable =
-              [
-                item.title,
-                item.question,
-                item.category,
-                item.bankType,
-                item.difficultyLabel
-              ]
-                .map(function (value) {
-                  return String(
-                    value || ""
-                  ).toLowerCase();
-                })
-                .join(" ");
-
-            const matchesSearch =
-              !searchValue ||
-              searchable.includes(
-                searchValue
-              );
-
-            const matchesRubric =
-              !rubricValue ||
-              String(
-                item.rubricType || ""
-              ) === rubricValue;
-
-            return (
-              matchesSearch &&
-              matchesRubric
+            const itemCategory = String(
+              item.categoryCode ||
+              item.category ||
+              item.categoryName ||
+              ""
             );
+
+            return String(item.bankType || "") === bankValue &&
+              itemCategory === categoryValue;
           }
-        );
+        )
+        .sort(function (left, right) {
+          return Number(left.difficultyRank || 999) -
+              Number(right.difficultyRank || 999) ||
+            String(left.sourceIdentifier || "")
+              .localeCompare(
+                String(right.sourceIdentifier || ""),
+                undefined,
+                { numeric: true }
+              ) ||
+            String(left.title || "")
+              .localeCompare(String(right.title || ""));
+        })
+        .slice(0, 1);
 
       clearElement(questionBankSelect);
 
@@ -2762,7 +2758,7 @@ const otherIssuesList =
 
         emptyOption.value = "";
         emptyOption.textContent =
-          "No matching questions";
+          "No unanswered questions remain in this category";
 
         questionBankSelect.appendChild(
           emptyOption
@@ -2805,21 +2801,50 @@ const otherIssuesList =
         }
       );
 
-      const canRestore =
-        filteredQuestionBank.some(
-          function (item) {
-            return String(
-              item.questionBankUuid || ""
-            ) === previousValue;
-          }
-        );
+      updateSelectedQuestion();
+    }
 
-      if (canRestore) {
-        questionBankSelect.value =
-          previousValue;
+
+    function populateQuestionBanks() {
+      const previousValue =
+        String(questionBankSearch.value || "");
+
+      clearElement(questionBankSearch);
+
+      const bankTypes = [
+        ...new Set(
+          questionBank
+            .map(function (item) {
+              return String(item.bankType || "");
+            })
+            .filter(Boolean)
+        )
+      ].sort(function (left, right) {
+        const order = { LUM: 1, PI: 2, GD: 3 };
+        return (order[left] || 99) - (order[right] || 99) ||
+          left.localeCompare(right);
+      });
+
+      bankTypes.forEach(function (bankType) {
+        const option = document.createElement("option");
+        option.value = bankType;
+        option.textContent =
+          bankType === "LUM"
+            ? "Language Use and Mechanics (LUM)"
+            : bankType === "PI"
+              ? "Personal Interview (PI)"
+              : bankType === "GD"
+                ? "Group Discussion (GD)"
+                : bankType;
+        questionBankSearch.appendChild(option);
+      });
+
+      if (bankTypes.includes(previousValue)) {
+        questionBankSearch.value = previousValue;
       }
 
-      updateSelectedQuestion();
+      populateRubricFilter();
+      populateQuestionBank();
     }
 
 
@@ -2850,6 +2875,11 @@ const otherIssuesList =
         practiceContext
           .is_private_learner === true;
 
+      const trainerGuided =
+        isPrivateLearner &&
+        paidPracticeControl &&
+        paidPracticeControl.trainerGuided === true;
+
       if (activeAssignments.length > 0) {
         const assignedOption =
           document.createElement(
@@ -2867,7 +2897,7 @@ const otherIssuesList =
         );
       }
 
-      if (isPrivateLearner) {
+      if (isPrivateLearner && !trainerGuided) {
         if (questionBank.length > 0) {
           const bankOption =
             document.createElement(
@@ -2900,8 +2930,7 @@ const otherIssuesList =
       }
 
       populateAssignedTasks();
-      populateRubricFilter();
-      populateQuestionBank();
+      populateQuestionBanks();
 
       practiceContextLoading.hidden =
         true;
@@ -2913,11 +2942,13 @@ const otherIssuesList =
         practiceModeSelect.options.length === 0
       ) {
         practiceContextNote.textContent =
-          String(
-            practiceContext && practiceContext.message
-              ? practiceContext.message
-              : "No assigned question is available right now."
-          );
+          trainerGuided
+            ? "Your Trainer-Guided path has no released unanswered question right now. Please contact your trainer."
+            : String(
+                practiceContext && practiceContext.message
+                  ? practiceContext.message
+                  : "No assigned question is available right now."
+              );
         practiceContextNote.hidden = false;
         practiceContextControls.hidden = true;
         selectedQuestionBox.hidden = true;
@@ -2926,14 +2957,28 @@ const otherIssuesList =
       }
 
       practiceModeSelect.value =
-        activeAssignments.length > 0
+        trainerGuided && activeAssignments.length > 0
           ? "assigned"
-          : questionBank.length > 0
+          : isPrivateLearner && questionBank.length > 0
             ? "question_bank"
+            : activeAssignments.length > 0
+              ? "assigned"
             : "custom";
 
       updatePassStatus();
       updatePracticeMode();
+
+      if (trainerGuided) {
+        practiceContextNote.textContent =
+          "Trainer-Guided practice is active" +
+          (
+            paidPracticeControl.trainerName
+              ? " with " + paidPracticeControl.trainerName
+              : ""
+          ) +
+          ". ASCENT will show the assigned questions in sequence.";
+        practiceContextNote.hidden = false;
+      }
     }
 
 
@@ -3076,6 +3121,53 @@ const otherIssuesList =
         }
 
         practiceContext = result;
+
+        paidPracticeControl = null;
+
+        if (result.is_private_learner === true) {
+          const controlResponse =
+            await fetch(
+              PAID_PRACTICE_CONTROL_URL,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type":
+                    "application/json",
+                  "apikey":
+                    SUPABASE_PUBLISHABLE_KEY,
+                  "Authorization":
+                    "Bearer " +
+                    SUPABASE_PUBLISHABLE_KEY
+                },
+                body: JSON.stringify({
+                  p_session_token:
+                    currentSession.sessionToken
+                })
+              }
+            );
+
+          const controlPayload =
+            await controlResponse.json();
+
+          paidPracticeControl =
+            Array.isArray(controlPayload)
+              ? controlPayload[0]
+              : controlPayload;
+
+          if (
+            !controlResponse.ok ||
+            !paidPracticeControl ||
+            paidPracticeControl.ok !== true
+          ) {
+            throw new Error(
+              paidPracticeControl &&
+              paidPracticeControl.message
+                ? paidPracticeControl.message
+                : "ASCENT could not load your paid-practice mode."
+            );
+          }
+        }
+
         refreshPrivateAudioPanel();
         applyRecordAgainPolicy();
 
@@ -3127,14 +3219,24 @@ const otherIssuesList =
                 (Number.isFinite(leftTime) ? leftTime : 0);
             })[0] || null;
 
-        const newestBatchKey = newestAssignment
+        const controlledBatchKey =
+          paidPracticeControl &&
+          paidPracticeControl.trainerGuided === true
+            ? String(
+                paidPracticeControl
+                  .guidedQuestionBatchUuid || ""
+              )
+            : "";
+
+        const newestBatchKey = controlledBatchKey ||
+          (newestAssignment
           ? String(
               newestAssignment.questionBatchUuid ||
               newestAssignment.taskUuid ||
               newestAssignment.assignmentUuid ||
               ""
             )
-          : "";
+          : "");
 
         activeAssignments =
           rawAssignments.filter(function (item) {
@@ -5277,8 +5379,11 @@ otherIssuesSection.hidden =
     );
 
     questionBankSearch.addEventListener(
-      "input",
-      populateQuestionBank
+      "change",
+      function () {
+        populateRubricFilter();
+        populateQuestionBank();
+      }
     );
 
     questionBankRubricFilter
