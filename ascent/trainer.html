@@ -342,6 +342,27 @@
               <div id="bankTargetCohortGroup" class="form-group" hidden><label for="bankTargetCohort">Broad cohort</label><select id="bankTargetCohort"><option value="">Choose cohort</option></select></div>
               <div id="bankTargetGroupGroup" class="form-group" hidden><label for="bankTargetGroup">Student group</label><select id="bankTargetGroup"><option value="">Choose group</option></select></div>
               <div id="bankTargetStudentsGroup" class="form-group two-wide" hidden><label>Selected students</label><div class="student-picker"><input id="bankStudentSearch" type="search" placeholder="Search by name, ID, email or batch"><div id="bankStudentOptions" class="student-options"></div></div><div id="bankSelectedStudentCount" class="form-note">0 students selected</div></div>
+              <div id="paidGuidedControlGroup" class="form-group two-wide" hidden>
+                <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+                  <input id="activatePaidGuidedMode" type="checkbox" style="width:auto;margin-top:3px">
+                  <span>Activate Trainer-Guided mode for this paid learner
+                    <div id="paidGuidedCurrentMode" class="form-note" style="margin-top:4px"></div>
+                  </span>
+                </label>
+                <button id="returnPaidSelfGuidedButton" class="secondary-button" type="button" hidden style="margin-top:12px">Return Learner to Self-Guided</button>
+              </div>
+              <div id="paidGuidedReturnPolicyGroup" class="form-group" hidden>
+                <label for="paidGuidedReturnPolicy">Return to Self-Guided</label>
+                <select id="paidGuidedReturnPolicy">
+                  <option value="AFTER_COMPLETION">After this path is completed</option>
+                  <option value="ON_DATE">On a chosen date</option>
+                  <option value="MANUAL">Only when trainer changes it</option>
+                </select>
+              </div>
+              <div id="paidGuidedReturnAtGroup" class="form-group" hidden>
+                <label for="paidGuidedReturnAt">Return date and time</label>
+                <input id="paidGuidedReturnAt" type="datetime-local">
+              </div>
               <div class="form-group"><label for="bankStartAt">First release</label><input id="bankStartAt" type="datetime-local"></div>
               <div class="form-group"><label for="bankIntervalDays">Question sequence</label><input id="bankIntervalDays" type="number" min="0" max="0" step="1" value="0" readonly required><div class="form-note">ASCENT keeps the complete bank ready, but shows each learner only the next unanswered question. The next question appears after submission.</div></div>
               <div class="form-group"><label for="bankDueDays">Days each question stays open</label><input id="bankDueDays" type="number" min="0" max="365" value="7"><div class="form-note">Leave blank for no deadline. A learner still sees only one unanswered question at a time.</div></div>
@@ -518,6 +539,8 @@
       createTrainer: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_create_trainer",
       questionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_question_bank_get",
       assignQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_assign_question_bank_tasks",
+      paidPracticeControls: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_paid_practice_control_data",
+      setPaidPracticeControl: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_paid_practice_control",
       upsertQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_upsert_question_bank",
       questionBankActive: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_set_question_bank_active",
       clearTestRegister: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_clear_test_student_register",
@@ -528,6 +551,7 @@
     let currentSession = null;
     let reportData = { summary:{}, batches:[], students:[], tasks:[], results:[] };
     let questionBankData = { questions:[], categories:[], difficultyScale:[], totalMatching:0 };
+    let paidPracticeControlData = { learners:[] };
     let selectedBankQuestions = new Set();
     let visibleBankQuestions = [];
     let visibleAssignmentRows = [];
@@ -862,10 +886,49 @@
 
     function selectedBankStudentUuids() { return Array.from(document.querySelectorAll(".bank-student-check:checked")).map(box => box.value); }
 
+    function selectedPaidLearner() {
+      const selected = selectedBankStudentUuids();
+      if (selected.length !== 1) return null;
+      return (paidPracticeControlData.learners || []).find(
+        learner => String(learner.studentUuid) === String(selected[0])
+      ) || null;
+    }
+
+    function updatePaidGuidedControls() {
+      const learner = selectedPaidLearner();
+      const group = byId("paidGuidedControlGroup");
+      const returnPolicyGroup = byId("paidGuidedReturnPolicyGroup");
+      const returnAtGroup = byId("paidGuidedReturnAtGroup");
+      const checkbox = byId("activatePaidGuidedMode");
+      const targetType = assignmentTarget(byId("bankTargetType").value).type;
+
+      group.hidden = !(targetType === "STUDENTS" && learner);
+
+      if (!learner) {
+        checkbox.checked = false;
+        returnPolicyGroup.hidden = true;
+        returnAtGroup.hidden = true;
+        return;
+      }
+
+      byId("paidGuidedCurrentMode").textContent =
+        learner.practiceMode === "TRAINER_GUIDED"
+          ? `Currently Trainer-Guided${learner.assignedTrainerName ? " by " + learner.assignedTrainerName : ""}. Assigning this path can replace the guided path.`
+          : "Currently Self-Guided. Tick this box to make the new assignment the learner’s guided path.";
+
+      byId("returnPaidSelfGuidedButton").hidden =
+        learner.practiceMode !== "TRAINER_GUIDED";
+      returnPolicyGroup.hidden = !checkbox.checked;
+      returnAtGroup.hidden =
+        !checkbox.checked ||
+        byId("paidGuidedReturnPolicy").value !== "ON_DATE";
+    }
+
     function updateBankSelectedStudentCount() {
       const count = selectedBankStudentUuids().length;
       byId("bankSelectedStudentCount").textContent = count + (count === 1 ? " student selected" : " students selected");
       updateBankAssignmentEstimate();
+      updatePaidGuidedControls();
     }
 
     function renderBankStudentPicker(filter="") {
@@ -2073,6 +2136,13 @@
       if (targetType === "GROUP" && !studentUuidsForGroup(target.value).length) { setStatus(byId("bankAssignmentStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedBankStudentUuids().length) { setStatus(byId("bankAssignmentStatus"),"Choose at least one student.","error"); return; }
       if (followupMode === "FIXED_FOLLOW_UP" && !byId("bankAssignmentFixedFollowup").value.trim()) { setStatus(byId("bankAssignmentStatus"),"Enter the fixed follow-up question.","error"); return; }
+      const paidLearner = selectedPaidLearner();
+      const activateGuided =
+        Boolean(paidLearner && byId("activatePaidGuidedMode").checked);
+      if (activateGuided && byId("paidGuidedReturnPolicy").value === "ON_DATE" && !byId("paidGuidedReturnAt").value) {
+        setStatus(byId("bankAssignmentStatus"),"Choose the date and time when this paid learner returns to Self-Guided practice.","error");
+        return;
+      }
       const bankStudentCount = estimatedBankTargetCount();
       if (!confirmReleaseSchedule(questionUuids.length, bankStudentCount, intervalDays, "bankStartAt", "bankDueDays")) return;
       const button = byId("assignBankQuestionsButton"); button.disabled = true; button.textContent = "Assigning…"; setStatus(byId("bankAssignmentStatus"),"","");
@@ -2095,12 +2165,51 @@
           p_followup_response_seconds:Number(byId("bankAssignmentResponseSeconds").value || 20)
         });
         if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Bank questions could not be assigned.");
+        if (activateGuided) {
+          const controlResult = await callRpc(RPC.setPaidPracticeControl,{
+            p_session_token:currentSession.sessionToken,
+            p_student_uuid:paidLearner.studentUuid,
+            p_practice_mode:"TRAINER_GUIDED",
+            p_question_batch_uuid:result.questionBatchUuid,
+            p_return_policy:byId("paidGuidedReturnPolicy").value,
+            p_return_at:byId("paidGuidedReturnPolicy").value === "ON_DATE" ? toIsoOrNull(byId("paidGuidedReturnAt").value) : null
+          });
+          if (!controlResult || controlResult.ok !== true) {
+            throw new Error(controlResult && controlResult.message ? controlResult.message : "The questions were assigned, but Trainer-Guided mode could not be activated.");
+          }
+        }
         setStatus(byId("bankAssignmentStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)} Rubrics were fixed from the Question Bank.`,"success");
         selectedBankQuestions.clear();
         renderQuestionBankTable();
         await loadReport("Refreshing assignments…");
       } catch (error) { console.error(error); setStatus(byId("bankAssignmentStatus"),error.message,"error"); }
       finally { button.disabled = false; button.textContent = "Create and Assign Selected Questions"; }
+    }
+
+    async function returnSelectedPaidLearnerToSelfGuided() {
+      const learner = selectedPaidLearner();
+      if (!learner) return;
+      if (!window.confirm(`Return ${learner.fullName} to Self-Guided practice now?`)) return;
+      const button = byId("returnPaidSelfGuidedButton");
+      button.disabled = true;
+      try {
+        const result = await callRpc(RPC.setPaidPracticeControl,{
+          p_session_token:currentSession.sessionToken,
+          p_student_uuid:learner.studentUuid,
+          p_practice_mode:"SELF_GUIDED",
+          p_question_batch_uuid:null,
+          p_return_policy:"MANUAL",
+          p_return_at:null
+        });
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "The learner could not be returned to Self-Guided practice.");
+        setStatus(byId("bankAssignmentStatus"),result.message,"success");
+        await loadReport("Refreshing paid learner controls…");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("bankAssignmentStatus"),error.message,"error");
+      } finally {
+        button.disabled = false;
+      }
     }
 
     function renderReminderDashboard() {
@@ -2237,10 +2346,20 @@
     async function loadReport(message="Loading dashboard…") {
       showLoading(message);
       try {
-        const data = await callRpc(RPC.report,{ p_session_token:currentSession.sessionToken, p_batch:null, p_student_uuid:null, p_task_uuid:null });
+        const [data, paidControls] = await Promise.all([
+          callRpc(RPC.report,{ p_session_token:currentSession.sessionToken, p_batch:null, p_student_uuid:null, p_task_uuid:null }),
+          callRpc(RPC.paidPracticeControls,{ p_session_token:currentSession.sessionToken })
+        ]);
         if (!data || data.ok !== true) {
           throw new Error(data && data.message ? data.message : "Report data could not be loaded.");
         }
+        if (!paidControls || paidControls.ok !== true) {
+          throw new Error(paidControls && paidControls.message ? paidControls.message : "Paid learner controls could not be loaded.");
+        }
+        paidPracticeControlData = {
+          ...paidControls,
+          learners:Array.isArray(paidControls.learners) ? paidControls.learners : []
+        };
         reportData = {
           ...data,
           batches:liveAscentBatches(),
@@ -4324,6 +4443,7 @@ function formatCriterionFeedback(criterion) {
         byId("bankTargetGroupGroup").hidden=true;
         byId("bankTargetStudentsGroup").hidden=value!=="STUDENTS";
         updateBankAssignmentEstimate();
+        updatePaidGuidedControls();
       });
       byId("bankTargetBatch").addEventListener("change",updateBankAssignmentEstimate);
       byId("bankTargetCohort").addEventListener("change",updateBankAssignmentEstimate);
@@ -4331,6 +4451,9 @@ function formatCriterionFeedback(criterion) {
       byId("bankIntervalDays").addEventListener("input",updateBankAssignmentEstimate);
       byId("bankStartAt").addEventListener("change",updateBankAssignmentEstimate);
       byId("bankStudentSearch").addEventListener("input",event => renderBankStudentPicker(event.target.value));
+      byId("activatePaidGuidedMode").addEventListener("change",updatePaidGuidedControls);
+      byId("paidGuidedReturnPolicy").addEventListener("change",updatePaidGuidedControls);
+      byId("returnPaidSelfGuidedButton").addEventListener("click",returnSelectedPaidLearnerToSelfGuided);
       byId("bankAssignmentFollowupMode").addEventListener("change",updateBankAssignmentFollowupControls);
       byId("bankAssignmentForm").addEventListener("submit",assignSelectedBankQuestions);
       byId("questionsText").addEventListener("input",updateQuestionCount);
