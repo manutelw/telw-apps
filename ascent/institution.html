@@ -645,6 +645,7 @@
     </div>
     <div class="top-actions">
       <span id="sessionName" class="session-name"></span>
+      <a id="backToAdminButton" class="ghost-button" href="./admin-settings.html" hidden>Back to Admin</a>
       <button id="refreshButton" class="ghost-button" type="button" hidden>Refresh</button>
       <button id="logoutButton" class="ghost-button" type="button" hidden>Log out</button>
     </div>
@@ -798,6 +799,7 @@
     const SUPABASE_URL = "https://vtqatrhwfvzyodiftvkc.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
     const SESSION_STORAGE_KEY = "ascent_trainer_session";
+    const ADMIN_MASTER_SESSION_KEY = "ascent_admin_master_session";
     const PORTAL_SLUG = String(new URLSearchParams(window.location.search).get("slug") || "").trim().toLowerCase();
 
     const RPC = {
@@ -1266,7 +1268,6 @@
 
     async function loadPortal() {
       if (!PORTAL_SLUG) {
-        clearSession();
         setLoginStatus("The institutional portal address is incomplete.","error");
         return;
       }
@@ -1300,7 +1301,10 @@
         renderParticipants();
       } catch (error) {
         console.error(error);
-        clearSession();
+        byId("portalShell").hidden = true;
+        byId("refreshButton").hidden = true;
+        byId("logoutButton").hidden = true;
+        byId("loginOverlay").hidden = false;
         setLoginStatus(error.message || "This account cannot open the requested institutional portal.","error");
       } finally {
         setLoading(false);
@@ -1368,6 +1372,16 @@
     });
 
     currentSession = loadStoredSession();
+    const adminMasterSession =
+      localStorage.getItem(
+        ADMIN_MASTER_SESSION_KEY
+      );
+    byId("backToAdminButton").hidden =
+      !adminMasterSession &&
+      String(
+        currentSession &&
+        currentSession.role || ""
+      ).toUpperCase() !== "ADMIN";
     if (currentSession) {
       loadPortal();
     } else {
