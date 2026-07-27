@@ -1547,6 +1547,75 @@
       return match ? `${match[1]}-${match[2]}` : batchFolderName(student);
     }
 
+    function fiibCohortMismatch(student) {
+      const email = String(
+        studentField(
+          student,
+          ["emailId","email"]
+        ) || ""
+      ).trim().toLowerCase();
+
+      if (!email.endsWith("@fiib.edu.in")) {
+        return false;
+      }
+
+      const emailMatch =
+        email.match(
+          /^([0-9]{2})-[^@]+@fiib\.edu\.in$/
+        );
+
+      const rollMatch =
+        normaliseRollNumber(
+          studentField(
+            student,
+            ["rollNo","studentId","student_id"]
+          )
+        ).match(
+          /^([0-9]{2})(PGDMFM|PGDM)([0-9]{3})$/
+        );
+
+      if (!emailMatch || !rollMatch) {
+        return true;
+      }
+
+      const emailFinalYear =
+        Number(emailMatch[1]);
+
+      const rollStartYear =
+        Number(rollMatch[1]);
+
+      if (
+        emailFinalYear !==
+        rollStartYear + 2
+      ) {
+        return true;
+      }
+
+      const savedBatch =
+        String(
+          studentField(
+            student,
+            ["batch","batchName"]
+          ) || ""
+        );
+
+      const batchMatch =
+        savedBatch.match(
+          /(20\d{2})\s*[–-]\s*(\d{2})/
+        );
+
+      if (!batchMatch) {
+        return true;
+      }
+
+      return (
+        Number(batchMatch[1]) !==
+          2000 + rollStartYear ||
+        Number(batchMatch[2]) !==
+          emailFinalYear
+      );
+    }
+
     function renderStudentRoster() {
       const data = studentPerformanceData;
       const students = (cohortData.students.length ? cohortData.students : (data && Array.isArray(data.students) ? data.students : [])).slice();
@@ -1588,7 +1657,6 @@
         if (studentRosterSort === "score-asc") return scoreComparison(1) || rollComparison || nameComparison;
         return rollComparison || nameComparison;
       });
-      const invalidRollStudents = students.filter(student => !isValidRollNumber(rollNumberValue(student)));
       if (!students.length) {
         byId("studentRosterTableWrap").innerHTML = `<div class="empty-state">No student records are available yet.</div>`;
         return;
@@ -1597,13 +1665,23 @@
       const currentYear = new Date().getFullYear();
       [currentYear,currentYear - 1].forEach(year => folders.set(`${year}-${String(year + 2).slice(-2)}`,[]));
       const newestFolder = `${currentYear}-${String(currentYear + 2).slice(-2)}`;
+      const needsRollCorrection = student => {
+        const rollNo = rollNumberValue(student);
+        return (
+          !isValidRollNumber(rollNo) ||
+          !folders.has(batchFolderName(student)) ||
+          fiibCohortMismatch(student)
+        );
+      };
+      const rollCorrectionStudents = students.filter(needsRollCorrection);
       students.forEach(student => {
-        const folder = isValidRollNumber(rollNumberValue(student)) ? batchFolderName(student) : savedBatchFolderName(student);
-        if (folders.has(folder)) folders.get(folder).push(student);
-        else if (!isValidRollNumber(rollNumberValue(student))) folders.get(newestFolder).push(student);
+        const folder = needsRollCorrection(student)
+          ? (folders.has(savedBatchFolderName(student)) ? savedBatchFolderName(student) : newestFolder)
+          : batchFolderName(student);
+        folders.get(folder).push(student);
       });
-      const liveStudentCount = Array.from(folders.values()).reduce((total,folderStudents) => total + folderStudents.length,0);
-      byId("studentRosterCount").textContent = `${students.length} students · ${liveStudentCount} in live batches · ${invalidRollStudents.length} need roll-number correction`;
+      const liveStudentCount = students.length - rollCorrectionStudents.length;
+      byId("studentRosterCount").textContent = `${students.length} students · ${liveStudentCount} in live batches · ${rollCorrectionStudents.length} need roll-number correction`;
       byId("studentRosterSort").value = studentRosterSort;
       const groupStudents = groupUuid => cohortData.students.filter(student => (student.groups || []).some(group => group.groupUuid === groupUuid));
       const groupsForBatch = batch => cohortData.groups.filter(group => {
@@ -1622,15 +1700,15 @@
       const batchFoldersHtml = Array.from(folders.entries())
         .sort((left,right) => right[0].localeCompare(left[0]))
         .map(([folder,folderStudents],index) => {
-          const batchStudents = folderStudents.filter(student => isValidRollNumber(rollNumberValue(student)));
-          const correctionStudents = folderStudents.filter(student => !isValidRollNumber(rollNumberValue(student)));
+          const batchStudents = folderStudents.filter(student => !needsRollCorrection(student));
+          const correctionStudents = folderStudents.filter(needsRollCorrection);
           const groups = groupsForBatch(folder);
           const subgroupFolders = groups.length ? groups.map(group => {
             const members = groupStudents(group.groupUuid);
             return `<details class="subgroup-folder"><summary><span>${escapeHtml(group.groupName || "Unnamed group")}</span><span class="batch-folder-count">${members.length} student${members.length === 1 ? "" : "s"}</span></summary><div class="subgroup-members"><ul>${members.map(student => `<li>${escapeHtml(studentField(student,["name","fullName"]) || "Student")} — ${escapeHtml(rollNumberValue(student) || "Roll number needed")}</li>`).join("")}</ul><button class="small-button delete-student-group-button" type="button" data-group="${escapeHtml(group.groupUuid)}" data-name="${escapeHtml(group.groupName || "this group")}">Delete subgroup</button></div></details>`;
           }).join("") : `<div class="form-note">No named subgroups in this batch yet.</div>`;
           const folderOpen = creatingStudentGroupName && creatingStudentGroupBatch === folder;
-          const correctionList = correctionStudents.length ? `<div class="roll-correction-section"><div class="roll-correction-head"><span>Roll number needs correction</span><span>${correctionStudents.length} student${correctionStudents.length === 1 ? "" : "s"}</span></div><div class="roll-correction-body"><p class="roll-correction-note">Please fill in the roll number for ${correctionStudents.length === 1 ? "this student" : "these " + correctionStudents.length + " students"}. ASCENT found an email address or another invalid value in the roll-number field. Once saved, the student will move into the main list above.</p>${tableForStudents(correctionStudents,folder,true)}</div></div>` : "";
+          const correctionList = correctionStudents.length ? `<div class="roll-correction-section"><div class="roll-correction-head"><span>Student details need correction</span><span>${correctionStudents.length} student${correctionStudents.length === 1 ? "" : "s"}</span></div><div class="roll-correction-body"><p class="roll-correction-note">Please correct the roll number or batch for ${correctionStudents.length === 1 ? "this student" : "these " + correctionStudents.length + " students"}. ASCENT found a missing or invalid roll number, a non-live cohort, or a mismatch between the FIIB email, roll number and batch. Once saved correctly, the student will move into the main list above.</p>${tableForStudents(correctionStudents,folder,true)}</div></div>` : "";
           return `<details class="batch-folder" ${folderOpen ? "open" : ""}><summary><span>${escapeHtml(folder)}</span><span class="batch-folder-count">${folderStudents.length} student${folderStudents.length === 1 ? "" : "s"}</span></summary><div class="batch-folder-body">${creatingStudentGroupName ? "" : `<div class="batch-folder-actions"><button class="secondary-button create-batch-group-button" type="button" data-batch="${escapeHtml(folder)}">Create subgroup</button></div>`}${batchStudents.length ? tableForStudents(batchStudents,folder) : `<div class="empty-state">No students with a completed roll number in this batch yet.</div>`}${correctionList}<div style="margin-top:14px"><strong style="color:var(--navy);font-size:13px">Named subgroups</strong>${subgroupFolders}</div></div></details>`;
         })
         .join("");
@@ -1661,6 +1739,30 @@
       }
       if (!isValidRollNumber(rollNo)) {
         setStatus(byId("studentsStatus"),"Enter proper roll number","error");
+        return;
+      }
+      if (!liveAscentBatches().includes(rollNumberCohort(rollNo).batch)) {
+        setStatus(byId("studentsStatus"),"Enter a roll number belonging to a current live batch.","error");
+        return;
+      }
+      const existingStudent =
+        cohortData.students.find(
+          student =>
+            studentUuidOf(student) ===
+            studentUuid
+        );
+      const correctedStudent = {
+        ...(existingStudent || {}),
+        rollNo:rollNo,
+        studentId:rollNo,
+        student_id:rollNo,
+        fullName:fullName,
+        name:fullName,
+        batch:batch,
+        batchName:batch
+      };
+      if (fiibCohortMismatch(correctedStudent)) {
+        setStatus(byId("studentsStatus"),"The FIIB email, roll number and batch do not identify the same cohort.","error");
         return;
       }
       button.disabled = true; button.textContent = "Saving…";

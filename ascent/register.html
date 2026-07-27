@@ -66,7 +66,8 @@
     }
 
     button,
-    input {
+    input,
+    select {
       font-family: inherit;
     }
 
@@ -228,7 +229,8 @@
       font-weight: 700;
     }
 
-    input {
+    input,
+    select {
       width: 100%;
       min-height: 48px;
       padding: 0 14px;
@@ -243,7 +245,8 @@
         box-shadow 0.2s ease;
     }
 
-    input:focus {
+    input:focus,
+    select:focus {
       border-color: #4d83b5;
       box-shadow: 0 0 0 4px rgba(77, 131, 181, 0.13);
       background: var(--white);
@@ -608,7 +611,10 @@
   </div>
 </div>
 
-          <div class="form-group">
+          <div
+            id="standardBatchGroup"
+            class="form-group"
+          >
             <label for="batch">
               Batch
             </label>
@@ -622,6 +628,29 @@
 
             <div class="field-note">
               Enter the batch name given by your institute or trainer.
+            </div>
+          </div>
+
+          <div
+            id="fiibBatchGroup"
+            class="form-group"
+            hidden
+          >
+            <label for="fiibBatch">
+              FIIB batch
+            </label>
+
+            <select
+              id="fiibBatch"
+              name="fiibBatch"
+            >
+              <option value="">
+                Choose your FIIB batch
+              </option>
+            </select>
+
+            <div class="field-note">
+              Choose your official batch. ASCENT will verify it against your FIIB email and roll number.
             </div>
           </div>
 
@@ -1081,6 +1110,21 @@ function openVerificationStage(
         "batch"
       );
 
+    const standardBatchGroup =
+      document.getElementById(
+        "standardBatchGroup"
+      );
+
+    const fiibBatchGroup =
+      document.getElementById(
+        "fiibBatchGroup"
+      );
+
+    const fiibBatchInput =
+      document.getElementById(
+        "fiibBatch"
+      );
+
     const passwordInput =
       document.getElementById(
         "password"
@@ -1115,6 +1159,104 @@ function openVerificationStage(
       statusMessage.textContent =
         message;
     }
+
+    function isFiibEmail(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .endsWith("@fiib.edu.in");
+    }
+
+    function fiibRegistrationBatches() {
+      const calendarYear =
+        new Date().getFullYear();
+
+      const currentStart =
+        String(calendarYear);
+
+      const currentEnd =
+        String(calendarYear + 2)
+          .slice(-2);
+
+      const batches = [
+        {
+          value:
+            currentStart +
+            "-" +
+            currentEnd,
+          label:
+            currentStart +
+            "–" +
+            currentEnd
+        }
+      ];
+
+      /*
+        The 2025-27 cohort is the final one-time
+        exception because it had not enrolled when
+        ASCENT registration opened in 2026.
+      */
+      if (calendarYear === 2026) {
+        batches.push({
+          value:"2025-27",
+          label:"2025–27"
+        });
+      }
+
+      return batches;
+    }
+
+    function initialiseFiibBatchOptions() {
+      fiibBatchInput.innerHTML =
+        '<option value="">Choose your FIIB batch</option>' +
+        fiibRegistrationBatches()
+          .map(function (batch) {
+            return (
+              '<option value="' +
+              batch.value +
+              '">' +
+              batch.label +
+              '</option>'
+            );
+          })
+          .join("");
+    }
+
+    function updateBatchEntryMode() {
+      const fiib =
+        isFiibEmail(emailInput.value);
+
+      standardBatchGroup.hidden =
+        fiib;
+
+      fiibBatchGroup.hidden =
+        !fiib;
+
+      if (fiib) {
+        batchInput.value = "";
+      } else {
+        fiibBatchInput.value = "";
+      }
+    }
+
+    initialiseFiibBatchOptions();
+
+    emailInput.addEventListener(
+      "input",
+      updateBatchEntryMode
+    );
+
+    studentIdInput.addEventListener(
+      "input",
+      function () {
+        studentIdInput.value =
+          studentIdInput.value
+            .toUpperCase()
+            .replace(/\s+/g, "");
+      }
+    );
+
+    updateBatchEntryMode();
 
 
     document
@@ -1156,7 +1298,10 @@ function openVerificationStage(
     event.preventDefault();
 
     const studentId =
-      studentIdInput.value.trim();
+      studentIdInput.value
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, "");
 
     const fullName =
       fullNameInput.value.trim();
@@ -1179,8 +1324,13 @@ function openVerificationStage(
     const institutionName =
       institutionNameInput.value.trim();
 
+    const fiibRegistration =
+      isFiibEmail(email);
+
     const batch =
-      batchInput.value.trim();
+      fiibRegistration
+        ? fiibBatchInput.value
+        : batchInput.value.trim();
 
     const password =
       passwordInput.value;
@@ -1223,6 +1373,102 @@ function openVerificationStage(
 
       emailInput.focus();
       return;
+    }
+
+    if (fiibRegistration) {
+      const emailMatch =
+        email.match(
+          /^([0-9]{2})-[^@]+@fiib\.edu\.in$/
+        );
+
+      if (!emailMatch) {
+        showStatus(
+          "Use your official FIIB email address beginning with your programme completion year, such as 28-name@fiib.edu.in.",
+          "error"
+        );
+
+        emailInput.focus();
+        return;
+      }
+
+      const rollMatch =
+        studentId.match(
+          /^([0-9]{2})(PGDMFM|PGDM)([0-9]{3})$/
+        );
+
+      if (!rollMatch) {
+        showStatus(
+          "Enter your FIIB roll number in the correct format, such as 26PGDM001 or 26PGDMFM001.",
+          "error"
+        );
+
+        studentIdInput.focus();
+        return;
+      }
+
+      const emailFinalYear =
+        Number(emailMatch[1]);
+
+      const expectedRollYear =
+        emailFinalYear - 2;
+
+      const enteredRollYear =
+        Number(rollMatch[1]);
+
+      if (
+        enteredRollYear !==
+        expectedRollYear
+      ) {
+        showStatus(
+          "This FIIB email belongs to the 20" +
+          String(expectedRollYear)
+            .padStart(2, "0") +
+          "–" +
+          String(emailFinalYear)
+            .padStart(2, "0") +
+          " batch. Your roll number must begin with " +
+          String(expectedRollYear)
+            .padStart(2, "0") +
+          "PGDM or " +
+          String(expectedRollYear)
+            .padStart(2, "0") +
+          "PGDMFM.",
+          "error"
+        );
+
+        studentIdInput.focus();
+        return;
+      }
+
+      if (!batch) {
+        showStatus(
+          "Choose your FIIB batch.",
+          "error"
+        );
+
+        fiibBatchInput.focus();
+        return;
+      }
+
+      const expectedBatch =
+        "20" +
+        String(expectedRollYear)
+          .padStart(2, "0") +
+        "-" +
+        String(emailFinalYear)
+          .padStart(2, "0");
+
+      if (batch !== expectedBatch) {
+        showStatus(
+          "Your verified email and roll number belong to the " +
+          expectedBatch.replace("-", "–") +
+          " batch. Choose that batch to continue.",
+          "error"
+        );
+
+        fiibBatchInput.focus();
+        return;
+      }
     }
 
     if (!/^[6-9][0-9]{9}$/.test(mobileNumber)) {
