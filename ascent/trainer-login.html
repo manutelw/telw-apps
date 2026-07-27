@@ -492,9 +492,9 @@
         <p>Trainer &amp; Admin</p>
       </div>
 
-      <h2>Trainer Login</h2>
+      <h2 id="loginHeading">Trainer Login</h2>
 
-      <p class="login-intro">
+      <p id="loginIntro" class="login-intro">
         Enter your registered trainer email address and password.
       </p>
 
@@ -587,6 +587,14 @@
     const SESSION_STORAGE_KEY =
       "ascent_trainer_session";
 
+    const ADMIN_MASTER_SESSION_KEY =
+      "ascent_admin_master_session";
+
+    const ADMIN_ENTRY_REQUESTED =
+      new URLSearchParams(
+        window.location.search
+      ).get("admin") === "1";
+
     const loginForm =
       document.getElementById("loginForm");
 
@@ -604,6 +612,21 @@
 
     const showPasswordButton =
       document.getElementById("showPasswordButton");
+
+    if (ADMIN_ENTRY_REQUESTED) {
+      document.getElementById(
+        "loginHeading"
+      ).textContent =
+        "Administrator Login";
+
+      document.getElementById(
+        "loginIntro"
+      ).textContent =
+        "Enter your administrator email address and password.";
+
+      loginButton.textContent =
+        "Open Administrator Page";
+    }
 
 
     showPasswordButton.addEventListener(
@@ -733,6 +756,22 @@
           const trainer =
             loginResult[0];
 
+          if (
+            ADMIN_ENTRY_REQUESTED &&
+            String(
+              trainer.role || ""
+            ).toUpperCase() !== "ADMIN"
+          ) {
+            showStatus(
+              "This account does not have administrator access.",
+              "error"
+            );
+
+            passwordInput.value = "";
+            passwordInput.focus();
+            return;
+          }
+
           const sessionData = {
             sessionToken:
               trainer.session_token,
@@ -758,6 +797,13 @@
             JSON.stringify(sessionData)
           );
 
+          if (ADMIN_ENTRY_REQUESTED) {
+            localStorage.setItem(
+              ADMIN_MASTER_SESSION_KEY,
+              JSON.stringify(sessionData)
+            );
+          }
+
           showStatus(
             "Login successful. Welcome, " +
             trainer.full_name +
@@ -771,7 +817,9 @@
           setTimeout(
             function () {
               window.location.href =
-                "./trainer.html";
+                ADMIN_ENTRY_REQUESTED
+                  ? "./admin-settings.html"
+                  : "./trainer.html";
             },
             600
           );
