@@ -1158,6 +1158,9 @@ const VERIFY_PRIVATE_PASS_PAYMENT_URL =
 const ENTRY_PARAMETERS =
   new URLSearchParams(window.location.search);
 
+const PURCHASE_ENTRY_REQUESTED =
+  ENTRY_PARAMETERS.get("purchase") === "1";
+
 const IS_MANUVIKRAMAN_COMMERCIAL =
   window.location.hostname === "manuvikraman.com" ||
   window.location.hostname === "www.manuvikraman.com";
@@ -2293,6 +2296,31 @@ function initialiseDirectInstitutionEntry() {
 
   const continueTo =
     String(ENTRY_PARAMETERS.get("continue") || "").trim().toLowerCase();
+
+  if (
+    IS_MANUVIKRAMAN_COMMERCIAL &&
+    PURCHASE_ENTRY_REQUESTED
+  ) {
+    const showPurchaseForm = function () {
+      privatePassCard.scrollIntoView({
+        behavior:"auto",
+        block:"start"
+      });
+    };
+
+    window.requestAnimationFrame(
+      showPurchaseForm
+    );
+    window.setTimeout(
+      showPurchaseForm,
+      250
+    );
+    window.setTimeout(
+      showPurchaseForm,
+      800
+    );
+    return;
+  }
 
   if (IS_MANUVIKRAMAN_COMMERCIAL) {
     accessSearchInput.value = "TELW-PRIVATE";
