@@ -1120,7 +1120,7 @@ body {
   </div>
 </section>
 
-      <div class="footer" style="background:#143a60;color:#fff;padding:18px 16px;font-size:14px;line-height:1.6;text-align:center"><strong style="display:block;font-size:15px">A Manu Vikraman Career-Readiness Product</strong><span>manuvikraman.com | clarionprep.com</span></div>
+      <div class="footer" style="background:#143a60;color:#fff;padding:18px 16px;font-size:14px;line-height:1.6;text-align:center"><strong id="adminEntryTouchpoint" style="display:block;font-size:15px">A Manu Vikraman Career-Readiness Product</strong><span>manuvikraman.com | clarionprep.com</span></div>
 
     </section>
    </main>
@@ -1255,7 +1255,7 @@ if (!IS_MANUVIKRAMAN_COMMERCIAL) {
     });
 
   document.querySelector(".footer").innerHTML =
-    "<strong style=\"display:block;font-size:15px\">A Manu Vikraman Career-Readiness Product</strong><span>manuvikraman.com | clarionprep.com</span>";
+    "<strong id=\"adminEntryTouchpoint\" style=\"display:block;font-size:15px\">A Manu Vikraman Career-Readiness Product</strong><span>manuvikraman.com | clarionprep.com</span>";
 }
 
     function showPrivatePaymentStatus(message, type) {
@@ -2332,6 +2332,43 @@ function initialiseDirectInstitutionEntry() {
 }
 
 initialiseDirectInstitutionEntry();
+
+function initialiseAdminEntryTouchpoint() {
+  const touchpoint =
+    document.getElementById(
+      "adminEntryTouchpoint"
+    );
+
+  if (!touchpoint) return;
+
+  let clickCount = 0;
+  let resetTimer = null;
+
+  touchpoint.addEventListener(
+    "click",
+    function () {
+      clickCount += 1;
+      window.clearTimeout(resetTimer);
+
+      if (clickCount >= 5) {
+        clickCount = 0;
+        window.location.href =
+          "./trainer-login.html?admin=1";
+        return;
+      }
+
+      resetTimer =
+        window.setTimeout(
+          function () {
+            clickCount = 0;
+          },
+          5000
+        );
+    }
+  );
+}
+
+initialiseAdminEntryTouchpoint();
 </script>
 </body>
 </html>
