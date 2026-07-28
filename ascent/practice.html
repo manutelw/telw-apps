@@ -412,6 +412,80 @@
       line-height: 1.5;
     }
 
+    .gd-preparation-panel {
+      margin-bottom: 22px;
+      border: 1px solid #d5e3ef;
+      border-radius: 16px;
+      background: #f7fbff;
+      overflow: hidden;
+    }
+
+    .gd-preparation-panel[hidden] {
+      display: none;
+    }
+
+    .gd-video-details summary {
+      padding: 16px 18px;
+      color: var(--navy);
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .gd-video-content {
+      padding: 0 18px 18px;
+    }
+
+    .gd-video-note {
+      margin-bottom: 14px;
+      color: #405a73;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .gd-video-frame {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      border-radius: 12px;
+      background: var(--navy);
+      overflow: hidden;
+    }
+
+    .gd-video-frame iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .gd-video-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .gd-video-watched-button {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 15px;
+      background: var(--navy);
+      color: var(--white);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .gd-video-status {
+      color: var(--success);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
     .recorder-box {
       padding: 26px;
       border: 1px solid var(--border);
@@ -1115,6 +1189,16 @@
         </a>
 
         <a
+          id="answerBuilderLink"
+          class="performance-button"
+          href="./answer-builder.html"
+          aria-label="Open ASCENT Answer Builder"
+          hidden
+        >
+          Answer Builder
+        </a>
+
+        <a
           class="performance-button"
           href="./change-password.html"
           aria-label="Change ASCENT password"
@@ -1384,6 +1468,55 @@
         </section>
 
         <section
+          id="gdPreparationPanel"
+          class="gd-preparation-panel"
+          hidden
+        >
+          <details
+            id="gdVideoDetails"
+            class="gd-video-details"
+          >
+            <summary>
+              GD preparation video: Five moves and fourteen skills
+            </summary>
+
+            <div class="gd-video-content">
+              <p class="gd-video-note">
+                Watch this once before beginning GD practice. Learn how to
+                enter, respond, develop, guide and close while remaining
+                composed.
+              </p>
+
+              <div class="gd-video-frame">
+                <iframe
+                  src="https://www.youtube-nocookie.com/embed/SWISzLRPbfQ?rel=0"
+                  title="How to speak in a group discussion"
+                  loading="lazy"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen
+                ></iframe>
+              </div>
+
+              <div class="gd-video-actions">
+                <button
+                  id="gdVideoWatchedButton"
+                  class="gd-video-watched-button"
+                  type="button"
+                >
+                  I have watched this video
+                </button>
+
+                <span
+                  id="gdVideoStatus"
+                  class="gd-video-status"
+                ></span>
+              </div>
+            </div>
+          </details>
+        </section>
+
+        <section
           id="pressurePanel"
           class="pressure-panel"
           aria-live="assertive"
@@ -1636,6 +1769,9 @@
     const SESSION_STORAGE_KEY =
       "ascent_student_session";
 
+    const ANSWER_BUILDER_HANDOFF_KEY =
+      "ascent_answer_builder_handoff";
+
     const SUPABASE_URL =
       "https://vtqatrhwfvzyodiftvkc.supabase.co";
 
@@ -1675,6 +1811,11 @@
 
     const logoutButton =
       document.getElementById("logoutButton");
+
+    const answerBuilderLink =
+      document.getElementById(
+        "answerBuilderLink"
+      );
 
     const startButton =
       document.getElementById("startButton");
@@ -1857,9 +1998,31 @@ const otherIssuesList =
         "selectedQuestionText"
       );
 
+    const gdPreparationPanel =
+      document.getElementById(
+        "gdPreparationPanel"
+      );
+
+    const gdVideoDetails =
+      document.getElementById(
+        "gdVideoDetails"
+      );
+
+    const gdVideoWatchedButton =
+      document.getElementById(
+        "gdVideoWatchedButton"
+      );
+
+    const gdVideoStatus =
+      document.getElementById(
+        "gdVideoStatus"
+      );
+
     const newResponseButton =
       document.getElementById("newResponseButton");
 
+    const GD_VIDEO_WATCHED_KEY =
+      "ascent_gd_preparation_watched_v1";
 
     let mediaStream = null;
     let audioContext = null;
@@ -2563,9 +2726,51 @@ const otherIssuesList =
     }
 
 
+    function updateGdPreparationPanel(
+      selected
+    ) {
+      const isGdQuestion =
+        selected &&
+        selected.valid === true &&
+        String(
+          selected.rubricType || ""
+        ).toUpperCase() === "GD";
+
+      gdPreparationPanel.hidden =
+        !isGdQuestion;
+
+      if (!isGdQuestion) {
+        gdVideoDetails.open = false;
+        return;
+      }
+
+      const hasWatched =
+        localStorage.getItem(
+          GD_VIDEO_WATCHED_KEY
+        ) === "yes";
+
+      gdVideoDetails.open =
+        !hasWatched;
+
+      gdVideoStatus.textContent =
+        hasWatched
+          ? "Watched. Open this panel whenever you want to review it."
+          : "";
+
+      gdVideoWatchedButton.textContent =
+        hasWatched
+          ? "Mark as watched again"
+          : "I have watched this video";
+    }
+
+
     function updateSelectedQuestion() {
       const selected =
         getSelectedPractice();
+
+      updateGdPreparationPanel(
+        selected
+      );
 
       if (!selected.valid) {
         selectedQuestionBox.hidden = true;
@@ -2991,6 +3196,80 @@ const otherIssuesList =
       }
     }
 
+    function applyAnswerBuilderHandoff() {
+      if (
+        !practiceContext ||
+        practiceContext.is_private_learner !== true
+      ) {
+        return;
+      }
+
+      const raw =
+        sessionStorage.getItem(
+          ANSWER_BUILDER_HANDOFF_KEY
+        );
+
+      if (!raw) return;
+
+      try {
+        const handoff = JSON.parse(raw);
+        const question =
+          String(
+            handoff.question || ""
+          ).trim();
+
+        if (!question) return;
+
+        const customOption = Array.from(
+          practiceModeSelect.options
+        ).some(
+          option =>
+            option.value === "custom"
+        );
+
+        if (!customOption) return;
+
+        practiceModeSelect.value =
+          "custom";
+
+        customQuestionInput.value =
+          question.slice(0,1200);
+
+        const rubricType =
+          String(
+            handoff.rubricType || ""
+          ).toUpperCase();
+
+        if (
+          [
+            "MANAGERIAL_COMMUNICATION",
+            "PI",
+            "GD"
+          ].includes(rubricType)
+        ) {
+          customRubricSelect.value =
+            rubricType;
+        }
+
+        updatePracticeMode();
+
+        practiceContextNote.textContent =
+          "Your Answer Builder question is ready. Record the response in your own words.";
+
+        practiceContextNote.hidden =
+          false;
+
+        sessionStorage.removeItem(
+          ANSWER_BUILDER_HANDOFF_KEY
+        );
+      } catch (error) {
+        console.error(
+          "ASCENT Answer Builder handoff error:",
+          error
+        );
+      }
+    }
+
 
     async function loadSingleAttemptHistory() {
       const response =
@@ -3340,6 +3619,10 @@ const otherIssuesList =
               );
 
         renderPracticeContext();
+        answerBuilderLink.hidden =
+          result.is_private_learner !== true;
+
+        applyAnswerBuilderHandoff();
 
         if (
           practiceContext &&
@@ -5415,6 +5698,21 @@ otherIssuesSection.hidden =
     customRubricSelect.addEventListener(
       "change",
       updateSelectedQuestion
+    );
+
+    gdVideoWatchedButton.addEventListener(
+      "click",
+      function () {
+        localStorage.setItem(
+          GD_VIDEO_WATCHED_KEY,
+          "yes"
+        );
+
+        gdVideoStatus.textContent =
+          "Watched. Open this panel whenever you want to review it.";
+
+        gdVideoDetails.open = false;
+      }
     );
 
 
