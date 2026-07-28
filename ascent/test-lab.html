@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- GD VIDEO BUILD: SWISzLRPbfQ · 2026-07-28 -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -123,6 +124,32 @@
       letter-spacing:.35px;
     }
     .question-text { font-size:18px; line-height:1.5; }
+    .gd-video-panel {
+      border-color:#d5e3ef;
+      background:#f7fbff;
+    }
+    .gd-video-panel details summary {
+      color:var(--navy);
+      font-size:16px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .gd-video-panel .note { margin:12px 0; }
+    .gd-video-frame {
+      position:relative;
+      width:100%;
+      padding-top:56.25%;
+      border-radius:12px;
+      background:var(--navy);
+      overflow:hidden;
+    }
+    .gd-video-frame iframe {
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      border:0;
+    }
     .status { min-height:20px; margin-top:12px; font-size:14px; }
     .status.success { color:var(--green); }
     .status.error { color:var(--red); }
@@ -211,6 +238,34 @@
           <div id="guidedControls" class="card full">
             <h3 id="guidedHeading">Institution-Guided path</h3>
             <p id="guidedNote" class="note"></p>
+          </div>
+
+          <div
+            id="gdVideoPanel"
+            class="card full gd-video-panel"
+            hidden
+          >
+            <details open>
+              <summary>
+                GD preparation video: Five moves and fourteen skills
+              </summary>
+
+              <p class="note">
+                This is how the preparation video appears when a learner
+                selects a GD question.
+              </p>
+
+              <div class="gd-video-frame">
+                <iframe
+                  src="https://www.youtube-nocookie.com/embed/SWISzLRPbfQ?rel=0"
+                  title="How to speak in a group discussion"
+                  loading="lazy"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen
+                ></iframe>
+              </div>
+            </details>
           </div>
 
           <div class="card full">
@@ -343,8 +398,11 @@
       const question = selectedQuestion();
       const box = byId("questionBox");
       const button = byId("completeButton");
+      const gdVideoPanel =
+        byId("gdVideoPanel");
 
       if (!question) {
+        gdVideoPanel.hidden = true;
         box.innerHTML =
           '<div class="question-meta">Path complete</div>' +
           '<div class="question-text">All simulated questions in this path have been completed.</div>';
@@ -355,6 +413,8 @@
       box.innerHTML =
         `<div class="question-meta">${question.bank} · Difficulty ${question.difficulty} · ${question.category}</div>` +
         `<div class="question-text">${question.text}</div>`;
+      gdVideoPanel.hidden =
+        question.bank !== "GD";
       button.disabled = false;
     }
 
