@@ -370,6 +370,190 @@
     .admin-status.error { color:#b42318; }
     .admin-status.success { color:#18794e; }
 
+    .admin-workspace-picker {
+      margin-bottom:14px;
+    }
+
+    .admin-workspace-picker label {
+      display:block;
+      margin-bottom:7px;
+      color:var(--navy);
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .admin-workspace-picker select {
+      width:100%;
+      min-height:44px;
+      padding:0 12px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#fff;
+      color:var(--navy);
+      font:inherit;
+    }
+
+    .statement-panel {
+      margin-top:18px;
+    }
+
+    .statement-toolbar {
+      display:grid;
+      grid-template-columns:
+        minmax(210px,1.5fr)
+        minmax(130px,.6fr)
+        minmax(130px,.6fr)
+        auto;
+      gap:10px;
+      align-items:end;
+    }
+
+    .statement-field label {
+      display:block;
+      margin-bottom:6px;
+      color:var(--muted);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.7px;
+      text-transform:uppercase;
+    }
+
+    .statement-field input,
+    .statement-field select {
+      width:100%;
+      min-height:43px;
+      padding:0 12px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#fff;
+      color:var(--navy);
+      font:inherit;
+      font-size:13px;
+    }
+
+    .download-button {
+      min-height:43px;
+      padding:0 16px;
+      border:0;
+      border-radius:10px;
+      background:var(--navy);
+      color:#fff;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .download-button:disabled {
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .statement-summary {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(130px,1fr));
+      gap:10px;
+      margin:16px 0;
+    }
+
+    .summary-card {
+      padding:13px 14px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fbfdff;
+    }
+
+    .summary-card span {
+      display:block;
+      color:var(--muted);
+      font-size:10px;
+      font-weight:800;
+      letter-spacing:.6px;
+      text-transform:uppercase;
+    }
+
+    .summary-card strong {
+      display:block;
+      margin-top:5px;
+      color:var(--navy);
+      font-size:20px;
+    }
+
+    .statement-table-wrap {
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:13px;
+    }
+
+    .statement-table {
+      width:100%;
+      min-width:1160px;
+      border-collapse:collapse;
+      background:#fff;
+      font-size:12px;
+    }
+
+    .statement-table th,
+    .statement-table td {
+      padding:12px 11px;
+      border-bottom:1px solid var(--border);
+      text-align:left;
+      vertical-align:top;
+    }
+
+    .statement-table th {
+      position:sticky;
+      top:0;
+      background:var(--blue-soft);
+      color:var(--navy);
+      font-size:10px;
+      letter-spacing:.55px;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .statement-table tr:last-child td {
+      border-bottom:0;
+    }
+
+    .statement-table .amount-cell {
+      font-weight:800;
+      white-space:nowrap;
+    }
+
+    .receipt-id {
+      color:var(--navy);
+      font-family:Consolas,Monaco,monospace;
+      font-size:11px;
+      overflow-wrap:anywhere;
+    }
+
+    .payment-status-badge {
+      display:inline-block;
+      padding:5px 8px;
+      border-radius:999px;
+      background:var(--gold-soft);
+      color:#704700;
+      font-size:10px;
+      font-weight:800;
+      text-transform:uppercase;
+    }
+
+    .payment-status-badge.paid {
+      background:#e8f7ef;
+      color:var(--green);
+    }
+
+    .payment-status-badge.failed,
+    .payment-status-badge.refunded {
+      background:#fff0ee;
+      color:#b42318;
+    }
+
+    .empty-payment-row {
+      padding:26px !important;
+      color:var(--muted);
+      text-align:center !important;
+    }
+
     .footer {
       padding:20px 0 4px;
       color:rgba(255,255,255,.72);
@@ -406,6 +590,11 @@
       }
 
       .payment-grid {
+        grid-template-columns:1fr;
+      }
+
+      .statement-toolbar,
+      .statement-summary {
         grid-template-columns:1fr;
       }
 
@@ -547,7 +736,7 @@
         <div class="payment-actions">
           <a
             class="action-link primary"
-            href="https://www.manuvikraman.com/ascent/"
+            href="https://www.manuvikraman.com/ascent/?purchase=1#privatePassPurchase"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -580,16 +769,28 @@
           </p>
         </div>
 
+        <div class="admin-workspace-picker">
+          <label for="adminInstitutionSelect">
+            Institution or learning group
+          </label>
+          <select id="adminInstitutionSelect">
+            <option value="">
+              Loading available institutions…
+            </option>
+          </select>
+        </div>
+
         <div class="plain-links">
           <a class="plain-link" href="../">Main homepage</a>
           <a class="plain-link" href="./">ASCENT login</a>
-          <a class="plain-link" href="./trainer.html">Administrator’s trainer portal</a>
-          <a class="plain-link" href="./trainer.html?section=students">Students review</a>
+          <a id="adminTrainerPortalLink" class="plain-link" href="./trainer.html">Administrator’s trainer portal</a>
+          <a id="adminStudentsReviewLink" class="plain-link" href="./trainer.html?section=students">Students review</a>
           <a class="plain-link" href="./institution.html?slug=fiib">FIIB institution portal</a>
           <a class="plain-link" href="../fiib/">FIIB entrance</a>
           <a class="plain-link" href="./register.html">Student registration</a>
           <a class="plain-link" href="./forgot-password.html">Password reset</a>
         </div>
+        <div id="adminWorkspaceStatus" class="admin-status" role="status" aria-live="polite"></div>
       </section>
 
       <section class="panel">
@@ -603,6 +804,111 @@
         <div id="trainerEntryStatus" class="admin-status" role="status" aria-live="polite"></div>
       </section>
     </div>
+
+    <section class="panel statement-panel">
+      <div class="panel-heading">
+        <h2>ASCENT Payment Statement</h2>
+        <p>
+          Verified ASCENT payment records. Search the statement, separate
+          test and live transactions, or download the displayed records.
+        </p>
+      </div>
+
+      <div class="statement-toolbar">
+        <div class="statement-field">
+          <label for="paymentSearch">Search</label>
+          <input
+            id="paymentSearch"
+            type="search"
+            placeholder="Name, email, receipt or Razorpay ID"
+          >
+        </div>
+
+        <div class="statement-field">
+          <label for="paymentModeFilter">Mode</label>
+          <select id="paymentModeFilter">
+            <option value="">All modes</option>
+            <option value="TEST">Test</option>
+            <option value="LIVE">Live</option>
+          </select>
+        </div>
+
+        <div class="statement-field">
+          <label for="paymentStatusFilter">Status</label>
+          <select id="paymentStatusFilter">
+            <option value="">All statuses</option>
+            <option value="PAID">Paid</option>
+            <option value="CREATED">Created</option>
+            <option value="FAILED">Failed</option>
+            <option value="REFUNDED">Refunded</option>
+          </select>
+        </div>
+
+        <button
+          id="downloadPaymentStatement"
+          class="download-button"
+          type="button"
+          disabled
+        >
+          Download CSV
+        </button>
+      </div>
+
+      <div class="statement-summary">
+        <div class="summary-card">
+          <span>Displayed records</span>
+          <strong id="paymentRecordCount">0</strong>
+        </div>
+
+        <div class="summary-card">
+          <span>Paid receipts</span>
+          <strong id="paidReceiptCount">0</strong>
+        </div>
+
+        <div class="summary-card">
+          <span>Paid value</span>
+          <strong id="paidPaymentValue">₹0</strong>
+        </div>
+
+        <div class="summary-card">
+          <span>Refunded value</span>
+          <strong id="refundedPaymentValue">₹0</strong>
+        </div>
+      </div>
+
+      <div class="statement-table-wrap">
+        <table class="statement-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Mode</th>
+              <th>Learner</th>
+              <th>Plan</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>ASCENT receipt</th>
+              <th>Razorpay payment ID</th>
+              <th>Razorpay order ID</th>
+            </tr>
+          </thead>
+
+          <tbody id="paymentStatementBody">
+            <tr>
+              <td class="empty-payment-row" colspan="9">
+                Loading payment records…
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div
+        id="paymentStatementStatus"
+        class="admin-status"
+        role="status"
+        aria-live="polite"
+      ></div>
+    </section>
 
     <div class="footer" style="background:#143a60;color:#fff;padding:18px 16px;font-size:14px;line-height:1.6;text-align:center"><strong style="display:block;font-size:15px">A Manu Vikraman Career-Readiness Product</strong><span>manuvikraman.com | clarionprep.com</span></div>
   </div>
@@ -627,6 +933,21 @@
     const ENTER_TRAINER_URL =
       SUPABASE_URL +
       "/rest/v1/rpc/ascent_admin_enter_trainer_portal";
+
+    const ADMIN_INSTITUTION_LIST_URL =
+      SUPABASE_URL +
+      "/rest/v1/rpc/ascent_admin_institution_workspace_list";
+
+    const ENTER_ADMIN_WORKSPACE_URL =
+      SUPABASE_URL +
+      "/rest/v1/rpc/ascent_admin_open_institution_workspace";
+
+    const PAYMENT_STATEMENT_URL =
+      SUPABASE_URL +
+      "/rest/v1/rpc/ascent_admin_payment_statement";
+
+    let allPaymentRecords = [];
+    let displayedPaymentRecords = [];
 
     function loadAdminSession() {
       const raw =
@@ -789,6 +1110,126 @@
       }
     }
 
+    async function enterAdminWorkspace(
+      destination
+    ) {
+      const status =
+        document.getElementById(
+          "adminWorkspaceStatus"
+        );
+
+      const accessPointUuid =
+        document.getElementById(
+          "adminInstitutionSelect"
+        ).value;
+
+      if (!accessPointUuid) {
+        status.className =
+          "admin-status error";
+        status.textContent =
+          "Choose an institution before opening the administrator workspace.";
+        return;
+      }
+
+      status.className = "admin-status";
+      status.textContent =
+        "Opening administrator workspace…";
+
+      try {
+        const result = await callAdminRpc(
+          ENTER_ADMIN_WORKSPACE_URL,
+          {
+            p_session_token:
+              session.sessionToken,
+            p_access_point_uuid:
+              accessPointUuid
+          }
+        );
+
+        localStorage.setItem(
+          ADMIN_MASTER_SESSION_KEY,
+          JSON.stringify(session)
+        );
+
+        localStorage.setItem(
+          SESSION_STORAGE_KEY,
+          JSON.stringify(result)
+        );
+
+        window.location.href =
+          destination;
+      } catch (error) {
+        status.className =
+          "admin-status error";
+        status.textContent =
+          error.message ||
+          "The administrator workspace could not be opened.";
+      }
+    }
+
+    async function loadAdminInstitutions() {
+      const select =
+        document.getElementById(
+          "adminInstitutionSelect"
+        );
+
+      try {
+        const result = await callAdminRpc(
+          ADMIN_INSTITUTION_LIST_URL,
+          {
+            p_session_token:
+              session.sessionToken
+          }
+        );
+
+        const institutions =
+          Array.isArray(result.institutions)
+            ? result.institutions
+            : [];
+
+        select.innerHTML =
+          '<option value="">Choose institution</option>' +
+          institutions.map(
+            institution =>
+              '<option value="' +
+              escapeHtml(
+                institution.accessPointUuid
+              ) +
+              '">' +
+              escapeHtml(
+                institution.displayName ||
+                institution.urlSlug ||
+                "Institution"
+              ) +
+              '</option>'
+          ).join("");
+
+        select.disabled =
+          institutions.length === 0;
+
+        if (institutions.length === 1) {
+          select.value =
+            institutions[0]
+              .accessPointUuid;
+        }
+      } catch (error) {
+        select.innerHTML =
+          '<option value="">Institutions unavailable</option>';
+        select.disabled = true;
+
+        const status =
+          document.getElementById(
+            "adminWorkspaceStatus"
+          );
+
+        status.className =
+          "admin-status error";
+        status.textContent =
+          error.message ||
+          "The institution list could not be loaded.";
+      }
+    }
+
     async function loadTrainerEntries() {
       const list =
         document.getElementById(
@@ -842,6 +1283,324 @@
       }
     }
 
+    function formatPaymentDate(value) {
+      if (!value) return "—";
+
+      const date = new Date(value);
+      if (!Number.isFinite(date.getTime())) {
+        return "—";
+      }
+
+      return new Intl.DateTimeFormat(
+        "en-IN",
+        {
+          dateStyle:"medium",
+          timeStyle:"short",
+          timeZone:"Asia/Kolkata"
+        }
+      ).format(date);
+    }
+
+    function formatPaymentAmount(
+      amountPaise,
+      currency="INR"
+    ) {
+      return new Intl.NumberFormat(
+        "en-IN",
+        {
+          style:"currency",
+          currency:currency || "INR",
+          maximumFractionDigits:2
+        }
+      ).format(
+        Number(amountPaise || 0) / 100
+      );
+    }
+
+    function paymentEventDate(payment) {
+      return payment.refundedAt ||
+        payment.paidAt ||
+        payment.failedAt ||
+        payment.createdAt;
+    }
+
+    function setPaymentStatementStatus(
+      message,
+      type=""
+    ) {
+      const element =
+        document.getElementById(
+          "paymentStatementStatus"
+        );
+
+      element.className =
+        "admin-status" +
+        (type ? " " + type : "");
+
+      element.textContent = message || "";
+    }
+
+    function updatePaymentSummary(payments) {
+      const paid = payments.filter(
+        payment =>
+          String(
+            payment.paymentStatus || ""
+          ).toUpperCase() === "PAID"
+      );
+
+      const refunded = payments.filter(
+        payment =>
+          String(
+            payment.paymentStatus || ""
+          ).toUpperCase() === "REFUNDED"
+      );
+
+      const paidPaise = paid.reduce(
+        (total,payment) =>
+          total + Number(
+            payment.amountPaise || 0
+          ),
+        0
+      );
+
+      const refundedPaise = refunded.reduce(
+        (total,payment) =>
+          total + Number(
+            payment.amountPaise || 0
+          ),
+        0
+      );
+
+      document.getElementById(
+        "paymentRecordCount"
+      ).textContent = payments.length;
+
+      document.getElementById(
+        "paidReceiptCount"
+      ).textContent = paid.length;
+
+      document.getElementById(
+        "paidPaymentValue"
+      ).textContent =
+        formatPaymentAmount(paidPaise);
+
+      document.getElementById(
+        "refundedPaymentValue"
+      ).textContent =
+        formatPaymentAmount(refundedPaise);
+    }
+
+    function renderPaymentStatement(payments) {
+      const body =
+        document.getElementById(
+          "paymentStatementBody"
+        );
+
+      displayedPaymentRecords = payments;
+      updatePaymentSummary(payments);
+
+      document.getElementById(
+        "downloadPaymentStatement"
+      ).disabled = !payments.length;
+
+      if (!payments.length) {
+        body.innerHTML =
+          '<tr><td class="empty-payment-row" colspan="9">No payment records match these filters.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = payments.map(
+        payment => {
+          const status =
+            String(
+              payment.paymentStatus || "UNKNOWN"
+            ).toUpperCase();
+
+          const mode =
+            String(
+              payment.paymentMode || "—"
+            ).toUpperCase();
+
+          return `
+            <tr>
+              <td>${escapeHtml(formatPaymentDate(paymentEventDate(payment)))}</td>
+              <td>${escapeHtml(mode)}</td>
+              <td>
+                <strong>${escapeHtml(payment.buyerName || "—")}</strong><br>
+                ${escapeHtml(payment.buyerEmail || "—")}<br>
+                ${escapeHtml(payment.buyerPhone || "")}
+              </td>
+              <td>${escapeHtml(payment.productName || payment.productCode || "—")}</td>
+              <td class="amount-cell">${escapeHtml(formatPaymentAmount(payment.amountPaise,payment.currency))}</td>
+              <td><span class="payment-status-badge ${escapeHtml(status.toLowerCase())}">${escapeHtml(status)}</span></td>
+              <td class="receipt-id">${escapeHtml(payment.internalReceipt || "—")}</td>
+              <td class="receipt-id">${escapeHtml(payment.razorpayPaymentId || "—")}</td>
+              <td class="receipt-id">${escapeHtml(payment.razorpayOrderId || "—")}</td>
+            </tr>
+          `;
+        }
+      ).join("");
+    }
+
+    function filterPaymentStatement() {
+      const search =
+        document.getElementById(
+          "paymentSearch"
+        ).value.trim().toLowerCase();
+
+      const mode =
+        document.getElementById(
+          "paymentModeFilter"
+        ).value;
+
+      const status =
+        document.getElementById(
+          "paymentStatusFilter"
+        ).value;
+
+      const filtered =
+        allPaymentRecords.filter(
+          payment => {
+            const haystack = [
+              payment.buyerName,
+              payment.buyerEmail,
+              payment.buyerPhone,
+              payment.productName,
+              payment.productCode,
+              payment.internalReceipt,
+              payment.razorpayPaymentId,
+              payment.razorpayOrderId
+            ].join(" ").toLowerCase();
+
+            return (
+              (!search || haystack.includes(search)) &&
+              (!mode ||
+                String(payment.paymentMode).toUpperCase() === mode) &&
+              (!status ||
+                String(payment.paymentStatus).toUpperCase() === status)
+            );
+          }
+        );
+
+      renderPaymentStatement(filtered);
+    }
+
+    function csvCell(value) {
+      return '"' +
+        String(value ?? "")
+          .replaceAll('"','""') +
+        '"';
+    }
+
+    function downloadPaymentStatement() {
+      const headings = [
+        "Date (IST)",
+        "Mode",
+        "Learner name",
+        "Email",
+        "Phone",
+        "Plan",
+        "Product code",
+        "Amount",
+        "Currency",
+        "Status",
+        "ASCENT receipt",
+        "Razorpay payment ID",
+        "Razorpay order ID",
+        "Signature verified at",
+        "Paid at",
+        "Failed at",
+        "Refunded at"
+      ];
+
+      const rows = displayedPaymentRecords.map(
+        payment => [
+          formatPaymentDate(paymentEventDate(payment)),
+          payment.paymentMode,
+          payment.buyerName,
+          payment.buyerEmail,
+          payment.buyerPhone,
+          payment.productName,
+          payment.productCode,
+          Number(payment.amountPaise || 0) / 100,
+          payment.currency,
+          payment.paymentStatus,
+          payment.internalReceipt,
+          payment.razorpayPaymentId,
+          payment.razorpayOrderId,
+          formatPaymentDate(payment.signatureVerifiedAt),
+          formatPaymentDate(payment.paidAt),
+          formatPaymentDate(payment.failedAt),
+          formatPaymentDate(payment.refundedAt)
+        ]
+      );
+
+      const csv = [
+        headings,
+        ...rows
+      ].map(
+        row => row.map(csvCell).join(",")
+      ).join("\r\n");
+
+      const blob = new Blob(
+        ["\uFEFF" + csv],
+        {type:"text/csv;charset=utf-8"}
+      );
+
+      const link =
+        document.createElement("a");
+
+      link.href =
+        URL.createObjectURL(blob);
+
+      link.download =
+        "ASCENT-Payment-Statement-" +
+        new Date().toISOString().slice(0,10) +
+        ".csv";
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
+    }
+
+    async function loadPaymentStatement() {
+      try {
+        const result = await callAdminRpc(
+          PAYMENT_STATEMENT_URL,
+          {
+            p_session_token:
+              session.sessionToken
+          }
+        );
+
+        allPaymentRecords =
+          Array.isArray(result.payments)
+            ? result.payments
+            : [];
+
+        filterPaymentStatement();
+
+        setPaymentStatementStatus(
+          allPaymentRecords.length
+            ? "Statement loaded from verified ASCENT payment records."
+            : "No ASCENT payment records are available yet.",
+          allPaymentRecords.length
+            ? "success"
+            : ""
+        );
+      } catch (error) {
+        allPaymentRecords = [];
+        renderPaymentStatement([]);
+
+        setPaymentStatementStatus(
+          error.message ||
+          "The payment statement could not be loaded.",
+          "error"
+        );
+      }
+    }
+
     if (session) {
       document
         .getElementById("adminShell")
@@ -871,7 +1630,65 @@
           }
         );
 
+      document
+        .getElementById(
+          "adminTrainerPortalLink"
+        )
+        .addEventListener(
+          "click",
+          event => {
+            event.preventDefault();
+            void enterAdminWorkspace(
+              "./trainer.html"
+            );
+          }
+        );
+
+      document
+        .getElementById(
+          "adminStudentsReviewLink"
+        )
+        .addEventListener(
+          "click",
+          event => {
+            event.preventDefault();
+            void enterAdminWorkspace(
+              "./trainer.html?section=students"
+            );
+          }
+        );
+
       loadTrainerEntries();
+      loadAdminInstitutions();
+      loadPaymentStatement();
+
+      document.getElementById(
+        "paymentSearch"
+      ).addEventListener(
+        "input",
+        filterPaymentStatement
+      );
+
+      document.getElementById(
+        "paymentModeFilter"
+      ).addEventListener(
+        "change",
+        filterPaymentStatement
+      );
+
+      document.getElementById(
+        "paymentStatusFilter"
+      ).addEventListener(
+        "change",
+        filterPaymentStatement
+      );
+
+      document.getElementById(
+        "downloadPaymentStatement"
+      ).addEventListener(
+        "click",
+        downloadPaymentStatement
+      );
     }
   </script>
 </body>
