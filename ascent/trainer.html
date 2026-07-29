@@ -427,6 +427,15 @@
             <div class="form-group"><label for="resultDateFrom">From date</label><input id="resultDateFrom" type="date"></div>
             <div class="form-group"><label for="resultDateTo">To date</label><input id="resultDateTo" type="date"></div>
           </div><div class="inline-row"><button id="applyResultFiltersButton" class="primary-button" type="button">Apply Filters</button><button id="clearResultFiltersButton" class="secondary-button" type="button">Clear</button></div></div>
+          <div class="panel">
+            <div class="panel-title-row"><div><h3>FIIB Weekly Trainer Report</h3><div class="panel-subtitle">Download one protected batch-and-week report. ASCENT excludes non-FIIB learners and never combines the two batches.</div></div></div>
+            <div class="form-grid">
+              <div class="form-group"><label for="fiibReportBatch">FIIB batch</label><select id="fiibReportBatch"><option value="">Choose one batch</option><option value="2025-27 PGDM">2025–27</option><option value="2026-28 PGDM">2026–28</option></select><div class="form-note">A batch must be selected. There is no combined-batch download.</div></div>
+              <div class="form-group"><label for="fiibReportWeek">Report week</label><select id="fiibReportWeek"><option value="">Choose week</option><option value="1">Week 1</option><option value="2">Week 2</option><option value="3">Week 3</option><option value="4">Week 4</option><option value="5">Week 5</option><option value="6">Week 6</option><option value="7">Week 7</option><option value="8">Week 8</option><option value="9">Week 9</option><option value="10">Week 10</option></select></div>
+            </div>
+            <div class="inline-row"><button id="fiibWeeklyExportButton" class="primary-button" type="button">Download FIIB Weekly Report</button></div>
+            <div id="fiibWeeklyExportStatus" class="form-status" role="status" aria-live="polite"></div>
+          </div>
           <div class="panel"><div class="panel-title-row"><div><h3>Student Results</h3><div id="resultCountLabel" class="panel-subtitle"></div></div></div><div id="resultsTableWrap" class="table-wrap"></div><div id="resultsStatus" class="form-status"></div></div>
         </section>
 
@@ -4052,6 +4061,224 @@ function formatCriterionFeedback(criterion) {
       }
     }
 
+    const FIIB_REPORT_CONFIG = {
+      institutionUuid:"9ba256d1-2689-4d5b-907c-34c3f9da59ca",
+      accessPointUuid:"04482860-a8e6-4ee8-b7f6-0e20b1f9d8b8",
+      emailDomain:"@fiib.edu.in",
+      batches:new Set(["2025-27 PGDM","2026-28 PGDM"])
+    };
+
+    function fiibInstitutionConfirmed(workbookData) {
+      const institutionUuid = exportText(
+        workbookData.institutionUuid ??
+        workbookData.institution_uuid
+      ).toLowerCase();
+      const accessPointUuid = exportText(
+        workbookData.accessPointUuid ??
+        workbookData.access_point_uuid
+      ).toLowerCase();
+      const institutionName = exportText(
+        workbookData.institutionName ??
+        workbookData.institution_name
+      ).toLowerCase();
+
+      return institutionUuid === FIIB_REPORT_CONFIG.institutionUuid ||
+        accessPointUuid === FIIB_REPORT_CONFIG.accessPointUuid ||
+        /\bfiib\b/.test(institutionName);
+    }
+
+    function fiibStudentBatch(student) {
+      const rollNo = normaliseRollNumber(
+        student.rollNo ??
+        student.studentId ??
+        student.student_id
+      );
+      return rollNumberCohort(rollNo).batch || "";
+    }
+
+    function isFiibStudentForBatch(student,batch) {
+      const email = exportText(
+        student.emailId ??
+        student.email ??
+        student.email_id
+      ).toLowerCase();
+      return Boolean(studentUuidOf(student)) &&
+        email.endsWith(FIIB_REPORT_CONFIG.emailDomain) &&
+        fiibStudentBatch(student) === batch;
+    }
+
+    function fiibAssignmentWeek(assignment) {
+      const explicit = exportNumber(
+        assignment.weekNumber ??
+        assignment.week_number ??
+        assignment.weekNo ??
+        assignment.week_no
+      );
+      if (explicit !== null && explicit >= 1 && explicit <= 10) return explicit;
+
+      const identifier = exportText(
+        assignment.weeklyQuestionBatchIdentifier ??
+        assignment.weekly_question_batch_identifier
+      );
+      const match = identifier.match(/(?:^|[^a-z0-9])(?:week|wk|w)\s*[-_:]?\s*0?([1-9]|10)(?:[^0-9]|$)/i);
+      if (match) return Number(match[1]);
+
+      const sequence = exportNumber(
+        assignment.sequenceNo ??
+        assignment.sequence_no
+      );
+      return sequence !== null && sequence >= 1 && sequence <= 10
+        ? sequence
+        : null;
+    }
+
+    function fiibWeeklyStudentRows(workbookData,batch,week) {
+      const students = (Array.isArray(workbookData.students) ? workbookData.students : [])
+        .filter(student => isFiibStudentForBatch(student,batch));
+      const allowedStudents = new Set(students.map(studentUuidOf));
+      const assignments = (Array.isArray(workbookData.assignments) ? workbookData.assignments : [])
+        .filter(assignment =>
+          allowedStudents.has(studentUuidOf(assignment)) &&
+          fiibAssignmentWeek(assignment) === week
+        );
+      const assignmentsByStudent = new Map();
+
+      assignments.forEach(function (assignment) {
+        const studentUuid = studentUuidOf(assignment);
+        if (!assignmentsByStudent.has(studentUuid)) assignmentsByStudent.set(studentUuid,[]);
+        assignmentsByStudent.get(studentUuid).push(assignment);
+      });
+
+      return students
+        .slice()
+        .sort((left,right) =>
+          normaliseRollNumber(left.rollNo).localeCompare(
+            normaliseRollNumber(right.rollNo),
+            undefined,
+            {numeric:true}
+          )
+        )
+        .map(function (student) {
+          const studentAssignments = assignmentsByStudent.get(studentUuidOf(student)) || [];
+          const scoredAssignments = studentAssignments
+            .map(assignment => exportNumber(assignment.finalScore ?? assignment.totalScore))
+            .filter(score => score !== null);
+          const averageScore = scoredAssignments.length
+            ? Number((scoredAssignments.reduce((sum,score) => sum + score,0) / scoredAssignments.length).toFixed(2))
+            : "";
+          const latestSubmission = studentAssignments
+            .filter(assignment => assignment.submittedAt)
+            .sort((left,right) => Date.parse(right.submittedAt) - Date.parse(left.submittedAt))[0];
+
+          return {
+            "Roll Number":normaliseRollNumber(student.rollNo ?? student.studentId),
+            "Student Name":exportText(student.name ?? student.fullName),
+            "Email ID":exportText(student.emailId ?? student.email),
+            "Batch":batch.replace(/ PGDM$/,""),
+            "Week":week,
+            "Questions Assigned":studentAssignments.length,
+            "Questions Completed":studentAssignments.filter(assignment => Boolean(assignment.submissionUuid)).length,
+            "Week Score":averageScore,
+            "Status":scoredAssignments.length
+              ? "Evaluated"
+              : studentAssignments.some(assignment => Boolean(assignment.submissionUuid))
+                ? "Pending Evaluation"
+                : studentAssignments.length
+                  ? "Not Answered"
+                  : "Not Assigned",
+            "Last Submitted At":latestSubmission ? exportDate(latestSubmission.submittedAt) : ""
+          };
+        });
+    }
+
+    async function exportFiibWeeklyReport() {
+      const statusElement = byId("fiibWeeklyExportStatus");
+      const button = byId("fiibWeeklyExportButton");
+      const batch = byId("fiibReportBatch").value;
+      const week = Number(byId("fiibReportWeek").value);
+
+      if (!FIIB_REPORT_CONFIG.batches.has(batch)) {
+        setStatus(statusElement,"Choose either the 2025–27 or 2026–28 FIIB batch.","error");
+        return;
+      }
+      if (!Number.isInteger(week) || week < 1 || week > 10) {
+        setStatus(statusElement,"Choose a report week from Week 1 to Week 10.","error");
+        return;
+      }
+      if (!window.XLSX) {
+        setStatus(statusElement,"The Excel library did not load. Check the internet connection and try again.","error");
+        return;
+      }
+
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Checking FIIB Records…";
+      setStatus(statusElement,"Preparing the protected batch report…","");
+
+      try {
+        const workbookData = await callRpc(
+          RPC.workbookExport,
+          {p_session_token:currentSession.sessionToken}
+        );
+        if (!workbookData || workbookData.ok !== true) {
+          throw new Error(workbookData && workbookData.message ? workbookData.message : "The report data could not be loaded.");
+        }
+        if (!fiibInstitutionConfirmed(workbookData)) {
+          throw new Error("Download blocked: this login is not confirmed as an FIIB institution login.");
+        }
+
+        const rows = fiibWeeklyStudentRows(workbookData,batch,week);
+        if (!rows.length) {
+          throw new Error(`No verified FIIB students were found for ${batch.replace(/ PGDM$/,"")}. Nothing was downloaded.`);
+        }
+
+        const headers = [
+          "Roll Number","Student Name","Email ID","Batch","Week",
+          "Questions Assigned","Questions Completed","Week Score","Status","Last Submitted At"
+        ];
+        const sheet = makeStyledWorksheet(
+          rows,
+          headers,
+          [16,25,31,13,9,18,20,14,20,20],
+          {
+            title:`FIIB ${batch.replace(/ PGDM$/,"")} · WEEK ${week} TRAINER REPORT`,
+            subtitle:`Generated by ${exportText(currentSession.fullName || currentSession.email)} on ${new Date().toLocaleString()} · Only verified @fiib.edu.in learners in the selected roll-number cohort are included.`,
+            groups:[
+              {label:"STUDENT",start:0,end:3,fill:WORKBOOK_STYLE.identity,bodyFill:WORKBOOK_STYLE.identitySoft},
+              {label:"WEEKLY PERFORMANCE",start:4,end:9,fill:WORKBOOK_STYLE.score,bodyFill:WORKBOOK_STYLE.scoreSoft}
+            ],
+            freezeColumns:3,
+            centerColumns:[0,3,4,5,6,7,8,9],
+            scoreColumns:[7],
+            emphasisScoreColumns:[7],
+            dateColumns:[9],
+            statusColumns:{8:"submission"},
+            dataRowHeight:32
+          }
+        );
+        const workbook = XLSX.utils.book_new();
+        workbook.Props = {
+          Title:`FIIB ${batch.replace(/ PGDM$/,"")} Week ${week} Trainer Report`,
+          Subject:"FIIB batch-specific ASCENT weekly scores",
+          Author:exportText(currentSession.fullName || "ASCENT"),
+          CreatedDate:new Date()
+        };
+        XLSX.utils.book_append_sheet(workbook,sheet,`WEEK ${week}`);
+        XLSX.writeFile(
+          workbook,
+          `FIIB_${batch.replace(/ PGDM$/,"").replace(/[^0-9A-Za-z]+/g,"-")}_Week-${String(week).padStart(2,"0")}_Trainer_Report.xlsx`,
+          {cellStyles:true,cellDates:true}
+        );
+        setStatus(statusElement,`FIIB ${batch.replace(/ PGDM$/,"")} Week ${week} report downloaded with ${rows.length} verified students. The other batch and non-FIIB learners were excluded.`,"success");
+      } catch (error) {
+        console.error(error);
+        setStatus(statusElement,error.message || "The FIIB weekly report could not be prepared.","error");
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+
     async function clearSelectedTestRegister() {
       if (!isAdmin()) {
         setStatus(byId("clearTestRegisterStatus"),"Only an administrator can clear test assignment records.","error");
@@ -4186,6 +4413,7 @@ function formatCriterionFeedback(criterion) {
       byId("refreshLeaderboardButton").addEventListener("click",() => loadPlacementReadinessBoard(true));
       byId("emailLeaderboardButton").addEventListener("click",emailPlacementReadinessBoard);
       byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows,"results"));
+      byId("fiibWeeklyExportButton").addEventListener("click",exportFiibWeeklyReport);
       byId("refreshStudentsButton").addEventListener("click",() => loadStudentPerformance(true));
       byId("doneStudentGroupButton").addEventListener("click",finishStudentGroupCreation);
       byId("refreshArchivesButton").addEventListener("click",() => loadArchiveData(true));
