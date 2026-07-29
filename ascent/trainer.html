@@ -4347,7 +4347,7 @@ function formatCriterionFeedback(criterion) {
     }
 
     function replaceWeekLabels(workbook) {
-      ["Dashboard","Student Tracker","Score Summary","Leaderboard"].forEach(function (sheetName) {
+      ["Student Tracker","Score Summary","Leaderboard"].forEach(function (sheetName) {
         const sheet = workbook.Sheets[sheetName];
         if (!sheet) return;
         Object.keys(sheet).forEach(function (address) {
