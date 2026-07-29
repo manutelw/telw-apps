@@ -428,12 +428,11 @@
             <div class="form-group"><label for="resultDateTo">To date</label><input id="resultDateTo" type="date"></div>
           </div><div class="inline-row"><button id="applyResultFiltersButton" class="primary-button" type="button">Apply Filters</button><button id="clearResultFiltersButton" class="secondary-button" type="button">Clear</button></div></div>
           <div class="panel">
-            <div class="panel-title-row"><div><h3>FIIB Weekly Trainer Report</h3><div class="panel-subtitle">Download one protected batch-and-week report. ASCENT excludes non-FIIB learners and never combines the two batches.</div></div></div>
+            <div class="panel-title-row"><div><h3>FIIB Interconnected Tracker</h3><div class="panel-subtitle">Download the complete batch workbook with all its connected sheets. Every submitted answer becomes the learner’s next Attempt column.</div></div></div>
             <div class="form-grid">
               <div class="form-group"><label for="fiibReportBatch">FIIB batch</label><select id="fiibReportBatch"><option value="">Choose one batch</option><option value="2025-27 PGDM">2025–27</option><option value="2026-28 PGDM">2026–28</option></select><div class="form-note">A batch must be selected. There is no combined-batch download.</div></div>
-              <div class="form-group"><label for="fiibReportWeek">Report week</label><select id="fiibReportWeek"><option value="">Choose week</option><option value="1">Week 1</option><option value="2">Week 2</option><option value="3">Week 3</option><option value="4">Week 4</option><option value="5">Week 5</option><option value="6">Week 6</option><option value="7">Week 7</option><option value="8">Week 8</option><option value="9">Week 9</option><option value="10">Week 10</option></select></div>
             </div>
-            <div class="inline-row"><button id="fiibWeeklyExportButton" class="primary-button" type="button">Download FIIB Weekly Report</button></div>
+            <div class="inline-row"><button id="fiibTrackerExportButton" class="primary-button" type="button">Download Interconnected Tracker</button></div>
             <div id="fiibWeeklyExportStatus" class="form-status" role="status" aria-live="polite"></div>
           </div>
           <div class="panel"><div class="panel-title-row"><div><h3>Student Results</h3><div id="resultCountLabel" class="panel-subtitle"></div></div></div><div id="resultsTableWrap" class="table-wrap"></div><div id="resultsStatus" class="form-status"></div></div>
@@ -4061,148 +4060,313 @@ function formatCriterionFeedback(criterion) {
       }
     }
 
-    const FIIB_REPORT_CONFIG = {
+    const FIIB_TRACKERS = {
       institutionUuid:"9ba256d1-2689-4d5b-907c-34c3f9da59ca",
       accessPointUuid:"04482860-a8e6-4ee8-b7f6-0e20b1f9d8b8",
       emailDomain:"@fiib.edu.in",
-      batches:new Set(["2025-27 PGDM","2026-28 PGDM"])
+      batches:{
+        "2025-27 PGDM":{
+          templateUrl:"/ascent/templates/Batch_2025-27_Dynamic_Attempt_Tracker.xlsx",
+          fileName:"FIIB_2025-27_ASCENT_Tracker.xlsx",
+          trainerSheets:["Mr Sandeep Kumar","Mr.Manu Vikraman"],
+          trackerIdentityColumns:4
+        },
+        "2026-28 PGDM":{
+          templateUrl:"/ascent/templates/26-28_Batch_Zip_Ahead_Student_Tracker.xlsx",
+          fileName:"FIIB_2026-28_ASCENT_Tracker.xlsx",
+          trainerSheets:["Mr Sandeep Kumar","Mr Manu Vikraman"],
+          trackerIdentityColumns:6
+        }
+      }
     };
 
     function fiibInstitutionConfirmed(workbookData) {
-      const institutionUuid = exportText(
-        workbookData.institutionUuid ??
-        workbookData.institution_uuid
-      ).toLowerCase();
-      const accessPointUuid = exportText(
-        workbookData.accessPointUuid ??
-        workbookData.access_point_uuid
-      ).toLowerCase();
-      const institutionName = exportText(
-        workbookData.institutionName ??
-        workbookData.institution_name
-      ).toLowerCase();
-
-      return institutionUuid === FIIB_REPORT_CONFIG.institutionUuid ||
-        accessPointUuid === FIIB_REPORT_CONFIG.accessPointUuid ||
+      const institutionUuid = exportText(workbookData.institutionUuid ?? workbookData.institution_uuid).toLowerCase();
+      const accessPointUuid = exportText(workbookData.accessPointUuid ?? workbookData.access_point_uuid).toLowerCase();
+      const institutionName = exportText(workbookData.institutionName ?? workbookData.institution_name).toLowerCase();
+      return institutionUuid === FIIB_TRACKERS.institutionUuid ||
+        accessPointUuid === FIIB_TRACKERS.accessPointUuid ||
         /\bfiib\b/.test(institutionName);
     }
 
-    function fiibStudentBatch(student) {
-      const rollNo = normaliseRollNumber(
-        student.rollNo ??
-        student.studentId ??
-        student.student_id
-      );
-      return rollNumberCohort(rollNo).batch || "";
-    }
-
-    function isFiibStudentForBatch(student,batch) {
-      const email = exportText(
-        student.emailId ??
-        student.email ??
-        student.email_id
-      ).toLowerCase();
+    function fiibStudentForBatch(student,batch) {
+      const rollNo = normaliseRollNumber(student.rollNo ?? student.studentId ?? student.student_id);
+      const email = exportText(student.emailId ?? student.email ?? student.email_id).toLowerCase();
       return Boolean(studentUuidOf(student)) &&
-        email.endsWith(FIIB_REPORT_CONFIG.emailDomain) &&
-        fiibStudentBatch(student) === batch;
+        email.endsWith(FIIB_TRACKERS.emailDomain) &&
+        rollNumberCohort(rollNo).batch === batch;
     }
 
-    function fiibAssignmentWeek(assignment) {
-      const explicit = exportNumber(
-        assignment.weekNumber ??
-        assignment.week_number ??
-        assignment.weekNo ??
-        assignment.week_no
-      );
-      if (explicit !== null && explicit >= 1 && explicit <= 10) return explicit;
-
-      const identifier = exportText(
-        assignment.weeklyQuestionBatchIdentifier ??
-        assignment.weekly_question_batch_identifier
-      );
-      const match = identifier.match(/(?:^|[^a-z0-9])(?:week|wk|w)\s*[-_:]?\s*0?([1-9]|10)(?:[^0-9]|$)/i);
-      if (match) return Number(match[1]);
-
-      const sequence = exportNumber(
-        assignment.sequenceNo ??
-        assignment.sequence_no
-      );
-      return sequence !== null && sequence >= 1 && sequence <= 10
-        ? sequence
-        : null;
+    function xlsxColumn(index) {
+      return XLSX.utils.encode_col(index);
     }
 
-    function fiibWeeklyStudentRows(workbookData,batch,week) {
-      const students = (Array.isArray(workbookData.students) ? workbookData.students : [])
-        .filter(student => isFiibStudentForBatch(student,batch));
-      const allowedStudents = new Set(students.map(studentUuidOf));
-      const assignments = (Array.isArray(workbookData.assignments) ? workbookData.assignments : [])
-        .filter(assignment =>
-          allowedStudents.has(studentUuidOf(assignment)) &&
-          fiibAssignmentWeek(assignment) === week
-        );
-      const assignmentsByStudent = new Map();
+    function xlsxCell(sheet,row,column) {
+      return sheet[XLSX.utils.encode_cell({r:row,c:column})];
+    }
 
-      assignments.forEach(function (assignment) {
-        const studentUuid = studentUuidOf(assignment);
-        if (!assignmentsByStudent.has(studentUuid)) assignmentsByStudent.set(studentUuid,[]);
-        assignmentsByStudent.get(studentUuid).push(assignment);
+    function copyCellStyle(cell) {
+      return cell && cell.s ? JSON.parse(JSON.stringify(cell.s)) : undefined;
+    }
+
+    function setTemplateCell(sheet,row,column,value,style,formula=null) {
+      const address = XLSX.utils.encode_cell({r:row,c:column});
+      const cell = formula
+        ? {t:"n",v:0,f:formula}
+        : typeof value === "number"
+          ? {t:"n",v:value}
+          : {t:"s",v:exportText(value)};
+      if (style) cell.s = JSON.parse(JSON.stringify(style));
+      sheet[address] = cell;
+      return cell;
+    }
+
+    function removeTemplateCells(sheet,startColumn,startRow=0) {
+      Object.keys(sheet).forEach(function (address) {
+        if (address.startsWith("!")) return;
+        const cell = XLSX.utils.decode_cell(address);
+        if (cell.c >= startColumn && cell.r >= startRow) delete sheet[address];
+      });
+      sheet["!merges"] = (sheet["!merges"] || []).filter(merge =>
+        merge.e.c < startColumn || merge.e.r < startRow
+      );
+    }
+
+    function sheetStudentRows(sheet) {
+      const range = XLSX.utils.decode_range(sheet["!ref"] || "A1:A1");
+      const rows = [];
+      for (let row=2; row<=range.e.r; row+=1) {
+        const rollNo = normaliseRollNumber(xlsxCell(sheet,row,1)?.v);
+        if (/^\d{2}(?:PGDM|PGDMFM)\d{3}$/.test(rollNo)) rows.push({row,rollNo});
+      }
+      return rows;
+    }
+
+    function existingAttemptColumns(sheet) {
+      const range = XLSX.utils.decode_range(sheet["!ref"] || "A1:A1");
+      const columns = [];
+      for (let column=6; column<=range.e.c; column+=1) {
+        const label = exportText(xlsxCell(sheet,0,column)?.v);
+        if (/^Attempt\s+\d+$/i.test(label)) columns.push(column);
+      }
+      return columns;
+    }
+
+    function fiibSubmissionMap(workbookData,students) {
+      const studentByUuid = new Map(students.map(student => [
+        studentUuidOf(student),
+        normaliseRollNumber(student.rollNo ?? student.studentId ?? student.student_id)
+      ]));
+      const rows = [
+        ...(Array.isArray(workbookData.submissions) ? workbookData.submissions : []),
+        ...(Array.isArray(workbookData.assignments) ? workbookData.assignments.filter(row => row.submissionUuid) : [])
+      ];
+      const seen = new Set();
+      const map = new Map();
+      rows.forEach(function (row,index) {
+        const rollNo = studentByUuid.get(studentUuidOf(row));
+        if (!rollNo) return;
+        const submissionUuid = exportText(row.submissionUuid ?? row.submission_uuid) ||
+          `${rollNo}|${exportText(row.assignmentUuid)}|${exportText(row.submittedAt)}|${index}`;
+        if (seen.has(submissionUuid)) return;
+        seen.add(submissionUuid);
+        if (!map.has(rollNo)) map.set(rollNo,[]);
+        map.get(rollNo).push({
+          submittedAt:Date.parse(row.submittedAt ?? row.submitted_at ?? "") || index,
+          score:scoreOf(row)
+        });
+      });
+      map.forEach(items => items.sort((left,right) => left.submittedAt - right.submittedAt));
+      return map;
+    }
+
+    function rebuildTrainerSheet(sheet,submissionMap) {
+      const studentRows = sheetStudentRows(sheet);
+      const baselineColumns = existingAttemptColumns(sheet);
+      const baselineByRoll = new Map(studentRows.map(item => [
+        item.rollNo,
+        baselineColumns.map(column => exportNumber(xlsxCell(sheet,item.row,column)?.v))
+      ]));
+      const baselineCount = baselineColumns.length;
+      const newAttemptCount = Math.max(0,...studentRows.map(item => (submissionMap.get(item.rollNo) || []).length));
+      const attemptCount = baselineCount + newAttemptCount;
+      const totalColumn = 6 + attemptCount;
+      const averageColumn = totalColumn + 1;
+      const completedColumn = totalColumn + 2;
+      const headerStyle = copyCellStyle(xlsxCell(sheet,0,6)) || copyCellStyle(xlsxCell(sheet,0,0));
+      const scoreStyle = copyCellStyle(xlsxCell(sheet,2,6));
+      const summaryStyle = copyCellStyle(xlsxCell(sheet,2,baselineColumns.length ? baselineColumns[baselineColumns.length - 1] + 1 : 6)) || scoreStyle;
+      const finalRow = Math.max(2,...studentRows.map(item => item.row));
+
+      removeTemplateCells(sheet,6,0);
+      sheet["!merges"] = sheet["!merges"] || [];
+      for (let attempt=0; attempt<attemptCount; attempt+=1) {
+        const column = 6 + attempt;
+        setTemplateCell(sheet,0,column,`Attempt ${attempt + 1}`,headerStyle);
+        sheet["!merges"].push({s:{r:0,c:column},e:{r:1,c:column}});
+      }
+      ["Total Score","Average Score","Attempts Completed"].forEach(function (label,index) {
+        const column = totalColumn + index;
+        setTemplateCell(sheet,0,column,label,headerStyle);
+        sheet["!merges"].push({s:{r:0,c:column},e:{r:1,c:column}});
       });
 
-      return students
-        .slice()
-        .sort((left,right) =>
-          normaliseRollNumber(left.rollNo).localeCompare(
-            normaliseRollNumber(right.rollNo),
-            undefined,
-            {numeric:true}
-          )
-        )
-        .map(function (student) {
-          const studentAssignments = assignmentsByStudent.get(studentUuidOf(student)) || [];
-          const scoredAssignments = studentAssignments
-            .map(assignment => exportNumber(assignment.finalScore ?? assignment.totalScore))
-            .filter(score => score !== null);
-          const averageScore = scoredAssignments.length
-            ? Number((scoredAssignments.reduce((sum,score) => sum + score,0) / scoredAssignments.length).toFixed(2))
-            : "";
-          const latestSubmission = studentAssignments
-            .filter(assignment => assignment.submittedAt)
-            .sort((left,right) => Date.parse(right.submittedAt) - Date.parse(left.submittedAt))[0];
+      studentRows.forEach(function (item) {
+        const baseline = baselineByRoll.get(item.rollNo) || [];
+        const current = submissionMap.get(item.rollNo) || [];
+        const scores = [...baseline,...current.map(submission => submission.score)];
+        for (let attempt=0; attempt<attemptCount; attempt+=1) {
+          const score = scores[attempt];
+          if (score !== null && score !== undefined) setTemplateCell(sheet,item.row,6 + attempt,score,scoreStyle);
+        }
+        if (attemptCount) {
+          setTemplateCell(sheet,item.row,totalColumn,0,summaryStyle,`SUM(G${item.row + 1}:${xlsxColumn(totalColumn - 1)}${item.row + 1})`);
+          setTemplateCell(sheet,item.row,averageColumn,0,summaryStyle,`IFERROR(${xlsxColumn(totalColumn)}${item.row + 1}/COUNT(G${item.row + 1}:${xlsxColumn(totalColumn - 1)}${item.row + 1}),0)`);
+          setTemplateCell(sheet,item.row,completedColumn,0,summaryStyle,`COUNT(G${item.row + 1}:${xlsxColumn(totalColumn - 1)}${item.row + 1})`);
+        } else {
+          setTemplateCell(sheet,item.row,totalColumn,0,summaryStyle);
+          setTemplateCell(sheet,item.row,averageColumn,0,summaryStyle);
+          setTemplateCell(sheet,item.row,completedColumn,0,summaryStyle);
+        }
+      });
 
-          return {
-            "Roll Number":normaliseRollNumber(student.rollNo ?? student.studentId),
-            "Student Name":exportText(student.name ?? student.fullName),
-            "Email ID":exportText(student.emailId ?? student.email),
-            "Batch":batch.replace(/ PGDM$/,""),
-            "Week":week,
-            "Questions Assigned":studentAssignments.length,
-            "Questions Completed":studentAssignments.filter(assignment => Boolean(assignment.submissionUuid)).length,
-            "Week Score":averageScore,
-            "Status":scoredAssignments.length
-              ? "Evaluated"
-              : studentAssignments.some(assignment => Boolean(assignment.submissionUuid))
-                ? "Pending Evaluation"
-                : studentAssignments.length
-                  ? "Not Answered"
-                  : "Not Assigned",
-            "Last Submitted At":latestSubmission ? exportDate(latestSubmission.submittedAt) : ""
-          };
-        });
+      sheet["!ref"] = `A1:${xlsxColumn(completedColumn)}${finalRow + 1}`;
+      sheet["!cols"] = sheet["!cols"] || [];
+      for (let column=6; column<=completedColumn; column+=1) {
+        sheet["!cols"][column] = {wch:column >= totalColumn ? 18 : 12};
+      }
+      return {attemptCount,totalColumn,averageColumn,completedColumn,studentRows};
     }
 
-    async function exportFiibWeeklyReport() {
-      const statusElement = byId("fiibWeeklyExportStatus");
-      const button = byId("fiibWeeklyExportButton");
-      const batch = byId("fiibReportBatch").value;
-      const week = Number(byId("fiibReportWeek").value);
-
-      if (!FIIB_REPORT_CONFIG.batches.has(batch)) {
-        setStatus(statusElement,"Choose either the 2025–27 or 2026–28 FIIB batch.","error");
-        return;
+    function rebuildStudentTracker(sheet,config,attemptCount) {
+      const startColumn = config.trackerIdentityColumns;
+      const headerRow = 4;
+      const dataStartRow = 6;
+      const range = XLSX.utils.decode_range(sheet["!ref"] || "A1:A1");
+      const studentRows = [];
+      for (let row=dataStartRow; row<=range.e.r; row+=1) {
+        const rollNo = normaliseRollNumber(xlsxCell(sheet,row,1)?.v);
+        if (/^\d{2}(?:PGDM|PGDMFM)\d{3}$/.test(rollNo)) studentRows.push({row,rollNo});
       }
-      if (!Number.isInteger(week) || week < 1 || week > 10) {
-        setStatus(statusElement,"Choose a report week from Week 1 to Week 10.","error");
+      const finalStudentRow = Math.max(dataStartRow,...studentRows.map(item => item.row));
+      const totalRow = finalStudentRow + 1;
+      const totalColumn = startColumn + attemptCount;
+      const averageColumn = totalColumn + 1;
+      const gradeColumn = totalColumn + 2;
+      const statusColumn = totalColumn + 3;
+      const helperColumn = totalColumn + 4;
+      const headerStyle = copyCellStyle(xlsxCell(sheet,headerRow,startColumn)) || copyCellStyle(xlsxCell(sheet,headerRow,0));
+      const scoreStyle = copyCellStyle(xlsxCell(sheet,dataStartRow,startColumn));
+      const summaryStyle = copyCellStyle(xlsxCell(sheet,dataStartRow,Math.min(range.e.c,totalColumn))) || scoreStyle;
+
+      removeTemplateCells(sheet,startColumn,headerRow);
+      for (let attempt=0; attempt<attemptCount; attempt+=1) {
+        setTemplateCell(sheet,headerRow,startColumn + attempt,`Attempt ${attempt + 1}`,headerStyle);
+      }
+      ["Total Score","Average Score","Grade","Status"].forEach((label,index) =>
+        setTemplateCell(sheet,headerRow,totalColumn + index,label,headerStyle)
+      );
+
+      const sandeep = config.trainerSheets[0].replace(/'/g,"''");
+      const manu = config.trainerSheets[1].replace(/'/g,"''");
+      studentRows.forEach(function (item) {
+        for (let attempt=0; attempt<attemptCount; attempt+=1) {
+          const trainerColumn = xlsxColumn(6 + attempt);
+          const formula = `IFERROR(INDEX('${sandeep}'!$${trainerColumn}$3:$${trainerColumn}$500,MATCH($B${item.row + 1},'${sandeep}'!$B$3:$B$500,0)),IFERROR(INDEX('${manu}'!$${trainerColumn}$3:$${trainerColumn}$500,MATCH($B${item.row + 1},'${manu}'!$B$3:$B$500,0)),""))`;
+          setTemplateCell(sheet,item.row,startColumn + attempt,0,scoreStyle,formula);
+        }
+        if (attemptCount) {
+          const first = xlsxColumn(startColumn);
+          const last = xlsxColumn(totalColumn - 1);
+          setTemplateCell(sheet,item.row,totalColumn,0,summaryStyle,`SUM(${first}${item.row + 1}:${last}${item.row + 1})`);
+          setTemplateCell(sheet,item.row,averageColumn,0,summaryStyle,`IFERROR(${xlsxColumn(totalColumn)}${item.row + 1}/COUNT(${first}${item.row + 1}:${last}${item.row + 1}),0)`);
+          setTemplateCell(sheet,item.row,statusColumn,"",summaryStyle,`IF(COUNT(${first}${item.row + 1}:${last}${item.row + 1})=${attemptCount},"Current",IF(COUNT(${first}${item.row + 1}:${last}${item.row + 1})>0,"Behind","Not Started"))`);
+        } else {
+          setTemplateCell(sheet,item.row,totalColumn,0,summaryStyle);
+          setTemplateCell(sheet,item.row,averageColumn,0,summaryStyle);
+          setTemplateCell(sheet,item.row,statusColumn,"Not Started",summaryStyle);
+        }
+        setTemplateCell(sheet,item.row,gradeColumn,"",summaryStyle,`IF(${xlsxColumn(averageColumn)}${item.row + 1}>=9,"A+",IF(${xlsxColumn(averageColumn)}${item.row + 1}>=8,"A",IF(${xlsxColumn(averageColumn)}${item.row + 1}>=7,"B+",IF(${xlsxColumn(averageColumn)}${item.row + 1}>=6,"B",IF(${xlsxColumn(averageColumn)}${item.row + 1}>=5,"C","D")))))`);
+        setTemplateCell(sheet,item.row,helperColumn,0,summaryStyle,`IF(${xlsxColumn(totalColumn)}${item.row + 1}>0,${xlsxColumn(totalColumn)}${item.row + 1}+ROW()/100000,0)`);
+      });
+
+      for (let attempt=0; attempt<attemptCount; attempt+=1) {
+        const column = startColumn + attempt;
+        setTemplateCell(sheet,totalRow,column,0,summaryStyle,`COUNT(${xlsxColumn(column)}${dataStartRow + 1}:${xlsxColumn(column)}${finalStudentRow + 1})`);
+      }
+      setTemplateCell(sheet,totalRow,totalColumn,0,summaryStyle,`SUM(${xlsxColumn(totalColumn)}${dataStartRow + 1}:${xlsxColumn(totalColumn)}${finalStudentRow + 1})`);
+      setTemplateCell(sheet,totalRow,averageColumn,0,summaryStyle,`IFERROR(AVERAGEIF(${xlsxColumn(averageColumn)}${dataStartRow + 1}:${xlsxColumn(averageColumn)}${finalStudentRow + 1},">0"),0)`);
+      sheet["!ref"] = `A1:${xlsxColumn(helperColumn)}${totalRow + 1}`;
+      sheet["!cols"] = sheet["!cols"] || [];
+      sheet["!cols"][helperColumn] = {hidden:true,wch:0};
+      return {startColumn,totalColumn,averageColumn,helperColumn,dataStartRow,finalStudentRow,totalRow};
+    }
+
+    function rebuildScoreSummary(sheet,attemptCount,tracker) {
+      removeTemplateCells(sheet,1,4);
+      const headerStyle = copyCellStyle(xlsxCell(sheet,4,1)) || copyCellStyle(xlsxCell(sheet,0,1));
+      const bodyStyle = copyCellStyle(xlsxCell(sheet,5,1));
+      ["Attempt","Scores Recorded","Average Score","Maximum Score","Participation"].forEach((label,index) =>
+        setTemplateCell(sheet,4,1 + index,label,headerStyle)
+      );
+      setTemplateCell(sheet,0,1,"ZIP AHEAD - Attempt Score Summary",copyCellStyle(xlsxCell(sheet,0,1)));
+      setTemplateCell(sheet,1,1,"Class performance overview by submitted attempt",copyCellStyle(xlsxCell(sheet,1,1)));
+      setTemplateCell(sheet,2,1,"Attempt columns are added only when submitted answers exist.",copyCellStyle(xlsxCell(sheet,2,1)));
+      for (let attempt=0; attempt<attemptCount; attempt+=1) {
+        const row = 5 + attempt;
+        const trackerColumn = tracker.startColumn + attempt;
+        setTemplateCell(sheet,row,1,`Attempt ${attempt + 1}`,bodyStyle);
+        setTemplateCell(sheet,row,2,0,bodyStyle,`'Student Tracker'!${xlsxColumn(trackerColumn)}${tracker.totalRow + 1}`);
+        setTemplateCell(sheet,row,3,0,bodyStyle,`IFERROR(AVERAGEIF('Student Tracker'!${xlsxColumn(trackerColumn)}$${tracker.dataStartRow + 1}:${xlsxColumn(trackerColumn)}$${tracker.finalStudentRow + 1},">0"),0)`);
+        setTemplateCell(sheet,row,4,10,bodyStyle);
+        setTemplateCell(sheet,row,5,0,bodyStyle,`IFERROR(C${row + 1}/${tracker.finalStudentRow - tracker.dataStartRow + 1},0)`);
+      }
+      sheet["!ref"] = `A1:F${Math.max(5,attemptCount + 5)}`;
+    }
+
+    function rebuildLeaderboard(sheet,tracker) {
+      removeTemplateCells(sheet,0,3);
+      const headerStyle = copyCellStyle(xlsxCell(sheet,3,0)) || copyCellStyle(xlsxCell(sheet,0,0));
+      const bodyStyle = copyCellStyle(xlsxCell(sheet,4,0));
+      ["Rank","Roll NO","Name","Specialisation","Total Score","Avg Score (/10)"].forEach((label,index) =>
+        setTemplateCell(sheet,3,index,label,headerStyle)
+      );
+      for (let rank=1; rank<=10; rank+=1) {
+        const row = 4 + rank - 1;
+        setTemplateCell(sheet,row,0,rank,bodyStyle);
+        setTemplateCell(sheet,row,6,0,bodyStyle,`IFERROR(LARGE('Student Tracker'!$${xlsxColumn(tracker.helperColumn)}$${tracker.dataStartRow + 1}:$${xlsxColumn(tracker.helperColumn)}$${tracker.finalStudentRow + 1},${rank}),"")`);
+        [1,2,3].forEach(function (column) {
+          setTemplateCell(sheet,row,column,"",bodyStyle,`IFERROR(INDEX('Student Tracker'!$${xlsxColumn(column)}$${tracker.dataStartRow + 1}:$${xlsxColumn(column)}$${tracker.finalStudentRow + 1},MATCH($G${row + 1},'Student Tracker'!$${xlsxColumn(tracker.helperColumn)}$${tracker.dataStartRow + 1}:$${xlsxColumn(tracker.helperColumn)}$${tracker.finalStudentRow + 1},0)),"")`);
+        });
+        setTemplateCell(sheet,row,4,0,bodyStyle,`IFERROR(INDEX('Student Tracker'!$${xlsxColumn(tracker.totalColumn)}$${tracker.dataStartRow + 1}:$${xlsxColumn(tracker.totalColumn)}$${tracker.finalStudentRow + 1},MATCH($G${row + 1},'Student Tracker'!$${xlsxColumn(tracker.helperColumn)}$${tracker.dataStartRow + 1}:$${xlsxColumn(tracker.helperColumn)}$${tracker.finalStudentRow + 1},0)),"")`);
+        setTemplateCell(sheet,row,5,0,bodyStyle,`IFERROR(INDEX('Student Tracker'!$${xlsxColumn(tracker.averageColumn)}$${tracker.dataStartRow + 1}:$${xlsxColumn(tracker.averageColumn)}$${tracker.finalStudentRow + 1},MATCH($G${row + 1},'Student Tracker'!$${xlsxColumn(tracker.helperColumn)}$${tracker.dataStartRow + 1}:$${xlsxColumn(tracker.helperColumn)}$${tracker.finalStudentRow + 1},0)),"")`);
+      }
+      sheet["!cols"] = sheet["!cols"] || [];
+      sheet["!cols"][6] = {hidden:true,wch:0};
+      sheet["!ref"] = "A1:G14";
+    }
+
+    function replaceWeekLabels(workbook) {
+      ["Dashboard","Student Tracker","Score Summary","Leaderboard"].forEach(function (sheetName) {
+        const sheet = workbook.Sheets[sheetName];
+        if (!sheet) return;
+        Object.keys(sheet).forEach(function (address) {
+          if (address.startsWith("!")) return;
+          const cell = sheet[address];
+          if (cell && typeof cell.v === "string") {
+            cell.v = cell.v.replace(/\bWeeks?\b/gi,match => match.toLowerCase().endsWith("s") ? "Attempts" : "Attempt");
+          }
+        });
+      });
+    }
+
+    async function exportFiibInterconnectedTracker() {
+      const statusElement = byId("fiibWeeklyExportStatus");
+      const button = byId("fiibTrackerExportButton");
+      const batch = byId("fiibReportBatch").value;
+      const config = FIIB_TRACKERS.batches[batch];
+      if (!config) {
+        setStatus(statusElement,"Choose either the 2025–27 or 2026–28 FIIB batch.","error");
         return;
       }
       if (!window.XLSX) {
@@ -4212,67 +4376,53 @@ function formatCriterionFeedback(criterion) {
 
       const originalText = button.textContent;
       button.disabled = true;
-      button.textContent = "Checking FIIB Records…";
-      setStatus(statusElement,"Preparing the protected batch report…","");
-
+      button.textContent = "Building Tracker…";
+      setStatus(statusElement,"Loading the protected workbook and matching ASCENT submissions…","");
       try {
-        const workbookData = await callRpc(
-          RPC.workbookExport,
-          {p_session_token:currentSession.sessionToken}
-        );
-        if (!workbookData || workbookData.ok !== true) {
-          throw new Error(workbookData && workbookData.message ? workbookData.message : "The report data could not be loaded.");
-        }
-        if (!fiibInstitutionConfirmed(workbookData)) {
-          throw new Error("Download blocked: this login is not confirmed as an FIIB institution login.");
-        }
+        const [workbookData,templateResponse] = await Promise.all([
+          callRpc(RPC.workbookExport,{p_session_token:currentSession.sessionToken}),
+          fetch(config.templateUrl,{cache:"no-store"})
+        ]);
+        if (!workbookData || workbookData.ok !== true) throw new Error(workbookData && workbookData.message ? workbookData.message : "ASCENT report data could not be loaded.");
+        if (!fiibInstitutionConfirmed(workbookData)) throw new Error("Download blocked: this login is not confirmed as an FIIB institution login.");
+        if (!templateResponse.ok) throw new Error(`Tracker template could not be loaded (${templateResponse.status}).`);
 
-        const rows = fiibWeeklyStudentRows(workbookData,batch,week);
-        if (!rows.length) {
-          throw new Error(`No verified FIIB students were found for ${batch.replace(/ PGDM$/,"")}. Nothing was downloaded.`);
-        }
+        const students = (Array.isArray(workbookData.students) ? workbookData.students : [])
+          .filter(student => fiibStudentForBatch(student,batch));
+        if (!students.length) throw new Error(`No verified FIIB students were found for ${batch.replace(/ PGDM$/,"")}.`);
+        const submissionMap = fiibSubmissionMap(workbookData,students);
+        const workbook = XLSX.read(await templateResponse.arrayBuffer(),{
+          type:"array",cellStyles:true,cellDates:true,bookVBA:true
+        });
+        const requiredSheets = [...config.trainerSheets,"Student Tracker","Score Summary","Leaderboard"];
+        const missingSheets = requiredSheets.filter(sheetName => !workbook.Sheets[sheetName]);
+        if (missingSheets.length) throw new Error(`Tracker template is missing: ${missingSheets.join(", ")}.`);
 
-        const headers = [
-          "Roll Number","Student Name","Email ID","Batch","Week",
-          "Questions Assigned","Questions Completed","Week Score","Status","Last Submitted At"
-        ];
-        const sheet = makeStyledWorksheet(
-          rows,
-          headers,
-          [16,25,31,13,9,18,20,14,20,20],
-          {
-            title:`FIIB ${batch.replace(/ PGDM$/,"")} · WEEK ${week} TRAINER REPORT`,
-            subtitle:`Generated by ${exportText(currentSession.fullName || currentSession.email)} on ${new Date().toLocaleString()} · Only verified @fiib.edu.in learners in the selected roll-number cohort are included.`,
-            groups:[
-              {label:"STUDENT",start:0,end:3,fill:WORKBOOK_STYLE.identity,bodyFill:WORKBOOK_STYLE.identitySoft},
-              {label:"WEEKLY PERFORMANCE",start:4,end:9,fill:WORKBOOK_STYLE.score,bodyFill:WORKBOOK_STYLE.scoreSoft}
-            ],
-            freezeColumns:3,
-            centerColumns:[0,3,4,5,6,7,8,9],
-            scoreColumns:[7],
-            emphasisScoreColumns:[7],
-            dateColumns:[9],
-            statusColumns:{8:"submission"},
-            dataRowHeight:32
-          }
+        const trainerResults = config.trainerSheets.map(sheetName =>
+          rebuildTrainerSheet(workbook.Sheets[sheetName],submissionMap)
         );
-        const workbook = XLSX.utils.book_new();
-        workbook.Props = {
-          Title:`FIIB ${batch.replace(/ PGDM$/,"")} Week ${week} Trainer Report`,
-          Subject:"FIIB batch-specific ASCENT weekly scores",
-          Author:exportText(currentSession.fullName || "ASCENT"),
-          CreatedDate:new Date()
+        const attemptCount = Math.max(...trainerResults.map(result => result.attemptCount),0);
+        const tracker = rebuildStudentTracker(workbook.Sheets["Student Tracker"],config,attemptCount);
+        rebuildScoreSummary(workbook.Sheets["Score Summary"],attemptCount,tracker);
+        rebuildLeaderboard(workbook.Sheets["Leaderboard"],tracker);
+        replaceWeekLabels(workbook);
+        workbook.Workbook = workbook.Workbook || {};
+        workbook.Workbook.CalcPr = {
+          ...(workbook.Workbook.CalcPr || {}),
+          calcMode:"auto",fullCalcOnLoad:true,forceFullCalc:true
         };
-        XLSX.utils.book_append_sheet(workbook,sheet,`WEEK ${week}`);
-        XLSX.writeFile(
-          workbook,
-          `FIIB_${batch.replace(/ PGDM$/,"").replace(/[^0-9A-Za-z]+/g,"-")}_Week-${String(week).padStart(2,"0")}_Trainer_Report.xlsx`,
-          {cellStyles:true,cellDates:true}
-        );
-        setStatus(statusElement,`FIIB ${batch.replace(/ PGDM$/,"")} Week ${week} report downloaded with ${rows.length} verified students. The other batch and non-FIIB learners were excluded.`,"success");
+        workbook.Props = {
+          ...(workbook.Props || {}),
+          Title:`FIIB ${batch.replace(/ PGDM$/,"")} ASCENT Interconnected Tracker`,
+          Author:exportText(currentSession.fullName || "ASCENT"),
+          ModifiedDate:new Date()
+        };
+        XLSX.writeFile(workbook,config.fileName,{cellStyles:true,cellDates:true,bookVBA:true});
+        const submittedCount = Array.from(submissionMap.values()).reduce((total,items) => total + items.length,0);
+        setStatus(statusElement,`${batch.replace(/ PGDM$/,"")} tracker downloaded with ${attemptCount} attempt columns and ${submittedCount} ASCENT submissions. All original workbook sheets were retained.`,"success");
       } catch (error) {
         console.error(error);
-        setStatus(statusElement,error.message || "The FIIB weekly report could not be prepared.","error");
+        setStatus(statusElement,error.message || "The interconnected FIIB tracker could not be prepared.","error");
       } finally {
         button.disabled = false;
         button.textContent = originalText;
@@ -4413,7 +4563,7 @@ function formatCriterionFeedback(criterion) {
       byId("refreshLeaderboardButton").addEventListener("click",() => loadPlacementReadinessBoard(true));
       byId("emailLeaderboardButton").addEventListener("click",emailPlacementReadinessBoard);
       byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows,"results"));
-      byId("fiibWeeklyExportButton").addEventListener("click",exportFiibWeeklyReport);
+      byId("fiibTrackerExportButton").addEventListener("click",exportFiibInterconnectedTracker);
       byId("refreshStudentsButton").addEventListener("click",() => loadStudentPerformance(true));
       byId("doneStudentGroupButton").addEventListener("click",finishStudentGroupCreation);
       byId("refreshArchivesButton").addEventListener("click",() => loadArchiveData(true));
