@@ -428,7 +428,7 @@
             <div class="form-group"><label for="resultDateTo">To date</label><input id="resultDateTo" type="date"></div>
           </div><div class="inline-row"><button id="applyResultFiltersButton" class="primary-button" type="button">Apply Filters</button><button id="clearResultFiltersButton" class="secondary-button" type="button">Clear</button></div></div>
           <div class="panel">
-            <div class="panel-title-row"><div><h3>FIIB Question Tracker</h3><div class="panel-subtitle">Download a two-sheet workbook containing Student Tracker and Leaderboard. Every submitted answer becomes the learner’s next Question column.</div></div></div>
+            <div class="panel-title-row"><div><h3>FIIB Question Tracker</h3><div class="panel-subtitle">Download a two-sheet workbook populated directly from live ASCENT student records and submissions. Every submitted answer becomes the learner’s next Question column.</div></div></div>
             <div class="form-grid">
               <div class="form-group"><label for="fiibReportBatch">FIIB batch</label><select id="fiibReportBatch"><option value="">Choose one batch</option><option value="2025-27 PGDM">2025–27</option><option value="2026-28 PGDM">2026–28</option></select><div class="form-note">A batch must be selected. There is no combined-batch download.</div></div>
             </div>
@@ -4178,11 +4178,14 @@ function formatCriterionFeedback(criterion) {
       const startColumn = 4;
       const headerRow = 4;
       const dataStartRow = 5;
-      const studentRows = sheetStudentRows(sheet);
-      const registeredByRoll = new Map(students.map(student => [
-        normaliseRollNumber(student.rollNo ?? student.studentId ?? student.student_id),
-        student
-      ]));
+      const studentRows = students
+        .map(student => ({
+          student,
+          rollNo:normaliseRollNumber(student.rollNo ?? student.studentId ?? student.student_id)
+        }))
+        .filter(item => /^\d{2}(?:PGDM|PGDMFM)\d{3}$/.test(item.rollNo))
+        .sort((left,right) => left.rollNo.localeCompare(right.rollNo,undefined,{numeric:true}))
+        .map((item,index) => ({...item,row:dataStartRow + index}));
       const questionCount = Math.max(0,...studentRows.map(item => (submissionMap.get(item.rollNo) || []).length));
       const totalColumn = startColumn + questionCount;
       const averageColumn = totalColumn + 1;
@@ -4206,10 +4209,10 @@ function formatCriterionFeedback(criterion) {
       );
 
       studentRows.forEach(function (item) {
-        const registered = registeredByRoll.get(item.rollNo);
-        const name = exportText(registered && (registered.name ?? registered.fullName)) || item.name;
-        const email = exportText(registered && (registered.emailId ?? registered.email ?? registered.email_id)) || item.email;
-        const mobile = exportText(registered && (registered.mobileNumber ?? registered.mobile_number ?? registered.mobile ?? registered.phone)) || item.mobile;
+        const registered = item.student;
+        const name = exportText(registered.fullName ?? registered.name);
+        const email = exportText(registered.emailId ?? registered.email ?? registered.email_id);
+        const mobile = exportText(registered.mobileNumber ?? registered.mobile_number ?? registered.mobile ?? registered.phone);
         [item.rollNo,name,email,mobile].forEach((value,index) =>
           setTemplateCell(sheet,item.row,index,value,identityStyle)
         );
