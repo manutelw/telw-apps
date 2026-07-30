@@ -721,6 +721,41 @@ body {
   display: none !important;
 }
 
+@media (min-width: 900px) {
+  body.commercial-entry .page-shell {
+    max-width: 1180px;
+  }
+
+  body.commercial-entry .login-panel {
+    display: grid;
+    grid-template-columns:
+      minmax(0, 1.15fr)
+      minmax(340px, 0.85fr);
+    column-gap: 34px;
+    row-gap: 10px;
+    align-items: start;
+  }
+
+  body.commercial-entry #privatePassPurchase {
+    grid-column: 1;
+    grid-row: 1 / span 5;
+    margin: 0;
+  }
+
+  body.commercial-entry #panelTitle,
+  body.commercial-entry #panelIntro,
+  body.commercial-entry #accessForm,
+  body.commercial-entry #resolvedAccessPanel,
+  body.commercial-entry .help-note {
+    grid-column: 2;
+  }
+
+  body.commercial-entry .footer {
+    grid-column: 1 / -1;
+    margin-top: 18px;
+  }
+}
+
   </style>
 </head>
 
@@ -1055,8 +1090,10 @@ body {
   </a>
 
   <a
+    id="privateBenefitsToggle"
     class="private-benefits-link"
     href="#privateBenefits"
+    aria-expanded="false"
   >
     See what you get
   </a>
@@ -1064,6 +1101,7 @@ body {
   <div
     id="privateBenefits"
     class="private-benefits"
+    hidden
   >
     <h4>
       Practise. Get specific feedback. Try again.
@@ -1173,6 +1211,10 @@ const IS_MANUVIKRAMAN_COMMERCIAL =
   window.location.hostname === "manuvikraman.com" ||
   window.location.hostname === "www.manuvikraman.com";
 
+if (IS_MANUVIKRAMAN_COMMERCIAL) {
+  document.body.classList.add("commercial-entry");
+}
+
   const accessForm =
   document.getElementById("accessForm");
 
@@ -1246,6 +1288,37 @@ const privateBuyerPhone =
 
 const privatePassCard =
   document.querySelector(".private-pass-card");
+
+const privateBenefitsToggle =
+  document.getElementById("privateBenefitsToggle");
+
+const privateBenefits =
+  document.getElementById("privateBenefits");
+
+if (privateBenefitsToggle && privateBenefits) {
+  privateBenefitsToggle.addEventListener(
+    "click",
+    function (event) {
+      event.preventDefault();
+
+      const willShow =
+        privateBenefits.hidden;
+
+      privateBenefits.hidden =
+        !willShow;
+
+      privateBenefitsToggle.textContent =
+        willShow
+          ? "Hide what you get"
+          : "See what you get";
+
+      privateBenefitsToggle.setAttribute(
+        "aria-expanded",
+        String(willShow)
+      );
+    }
+  );
+}
 
 if (!IS_MANUVIKRAMAN_COMMERCIAL) {
   privatePassCard.hidden = true;
