@@ -721,6 +721,22 @@ body {
   display: none !important;
 }
 
+#newStudentRegistrationLink[hidden] {
+  display: none !important;
+}
+
+body.commercial-entry #privatePassPurchase {
+  background: #fff8e8;
+  border-color: #efd8a2;
+}
+
+body.commercial-entry #privatePassTitle,
+body.commercial-entry #panelTitle {
+  font-size: 22px;
+  line-height: 1.25;
+  font-weight: 800;
+}
+
 @media (min-width: 900px) {
   body.commercial-entry .page-shell {
     max-width: 1180px;
@@ -732,7 +748,7 @@ body {
       minmax(0, 1.15fr)
       minmax(340px, 0.85fr);
     column-gap: 34px;
-    row-gap: 10px;
+    row-gap: 0;
     align-items: start;
   }
 
@@ -748,6 +764,31 @@ body {
   body.commercial-entry #resolvedAccessPanel,
   body.commercial-entry .help-note {
     grid-column: 2;
+    margin: 0;
+    background: #eff9f1;
+    border-left: 1px solid #cfe4d2;
+    border-right: 1px solid #cfe4d2;
+  }
+
+  body.commercial-entry #panelTitle {
+    padding: 20px 20px 8px;
+    border-top: 1px solid #cfe4d2;
+    border-radius: 14px 14px 0 0;
+  }
+
+  body.commercial-entry #panelIntro {
+    padding: 0 20px 14px;
+  }
+
+  body.commercial-entry #resolvedAccessPanel,
+  body.commercial-entry #accessForm {
+    padding: 4px 20px 18px;
+  }
+
+  body.commercial-entry .help-note {
+    padding: 18px 20px;
+    border-bottom: 1px solid #cfe4d2;
+    border-radius: 0 0 14px 14px;
   }
 
   body.commercial-entry .footer {
