@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Upload a Job Description and generate an FIIB-standard company and role briefing." />
+  <title>FIIB JD Briefing Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-mark" aria-hidden="true">F</div>
+    <div>
+      <div class="eyebrow">FIIB L&amp;D</div>
+      <div class="brand-title">JD Briefing Builder</div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="hero">
+      <div>
+        <p class="kicker">FROM JOB DESCRIPTION TO DUGOUT PRE-READING</p>
+        <h1>Upload one JD. Generate the complete company briefing.</h1>
+        <p class="hero-copy">
+          The program captures recruitment information, analyses the role, researches the company, and prepares a standardised student briefing for L&amp;D validation.
+        </p>
+      </div>
+      <div class="hero-badge">
+        <span>4</span>
+        <small>automated stages</small>
+      </div>
+    </section>
+
+    <section class="workflow-grid" aria-label="Automated workflow">
+      <article><span>1</span><div><strong>Capture</strong><small>Recruitment information</small></div></article>
+      <article><span>2</span><div><strong>Analyse</strong><small>JD requirements and evidence</small></div></article>
+      <article><span>3</span><div><strong>Research</strong><small>Company and current context</small></div></article>
+      <article><span>4</span><div><strong>Brief</strong><small>Student-facing pre-reading</small></div></article>
+    </section>
+
+    <section class="panel upload-panel" id="uploadPanel">
+      <div class="panel-heading">
+        <div>
+          <p class="section-label">NEW BRIEFING</p>
+          <h2>Upload the Job Description</h2>
+        </div>
+        <span class="privacy-note">Processed securely by the server</span>
+      </div>
+
+      <form id="briefingForm">
+        <label class="dropzone" id="dropzone" for="jdFile">
+          <input id="jdFile" name="jdFile" type="file" accept=".pdf,.doc,.docx,.txt,.rtf,.odt,.html,.md" required />
+          <span class="upload-icon" aria-hidden="true">↑</span>
+          <strong id="filePrompt">Choose or drop the JD here</strong>
+          <small id="fileHelp">PDF, Word, RTF, ODT, HTML, Markdown or text · Maximum 15 MB</small>
+        </label>
+
+        <div class="form-grid">
+          <label>
+            <span>Additional L&amp;D context <em>optional</em></span>
+            <textarea id="optionalContext" rows="4" maxlength="4000" placeholder="Example: Campus role for the 2025–27 batch. Package and interview stages were shared separately by CMC."></textarea>
+          </label>
+          <label>
+            <span>App password <em>if configured</em></span>
+            <input id="appPassword" type="password" autocomplete="current-password" placeholder="Enter the internal access password" />
+            <small class="field-help">This is not your OpenAI key. The API key remains on the server.</small>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button class="primary-button" id="generateButton" type="submit">Generate full briefing</button>
+          <button class="text-button" id="clearButton" type="button">Clear</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel progress-panel hidden" id="progressPanel" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <div>
+        <h2 id="progressTitle">Reading the Job Description…</h2>
+        <p id="progressMessage">The system is extracting the company, role and recruitment details.</p>
+      </div>
+    </section>
+
+    <section class="error-panel hidden" id="errorPanel" role="alert">
+      <strong>Briefing could not be generated</strong>
+      <p id="errorMessage"></p>
+    </section>
+
+    <section class="results hidden" id="resultsSection">
+      <div class="results-header">
+        <div>
+          <p class="section-label">GENERATED REPORT</p>
+          <h2 id="resultsTitle">Company Briefing</h2>
+          <p id="resultsMeta"></p>
+        </div>
+        <div class="result-actions">
+          <button id="downloadWordButton" type="button">Download Word</button>
+          <button id="downloadJsonButton" type="button">Download data</button>
+          <button id="printButton" type="button">Print / PDF</button>
+          <button id="newBriefingButton" class="primary-button compact" type="button">New JD</button>
+        </div>
+      </div>
+
+      <nav class="tabs" aria-label="Report sections">
+        <button class="tab active" data-tab="overview" type="button">Overview</button>
+        <button class="tab" data-tab="analysis" type="button">JD Analysis</button>
+        <button class="tab" data-tab="research" type="button">Company Research</button>
+        <button class="tab" data-tab="briefing" type="button">Student Briefing</button>
+        <button class="tab" data-tab="sources" type="button">Sources &amp; Checks</button>
+      </nav>
+
+      <div id="reportContent"></div>
+    </section>
+  </main>
+
+  <footer>
+    L&amp;D must validate the generated briefing before publishing it on FIIB Hub.
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
