@@ -53,6 +53,11 @@
     .nav-item { width:100%; border:0; border-radius:11px; padding:12px 14px; background:transparent; color:#4a6075; font-size:14px; font-weight:700; text-align:left; }
     .nav-item.active { background:linear-gradient(135deg,var(--navy),var(--blue)); color:#fff; }
     .nav-item:not(.active):hover { background:var(--blue-soft); color:var(--navy); }
+    .restricted-tool-link {
+      display:block; width:100%; margin-top:10px; border:1px solid #d3a23d; border-radius:11px; padding:12px 14px;
+      background:#fff8e8; color:#754d00; font-size:14px; font-weight:800; text-align:left; text-decoration:none;
+    }
+    .restricted-tool-link:hover { background:#fff0c4; color:#5d3d00; }
     .workspace { min-height:700px; padding:28px; overflow:hidden; }
     .section-panel { display:none; }
     .section-panel.active { display:block; }
@@ -257,6 +262,7 @@
           <button id="followupsNavItem" class="nav-item" type="button" data-section="followups">Student Follow-ups</button>
           <button id="trainersNavItem" class="nav-item" type="button" data-section="trainers" hidden>Trainers</button>
         </div>
+        <a id="jdBriefingLink" class="restricted-tool-link" href="../jd-briefing/" target="_blank" rel="noopener noreferrer" hidden>JD Briefing Builder</a>
       </aside>
 
       <section class="workspace">
@@ -505,6 +511,10 @@
   <script>
     const SESSION_STORAGE_KEY = "ascent_trainer_session";
     const ACTIVE_SECTION_STORAGE_KEY = "ascent_trainer_active_section";
+    const JD_BRIEFING_ALLOWED_EMAILS = new Set([
+      "manutelw@gmail.com",
+      "sandeep.kumar@fiib.edu.in"
+    ]);
     const SUPABASE_URL = "https://vtqatrhwfvzyodiftvkc.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
     const RPC = {
@@ -707,8 +717,12 @@
     const currentRole = () => String(currentSession && currentSession.role || "TRAINER").toUpperCase();
     const isAdmin = () => currentRole() === "ADMIN";
     const isCeo = () => currentRole() === "CEO";
+    const canAccessJdBriefing = () => JD_BRIEFING_ALLOWED_EMAILS.has(
+      String(currentSession && currentSession.email || "").trim().toLowerCase()
+    );
 
     function applyRoleAccess() {
+      byId("jdBriefingLink").hidden = !canAccessJdBriefing();
       byId("trainersNavItem").hidden = !isAdmin();
       byId("addBankQuestionButton").hidden = !isAdmin();
       byId("bankInactiveFilterGroup").hidden = !isAdmin();
