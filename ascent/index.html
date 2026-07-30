@@ -941,6 +941,7 @@ body {
   </a>
 
 <a
+  id="newStudentRegistrationLink"
   class="forgot-password-link"
   href="./register.html"
 >
@@ -953,17 +954,17 @@ body {
   aria-labelledby="privatePassTitle"
 >
   <div class="private-pass-label">
-    For Private Learners
+    New Private Learner
   </div>
 
   <h3 id="privatePassTitle">
-    Choose your ASCENT 4-Week Pass
+    New learner — Buy your first ASCENT pass
   </h3>
 
   <p class="private-pass-summary">
-    Practise interview and professional speaking,
-    receive specific feedback, and use it to make
-    your next response stronger.
+    First buy your pass using the email address you
+    will register with. After payment, create your
+    account with that same email address.
   </p>
 
   <div class="form-group">
@@ -1043,8 +1044,15 @@ body {
     role="status"
     aria-live="polite"
   >
-    Secure payment through Razorpay Test Mode.
+    Secure payment through Razorpay.
   </p>
+
+  <a
+    class="private-benefits-link"
+    href="./register.html"
+  >
+    Already paid? Create your account
+  </a>
 
   <a
     class="private-benefits-link"
@@ -1828,9 +1836,30 @@ accessForm.addEventListener(
             .hidden = true;
           changeAccessButton.hidden = true;
           document.getElementById("panelTitle").textContent =
-            "Individual ASCENT Login";
+            "Existing learner — Log in";
           document.getElementById("panelIntro").textContent =
-            "Log in with the personal email address linked to your paid ASCENT pass.";
+            "Already registered? Log in with the email address or ASCENT ID linked to your pass.";
+
+          const newStudentRegistrationLink =
+            document.getElementById("newStudentRegistrationLink");
+
+          if (newStudentRegistrationLink) {
+            newStudentRegistrationLink.hidden = true;
+          }
+
+          const loginPanel =
+            document.querySelector(".login-panel");
+
+          if (
+            loginPanel &&
+            privatePassCard &&
+            privatePassCard.parentElement === loginPanel
+          ) {
+            loginPanel.insertBefore(
+              privatePassCard,
+              document.getElementById("panelTitle")
+            );
+          }
         }
       }
 
