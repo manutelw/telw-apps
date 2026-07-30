@@ -536,6 +536,7 @@
       createTrainer: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_create_trainer",
       questionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_question_bank_get",
       assignQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_assign_question_bank_tasks",
+      registerStandingRelease: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_register_standing_release",
       upsertQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_upsert_question_bank",
       questionBankActive: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_set_question_bank_active",
       clearTestRegister: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_clear_test_student_register",
@@ -1970,7 +1971,73 @@
       }
       return parts.join(" · ") + ".";
     }
+async function registerStandingReleaseIfNeeded(
+  targetType,
+  targetStudentUuids,
+  assignmentResult
+) {
+  /*
+    In this trainer interface, COHORT means a complete
+    academic batch such as 2025–27 or 2026–28.
 
+    Named groups and individually selected students
+    must not become standing batch releases.
+  */
+  const isCompleteBatch =
+    targetType === "COHORT" ||
+    targetType === "BATCH";
+
+  if (!isCompleteBatch) {
+    return "";
+  }
+
+  if (
+    !assignmentResult ||
+    !assignmentResult.questionBatchUuid
+  ) {
+    throw new Error(
+      "The questions were assigned, but ASCENT could not identify the release for automatic future enrolment."
+    );
+  }
+
+  if (
+    !Array.isArray(targetStudentUuids) ||
+    !targetStudentUuids.length
+  ) {
+    throw new Error(
+      "The questions were assigned, but the batch could not be registered for automatic future enrolment."
+    );
+  }
+
+  const standingResult = await callRpc(
+    RPC.registerStandingRelease,
+    {
+      p_session_token:
+        currentSession.sessionToken,
+
+      p_question_batch_uuid:
+        assignmentResult.questionBatchUuid,
+
+      p_student_uuids:
+        targetStudentUuids
+    }
+  );
+
+  if (
+    !standingResult ||
+    standingResult.ok !== true
+  ) {
+    throw new Error(
+      standingResult &&
+      standingResult.message
+        ? "The questions were assigned, but automatic future enrolment was not activated: " +
+          standingResult.message
+        : "The questions were assigned, but automatic future enrolment was not activated."
+    );
+  }
+
+  return " " + standingResult.message;
+}
     async function assignSelectedBankQuestions(event) {
       event.preventDefault();
       if (isCeo()) return;
@@ -1997,14 +2064,31 @@
       if (!confirmReleaseSchedule(questionUuids.length, bankStudentCount, intervalDays, "bankStartAt", "bankDueDays")) return;
       const button = byId("assignBankQuestionsButton"); button.disabled = true; button.textContent = "Assigning…"; setStatus(byId("bankAssignmentStatus"),"","");
       try {
-        const dueText = byId("bankDueDays").value.trim();
-        const result = await callRpc(RPC.assignQuestionBank,{
+       const dueText =
+  byId("bankDueDays").value.trim();
+
+const targetStudentUuids =
+  targetType === "STUDENTS"
+    ? selectedBankStudentUuids()
+    : targetType === "GROUP"
+      ? studentUuidsForGroup(target.value)
+      : targetType === "COHORT"
+        ? studentUuidsForCohort(target.value)
+        : targetType === "BATCH"
+          ? studentUuidsForBatch(
+              byId("bankTargetBatch").value
+            )
+          : null;
+
+const result = await callRpc(
+  RPC.assignQuestionBank,
+  {
           p_session_token:currentSession.sessionToken,
           p_question_uuids:questionUuids,
           p_title_prefix:byId("bankAssignmentTitle").value.trim() || "ASCENT Bank Task",
           p_target_type:targetType === "GROUP" || targetType === "COHORT" || targetType === "BATCH" ? "STUDENTS" : targetType,
           p_target_batch:null,
-          p_student_uuids:targetType === "STUDENTS" ? selectedBankStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(target.value) : targetType === "COHORT" ? studentUuidsForCohort(target.value) : targetType === "BATCH" ? studentUuidsForBatch(byId("bankTargetBatch").value) : null,
+          p_student_uuids:targetStudentUuids,
           p_start_at:toIsoOrNull(byId("bankStartAt").value),
           p_interval_days:intervalDays,
           p_due_days:dueText === "" ? null : Number(dueText),
@@ -2015,7 +2099,13 @@
           p_followup_response_seconds:Number(byId("bankAssignmentResponseSeconds").value || 20)
         });
         if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Bank questions could not be assigned.");
-        setStatus(byId("bankAssignmentStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)} Rubrics were fixed from the Question Bank.`,"success");
+        const standingReleaseNote =
+  await registerStandingReleaseIfNeeded(
+    targetType,
+    targetStudentUuids,
+    result
+  );
+        setStatus(byId("bankAssignmentStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)} Rubrics were fixed from the Question Bank.${standingReleaseNote}`,"success");
         selectedBankQuestions.clear();
         renderQuestionBankTable();
         await loadReport("Refreshing assignments…");
@@ -2207,6 +2297,12 @@
           p_pressure_prep_seconds:Number(byId("pressurePrepSeconds").value || 5), p_pressure_response_seconds:Number(byId("pressureResponseSeconds").value || 20)
         });
         if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "The batch could not be created.");
+        const standingReleaseNote =
+  await registerStandingReleaseIfNeeded(
+    targetType,
+    targetStudentUuids,
+    result
+  );
         let emailNote = "";
         if (byId("emailBulkRelease").checked && Array.isArray(targetStudentUuids) && targetStudentUuids.length) {
           try {
@@ -2225,7 +2321,14 @@
             emailNote = ` The questions were created, but the release email was not queued: ${emailError.message || "unknown error"}.`;
           }
         }
-        setStatus(byId("bulkTaskStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)}${emailNote}`,"success");
+        setStatus(
+  byId("bulkTaskStatus"),
+  `${result.message} ${assignmentResultSummary(
+    result,
+    intervalDays
+  )}${standingReleaseNote}${emailNote}`,
+  "success"
+);
         byId("questionsText").value = ""; updateQuestionCount(); await loadReport("Refreshing tasks and assignments…");
       } catch (error) { console.error(error); setStatus(byId("bulkTaskStatus"),error.message || "ASCENT could not create the question batch.","error"); }
       finally { button.disabled = false; button.textContent = "Create and Assign Batch"; }
