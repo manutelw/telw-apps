@@ -1,6 +1,52 @@
 (() => {
   "use strict";
 
+  const TRAINER_SESSION_STORAGE_KEY = "ascent_trainer_session";
+  const ALLOWED_TRAINER_EMAILS = new Set([
+    "manutelw@gmail.com",
+    "sandeep.kumar@fiib.edu.in",
+  ]);
+
+  function loadAuthorisedTrainerSession() {
+    const raw =
+      localStorage.getItem(TRAINER_SESSION_STORAGE_KEY) ||
+      sessionStorage.getItem(TRAINER_SESSION_STORAGE_KEY);
+
+    if (!raw) return null;
+
+    try {
+      const stored = JSON.parse(raw);
+      const session = {
+        ...stored,
+        sessionToken: stored.sessionToken || stored.session_token,
+        email: String(stored.email || "").trim().toLowerCase(),
+        expiresAt: stored.expiresAt || stored.expires_at,
+      };
+      const expiryTime = new Date(session.expiresAt).getTime();
+
+      if (
+        !session.sessionToken ||
+        !ALLOWED_TRAINER_EMAILS.has(session.email) ||
+        !Number.isFinite(expiryTime) ||
+        expiryTime <= Date.now()
+      ) {
+        return null;
+      }
+
+      localStorage.setItem(TRAINER_SESSION_STORAGE_KEY, JSON.stringify(session));
+      sessionStorage.removeItem(TRAINER_SESSION_STORAGE_KEY);
+      return session;
+    } catch {
+      return null;
+    }
+  }
+
+  const authorisedTrainerSession = loadAuthorisedTrainerSession();
+  if (!authorisedTrainerSession) {
+    window.location.replace("../ascent/");
+    return;
+  }
+
   const config = window.JD_BRIEFING_CONFIG || {};
   const form = document.getElementById("briefingForm");
   const fileInput = document.getElementById("jdFile");
