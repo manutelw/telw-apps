@@ -355,6 +355,7 @@
               <div id="bankAssignmentFixedFollowupGroup" class="form-group two-wide" hidden><label for="bankAssignmentFixedFollowup">Fixed follow-up question</label><input id="bankAssignmentFixedFollowup" type="text" placeholder="This follow-up is used for every selected question"></div><div id="bankAssignmentSmartFollowupNote" class="form-group two-wide" hidden><label>Smart follow-up</label><div class="form-note" style="margin-top:0">ASCENT will choose an approved follow-up from the relevant weakness group: evidence, ownership, decision logic, alternatives, risk or business impact.</div></div>
               <div id="bankAssignmentPrepGroup" class="form-group" hidden><label for="bankAssignmentPrepSeconds">Follow-up preparation</label><input id="bankAssignmentPrepSeconds" type="number" min="0" max="120" value="5"></div>
               <div id="bankAssignmentResponseGroup" class="form-group" hidden><label for="bankAssignmentResponseSeconds">Follow-up response</label><input id="bankAssignmentResponseSeconds" type="number" min="10" max="300" value="20"></div>
+              <div class="form-group full-width"><label class="checkbox-line" style="align-items:flex-start"><input id="emailBankRelease" type="checkbox" checked><span>Email students about this Question Bank release<div class="form-note" style="margin-top:4px">Each student receives one personalised email for the complete question set—not one email per question. It includes the closing date, diagnostic or daily-practice instructions, and how to use scores and feedback.</div></span></label></div>
             </div>
             <div class="inline-row"><button id="assignBankQuestionsButton" class="primary-button" type="submit">Create and Assign Selected Questions</button><span id="bankAssignmentEstimate" class="form-note"></span></div>
             <div id="bankAssignmentStatus" class="form-status" role="status" aria-live="polite"></div>
@@ -488,6 +489,14 @@
             <div class="panel-title-row"><div><h3>Reminder sequence</h3><div class="panel-subtitle">Each reminder gives the learner a complete 48-hour response window.</div></div></div>
             <div class="form-note">First reminder: 48 hours after release · Second reminder: 48 hours after Reminder 1 · Final reminder: 48 hours after Reminder 2 · Trainer attention: 48 hours after the final reminder. The sequence stops immediately when a response is submitted.</div>
           </div>
+          <div class="panel">
+            <div class="panel-title-row"><div><h3>Question Bank release notifications</h3><div class="panel-subtitle">Send one advance-notice email to each student assigned to a Question Bank release. Duplicate emails are automatically blocked.</div></div></div>
+            <div class="form-grid">
+              <div class="form-group two-wide"><label for="releaseEmailBatchSelect">Scheduled Question Bank release</label><select id="releaseEmailBatchSelect"><option value="">Choose a release</option></select><div id="releaseEmailBatchDetails" class="form-note">Recent Question Bank releases will appear here.</div></div>
+            </div>
+            <div class="inline-row"><button id="queueReleaseEmailsButton" class="primary-button" type="button">Queue Student Notification Emails</button></div>
+            <div id="releaseEmailStatus" class="form-status" role="status" aria-live="polite"></div>
+          </div>
           <div id="followupsStatus" class="form-status" role="status" aria-live="polite"></div>
         </section>
 
@@ -542,7 +551,9 @@
       clearTestRegister: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_clear_test_student_register",
       reminderDashboard: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_dashboard",
       setRemindersEnabled: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_reminders_enabled",
-      reminderExport: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_export"
+      reminderExport: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_export",
+      releaseEmailBatches: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_release_email_batches",
+      queueQuestionBankReleaseEmail: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_queue_question_bank_release_email"
     };
     let currentSession = null;
     let reportData = { summary:{}, batches:[], students:[], tasks:[], results:[] };
@@ -561,6 +572,7 @@
     let creatingStudentGroupBatch = "";
     let studentRosterSort = "roll-asc";
     let reminderData = { isEnabled:false, didNotRespondAfterReminder1:0, didNotRespondAfterReminder2:0, didNotRespondAfterFinalReminder:0, deliveryFailures:0 };
+    let releaseEmailData = { releases:[] };
 
     const byId = id => document.getElementById(id);
     const escapeHtml = value => String(value ?? "").replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
@@ -731,6 +743,7 @@
       byId("bankAssignmentForm").hidden = isCeo();
       byId("bulkQuestionsNavItem").hidden = isCeo();
       byId("testRegisterAdminPanel").hidden = !isAdmin();
+      byId("queueReleaseEmailsButton").hidden = isCeo();
     }
 
     function normaliseQuestionForAssignment(value) {
@@ -2060,6 +2073,7 @@ async function registerStandingReleaseIfNeeded(
       if (targetType === "GROUP" && !studentUuidsForGroup(target.value).length) { setStatus(byId("bankAssignmentStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedBankStudentUuids().length) { setStatus(byId("bankAssignmentStatus"),"Choose at least one student.","error"); return; }
       if (followupMode === "FIXED_FOLLOW_UP" && !byId("bankAssignmentFixedFollowup").value.trim()) { setStatus(byId("bankAssignmentStatus"),"Enter the fixed follow-up question.","error"); return; }
+      if (byId("emailBankRelease").checked && !byId("bankDueDays").value.trim()) { setStatus(byId("bankAssignmentStatus"),"Enter the closing period before emailing students. Every release email must state a closing date and time.","error"); return; }
       const bankStudentCount = estimatedBankTargetCount();
       if (!confirmReleaseSchedule(questionUuids.length, bankStudentCount, intervalDays, "bankStartAt", "bankDueDays")) return;
       const button = byId("assignBankQuestionsButton"); button.disabled = true; button.textContent = "Assigning…"; setStatus(byId("bankAssignmentStatus"),"","");
@@ -2105,12 +2119,155 @@ const result = await callRpc(
     targetStudentUuids,
     result
   );
-        setStatus(byId("bankAssignmentStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)} Rubrics were fixed from the Question Bank.${standingReleaseNote}`,"success");
+        let releaseEmailNote = "";
+        if (byId("emailBankRelease").checked && result.questionBatchUuid) {
+          try {
+            const emailResult = await callRpc(
+              RPC.queueQuestionBankReleaseEmail,
+              {
+                p_session_token:currentSession.sessionToken,
+                p_question_batch_uuid:result.questionBatchUuid
+              }
+            );
+            if (!emailResult || emailResult.ok !== true) {
+              throw new Error(emailResult && emailResult.message ? emailResult.message : "The student notification emails could not be queued.");
+            }
+            releaseEmailNote = ` ${emailResult.message}`;
+          } catch (emailError) {
+            console.error(emailError);
+            releaseEmailNote = ` The questions were assigned, but the student notification emails were not queued: ${emailError.message || "unknown error"}. Use Student Follow-ups to retry this release.`;
+          }
+        }
+        setStatus(byId("bankAssignmentStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)} Rubrics were fixed from the Question Bank.${standingReleaseNote}${releaseEmailNote}`,"success");
         selectedBankQuestions.clear();
         renderQuestionBankTable();
         await loadReport("Refreshing assignments…");
+        await loadReleaseEmailBatches();
       } catch (error) { console.error(error); setStatus(byId("bankAssignmentStatus"),error.message,"error"); }
       finally { button.disabled = false; button.textContent = "Create and Assign Selected Questions"; }
+    }
+
+    function selectedReleaseEmailBatch() {
+      const questionBatchUuid = byId("releaseEmailBatchSelect").value;
+      return (releaseEmailData.releases || []).find(
+        release => release.questionBatchUuid === questionBatchUuid
+      ) || null;
+    }
+
+    function renderReleaseEmailBatchDetails() {
+      const release = selectedReleaseEmailBatch();
+      const details = byId("releaseEmailBatchDetails");
+      const button = byId("queueReleaseEmailsButton");
+      if (!release) {
+        details.textContent = "Recent Question Bank releases will appear here.";
+        button.disabled = true;
+        return;
+      }
+
+      const deliveryText = Number(release.sentCount || 0) > 0
+        ? `${Number(release.sentCount || 0)} sent`
+        : Number(release.queuedCount || 0) > 0
+          ? `${Number(release.queuedCount || 0)} already queued`
+          : "No notification emails queued yet";
+      const failedText = Number(release.failedCount || 0) > 0
+        ? ` · ${Number(release.failedCount)} failed and available for retry`
+        : "";
+      details.textContent = `${Number(release.questionCount || 0)} questions · ${Number(release.studentCount || 0)} students · opens ${formatDate(release.opensAt)}${release.dueAt ? ` · complete by ${formatDate(release.dueAt)}` : ""} · ${deliveryText}${failedText}`;
+      button.disabled = false;
+      button.textContent = Number(release.failedCount || 0) > 0
+        ? "Queue Missing and Retry Failed Emails"
+        : "Queue Student Notification Emails";
+    }
+
+    function renderReleaseEmailBatches() {
+      const select = byId("releaseEmailBatchSelect");
+      const current = select.value;
+      const releases = Array.isArray(releaseEmailData.releases)
+        ? releaseEmailData.releases
+        : [];
+      select.innerHTML = `<option value="">Choose a release</option>` + releases.map(release => {
+        const status = Number(release.sentCount || 0) > 0
+          ? `${release.sentCount} sent`
+          : Number(release.queuedCount || 0) > 0
+            ? `${release.queuedCount} queued`
+            : "not notified";
+        return `<option value="${escapeHtml(release.questionBatchUuid)}">${escapeHtml(release.title || "Question Bank release")} · ${escapeHtml(formatDate(release.opensAt))} · ${escapeHtml(release.studentCount || 0)} students · ${escapeHtml(status)}</option>`;
+      }).join("");
+      if (releases.some(release => release.questionBatchUuid === current)) {
+        select.value = current;
+      } else if (releases.length) {
+        select.value = releases[0].questionBatchUuid;
+      }
+      renderReleaseEmailBatchDetails();
+    }
+
+    async function loadReleaseEmailBatches() {
+      try {
+        const result = await callRpc(
+          RPC.releaseEmailBatches,
+          { p_session_token:currentSession.sessionToken }
+        );
+        if (!result || result.ok !== true) {
+          throw new Error(result && result.message ? result.message : "Question Bank releases could not be loaded.");
+        }
+        releaseEmailData = result;
+        renderReleaseEmailBatches();
+      } catch (error) {
+        console.error(error);
+        releaseEmailData = { releases:[] };
+        renderReleaseEmailBatches();
+        setStatus(byId("releaseEmailStatus"),error.message || "Question Bank releases could not be loaded.","error");
+      }
+    }
+
+    async function queueSelectedReleaseEmails() {
+      if (isCeo()) return;
+      const release = selectedReleaseEmailBatch();
+      if (!release) {
+        setStatus(byId("releaseEmailStatus"),"Choose the scheduled Question Bank release.","error");
+        return;
+      }
+
+      const alreadyQueued = Number(release.queuedCount || 0);
+      const confirmation =
+        `Queue one private notification email for every eligible student in this release?\n\n` +
+        `${release.title || "Question Bank release"}\n` +
+        `${Number(release.questionCount || 0)} questions\n` +
+        `${Number(release.studentCount || 0)} assigned students\n` +
+        `Opens: ${formatDate(release.opensAt)}\n` +
+        `${release.dueAt ? `Complete by: ${formatDate(release.dueAt)}\n` : ""}` +
+        `${alreadyQueued ? `${alreadyQueued} student delivery records already exist and will not be duplicated.\n` : ""}` +
+        `\nPress OK to queue only missing emails and retry failed deliveries.`;
+      if (!window.confirm(confirmation)) return;
+
+      const button = byId("queueReleaseEmailsButton");
+      button.disabled = true;
+      button.textContent = "Queuing…";
+      setStatus(byId("releaseEmailStatus"),"Queuing student notification emails…","");
+      try {
+        const result = await callRpc(
+          RPC.queueQuestionBankReleaseEmail,
+          {
+            p_session_token:currentSession.sessionToken,
+            p_question_batch_uuid:release.questionBatchUuid
+          }
+        );
+        if (!result || result.ok !== true) {
+          throw new Error(result && result.message ? result.message : "The student notification emails could not be queued.");
+        }
+        setStatus(
+          byId("releaseEmailStatus"),
+          `${result.message} Eligible students: ${Number(result.eligibleStudents || 0)}. Duplicate deliveries blocked: ${Number(result.alreadyProtected || 0)}.`,
+          "success"
+        );
+        await loadReleaseEmailBatches();
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("releaseEmailStatus"),error.message || "The student notification emails could not be queued.","error");
+      } finally {
+        button.disabled = false;
+        renderReleaseEmailBatchDetails();
+      }
     }
 
     function renderReminderDashboard() {
@@ -4597,9 +4754,14 @@ function formatCriterionFeedback(criterion) {
       byId("archiveCohortSelect").addEventListener("change",renderArchives);
       byId("archiveExportButton").addEventListener("click",exportArchivedRoster);
       byId("refreshAudioFilingButton").addEventListener("click",() => loadAudioFilingData(true));
-      byId("refreshFollowupsButton").addEventListener("click",() => loadReminderDashboard("Refreshing student follow-ups…"));
+      byId("refreshFollowupsButton").addEventListener("click",async() => {
+        await loadReminderDashboard("Refreshing student follow-ups…");
+        await loadReleaseEmailBatches();
+      });
       byId("toggleFollowupsButton").addEventListener("click",toggleInstitutionalFollowups);
       byId("followupsExportButton").addEventListener("click",downloadFollowupExcel);
+      byId("releaseEmailBatchSelect").addEventListener("change",renderReleaseEmailBatchDetails);
+      byId("queueReleaseEmailsButton").addEventListener("click",queueSelectedReleaseEmails);
       byId("refreshQuestionBankButton").addEventListener("click",() => loadQuestionBank("Refreshing question bank…"));
       byId("addBankQuestionButton").addEventListener("click",() => openBankQuestionEditor());
       byId("cancelBankEditButton").addEventListener("click",closeBankQuestionEditor);
@@ -4672,6 +4834,7 @@ function formatCriterionFeedback(criterion) {
       populateBankGroupSelect();
       await loadQuestionBank();
       await loadReminderDashboard();
+      await loadReleaseEmailBatches();
       restoreTrainerSection(true);
     }
     initialise();
