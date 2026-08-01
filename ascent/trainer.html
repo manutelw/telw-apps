@@ -355,7 +355,7 @@
               <div id="bankAssignmentFixedFollowupGroup" class="form-group two-wide" hidden><label for="bankAssignmentFixedFollowup">Fixed follow-up question</label><input id="bankAssignmentFixedFollowup" type="text" placeholder="This follow-up is used for every selected question"></div><div id="bankAssignmentSmartFollowupNote" class="form-group two-wide" hidden><label>Smart follow-up</label><div class="form-note" style="margin-top:0">ASCENT will choose an approved follow-up from the relevant weakness group: evidence, ownership, decision logic, alternatives, risk or business impact.</div></div>
               <div id="bankAssignmentPrepGroup" class="form-group" hidden><label for="bankAssignmentPrepSeconds">Follow-up preparation</label><input id="bankAssignmentPrepSeconds" type="number" min="0" max="120" value="5"></div>
               <div id="bankAssignmentResponseGroup" class="form-group" hidden><label for="bankAssignmentResponseSeconds">Follow-up response</label><input id="bankAssignmentResponseSeconds" type="number" min="10" max="300" value="20"></div>
-              <div class="form-group full-width"><label class="checkbox-line" style="align-items:flex-start"><input id="emailBankRelease" type="checkbox" checked><span>Email students about this Question Bank release<div class="form-note" style="margin-top:4px">Each student receives one personalised email for the complete question set—not one email per question. It includes the closing date, diagnostic or daily-practice instructions, and how to use scores and feedback.</div></span></label></div>
+              <div class="form-group full-width"><div class="read-only-note"><strong>Student email is automatic.</strong> Each student receives one personalised email for the complete question set—not one email per question. It includes the closing date, diagnostic or daily-practice instructions, and how to use scores and feedback.</div></div>
             </div>
             <div class="inline-row"><button id="assignBankQuestionsButton" class="primary-button" type="submit">Create and Assign Selected Questions</button><span id="bankAssignmentEstimate" class="form-note"></span></div>
             <div id="bankAssignmentStatus" class="form-status" role="status" aria-live="polite"></div>
@@ -384,7 +384,7 @@
               <div id="pressurePromptGroup" class="form-group two-wide" hidden><label for="pressurePrompt">Follow-up question</label><input id="pressurePrompt" type="text" placeholder="Paste the follow-up question"><div class="form-note">This same follow-up is attached to every question in this batch.</div></div>
               <div id="pressurePrepGroup" class="form-group" hidden><label for="pressurePrepSeconds">Follow-up preparation</label><input id="pressurePrepSeconds" type="number" min="0" max="120" value="5"></div>
               <div id="pressureResponseGroup" class="form-group" hidden><label for="pressureResponseSeconds">Follow-up response</label><input id="pressureResponseSeconds" type="number" min="10" max="300" value="20"></div>
-              <div class="form-group two-wide"><label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input id="emailBulkRelease" type="checkbox" style="width:auto;margin-top:3px"><span>Email students when each Bulk Question is released<div class="form-note" style="margin-top:4px">Each student receives one email when their next scheduled Bulk Question becomes available. Question Bank releases do not send emails.</div></span></label></div>
+              <div class="form-group full-width"><div class="read-only-note"><strong>Student email is automatic.</strong> Each student receives one email for the complete Bulk Questions release—not one email per question. The email includes the opening and closing dates, daily-practice rule, and how to use scores and feedback.</div></div>
             </div>
             <div class="inline-row"><button id="createBatchButton" class="primary-button" type="submit">Create and Assign Batch</button><span id="assignmentEstimate" class="form-note"></span></div>
             <div id="bulkTaskStatus" class="form-status" role="status" aria-live="polite"></div>
@@ -2073,7 +2073,7 @@ async function registerStandingReleaseIfNeeded(
       if (targetType === "GROUP" && !studentUuidsForGroup(target.value).length) { setStatus(byId("bankAssignmentStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedBankStudentUuids().length) { setStatus(byId("bankAssignmentStatus"),"Choose at least one student.","error"); return; }
       if (followupMode === "FIXED_FOLLOW_UP" && !byId("bankAssignmentFixedFollowup").value.trim()) { setStatus(byId("bankAssignmentStatus"),"Enter the fixed follow-up question.","error"); return; }
-      if (byId("emailBankRelease").checked && !byId("bankDueDays").value.trim()) { setStatus(byId("bankAssignmentStatus"),"Enter the closing period before emailing students. Every release email must state a closing date and time.","error"); return; }
+      if (!byId("bankDueDays").value.trim()) { setStatus(byId("bankAssignmentStatus"),"Enter the closing period. Every release and student email must state a closing date and time.","error"); return; }
       const bankStudentCount = estimatedBankTargetCount();
       if (!confirmReleaseSchedule(questionUuids.length, bankStudentCount, intervalDays, "bankStartAt", "bankDueDays")) return;
       const button = byId("assignBankQuestionsButton"); button.disabled = true; button.textContent = "Assigning…"; setStatus(byId("bankAssignmentStatus"),"","");
@@ -2120,23 +2120,24 @@ const result = await callRpc(
     result
   );
         let releaseEmailNote = "";
-        if (byId("emailBankRelease").checked && result.questionBatchUuid) {
-          try {
-            const emailResult = await callRpc(
-              RPC.queueQuestionBankReleaseEmail,
-              {
-                p_session_token:currentSession.sessionToken,
-                p_question_batch_uuid:result.questionBatchUuid
-              }
-            );
-            if (!emailResult || emailResult.ok !== true) {
-              throw new Error(emailResult && emailResult.message ? emailResult.message : "The student notification emails could not be queued.");
-            }
-            releaseEmailNote = ` ${emailResult.message}`;
-          } catch (emailError) {
-            console.error(emailError);
-            releaseEmailNote = ` The questions were assigned, but the student notification emails were not queued: ${emailError.message || "unknown error"}. Use Student Follow-ups to retry this release.`;
+        try {
+          if (!result.questionBatchUuid) {
+            throw new Error("ASCENT could not identify the complete release.");
           }
+          const emailResult = await callRpc(
+            RPC.queueQuestionBankReleaseEmail,
+            {
+              p_session_token:currentSession.sessionToken,
+              p_question_batch_uuid:result.questionBatchUuid
+            }
+          );
+          if (!emailResult || emailResult.ok !== true) {
+            throw new Error(emailResult && emailResult.message ? emailResult.message : "The student notification emails could not be queued.");
+          }
+          releaseEmailNote = ` ${emailResult.message}`;
+        } catch (emailError) {
+          console.error(emailError);
+          releaseEmailNote = ` The questions were assigned, but the compulsory student notification emails were not queued: ${emailError.message || "unknown error"}. Use Student Follow-ups to retry this release.`;
         }
         setStatus(byId("bankAssignmentStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)} Rubrics were fixed from the Question Bank.${standingReleaseNote}${releaseEmailNote}`,"success");
         selectedBankQuestions.clear();
@@ -2437,6 +2438,7 @@ const result = await callRpc(
       if (targetType === "GROUP" && !studentUuidsForGroup(target.value).length) { setStatus(byId("bulkTaskStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedStudentUuids().length) { setStatus(byId("bulkTaskStatus"),"Choose at least one student.","error"); return; }
       if (pressureMode === "FIXED_FOLLOW_UP" && !byId("pressurePrompt").value.trim()) { setStatus(byId("bulkTaskStatus"),"Enter the follow-up question.","error"); return; }
+      if (!byId("dueDays").value.trim()) { setStatus(byId("bulkTaskStatus"),"Enter the closing period. Every release and student email must state a closing date and time.","error"); return; }
       const studentCount = estimatedTargetCount();
       if (!confirmReleaseSchedule(questions.length, studentCount, intervalDays, "startAt", "dueDays")) return;
       const button = byId("createBatchButton"); button.disabled = true; button.textContent = "Creating Batch…"; setStatus(byId("bulkTaskStatus"),"","");
@@ -2461,22 +2463,28 @@ const result = await callRpc(
     result
   );
         let emailNote = "";
-        if (byId("emailBulkRelease").checked && Array.isArray(targetStudentUuids) && targetStudentUuids.length) {
-          try {
-            const emailResult = await callRpc(RPC.queueBulkReleaseEmail,{
-              p_session_token:currentSession.sessionToken,
-              p_student_uuids:targetStudentUuids,
-              p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
-              p_questions:questions,
-              p_interval_days:intervalDays,
-              p_release_at:releaseAt
-            });
-            if (!emailResult || emailResult.ok !== true) throw new Error(emailResult && emailResult.message ? emailResult.message : "The release email could not be queued.");
-            emailNote = ` ${emailResult.message}`;
-          } catch (emailError) {
-            console.error(emailError);
-            emailNote = ` The questions were created, but the release email was not queued: ${emailError.message || "unknown error"}.`;
+        try {
+          if (!Array.isArray(targetStudentUuids) || !targetStudentUuids.length) {
+            throw new Error("ASCENT could not identify the students for this release.");
           }
+          if (!result.questionBatchUuid) {
+            throw new Error("ASCENT could not identify the complete release.");
+          }
+          const emailResult = await callRpc(RPC.queueBulkReleaseEmail,{
+            p_session_token:currentSession.sessionToken,
+            p_student_uuids:targetStudentUuids,
+            p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
+            p_questions:questions,
+            p_interval_days:intervalDays,
+            p_release_at:releaseAt,
+            p_question_batch_uuid:result.questionBatchUuid,
+            p_due_days:Number(dueText)
+          });
+          if (!emailResult || emailResult.ok !== true) throw new Error(emailResult && emailResult.message ? emailResult.message : "The release email could not be queued.");
+          emailNote = ` ${emailResult.message}`;
+        } catch (emailError) {
+          console.error(emailError);
+          emailNote = ` The questions were created, but the compulsory student notification emails were not queued: ${emailError.message || "unknown error"}.`;
         }
         setStatus(
   byId("bulkTaskStatus"),
