@@ -1,0 +1,30 @@
+{
+  "name": "ASCENT – Communication Practice",
+  "short_name": "ASCENT",
+  "description": "Structured speaking practice, recorded responses, feedback and progress for professional communication.",
+  "id": "/ascent/play.html",
+  "start_url": "/ascent/play.html",
+  "scope": "/ascent/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#143a60",
+  "background_color": "#edf4fb",
+  "categories": [
+    "education",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "/ascent/icons/ascent-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/ascent/icons/ascent-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
