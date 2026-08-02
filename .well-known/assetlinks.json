@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.telw.ascent",
+        "sha256_cert_fingerprints": ["9F:86:0F:37:A4:2F:0C:A0:3E:41:9B:69:3A:09:81:39:30:4A:30:BF:76:C7:A4:7B:AE:CC:D5:89:67:F5:10:96"]
+      }
+    }]
