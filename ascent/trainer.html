@@ -351,12 +351,16 @@
         </section>
 
         <section id="resultsSection" class="section-panel">
-          <div class="workspace-header"><div><h2>Results</h2><p>See one summary row per student. Download the complete question-wise record in Excel.</p></div><div class="header-actions"><button id="resultsExportButton" class="primary-button" type="button">Download Excel</button></div></div>
+          <div class="workspace-header"><div><h2>Results</h2><p>Filter results, compare first and latest scores, and download the complete Excel report.</p></div><div class="header-actions"><button id="resultsExportButton" class="primary-button" type="button">Download Excel</button></div></div>
           <div class="panel"><div class="filter-grid">
             <div class="form-group"><label for="resultBatchFilter">Batch</label><select id="resultBatchFilter"><option value="">All batches</option></select></div>
             <div class="form-group"><label for="resultStudentFilter">Student</label><select id="resultStudentFilter"><option value="">All students</option></select></div>
+            <div class="form-group"><label for="resultTaskFilter">Task</label><select id="resultTaskFilter"><option value="">All tasks</option></select></div>
+            <div class="form-group"><label for="resultStatusFilter">Status</label><select id="resultStatusFilter"><option value="">All statuses</option><option value="COMPLETED">Completed</option><option value="NOT_STARTED">Not started</option><option value="NOT_ATTEMPTED">Not attempted</option><option value="SCHEDULED">Scheduled</option><option value="WITHDRAWN">Withdrawn</option></select></div>
+            <div class="form-group"><label for="resultDateFrom">From date</label><input id="resultDateFrom" type="date"></div>
+            <div class="form-group"><label for="resultDateTo">To date</label><input id="resultDateTo" type="date"></div>
           </div><div class="inline-row"><button id="applyResultFiltersButton" class="primary-button" type="button">Apply Filters</button><button id="clearResultFiltersButton" class="secondary-button" type="button">Clear</button></div></div>
-          <div class="panel"><div class="panel-title-row"><div><h3>Student Results Summary</h3><div id="resultCountLabel" class="panel-subtitle"></div></div></div><div id="resultsTableWrap" class="table-wrap"></div><div id="resultsStatus" class="form-status"></div></div>
+          <div class="panel"><div class="panel-title-row"><div><h3>Student Results</h3><div id="resultCountLabel" class="panel-subtitle"></div></div></div><div id="resultsTableWrap" class="table-wrap"></div><div id="resultsStatus" class="form-status"></div></div>
         </section>
 
         <section id="studentsSection" class="section-panel">
@@ -715,9 +719,13 @@
 
     function populateControls() {
       const batches = reportData.batches.map(batch => ({value:batch,label:batch}));
-      ["targetBatch","bankTargetBatch","assignmentBatchFilter","resultBatchFilter"].forEach(id => fillSelect(id,batches,"value",item => item.label,["targetBatch","bankTargetBatch"].includes(id) ? "Choose batch" : "All batches"));
+      ["targetBatch","bankTargetBatch","assignmentBatchFilter"].forEach(id => fillSelect(id,batches,"value",item => item.label,["targetBatch","bankTargetBatch"].includes(id) ? "Choose batch" : "All batches"));
+      fillSelect("resultBatchFilter",[
+        {value:"2025-27 PGDM",label:"2025-27 PGDM"},
+        {value:"2026-28 PGDM",label:"2026-28 PGDM"}
+      ],"value",item => item.label,"All batches");
       ["assignmentStudentFilter","resultStudentFilter"].forEach(id => fillSelect(id,reportData.students,"studentUuid",student => `${student.fullName} (${student.studentId})`,"All students"));
-      fillSelect("assignmentTaskFilter",reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks");
+      ["assignmentTaskFilter","resultTaskFilter"].forEach(id => fillSelect(id,reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks"));
       const testStudents = reportData.students.filter(student => String(student.studentId || "").trim().toUpperCase().startsWith("ASCENTTEST"));
       fillSelect("testStudentClearSelect",testStudents,"studentUuid",student => `${student.fullName} (${student.studentId})`,"Choose a test student");
       byId("clearTestRegisterButton").disabled = !testStudents.length;
@@ -818,67 +826,60 @@
       byId("assignmentsTableWrap").innerHTML = `<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Available</th><th>Due</th><th>Submitted</th><th>Status</th></tr></thead><tbody>${visibleAssignmentRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong><br>${escapeHtml(row.studentId)}</td><td>${escapeHtml(row.batch || "—")}</td><td class="question-cell"><strong>${escapeHtml(row.taskTitle)}</strong><br>${escapeHtml(row.question)}</td><td>${escapeHtml(formatDate(row.availableAt))}</td><td>${escapeHtml(formatDate(row.dueAt))}</td><td>${Number(row.attemptCount || 0) > 0 ? "Yes" : "No"}</td><td><span class="status-badge ${statusClass(row.status)}">${escapeHtml(row.status)}</span></td></tr>`).join("")}</tbody></table>`;
     }
 
-    function buildStudentResultRows() {
-      const selectedBatch = byId("resultBatchFilter").value;
-      const selectedStudent = byId("resultStudentFilter").value;
-      const assignments = Array.isArray(reportData.results) ? reportData.results : [];
-      const students = Array.isArray(reportData.students) ? reportData.students : [];
-
-      return students
-        .filter(student => !selectedBatch || String(student.batch || "") === selectedBatch)
-        .filter(student => !selectedStudent || String(student.studentUuid || "") === selectedStudent)
-        .map(student => {
-          const studentUuid = String(student.studentUuid || "");
-          const studentAssignments = assignments.filter(row =>
-            String(row.studentUuid || "") === studentUuid &&
-            String(row.status || "").toUpperCase() !== "WITHDRAWN"
-          );
-
-          const answeredAssignments = studentAssignments.filter(row =>
-            Number(row.attemptCount || 0) > 0 || Boolean(row.latestSubmittedAt)
-          );
-
-          const scoredAssignments = answeredAssignments
-            .filter(row =>
-              row.latestScore !== null &&
-              row.latestScore !== undefined &&
-              row.latestScore !== "" &&
-              Boolean(row.latestSubmittedAt)
-            )
-            .slice()
-            .sort((left,right) =>
-              new Date(left.latestSubmittedAt).getTime() - new Date(right.latestSubmittedAt).getTime()
-            );
-
-          const latestScored = scoredAssignments.length
-            ? scoredAssignments[scoredAssignments.length - 1]
-            : null;
-
-          return {
-            fullName:student.fullName || "—",
-            studentId:student.studentId || "—",
-            totalQuestions:studentAssignments.length,
-            questionsAnswered:answeredAssignments.length,
-            lastScore:latestScored ? latestScored.latestScore : null,
-            submittedAt:latestScored ? latestScored.latestSubmittedAt : null
-          };
-        })
-        .sort((left,right) =>
-          String(left.studentId).localeCompare(String(right.studentId),undefined,{numeric:true,sensitivity:"base"}) ||
-          String(left.fullName).localeCompare(String(right.fullName),undefined,{sensitivity:"base"})
-        );
+    function resultBatchFromRollNumber(studentId,batch) {
+      const roll = String(studentId || "").trim().toUpperCase();
+      if (/^25PGDM(?:FM)?\d{3}$/.test(roll)) return "2025-27 PGDM";
+      if (/^26PGDM(?:FM)?\d{3}$/.test(roll)) return "2026-28 PGDM";
+      return String(batch || "");
     }
 
     function renderResultsTable() {
-      visibleResultRows = buildStudentResultRows();
+      const normalisedRows = (reportData.results || []).map(row => ({
+        ...row,
+        batch:resultBatchFromRollNumber(row.studentId,row.batch)
+      }));
+      const filteredRows = resultFilter(normalisedRows,"result");
+      const studentRows = new Map();
+
+      filteredRows.forEach(row => {
+        const key = String(row.studentUuid || row.studentId || row.email || "");
+        if (!key) return;
+
+        if (!studentRows.has(key)) {
+          studentRows.set(key,{
+            fullName:row.fullName || "—",
+            studentId:row.studentId || "—",
+            totalQuestions:0,
+            questionsAnswered:0,
+            lastScore:null,
+            latestSubmittedAt:null,
+            latestTimestamp:0
+          });
+        }
+
+        const student = studentRows.get(key);
+        student.totalQuestions += 1;
+
+        const answered = Number(row.attemptCount || 0) > 0 || Boolean(row.latestSubmittedAt);
+        if (answered) student.questionsAnswered += 1;
+
+        const submittedTimestamp = Date.parse(row.latestSubmittedAt || "");
+        const hasScore = row.latestScore !== null && row.latestScore !== undefined && row.latestScore !== "";
+        if (answered && hasScore && Number.isFinite(submittedTimestamp) && submittedTimestamp >= student.latestTimestamp) {
+          student.lastScore = row.latestScore;
+          student.latestSubmittedAt = row.latestSubmittedAt;
+          student.latestTimestamp = submittedTimestamp;
+        }
+      });
+
+      visibleResultRows = Array.from(studentRows.values()).sort((left,right) =>
+        String(left.studentId).localeCompare(String(right.studentId),undefined,{numeric:true,sensitivity:"base"}) ||
+        String(left.fullName).localeCompare(String(right.fullName),undefined,{sensitivity:"base"})
+      );
+
       byId("resultCountLabel").textContent = `${visibleResultRows.length} students shown`;
-
-      if (!visibleResultRows.length) {
-        byId("resultsTableWrap").innerHTML = `<div class="empty-state">No students match these filters.</div>`;
-        return;
-      }
-
-      byId("resultsTableWrap").innerHTML = `<table><thead><tr><th>Name of Student</th><th>Roll Number</th><th>Total Questions</th><th>Questions Answered</th><th>Last Score</th><th>Submitted Time</th></tr></thead><tbody>${visibleResultRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong></td><td>${escapeHtml(row.studentId)}</td><td>${escapeHtml(row.totalQuestions)}</td><td>${escapeHtml(row.questionsAnswered)}</td><td>${escapeHtml(formatNumber(row.lastScore))}</td><td>${escapeHtml(formatDate(row.submittedAt))}</td></tr>`).join("")}</tbody></table>`;
+      if (!visibleResultRows.length) { byId("resultsTableWrap").innerHTML = `<div class="empty-state">No results match these filters.</div>`; return; }
+      byId("resultsTableWrap").innerHTML = `<table><thead><tr><th>Name of Student</th><th>Roll Number</th><th>Total Questions</th><th>Questions Answered</th><th>Last Score</th><th>Submitted Time</th></tr></thead><tbody>${visibleResultRows.map(row => `<tr><td><strong>${escapeHtml(row.fullName)}</strong></td><td>${escapeHtml(row.studentId)}</td><td>${escapeHtml(row.totalQuestions)}</td><td>${escapeHtml(row.questionsAnswered)}</td><td>${escapeHtml(formatNumber(row.lastScore))}</td><td>${escapeHtml(formatDate(row.latestSubmittedAt))}</td></tr>`).join("")}</tbody></table>`;
     }
 
     function studentField(student, keys) {
@@ -3410,20 +3411,8 @@ function formatCriterionFeedback(criterion) {
     }
 
     function clearFilters(prefix) {
-      if (prefix === "result") {
-        ["BatchFilter","StudentFilter"].forEach(suffix => {
-          const element = byId(prefix+suffix);
-          if (element) element.value="";
-        });
-        renderResultsTable();
-        return;
-      }
-
-      ["BatchFilter","StudentFilter","TaskFilter","StatusFilter"].forEach(suffix => {
-        const element = byId(prefix+suffix);
-        if (element) element.value="";
-      });
-      renderAssignmentsTable();
+      ["BatchFilter","StudentFilter","TaskFilter","StatusFilter"].forEach(suffix => { const element = byId(prefix+suffix); if (element) element.value=""; });
+      if (prefix === "result") { byId("resultDateFrom").value=""; byId("resultDateTo").value=""; renderResultsTable(); } else renderAssignmentsTable();
     }
 
     function initialiseAdminTouchpoint() {
