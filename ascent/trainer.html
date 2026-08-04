@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-ascent-build="2026-08-04.2">
+<html lang="en" data-ascent-build="2026-08-04.5">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,6 +41,7 @@
     .home-button,.logout-button { padding:10px 14px; font-size:14px; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
     .secondary-button { min-height:44px; padding:0 16px; font-size:14px; }
     .small-button { padding:7px 10px; font-size:12px; }
+    .student-profile-button { pointer-events:auto !important; cursor:pointer !important; opacity:1 !important; position:relative; z-index:3; }
     .secondary-button:hover,.home-button:hover,.logout-button:hover,.small-button:hover { background:var(--blue-soft); }
     .danger-button { border-color:#efb6b0; color:var(--danger); }
     .task-actions { display:flex; flex-wrap:wrap; gap:7px; min-width:150px; }
@@ -533,7 +534,7 @@
     let visibleAssignmentRows = [];
     let visibleResultRows = [];
     let studentPerformanceData = null;
-    const STUDENT_PERFORMANCE_VIEWER_BUILD = "2026-08-04.2";
+    const STUDENT_PERFORMANCE_VIEWER_BUILD = "2026-08-04.5";
     let cohortData = { students:[], groups:[] };
     let archiveData = { archives:[], students:[] };
     let audioFilingData = { cohorts:[] };
@@ -1741,7 +1742,7 @@
         const profileKey = studentProfileKey(student);
         const lastScore = latestStudentScore(data,student);
         const storedRoll = studentField(student,["rollNo","studentId","student_id"]);
-        return `<tr${isCorrectionSection ? ` class="roll-correction-row"` : ""}><td><input class="student-edit-input student-roll-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(storedRoll || "")}" placeholder="e.g. 26PGDM001" maxlength="11"></td><td><input class="student-edit-input student-name-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["name","fullName"]) || "")}" placeholder="Enter name"><div class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</div></td><td><input class="student-edit-input student-batch-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["batch","batchName"]) || "")}" placeholder="Enter batch"></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="bank-actions"><button class="small-button student-save-button" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button student-profile-button" type="button" data-student-key="${escapeHtml(profileKey)}" data-student-name="${escapeHtml(studentField(student,["name","fullName"]) || "Student")}" data-viewer-build="${STUDENT_PERFORMANCE_VIEWER_BUILD}" ${profileKey ? "" : "disabled"}>View performance</button></div></td>${mayAddToGroup ? `<td><input class="student-group-roster-check" type="checkbox" data-student="${escapeHtml(studentUuid)}" ${selectedStudentGroupUuids.has(studentUuid) ? "checked" : ""} aria-label="Add ${escapeHtml(studentField(student,["name","fullName"]) || "student")} to group"></td>` : ""}</tr>`;
+        return `<tr${isCorrectionSection ? ` class="roll-correction-row"` : ""}><td><input class="student-edit-input student-roll-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(storedRoll || "")}" placeholder="e.g. 26PGDM001" maxlength="11"></td><td><input class="student-edit-input student-name-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["name","fullName"]) || "")}" placeholder="Enter name"><div class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</div></td><td><input class="student-edit-input student-batch-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["batch","batchName"]) || "")}" placeholder="Enter batch"></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="bank-actions"><button class="small-button student-save-button" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}" data-student-key="${escapeHtml(profileKey)}" data-student-name="${escapeHtml(studentField(student,["name","fullName","full_name"]) || "Student")}" data-viewer-build="${STUDENT_PERFORMANCE_VIEWER_BUILD}">View performance</button></div></td>${mayAddToGroup ? `<td><input class="student-group-roster-check" type="checkbox" data-student="${escapeHtml(studentUuid)}" ${selectedStudentGroupUuids.has(studentUuid) ? "checked" : ""} aria-label="Add ${escapeHtml(studentField(student,["name","fullName"]) || "student")} to group"></td>` : ""}</tr>`;
         }).join("")}</tbody></table>`;
       };
       const batchFoldersHtml = Array.from(folders.entries())
@@ -1760,6 +1761,11 @@
         })
         .join("");
       byId("studentRosterTableWrap").innerHTML = batchFoldersHtml;
+      document.querySelectorAll(".student-profile-button").forEach(button => {
+        button.disabled = false;
+        button.removeAttribute("disabled");
+        button.addEventListener("click",event => openStudentPerformanceFromButton(event,button));
+      });
       byId("studentRosterSort").addEventListener("change",event => { studentRosterSort = event.target.value; renderStudentRoster(); });
       document.querySelectorAll(".student-save-button").forEach(button => button.addEventListener("click",() => saveStudentDetails(button)));
       document.querySelectorAll(".student-roll-input").forEach(input => input.addEventListener("input",() => { input.value = normaliseRollNumber(input.value); }));
@@ -1802,12 +1808,35 @@
       }
     }
 
+    function openStudentPerformanceFromButton(event,button) {
+      try {
+        if (event) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        if (!button) throw new Error("The View performance control could not be identified.");
+        const studentName = button.dataset.studentName || "student";
+        const studentKey = button.dataset.studentKey || button.dataset.student || `name:${normalisedStudentName({name:studentName})}`;
+        setStatus(byId("studentsStatus"),`Opening ${studentName}… viewer ${STUDENT_PERFORMANCE_VIEWER_BUILD}`,"");
+        renderStudentProfile(studentKey);
+      } catch (error) {
+        console.error("View performance click failed",error);
+        setStatus(byId("studentsStatus"),`${error.message || "View performance could not start."} Viewer ${STUDENT_PERFORMANCE_VIEWER_BUILD}.`,"error");
+      }
+      return false;
+    }
+
     function renderStudentProfile(studentKey) {
       try {
         const data = studentPerformanceData;
         const key = String(studentKey || "");
-        const student = cohortData.students.find(item => studentProfileKey(item) === key || studentUuidOf(item) === key) ||
-          (data && Array.isArray(data.students) ? data.students : []).find(item => studentProfileKey(item) === key || studentUuidOf(item) === key);
+        const rawNameKey = key.startsWith("name:") ? key.slice(5) : normalisedStudentName({name:key});
+        const matchesRequestedStudent = item =>
+          studentProfileKey(item) === key ||
+          studentUuidOf(item) === key ||
+          Boolean(rawNameKey && normalisedStudentName(item) === rawNameKey);
+        const student = cohortData.students.find(matchesRequestedStudent) ||
+          (data && Array.isArray(data.students) ? data.students : []).find(matchesRequestedStudent);
         if (!student) {
           throw new Error("ASCENT could not match this roster entry to a student record.");
         }
@@ -2983,6 +3012,22 @@ function formatCriterionFeedback(criterion) {
       };
 
       return aliases[key] || key;
+    }
+
+    function rubricLabel(value) {
+      const key = workbookRubricKey(value);
+      const labels = {
+        MANAGERIAL_COMMUNICATION:"LUM",
+        PI:"PI",
+        GD:"GD",
+        DIAGNOSTIC:"Diagnostic"
+      };
+
+      if (labels[key]) return labels[key];
+
+      return exportText(value || key || "Question")
+        .replace(/_/g," ")
+        .replace(/\b\w/g,letter => letter.toUpperCase());
     }
 
     function workbookCriterionLabel(key) {
@@ -4391,11 +4436,7 @@ function formatCriterionFeedback(criterion) {
       byId("studentRosterTableWrap").addEventListener("click",event => {
         const button = event.target.closest(".student-profile-button");
         if (!button) return;
-        event.preventDefault();
-        event.stopPropagation();
-        const studentName = button.dataset.studentName || "student";
-        setStatus(byId("studentsStatus"),`Opening ${studentName}… viewer ${STUDENT_PERFORMANCE_VIEWER_BUILD}`,"");
-        renderStudentProfile(button.dataset.studentKey || button.dataset.student || "");
+        openStudentPerformanceFromButton(event,button);
       });
       byId("addTrainerForm").addEventListener("submit",createTrainer);
     }
