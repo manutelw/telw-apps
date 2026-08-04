@@ -53,11 +53,6 @@
     .nav-item { width:100%; border:0; border-radius:11px; padding:12px 14px; background:transparent; color:#4a6075; font-size:14px; font-weight:700; text-align:left; }
     .nav-item.active { background:linear-gradient(135deg,var(--navy),var(--blue)); color:#fff; }
     .nav-item:not(.active):hover { background:var(--blue-soft); color:var(--navy); }
-    .restricted-tool-link {
-      display:block; width:100%; margin-top:10px; border:1px solid #d3a23d; border-radius:11px; padding:12px 14px;
-      background:#fff8e8; color:#754d00; font-size:14px; font-weight:800; text-align:left; text-decoration:none;
-    }
-    .restricted-tool-link:hover { background:#fff0c4; color:#5d3d00; }
     .workspace { min-height:700px; padding:28px; overflow:hidden; }
     .section-panel { display:none; }
     .section-panel.active { display:block; }
@@ -262,7 +257,6 @@
           <button id="followupsNavItem" class="nav-item" type="button" data-section="followups">Student Follow-ups</button>
           <button id="trainersNavItem" class="nav-item" type="button" data-section="trainers" hidden>Trainers</button>
         </div>
-        <a id="jdBriefingLink" class="restricted-tool-link" href="../jd-briefing/" target="_blank" rel="noopener noreferrer" hidden>JD Briefing Builder</a>
       </aside>
 
       <section class="workspace">
@@ -355,7 +349,6 @@
               <div id="bankAssignmentFixedFollowupGroup" class="form-group two-wide" hidden><label for="bankAssignmentFixedFollowup">Fixed follow-up question</label><input id="bankAssignmentFixedFollowup" type="text" placeholder="This follow-up is used for every selected question"></div><div id="bankAssignmentSmartFollowupNote" class="form-group two-wide" hidden><label>Smart follow-up</label><div class="form-note" style="margin-top:0">ASCENT will choose an approved follow-up from the relevant weakness group: evidence, ownership, decision logic, alternatives, risk or business impact.</div></div>
               <div id="bankAssignmentPrepGroup" class="form-group" hidden><label for="bankAssignmentPrepSeconds">Follow-up preparation</label><input id="bankAssignmentPrepSeconds" type="number" min="0" max="120" value="5"></div>
               <div id="bankAssignmentResponseGroup" class="form-group" hidden><label for="bankAssignmentResponseSeconds">Follow-up response</label><input id="bankAssignmentResponseSeconds" type="number" min="10" max="300" value="20"></div>
-              <div class="form-group full-width"><div class="read-only-note"><strong>Student email is automatic.</strong> Each student receives one personalised email for the complete question set—not one email per question. It includes the closing date, diagnostic or daily-practice instructions, and how to use scores and feedback.</div></div>
             </div>
             <div class="inline-row"><button id="assignBankQuestionsButton" class="primary-button" type="submit">Create and Assign Selected Questions</button><span id="bankAssignmentEstimate" class="form-note"></span></div>
             <div id="bankAssignmentStatus" class="form-status" role="status" aria-live="polite"></div>
@@ -384,7 +377,7 @@
               <div id="pressurePromptGroup" class="form-group two-wide" hidden><label for="pressurePrompt">Follow-up question</label><input id="pressurePrompt" type="text" placeholder="Paste the follow-up question"><div class="form-note">This same follow-up is attached to every question in this batch.</div></div>
               <div id="pressurePrepGroup" class="form-group" hidden><label for="pressurePrepSeconds">Follow-up preparation</label><input id="pressurePrepSeconds" type="number" min="0" max="120" value="5"></div>
               <div id="pressureResponseGroup" class="form-group" hidden><label for="pressureResponseSeconds">Follow-up response</label><input id="pressureResponseSeconds" type="number" min="10" max="300" value="20"></div>
-              <div class="form-group full-width"><div class="read-only-note"><strong>Student email is automatic.</strong> Each student receives one email for the complete Bulk Questions release—not one email per question. The email includes the opening and closing dates, daily-practice rule, and how to use scores and feedback.</div></div>
+              <div class="form-group two-wide"><label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input id="emailBulkRelease" type="checkbox" style="width:auto;margin-top:3px"><span>Email students when each Bulk Question is released<div class="form-note" style="margin-top:4px">Each student receives one email when their next scheduled Bulk Question becomes available. Question Bank releases do not send emails.</div></span></label></div>
             </div>
             <div class="inline-row"><button id="createBatchButton" class="primary-button" type="submit">Create and Assign Batch</button><span id="assignmentEstimate" class="form-note"></span></div>
             <div id="bulkTaskStatus" class="form-status" role="status" aria-live="polite"></div>
@@ -434,14 +427,6 @@
             <div class="form-group"><label for="resultDateFrom">From date</label><input id="resultDateFrom" type="date"></div>
             <div class="form-group"><label for="resultDateTo">To date</label><input id="resultDateTo" type="date"></div>
           </div><div class="inline-row"><button id="applyResultFiltersButton" class="primary-button" type="button">Apply Filters</button><button id="clearResultFiltersButton" class="secondary-button" type="button">Clear</button></div></div>
-          <div class="panel">
-            <div class="panel-title-row"><div><h3>FIIB Question Tracker</h3><div class="panel-subtitle">Download a two-sheet workbook populated directly from live ASCENT student records and submissions. Every submitted answer becomes the learner’s next Question column.</div></div></div>
-            <div class="form-grid">
-              <div class="form-group"><label for="fiibReportBatch">FIIB batch</label><select id="fiibReportBatch"><option value="">Choose one batch</option><option value="2025-27 PGDM">2025–27</option><option value="2026-28 PGDM">2026–28</option></select><div class="form-note">A batch must be selected. There is no combined-batch download.</div></div>
-            </div>
-            <div class="inline-row"><button id="fiibTrackerExportButton" class="primary-button" type="button">Download Question Tracker</button></div>
-            <div id="fiibWeeklyExportStatus" class="form-status" role="status" aria-live="polite"></div>
-          </div>
           <div class="panel"><div class="panel-title-row"><div><h3>Student Results</h3><div id="resultCountLabel" class="panel-subtitle"></div></div></div><div id="resultsTableWrap" class="table-wrap"></div><div id="resultsStatus" class="form-status"></div></div>
         </section>
 
@@ -489,14 +474,6 @@
             <div class="panel-title-row"><div><h3>Reminder sequence</h3><div class="panel-subtitle">Each reminder gives the learner a complete 48-hour response window.</div></div></div>
             <div class="form-note">First reminder: 48 hours after release · Second reminder: 48 hours after Reminder 1 · Final reminder: 48 hours after Reminder 2 · Trainer attention: 48 hours after the final reminder. The sequence stops immediately when a response is submitted.</div>
           </div>
-          <div class="panel">
-            <div class="panel-title-row"><div><h3>Question Bank release notifications</h3><div class="panel-subtitle">Send one advance-notice email to each student assigned to a Question Bank release. Duplicate emails are automatically blocked.</div></div></div>
-            <div class="form-grid">
-              <div class="form-group two-wide"><label for="releaseEmailBatchSelect">Scheduled Question Bank release</label><select id="releaseEmailBatchSelect"><option value="">Choose a release</option></select><div id="releaseEmailBatchDetails" class="form-note">Recent Question Bank releases will appear here.</div></div>
-            </div>
-            <div class="inline-row"><button id="queueReleaseEmailsButton" class="primary-button" type="button">Queue Student Notification Emails</button></div>
-            <div id="releaseEmailStatus" class="form-status" role="status" aria-live="polite"></div>
-          </div>
           <div id="followupsStatus" class="form-status" role="status" aria-live="polite"></div>
         </section>
 
@@ -520,10 +497,6 @@
   <script>
     const SESSION_STORAGE_KEY = "ascent_trainer_session";
     const ACTIVE_SECTION_STORAGE_KEY = "ascent_trainer_active_section";
-    const JD_BRIEFING_ALLOWED_EMAILS = new Set([
-      "manutelw@gmail.com",
-      "sandeep.kumar@fiib.edu.in"
-    ]);
     const SUPABASE_URL = "https://vtqatrhwfvzyodiftvkc.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
     const RPC = {
@@ -545,15 +518,12 @@
       createTrainer: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_create_trainer",
       questionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_question_bank_get",
       assignQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_assign_question_bank_tasks",
-      registerStandingRelease: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_register_standing_release",
       upsertQuestionBank: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_upsert_question_bank",
       questionBankActive: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_set_question_bank_active",
       clearTestRegister: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_clear_test_student_register",
       reminderDashboard: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_dashboard",
       setRemindersEnabled: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_reminders_enabled",
-      reminderExport: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_export",
-      releaseEmailBatches: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_release_email_batches",
-      queueQuestionBankReleaseEmail: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_queue_question_bank_release_email"
+      reminderExport: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_export"
     };
     let currentSession = null;
     let reportData = { summary:{}, batches:[], students:[], tasks:[], results:[] };
@@ -572,7 +542,6 @@
     let creatingStudentGroupBatch = "";
     let studentRosterSort = "roll-asc";
     let reminderData = { isEnabled:false, didNotRespondAfterReminder1:0, didNotRespondAfterReminder2:0, didNotRespondAfterFinalReminder:0, deliveryFailures:0 };
-    let releaseEmailData = { releases:[] };
 
     const byId = id => document.getElementById(id);
     const escapeHtml = value => String(value ?? "").replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
@@ -730,12 +699,8 @@
     const currentRole = () => String(currentSession && currentSession.role || "TRAINER").toUpperCase();
     const isAdmin = () => currentRole() === "ADMIN";
     const isCeo = () => currentRole() === "CEO";
-    const canAccessJdBriefing = () => JD_BRIEFING_ALLOWED_EMAILS.has(
-      String(currentSession && currentSession.email || "").trim().toLowerCase()
-    );
 
     function applyRoleAccess() {
-      byId("jdBriefingLink").hidden = !canAccessJdBriefing();
       byId("trainersNavItem").hidden = !isAdmin();
       byId("addBankQuestionButton").hidden = !isAdmin();
       byId("bankInactiveFilterGroup").hidden = !isAdmin();
@@ -743,7 +708,6 @@
       byId("bankAssignmentForm").hidden = isCeo();
       byId("bulkQuestionsNavItem").hidden = isCeo();
       byId("testRegisterAdminPanel").hidden = !isAdmin();
-      byId("queueReleaseEmailsButton").hidden = isCeo();
     }
 
     function normaliseQuestionForAssignment(value) {
@@ -1056,7 +1020,60 @@
     }
 
     function studentUuidOf(row) {
-      return String(studentField(row,["studentUuid","student_uuid","uuid","id"]) || "");
+      return String(studentField(row,["studentUuid","student_uuid","uuid","id"]) || "").trim();
+    }
+
+    function normalisedStudentEmail(row) {
+      return exportText(studentField(row,["emailId","email","email_id"]))
+        .trim()
+        .toLowerCase();
+    }
+
+    function normalisedStudentRoll(row) {
+      return normaliseRollNumber(studentField(row,["rollNo","studentId","student_id","roll_number"]));
+    }
+
+    function normalisedStudentName(row) {
+      return exportText(studentField(row,["name","fullName","full_name"]))
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g," ");
+    }
+
+    function studentProfileKey(row) {
+      const uuid = studentUuidOf(row);
+      if (uuid) return `uuid:${uuid}`;
+      const email = normalisedStudentEmail(row);
+      if (email) return `email:${email}`;
+      const roll = normalisedStudentRoll(row);
+      if (roll) return `roll:${roll}`;
+      const name = normalisedStudentName(row);
+      return name ? `name:${name}` : "";
+    }
+
+    function sameStudentRecord(row, studentOrKey) {
+      if (!row || !studentOrKey) return false;
+
+      if (typeof studentOrKey === "string") {
+        const key = String(studentOrKey);
+        return studentProfileKey(row) === key || studentUuidOf(row) === key;
+      }
+
+      const rowUuid = studentUuidOf(row);
+      const targetUuid = studentUuidOf(studentOrKey);
+      if (rowUuid && targetUuid && rowUuid === targetUuid) return true;
+
+      const rowEmail = normalisedStudentEmail(row);
+      const targetEmail = normalisedStudentEmail(studentOrKey);
+      if (rowEmail && targetEmail && rowEmail === targetEmail) return true;
+
+      const rowRoll = normalisedStudentRoll(row);
+      const targetRoll = normalisedStudentRoll(studentOrKey);
+      if (rowRoll && targetRoll && rowRoll === targetRoll) return true;
+
+      const rowName = normalisedStudentName(row);
+      const targetName = normalisedStudentName(studentOrKey);
+      return Boolean(rowName && targetName && rowName === targetName);
     }
 
     function submittedAtOf(row) {
@@ -1069,10 +1086,10 @@
       return exportNumber(row && (row.score ?? row.finalScore ?? row.totalScore ?? row.latestScore));
     }
 
-    function uniqueStudentAssignments(data, studentUuid) {
+    function uniqueStudentAssignments(data, studentOrKey) {
       const latestByTask = new Map();
-      (Array.isArray(data.assignments) ? data.assignments : [])
-        .filter(row => studentUuidOf(row) === studentUuid)
+      (data && Array.isArray(data.assignments) ? data.assignments : [])
+        .filter(row => sameStudentRecord(row,studentOrKey))
         .forEach(function (row) {
           const key = String(row.assignmentUuid || row.taskUuid || row.question || "");
           latestByTask.set(key,selectedAssignment(latestByTask.get(key),row));
@@ -1080,10 +1097,10 @@
       return Array.from(latestByTask.values());
     }
 
-    function studentSubmissions(data, studentUuid) {
+    function studentSubmissions(data, studentOrKey) {
       const latestBySubmission = new Map();
-      (Array.isArray(data.submissions) ? data.submissions : [])
-        .filter(row => studentUuidOf(row) === studentUuid)
+      (data && Array.isArray(data.submissions) ? data.submissions : [])
+        .filter(row => sameStudentRecord(row,studentOrKey))
         .forEach(function (row) {
           const key = String(row.submissionUuid || row.submission_uuid || row.assignmentUuid || `${row.question || ""}|${submittedAtOf(row)}`);
           latestBySubmission.set(key,row);
@@ -1650,9 +1667,10 @@
         const mayAddToGroup = creatingStudentGroupName && creatingStudentGroupBatch === batch && !isCorrectionSection;
         return `<table><thead><tr><th>Roll Number</th><th>Name</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th></th>${mayAddToGroup ? `<th>Add to group</th>` : ""}</tr></thead><tbody>${sortStudents(folderStudents).map(student => {
         const studentUuid = studentUuidOf(student);
-        const lastScore = latestStudentScore(data,studentUuid);
+        const profileKey = studentProfileKey(student);
+        const lastScore = latestStudentScore(data,student);
         const storedRoll = studentField(student,["rollNo","studentId","student_id"]);
-        return `<tr${isCorrectionSection ? ` class="roll-correction-row"` : ""}><td><input class="student-edit-input student-roll-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(storedRoll || "")}" placeholder="e.g. 26PGDM001" maxlength="11"></td><td><input class="student-edit-input student-name-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["name","fullName"]) || "")}" placeholder="Enter name"><div class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</div></td><td><input class="student-edit-input student-batch-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["batch","batchName"]) || "")}" placeholder="Enter batch"></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="bank-actions"><button class="small-button student-save-button" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button></div></td>${mayAddToGroup ? `<td><input class="student-group-roster-check" type="checkbox" data-student="${escapeHtml(studentUuid)}" ${selectedStudentGroupUuids.has(studentUuid) ? "checked" : ""} aria-label="Add ${escapeHtml(studentField(student,["name","fullName"]) || "student")} to group"></td>` : ""}</tr>`;
+        return `<tr${isCorrectionSection ? ` class="roll-correction-row"` : ""}><td><input class="student-edit-input student-roll-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(storedRoll || "")}" placeholder="e.g. 26PGDM001" maxlength="11"></td><td><input class="student-edit-input student-name-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["name","fullName"]) || "")}" placeholder="Enter name"><div class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</div></td><td><input class="student-edit-input student-batch-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["batch","batchName"]) || "")}" placeholder="Enter batch"></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="bank-actions"><button class="small-button student-save-button" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button student-profile-button" type="button" data-student-key="${escapeHtml(profileKey)}" ${profileKey ? "" : "disabled"}>View performance</button></div></td>${mayAddToGroup ? `<td><input class="student-group-roster-check" type="checkbox" data-student="${escapeHtml(studentUuid)}" ${selectedStudentGroupUuids.has(studentUuid) ? "checked" : ""} aria-label="Add ${escapeHtml(studentField(student,["name","fullName"]) || "student")} to group"></td>` : ""}</tr>`;
         }).join("")}</tbody></table>`;
       };
       const batchFoldersHtml = Array.from(folders.entries())
@@ -1672,7 +1690,7 @@
         .join("");
       byId("studentRosterTableWrap").innerHTML = batchFoldersHtml;
       byId("studentRosterSort").addEventListener("change",event => { studentRosterSort = event.target.value; renderStudentRoster(); });
-      document.querySelectorAll(".student-profile-button").forEach(button => button.addEventListener("click",() => renderStudentProfile(button.dataset.student)));
+      document.querySelectorAll(".student-profile-button").forEach(button => button.addEventListener("click",() => renderStudentProfile(button.dataset.studentKey || button.dataset.student)));
       document.querySelectorAll(".student-save-button").forEach(button => button.addEventListener("click",() => saveStudentDetails(button)));
       document.querySelectorAll(".student-roll-input").forEach(input => input.addEventListener("input",() => { input.value = normaliseRollNumber(input.value); }));
       document.querySelectorAll(".student-group-roster-check").forEach(box => box.addEventListener("change",() => {
@@ -1714,12 +1732,17 @@
       }
     }
 
-    function renderStudentProfile(studentUuid) {
+    function renderStudentProfile(studentKey) {
       const data = studentPerformanceData;
-      const student = cohortData.students.find(item => studentUuidOf(item) === String(studentUuid)) || (data && Array.isArray(data.students) ? data.students : []).find(item => studentUuidOf(item) === String(studentUuid));
-      if (!student) return;
-      const assignments = uniqueStudentAssignments(data,studentUuid);
-      const submissions = studentSubmissions(data,studentUuid);
+      const key = String(studentKey || "");
+      const student = cohortData.students.find(item => studentProfileKey(item) === key || studentUuidOf(item) === key) ||
+        (data && Array.isArray(data.students) ? data.students : []).find(item => studentProfileKey(item) === key || studentUuidOf(item) === key);
+      if (!student) {
+        setStatus(byId("studentsStatus"),"ASCENT could not match this roster record to a student profile. Refresh the student list and try again.","error");
+        return;
+      }
+      const assignments = uniqueStudentAssignments(data,student);
+      const submissions = studentSubmissions(data,student);
       const scored = submissions.map(row => ({row,score:scoreOf(row)})).filter(item => item.score !== null);
       const answeredAssignments = assignments.filter(item => Boolean(item.submissionUuid) || submissions.some(submission => String(submission.assignmentUuid || "") === String(item.assignmentUuid || "")));
       const questionsSent = assignments.length;
@@ -1984,73 +2007,7 @@
       }
       return parts.join(" · ") + ".";
     }
-async function registerStandingReleaseIfNeeded(
-  targetType,
-  targetStudentUuids,
-  assignmentResult
-) {
-  /*
-    In this trainer interface, COHORT means a complete
-    academic batch such as 2025–27 or 2026–28.
 
-    Named groups and individually selected students
-    must not become standing batch releases.
-  */
-  const isCompleteBatch =
-    targetType === "COHORT" ||
-    targetType === "BATCH";
-
-  if (!isCompleteBatch) {
-    return "";
-  }
-
-  if (
-    !assignmentResult ||
-    !assignmentResult.questionBatchUuid
-  ) {
-    throw new Error(
-      "The questions were assigned, but ASCENT could not identify the release for automatic future enrolment."
-    );
-  }
-
-  if (
-    !Array.isArray(targetStudentUuids) ||
-    !targetStudentUuids.length
-  ) {
-    throw new Error(
-      "The questions were assigned, but the batch could not be registered for automatic future enrolment."
-    );
-  }
-
-  const standingResult = await callRpc(
-    RPC.registerStandingRelease,
-    {
-      p_session_token:
-        currentSession.sessionToken,
-
-      p_question_batch_uuid:
-        assignmentResult.questionBatchUuid,
-
-      p_student_uuids:
-        targetStudentUuids
-    }
-  );
-
-  if (
-    !standingResult ||
-    standingResult.ok !== true
-  ) {
-    throw new Error(
-      standingResult &&
-      standingResult.message
-        ? "The questions were assigned, but automatic future enrolment was not activated: " +
-          standingResult.message
-        : "The questions were assigned, but automatic future enrolment was not activated."
-    );
-  }
-
-  return " " + standingResult.message;
-}
     async function assignSelectedBankQuestions(event) {
       event.preventDefault();
       if (isCeo()) return;
@@ -2073,36 +2030,18 @@ async function registerStandingReleaseIfNeeded(
       if (targetType === "GROUP" && !studentUuidsForGroup(target.value).length) { setStatus(byId("bankAssignmentStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedBankStudentUuids().length) { setStatus(byId("bankAssignmentStatus"),"Choose at least one student.","error"); return; }
       if (followupMode === "FIXED_FOLLOW_UP" && !byId("bankAssignmentFixedFollowup").value.trim()) { setStatus(byId("bankAssignmentStatus"),"Enter the fixed follow-up question.","error"); return; }
-      if (!byId("bankDueDays").value.trim()) { setStatus(byId("bankAssignmentStatus"),"Enter the closing period. Every release and student email must state a closing date and time.","error"); return; }
       const bankStudentCount = estimatedBankTargetCount();
       if (!confirmReleaseSchedule(questionUuids.length, bankStudentCount, intervalDays, "bankStartAt", "bankDueDays")) return;
       const button = byId("assignBankQuestionsButton"); button.disabled = true; button.textContent = "Assigning…"; setStatus(byId("bankAssignmentStatus"),"","");
       try {
-       const dueText =
-  byId("bankDueDays").value.trim();
-
-const targetStudentUuids =
-  targetType === "STUDENTS"
-    ? selectedBankStudentUuids()
-    : targetType === "GROUP"
-      ? studentUuidsForGroup(target.value)
-      : targetType === "COHORT"
-        ? studentUuidsForCohort(target.value)
-        : targetType === "BATCH"
-          ? studentUuidsForBatch(
-              byId("bankTargetBatch").value
-            )
-          : null;
-
-const result = await callRpc(
-  RPC.assignQuestionBank,
-  {
+        const dueText = byId("bankDueDays").value.trim();
+        const result = await callRpc(RPC.assignQuestionBank,{
           p_session_token:currentSession.sessionToken,
           p_question_uuids:questionUuids,
           p_title_prefix:byId("bankAssignmentTitle").value.trim() || "ASCENT Bank Task",
           p_target_type:targetType === "GROUP" || targetType === "COHORT" || targetType === "BATCH" ? "STUDENTS" : targetType,
           p_target_batch:null,
-          p_student_uuids:targetStudentUuids,
+          p_student_uuids:targetType === "STUDENTS" ? selectedBankStudentUuids() : targetType === "GROUP" ? studentUuidsForGroup(target.value) : targetType === "COHORT" ? studentUuidsForCohort(target.value) : targetType === "BATCH" ? studentUuidsForBatch(byId("bankTargetBatch").value) : null,
           p_start_at:toIsoOrNull(byId("bankStartAt").value),
           p_interval_days:intervalDays,
           p_due_days:dueText === "" ? null : Number(dueText),
@@ -2113,162 +2052,12 @@ const result = await callRpc(
           p_followup_response_seconds:Number(byId("bankAssignmentResponseSeconds").value || 20)
         });
         if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Bank questions could not be assigned.");
-        const standingReleaseNote =
-  await registerStandingReleaseIfNeeded(
-    targetType,
-    targetStudentUuids,
-    result
-  );
-        let releaseEmailNote = "";
-        try {
-          if (!result.questionBatchUuid) {
-            throw new Error("ASCENT could not identify the complete release.");
-          }
-          const emailResult = await callRpc(
-            RPC.queueQuestionBankReleaseEmail,
-            {
-              p_session_token:currentSession.sessionToken,
-              p_question_batch_uuid:result.questionBatchUuid
-            }
-          );
-          if (!emailResult || emailResult.ok !== true) {
-            throw new Error(emailResult && emailResult.message ? emailResult.message : "The student notification emails could not be queued.");
-          }
-          releaseEmailNote = ` ${emailResult.message}`;
-        } catch (emailError) {
-          console.error(emailError);
-          releaseEmailNote = ` The questions were assigned, but the compulsory student notification emails were not queued: ${emailError.message || "unknown error"}. Use Student Follow-ups to retry this release.`;
-        }
-        setStatus(byId("bankAssignmentStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)} Rubrics were fixed from the Question Bank.${standingReleaseNote}${releaseEmailNote}`,"success");
+        setStatus(byId("bankAssignmentStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)} Rubrics were fixed from the Question Bank.`,"success");
         selectedBankQuestions.clear();
         renderQuestionBankTable();
         await loadReport("Refreshing assignments…");
-        await loadReleaseEmailBatches();
       } catch (error) { console.error(error); setStatus(byId("bankAssignmentStatus"),error.message,"error"); }
       finally { button.disabled = false; button.textContent = "Create and Assign Selected Questions"; }
-    }
-
-    function selectedReleaseEmailBatch() {
-      const questionBatchUuid = byId("releaseEmailBatchSelect").value;
-      return (releaseEmailData.releases || []).find(
-        release => release.questionBatchUuid === questionBatchUuid
-      ) || null;
-    }
-
-    function renderReleaseEmailBatchDetails() {
-      const release = selectedReleaseEmailBatch();
-      const details = byId("releaseEmailBatchDetails");
-      const button = byId("queueReleaseEmailsButton");
-      if (!release) {
-        details.textContent = "Recent Question Bank releases will appear here.";
-        button.disabled = true;
-        return;
-      }
-
-      const deliveryText = Number(release.sentCount || 0) > 0
-        ? `${Number(release.sentCount || 0)} sent`
-        : Number(release.queuedCount || 0) > 0
-          ? `${Number(release.queuedCount || 0)} already queued`
-          : "No notification emails queued yet";
-      const failedText = Number(release.failedCount || 0) > 0
-        ? ` · ${Number(release.failedCount)} failed and available for retry`
-        : "";
-      details.textContent = `${Number(release.questionCount || 0)} questions · ${Number(release.studentCount || 0)} students · opens ${formatDate(release.opensAt)}${release.dueAt ? ` · complete by ${formatDate(release.dueAt)}` : ""} · ${deliveryText}${failedText}`;
-      button.disabled = false;
-      button.textContent = Number(release.failedCount || 0) > 0
-        ? "Queue Missing and Retry Failed Emails"
-        : "Queue Student Notification Emails";
-    }
-
-    function renderReleaseEmailBatches() {
-      const select = byId("releaseEmailBatchSelect");
-      const current = select.value;
-      const releases = Array.isArray(releaseEmailData.releases)
-        ? releaseEmailData.releases
-        : [];
-      select.innerHTML = `<option value="">Choose a release</option>` + releases.map(release => {
-        const status = Number(release.sentCount || 0) > 0
-          ? `${release.sentCount} sent`
-          : Number(release.queuedCount || 0) > 0
-            ? `${release.queuedCount} queued`
-            : "not notified";
-        return `<option value="${escapeHtml(release.questionBatchUuid)}">${escapeHtml(release.title || "Question Bank release")} · ${escapeHtml(formatDate(release.opensAt))} · ${escapeHtml(release.studentCount || 0)} students · ${escapeHtml(status)}</option>`;
-      }).join("");
-      if (releases.some(release => release.questionBatchUuid === current)) {
-        select.value = current;
-      } else if (releases.length) {
-        select.value = releases[0].questionBatchUuid;
-      }
-      renderReleaseEmailBatchDetails();
-    }
-
-    async function loadReleaseEmailBatches() {
-      try {
-        const result = await callRpc(
-          RPC.releaseEmailBatches,
-          { p_session_token:currentSession.sessionToken }
-        );
-        if (!result || result.ok !== true) {
-          throw new Error(result && result.message ? result.message : "Question Bank releases could not be loaded.");
-        }
-        releaseEmailData = result;
-        renderReleaseEmailBatches();
-      } catch (error) {
-        console.error(error);
-        releaseEmailData = { releases:[] };
-        renderReleaseEmailBatches();
-        setStatus(byId("releaseEmailStatus"),error.message || "Question Bank releases could not be loaded.","error");
-      }
-    }
-
-    async function queueSelectedReleaseEmails() {
-      if (isCeo()) return;
-      const release = selectedReleaseEmailBatch();
-      if (!release) {
-        setStatus(byId("releaseEmailStatus"),"Choose the scheduled Question Bank release.","error");
-        return;
-      }
-
-      const alreadyQueued = Number(release.queuedCount || 0);
-      const confirmation =
-        `Queue one private notification email for every eligible student in this release?\n\n` +
-        `${release.title || "Question Bank release"}\n` +
-        `${Number(release.questionCount || 0)} questions\n` +
-        `${Number(release.studentCount || 0)} assigned students\n` +
-        `Opens: ${formatDate(release.opensAt)}\n` +
-        `${release.dueAt ? `Complete by: ${formatDate(release.dueAt)}\n` : ""}` +
-        `${alreadyQueued ? `${alreadyQueued} student delivery records already exist and will not be duplicated.\n` : ""}` +
-        `\nPress OK to queue only missing emails and retry failed deliveries.`;
-      if (!window.confirm(confirmation)) return;
-
-      const button = byId("queueReleaseEmailsButton");
-      button.disabled = true;
-      button.textContent = "Queuing…";
-      setStatus(byId("releaseEmailStatus"),"Queuing student notification emails…","");
-      try {
-        const result = await callRpc(
-          RPC.queueQuestionBankReleaseEmail,
-          {
-            p_session_token:currentSession.sessionToken,
-            p_question_batch_uuid:release.questionBatchUuid
-          }
-        );
-        if (!result || result.ok !== true) {
-          throw new Error(result && result.message ? result.message : "The student notification emails could not be queued.");
-        }
-        setStatus(
-          byId("releaseEmailStatus"),
-          `${result.message} Eligible students: ${Number(result.eligibleStudents || 0)}. Duplicate deliveries blocked: ${Number(result.alreadyProtected || 0)}.`,
-          "success"
-        );
-        await loadReleaseEmailBatches();
-      } catch (error) {
-        console.error(error);
-        setStatus(byId("releaseEmailStatus"),error.message || "The student notification emails could not be queued.","error");
-      } finally {
-        button.disabled = false;
-        renderReleaseEmailBatchDetails();
-      }
     }
 
     function renderReminderDashboard() {
@@ -2438,7 +2227,6 @@ const result = await callRpc(
       if (targetType === "GROUP" && !studentUuidsForGroup(target.value).length) { setStatus(byId("bulkTaskStatus"),"That student group does not have any students.","error"); return; }
       if (targetType === "STUDENTS" && !selectedStudentUuids().length) { setStatus(byId("bulkTaskStatus"),"Choose at least one student.","error"); return; }
       if (pressureMode === "FIXED_FOLLOW_UP" && !byId("pressurePrompt").value.trim()) { setStatus(byId("bulkTaskStatus"),"Enter the follow-up question.","error"); return; }
-      if (!byId("dueDays").value.trim()) { setStatus(byId("bulkTaskStatus"),"Enter the closing period. Every release and student email must state a closing date and time.","error"); return; }
       const studentCount = estimatedTargetCount();
       if (!confirmReleaseSchedule(questions.length, studentCount, intervalDays, "startAt", "dueDays")) return;
       const button = byId("createBatchButton"); button.disabled = true; button.textContent = "Creating Batch…"; setStatus(byId("bulkTaskStatus"),"","");
@@ -2456,44 +2244,25 @@ const result = await callRpc(
           p_pressure_prep_seconds:Number(byId("pressurePrepSeconds").value || 5), p_pressure_response_seconds:Number(byId("pressureResponseSeconds").value || 20)
         });
         if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "The batch could not be created.");
-        const standingReleaseNote =
-  await registerStandingReleaseIfNeeded(
-    targetType,
-    targetStudentUuids,
-    result
-  );
         let emailNote = "";
-        try {
-          if (!Array.isArray(targetStudentUuids) || !targetStudentUuids.length) {
-            throw new Error("ASCENT could not identify the students for this release.");
+        if (byId("emailBulkRelease").checked && Array.isArray(targetStudentUuids) && targetStudentUuids.length) {
+          try {
+            const emailResult = await callRpc(RPC.queueBulkReleaseEmail,{
+              p_session_token:currentSession.sessionToken,
+              p_student_uuids:targetStudentUuids,
+              p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
+              p_questions:questions,
+              p_interval_days:intervalDays,
+              p_release_at:releaseAt
+            });
+            if (!emailResult || emailResult.ok !== true) throw new Error(emailResult && emailResult.message ? emailResult.message : "The release email could not be queued.");
+            emailNote = ` ${emailResult.message}`;
+          } catch (emailError) {
+            console.error(emailError);
+            emailNote = ` The questions were created, but the release email was not queued: ${emailError.message || "unknown error"}.`;
           }
-          if (!result.questionBatchUuid) {
-            throw new Error("ASCENT could not identify the complete release.");
-          }
-          const emailResult = await callRpc(RPC.queueBulkReleaseEmail,{
-            p_session_token:currentSession.sessionToken,
-            p_student_uuids:targetStudentUuids,
-            p_title_prefix:byId("titlePrefix").value.trim() || "ASCENT Task",
-            p_questions:questions,
-            p_interval_days:intervalDays,
-            p_release_at:releaseAt,
-            p_question_batch_uuid:result.questionBatchUuid,
-            p_due_days:Number(dueText)
-          });
-          if (!emailResult || emailResult.ok !== true) throw new Error(emailResult && emailResult.message ? emailResult.message : "The release email could not be queued.");
-          emailNote = ` ${emailResult.message}`;
-        } catch (emailError) {
-          console.error(emailError);
-          emailNote = ` The questions were created, but the compulsory student notification emails were not queued: ${emailError.message || "unknown error"}.`;
         }
-        setStatus(
-  byId("bulkTaskStatus"),
-  `${result.message} ${assignmentResultSummary(
-    result,
-    intervalDays
-  )}${standingReleaseNote}${emailNote}`,
-  "success"
-);
+        setStatus(byId("bulkTaskStatus"),`${result.message} ${assignmentResultSummary(result, intervalDays)}${emailNote}`,"success");
         byId("questionsText").value = ""; updateQuestionCount(); await loadReport("Refreshing tasks and assignments…");
       } catch (error) { console.error(error); setStatus(byId("bulkTaskStatus"),error.message || "ASCENT could not create the question batch.","error"); }
       finally { button.disabled = false; button.textContent = "Create and Assign Batch"; }
@@ -4342,285 +4111,6 @@ function formatCriterionFeedback(criterion) {
       }
     }
 
-    const FIIB_TRACKERS = {
-      institutionUuid:"9ba256d1-2689-4d5b-907c-34c3f9da59ca",
-      accessPointUuid:"04482860-a8e6-4ee8-b7f6-0e20b1f9d8b8",
-      emailDomain:"@fiib.edu.in",
-      batches:{
-        "2025-27 PGDM":{
-          templateUrl:"/ascent/templates/Batch_2025-27_Question_Tracker.xlsx",
-          fileName:"FIIB_2025-27_ASCENT_Question_Tracker.xlsx"
-        },
-        "2026-28 PGDM":{
-          templateUrl:"/ascent/templates/Batch_2026-28_Question_Tracker.xlsx",
-          fileName:"FIIB_2026-28_ASCENT_Question_Tracker.xlsx"
-        }
-      }
-    };
-
-    function fiibInstitutionConfirmed(workbookData) {
-      const institutionUuid = exportText(workbookData.institutionUuid ?? workbookData.institution_uuid).toLowerCase();
-      const accessPointUuid = exportText(workbookData.accessPointUuid ?? workbookData.access_point_uuid).toLowerCase();
-      const institutionName = exportText(workbookData.institutionName ?? workbookData.institution_name).toLowerCase();
-      return institutionUuid === FIIB_TRACKERS.institutionUuid ||
-        accessPointUuid === FIIB_TRACKERS.accessPointUuid ||
-        /\bfiib\b/.test(institutionName);
-    }
-
-    function fiibStudentForBatch(student,batch) {
-      const rollNo = normaliseRollNumber(student.rollNo ?? student.studentId ?? student.student_id);
-      const email = exportText(student.emailId ?? student.email ?? student.email_id).toLowerCase();
-      return Boolean(studentUuidOf(student)) &&
-        email.endsWith(FIIB_TRACKERS.emailDomain) &&
-        rollNumberCohort(rollNo).batch === batch;
-    }
-
-    function xlsxColumn(index) {
-      return XLSX.utils.encode_col(index);
-    }
-
-    function xlsxCell(sheet,row,column) {
-      return sheet[XLSX.utils.encode_cell({r:row,c:column})];
-    }
-
-    function copyCellStyle(cell) {
-      return cell && cell.s ? JSON.parse(JSON.stringify(cell.s)) : undefined;
-    }
-
-    function setTemplateCell(sheet,row,column,value,style,formula=null) {
-      const address = XLSX.utils.encode_cell({r:row,c:column});
-      const cell = formula
-        ? {t:"n",v:0,f:formula}
-        : typeof value === "number"
-          ? {t:"n",v:value}
-          : {t:"s",v:exportText(value)};
-      if (style) cell.s = JSON.parse(JSON.stringify(style));
-      sheet[address] = cell;
-      return cell;
-    }
-
-    function removeTemplateCells(sheet,startColumn,startRow=0) {
-      Object.keys(sheet).forEach(function (address) {
-        if (address.startsWith("!")) return;
-        const cell = XLSX.utils.decode_cell(address);
-        if (cell.c >= startColumn && cell.r >= startRow) delete sheet[address];
-      });
-      sheet["!merges"] = (sheet["!merges"] || []).filter(merge =>
-        merge.e.c < startColumn || merge.e.r < startRow
-      );
-    }
-
-    function sheetStudentRows(sheet) {
-      const range = XLSX.utils.decode_range(sheet["!ref"] || "A1:A1");
-      const rows = [];
-      for (let row=5; row<=range.e.r; row+=1) {
-        const rollNo = normaliseRollNumber(xlsxCell(sheet,row,0)?.v);
-        if (/^\d{2}(?:PGDM|PGDMFM)\d{3}$/.test(rollNo)) {
-          rows.push({
-            row,
-            rollNo,
-            name:exportText(xlsxCell(sheet,row,1)?.v),
-            email:exportText(xlsxCell(sheet,row,2)?.v),
-            mobile:exportText(xlsxCell(sheet,row,3)?.v)
-          });
-        }
-      }
-      return rows;
-    }
-
-    function fiibSubmissionMap(workbookData,students) {
-      const studentByUuid = new Map(students.map(student => [
-        studentUuidOf(student),
-        normaliseRollNumber(student.rollNo ?? student.studentId ?? student.student_id)
-      ]));
-      const rows = [
-        ...(Array.isArray(workbookData.submissions) ? workbookData.submissions : []),
-        ...(Array.isArray(workbookData.assignments) ? workbookData.assignments.filter(row => row.submissionUuid) : [])
-      ];
-      const seen = new Set();
-      const map = new Map();
-      rows.forEach(function (row,index) {
-        const rollNo = studentByUuid.get(studentUuidOf(row));
-        if (!rollNo) return;
-        const submissionUuid = exportText(row.submissionUuid ?? row.submission_uuid) ||
-          `${rollNo}|${exportText(row.assignmentUuid)}|${exportText(row.submittedAt)}|${index}`;
-        if (seen.has(submissionUuid)) return;
-        seen.add(submissionUuid);
-        if (!map.has(rollNo)) map.set(rollNo,[]);
-        map.get(rollNo).push({
-          submittedAt:Date.parse(row.submittedAt ?? row.submitted_at ?? "") || index,
-          score:scoreOf(row)
-        });
-      });
-      map.forEach(items => items.sort((left,right) => left.submittedAt - right.submittedAt));
-      return map;
-    }
-
-    function rebuildStudentTracker(sheet,students,submissionMap) {
-      const startColumn = 4;
-      const headerRow = 4;
-      const dataStartRow = 5;
-      const studentRows = students
-        .map(student => ({
-          student,
-          rollNo:normaliseRollNumber(student.rollNo ?? student.studentId ?? student.student_id)
-        }))
-        .filter(item => /^\d{2}(?:PGDM|PGDMFM)\d{3}$/.test(item.rollNo))
-        .sort((left,right) => left.rollNo.localeCompare(right.rollNo,undefined,{numeric:true}))
-        .map((item,index) => ({...item,row:dataStartRow + index}));
-      const questionCount = Math.max(0,...studentRows.map(item => (submissionMap.get(item.rollNo) || []).length));
-      const totalColumn = startColumn + questionCount;
-      const averageColumn = totalColumn + 1;
-      const completedColumn = totalColumn + 2;
-      const helperColumn = totalColumn + 3;
-      const headerStyle = copyCellStyle(xlsxCell(sheet,headerRow,startColumn)) || copyCellStyle(xlsxCell(sheet,headerRow,0));
-      const scoreStyle = copyCellStyle(xlsxCell(sheet,dataStartRow,startColumn));
-      const identityStyle = copyCellStyle(xlsxCell(sheet,dataStartRow,0));
-      const summaryStyle = scoreStyle || identityStyle;
-      const finalStudentRow = Math.max(dataStartRow,...studentRows.map(item => item.row));
-
-      removeTemplateCells(sheet,0,headerRow);
-      ["Roll Number","Name","Email ID","Mobile Number"].forEach((label,index) =>
-        setTemplateCell(sheet,headerRow,index,label,headerStyle)
-      );
-      for (let question=0; question<questionCount; question+=1) {
-        setTemplateCell(sheet,headerRow,startColumn + question,`Question ${question + 1}`,headerStyle);
-      }
-      ["Total Score","Average Score","Questions Answered"].forEach((label,index) =>
-        setTemplateCell(sheet,headerRow,totalColumn + index,label,headerStyle)
-      );
-
-      studentRows.forEach(function (item) {
-        const registered = item.student;
-        const name = exportText(registered.fullName ?? registered.name);
-        const email = exportText(registered.emailId ?? registered.email ?? registered.email_id);
-        const mobile = exportText(registered.mobileNumber ?? registered.mobile_number ?? registered.mobile ?? registered.phone);
-        [item.rollNo,name,email,mobile].forEach((value,index) =>
-          setTemplateCell(sheet,item.row,index,value,identityStyle)
-        );
-        const submissions = submissionMap.get(item.rollNo) || [];
-        for (let question=0; question<questionCount; question+=1) {
-          const score = submissions[question] && submissions[question].score;
-          if (score !== null && score !== undefined) {
-            setTemplateCell(sheet,item.row,startColumn + question,score,scoreStyle);
-          }
-        }
-        if (questionCount) {
-          const first = xlsxColumn(startColumn);
-          const last = xlsxColumn(totalColumn - 1);
-          setTemplateCell(sheet,item.row,totalColumn,0,summaryStyle,`SUM(${first}${item.row + 1}:${last}${item.row + 1})`);
-          setTemplateCell(sheet,item.row,averageColumn,0,summaryStyle,`IFERROR(${xlsxColumn(totalColumn)}${item.row + 1}/COUNT(${first}${item.row + 1}:${last}${item.row + 1}),0)`);
-          setTemplateCell(sheet,item.row,completedColumn,0,summaryStyle,`COUNT(${first}${item.row + 1}:${last}${item.row + 1})`);
-        } else {
-          setTemplateCell(sheet,item.row,totalColumn,0,summaryStyle);
-          setTemplateCell(sheet,item.row,averageColumn,0,summaryStyle);
-          setTemplateCell(sheet,item.row,completedColumn,0,summaryStyle);
-        }
-        setTemplateCell(sheet,item.row,helperColumn,0,summaryStyle,`IF(${xlsxColumn(totalColumn)}${item.row + 1}>0,${xlsxColumn(totalColumn)}${item.row + 1}+ROW()/100000,0)`);
-      });
-
-      sheet["!ref"] = `A1:${xlsxColumn(helperColumn)}${finalStudentRow + 1}`;
-      sheet["!cols"] = sheet["!cols"] || [];
-      sheet["!cols"][0] = {wch:16};
-      sheet["!cols"][1] = {wch:25};
-      sheet["!cols"][2] = {wch:32};
-      sheet["!cols"][3] = {wch:18};
-      for (let column=startColumn; column<=completedColumn; column+=1) {
-        sheet["!cols"][column] = {wch:column < totalColumn ? 12 : 18};
-      }
-      sheet["!cols"][helperColumn] = {hidden:true,wch:0};
-      return {questionCount,totalColumn,averageColumn,completedColumn,helperColumn,dataStartRow,finalStudentRow};
-    }
-
-    function rebuildLeaderboard(sheet,tracker) {
-      removeTemplateCells(sheet,0,3);
-      const headerStyle = copyCellStyle(xlsxCell(sheet,3,0)) || copyCellStyle(xlsxCell(sheet,0,0));
-      const bodyStyle = copyCellStyle(xlsxCell(sheet,4,0));
-      ["Rank","Roll Number","Name","Total Score","Average Score","Questions Answered"].forEach((label,index) =>
-        setTemplateCell(sheet,3,index,label,headerStyle)
-      );
-      for (let rank=1; rank<=10; rank+=1) {
-        const row = 4 + rank - 1;
-        setTemplateCell(sheet,row,0,rank,bodyStyle);
-        const helperRange = `'Student Tracker'!$${xlsxColumn(tracker.helperColumn)}$${tracker.dataStartRow + 1}:$${xlsxColumn(tracker.helperColumn)}$${tracker.finalStudentRow + 1}`;
-        const ranked = `LARGE(${helperRange},${rank})`;
-        const match = `MATCH(${ranked},${helperRange},0)`;
-        [[1,0],[2,1],[3,tracker.totalColumn],[4,tracker.averageColumn],[5,tracker.completedColumn]].forEach(function ([outputColumn,trackerColumn]) {
-          const formula = `IFERROR(IF(${ranked}<=0,"",INDEX('Student Tracker'!$${xlsxColumn(trackerColumn)}$${tracker.dataStartRow + 1}:$${xlsxColumn(trackerColumn)}$${tracker.finalStudentRow + 1},${match})),"")`;
-          setTemplateCell(sheet,row,outputColumn,"",bodyStyle,formula);
-        });
-      }
-      sheet["!ref"] = "A1:F14";
-    }
-
-    async function exportFiibInterconnectedTracker() {
-      const statusElement = byId("fiibWeeklyExportStatus");
-      const button = byId("fiibTrackerExportButton");
-      const batch = byId("fiibReportBatch").value;
-      const config = FIIB_TRACKERS.batches[batch];
-      if (!config) {
-        setStatus(statusElement,"Choose either the 2025–27 or 2026–28 FIIB batch.","error");
-        return;
-      }
-      if (!window.XLSX) {
-        setStatus(statusElement,"The Excel library did not load. Check the internet connection and try again.","error");
-        return;
-      }
-
-      const originalText = button.textContent;
-      button.disabled = true;
-      button.textContent = "Building Tracker…";
-      setStatus(statusElement,"Loading the protected workbook and matching ASCENT submissions…","");
-      try {
-        const [workbookData,templateResponse] = await Promise.all([
-          callRpc(RPC.workbookExport,{p_session_token:currentSession.sessionToken}),
-          fetch(config.templateUrl,{cache:"no-store"})
-        ]);
-        if (!workbookData || workbookData.ok !== true) throw new Error(workbookData && workbookData.message ? workbookData.message : "ASCENT report data could not be loaded.");
-        if (!fiibInstitutionConfirmed(workbookData)) throw new Error("Download blocked: this login is not confirmed as an FIIB institution login.");
-        if (!templateResponse.ok) throw new Error(`Tracker template could not be loaded (${templateResponse.status}).`);
-
-        await addMobileNumbersToWorkbook(workbookData);
-        const students = (Array.isArray(workbookData.students) ? workbookData.students : [])
-          .filter(student => fiibStudentForBatch(student,batch));
-        if (!students.length) throw new Error(`No verified FIIB students were found for ${batch.replace(/ PGDM$/,"")}.`);
-        const submissionMap = fiibSubmissionMap(workbookData,students);
-        const workbook = XLSX.read(await templateResponse.arrayBuffer(),{
-          type:"array",cellStyles:true,cellDates:true,bookVBA:true
-        });
-        const requiredSheets = ["Student Tracker","Leaderboard"];
-        const missingSheets = requiredSheets.filter(sheetName => !workbook.Sheets[sheetName]);
-        if (missingSheets.length) throw new Error(`Tracker template is missing: ${missingSheets.join(", ")}.`);
-
-        const tracker = rebuildStudentTracker(workbook.Sheets["Student Tracker"],students,submissionMap);
-        rebuildLeaderboard(workbook.Sheets["Leaderboard"],tracker);
-        workbook.SheetNames = ["Student Tracker","Leaderboard"];
-        Object.keys(workbook.Sheets).forEach(sheetName => {
-          if (!workbook.SheetNames.includes(sheetName)) delete workbook.Sheets[sheetName];
-        });
-        workbook.Workbook = workbook.Workbook || {};
-        workbook.Workbook.CalcPr = {
-          ...(workbook.Workbook.CalcPr || {}),
-          calcMode:"auto",fullCalcOnLoad:true,forceFullCalc:true
-        };
-        workbook.Props = {
-          ...(workbook.Props || {}),
-          Title:`FIIB ${batch.replace(/ PGDM$/,"")} ASCENT Question Tracker`,
-          Author:exportText(currentSession.fullName || "ASCENT"),
-          ModifiedDate:new Date()
-        };
-        XLSX.writeFile(workbook,config.fileName,{cellStyles:true,cellDates:true,bookVBA:true});
-        const submittedCount = Array.from(submissionMap.values()).reduce((total,items) => total + items.length,0);
-        setStatus(statusElement,`${batch.replace(/ PGDM$/,"")} tracker downloaded with ${tracker.questionCount} Question columns and ${submittedCount} ASCENT submissions. It contains only Student Tracker and Leaderboard.`,"success");
-      } catch (error) {
-        console.error(error);
-        setStatus(statusElement,error.message || "The interconnected FIIB tracker could not be prepared.","error");
-      } finally {
-        button.disabled = false;
-        button.textContent = originalText;
-      }
-    }
-
     async function clearSelectedTestRegister() {
       if (!isAdmin()) {
         setStatus(byId("clearTestRegisterStatus"),"Only an administrator can clear test assignment records.","error");
@@ -4748,28 +4238,22 @@ function formatCriterionFeedback(criterion) {
 
     function wireEvents() {
       document.querySelectorAll(".nav-item").forEach(item => item.addEventListener("click",() => showSection(item.dataset.section)));
-      byId("logoutButton").addEventListener("click",() => { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href="./"; });
+      byId("logoutButton").addEventListener("click",() => { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href="./trainer-login.html"; });
       byId("refreshDashboardButton").addEventListener("click",() => loadReport("Refreshing dashboard…"));
       byId("refreshTasksButton").addEventListener("click",() => loadReport("Refreshing tasks…"));
       byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results,"dashboard"));
       byId("refreshLeaderboardButton").addEventListener("click",() => loadPlacementReadinessBoard(true));
       byId("emailLeaderboardButton").addEventListener("click",emailPlacementReadinessBoard);
       byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows,"results"));
-      byId("fiibTrackerExportButton").addEventListener("click",exportFiibInterconnectedTracker);
       byId("refreshStudentsButton").addEventListener("click",() => loadStudentPerformance(true));
       byId("doneStudentGroupButton").addEventListener("click",finishStudentGroupCreation);
       byId("refreshArchivesButton").addEventListener("click",() => loadArchiveData(true));
       byId("archiveCohortSelect").addEventListener("change",renderArchives);
       byId("archiveExportButton").addEventListener("click",exportArchivedRoster);
       byId("refreshAudioFilingButton").addEventListener("click",() => loadAudioFilingData(true));
-      byId("refreshFollowupsButton").addEventListener("click",async() => {
-        await loadReminderDashboard("Refreshing student follow-ups…");
-        await loadReleaseEmailBatches();
-      });
+      byId("refreshFollowupsButton").addEventListener("click",() => loadReminderDashboard("Refreshing student follow-ups…"));
       byId("toggleFollowupsButton").addEventListener("click",toggleInstitutionalFollowups);
       byId("followupsExportButton").addEventListener("click",downloadFollowupExcel);
-      byId("releaseEmailBatchSelect").addEventListener("change",renderReleaseEmailBatchDetails);
-      byId("queueReleaseEmailsButton").addEventListener("click",queueSelectedReleaseEmails);
       byId("refreshQuestionBankButton").addEventListener("click",() => loadQuestionBank("Refreshing question bank…"));
       byId("addBankQuestionButton").addEventListener("click",() => openBankQuestionEditor());
       byId("cancelBankEditButton").addEventListener("click",closeBankQuestionEditor);
@@ -4842,7 +4326,6 @@ function formatCriterionFeedback(criterion) {
       populateBankGroupSelect();
       await loadQuestionBank();
       await loadReminderDashboard();
-      await loadReleaseEmailBatches();
       restoreTrainerSection(true);
     }
     initialise();
