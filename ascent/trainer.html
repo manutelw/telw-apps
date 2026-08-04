@@ -1111,31 +1111,71 @@
 
     function bindStudentRosterEvents() {
       const roster = byId("studentRosterTableWrap");
+
+      // Keep one permanent delegated handler. The student table is redrawn when
+      // the batch changes, so listeners attached to individual buttons can be lost.
+      if (!roster.dataset.actionsBound) {
+        roster.addEventListener("click",function (event) {
+          const viewButton = event.target.closest(".student-profile-button");
+          if (viewButton && roster.contains(viewButton)) {
+            event.preventDefault();
+            event.stopPropagation();
+            const studentUuid = String(viewButton.dataset.student || "").trim();
+            if (!studentUuid) {
+              setStatus(byId("studentsStatus"),"This student record is missing its identifier.","error");
+              return;
+            }
+            openStudentProfile(studentUuid);
+            return;
+          }
+
+          const editButton = event.target.closest(".edit-student-button");
+          if (editButton && roster.contains(editButton)) {
+            editingStudentUuid = String(editButton.dataset.student || "");
+            renderStudentRoster();
+            return;
+          }
+
+          const cancelButton = event.target.closest(".cancel-student-edit");
+          if (cancelButton && roster.contains(cancelButton)) {
+            editingStudentUuid = "";
+            renderStudentRoster();
+            return;
+          }
+
+          const saveButton = event.target.closest(".save-student-edit");
+          if (saveButton && roster.contains(saveButton)) {
+            saveStudentEdit(String(saveButton.dataset.student || ""));
+          }
+        });
+        roster.dataset.actionsBound = "true";
+      }
+
       roster.querySelectorAll(".student-profile-button").forEach(button => {
         button.disabled = false;
+        button.removeAttribute("aria-disabled");
         button.style.pointerEvents = "auto";
-        button.onclick = function (event) {
-          event.preventDefault();
-          event.stopPropagation();
-          const studentUuid = String(button.dataset.student || "");
-          if (!studentUuid) return;
-          try {
-            renderStudentProfile(studentUuid);
-          } catch (error) {
-            console.error(error);
-            setStatus(byId("studentsStatus"),error.message || "Student performance could not be opened.","error");
-          }
-        };
+        button.style.cursor = "pointer";
       });
-      roster.querySelectorAll(".edit-student-button").forEach(button => button.addEventListener("click",() => {
-        editingStudentUuid = button.dataset.student;
-        renderStudentRoster();
-      }));
-      roster.querySelectorAll(".cancel-student-edit").forEach(button => button.addEventListener("click",() => {
-        editingStudentUuid = "";
-        renderStudentRoster();
-      }));
-      roster.querySelectorAll(".save-student-edit").forEach(button => button.addEventListener("click",() => saveStudentEdit(button.dataset.student)));
+    }
+
+    function openStudentProfile(studentUuid) {
+      const profile = byId("studentProfilePanel");
+      profile.hidden = false;
+      profile.innerHTML = `<div class="student-profile"><div class="panel-subtitle">Opening student performance…</div></div>`;
+      profile.scrollIntoView({behavior:"auto",block:"start"});
+
+      window.requestAnimationFrame(function () {
+        try {
+          renderStudentProfile(studentUuid);
+          setStatus(byId("studentsStatus"),"Student performance opened.","success");
+        } catch (error) {
+          console.error(error);
+          profile.hidden = false;
+          profile.innerHTML = `<div class="student-profile"><div class="empty-state">${escapeHtml(error && error.message ? error.message : "Student performance could not be opened.")}</div></div>`;
+          setStatus(byId("studentsStatus"),error && error.message ? error.message : "Student performance could not be opened.","error");
+        }
+      });
     }
 
     async function saveStudentEdit(studentUuid) {
@@ -1231,7 +1271,8 @@
     function renderStudentProfile(studentUuid) {
       const data = studentPerformanceData;
       const student = cohortData.students.find(item => studentUuidOf(item) === String(studentUuid)) || (data && Array.isArray(data.students) ? data.students : []).find(item => studentUuidOf(item) === String(studentUuid));
-      if (!student) return;
+      if (!student) throw new Error("This student record could not be found in the current batch data.");
+      if (!data) throw new Error("Student performance data is still loading. Please click Refresh once and try again.");
       const assignments = uniqueStudentAssignments(data,studentUuid);
       const submissions = studentSubmissions(data,studentUuid);
       const scored = submissions.map(row => ({row,score:scoreOf(row)})).filter(item => item.score !== null);
@@ -1248,7 +1289,15 @@
         const scoredRows = rows.filter(row => scoreOf(row) !== null);
         const first = scoredRows[0] || null;
         const latest = scoredRows[scoredRows.length - 1] || null;
-        return {rubricType:rows[0].rubricType,question:rows[0].question,criteria:latest ? formatCriteriaInline(latest) : "—",firstScore:first ? scoreOf(first) : null,lastScore:latest ? scoreOf(latest) : null};
+        let criteria = "—";
+        if (latest) {
+          try {
+            criteria = formatCriteriaInline(latest);
+          } catch (error) {
+            console.warn("Criterion scores could not be formatted for this response.",error);
+          }
+        }
+        return {rubricType:rows[0].rubricType,question:rows[0].question,criteria,firstScore:first ? scoreOf(first) : null,lastScore:latest ? scoreOf(latest) : null};
       });
       const profile = byId("studentProfilePanel");
       profile.hidden = false;
@@ -1258,7 +1307,7 @@
       renderLineSvg("studentProgressLine",points,"Scores will appear after the student submits responses.");
       const completion = questionsSent ? Math.round(answeredAssignments.length / questionsSent * 100) : 0;
       byId("studentCompletionRing").style.background = `conic-gradient(#27679d 0 ${completion}%, #e4edf5 ${completion}% 100%)`;
-      profile.scrollIntoView({behavior:"smooth",block:"start"});
+      profile.scrollIntoView({behavior:"auto",block:"start"});
     }
 
     function bankCategoriesForType(bankType="") {
