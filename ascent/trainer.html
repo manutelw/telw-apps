@@ -181,6 +181,17 @@
       .card-grid,.form-grid,.filter-grid { grid-template-columns:1fr; } .form-group.two-wide,.form-group.full-width { grid-column:auto; }
       .criterion-row { grid-template-columns:100px 1fr 38px; } .workspace { padding:15px; }
     }
+
+    .student-roster-tabs { display:flex; gap:8px; flex-wrap:wrap; }
+    .student-roster-tab.active { background:#173f68; border-color:#173f68; color:#fff; }
+    .batch-folder { border:1px solid #d9e4ee; border-radius:12px; background:#fff; margin-top:14px; overflow:hidden; }
+    .batch-folder > summary { cursor:pointer; list-style:none; display:flex; justify-content:space-between; gap:16px; align-items:center; padding:14px 16px; background:#f4f8fb; font-weight:800; color:#173f68; }
+    .batch-folder > summary::-webkit-details-marker { display:none; }
+    .batch-folder-count { font-size:13px; color:#66798c; font-weight:700; }
+    .batch-folder .table-wrap { border:0; border-radius:0; }
+    .student-edit-input, .student-edit-select { min-width:130px; width:100%; padding:8px 9px; border:1px solid #aebfce; border-radius:7px; font:inherit; background:#fff; }
+    .student-row-actions { display:flex; gap:7px; flex-wrap:wrap; }
+    .student-batch-warning { margin-top:14px; padding:12px 14px; border:1px solid #e4c982; background:#fff9e8; border-radius:10px; color:#6c5311; }
   </style>
 </head>
 <body>
@@ -365,7 +376,7 @@
 
         <section id="studentsSection" class="section-panel">
           <div class="workspace-header"><div><h2>Students</h2><p>Open an individual student record to see question-wise performance, score movement and response completion.</p></div><div class="header-actions"><button id="refreshStudentsButton" class="secondary-button" type="button">Refresh</button></div></div>
-          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle"></div></div></div><div id="studentRosterTableWrap" class="table-wrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
+          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle"></div></div><div class="student-roster-tabs"><button id="activeStudentsTab" class="secondary-button student-roster-tab active" type="button">Active Batches</button><button id="archivedStudentsTab" class="secondary-button student-roster-tab" type="button">Archives</button></div></div><div id="studentRosterTableWrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
           <div id="studentProfilePanel" class="panel" hidden></div>
         </section>
 
@@ -427,6 +438,8 @@
       studentMobileMap: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_student_mobile_map",
       cohortRoster: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_cohort_roster",
       setAcademicYear: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_student_academic_year",
+      updateStudent: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_update_student_details",
+      archiveRoster: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_archive_roster",
       bulk: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_bulk_create_tasks",
       taskActive: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_task_active",
       createTrainer: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_create_trainer",
@@ -448,6 +461,9 @@
     let visibleResultRows = [];
     let studentPerformanceData = null;
     let cohortData = { students:[], groups:[] };
+    let archiveData = { archives:[], students:[] };
+    let studentRosterView = "active";
+    let editingStudentUuid = "";
     let reminderData = { isEnabled:false, didNotRespondAfterReminder1:0, didNotRespondAfterReminder2:0, didNotRespondAfterFinalReminder:0, deliveryFailures:0 };
 
     const byId = id => document.getElementById(id);
@@ -720,10 +736,7 @@
     function populateControls() {
       const batches = reportData.batches.map(batch => ({value:batch,label:batch}));
       ["targetBatch","bankTargetBatch","assignmentBatchFilter"].forEach(id => fillSelect(id,batches,"value",item => item.label,["targetBatch","bankTargetBatch"].includes(id) ? "Choose batch" : "All batches"));
-      fillSelect("resultBatchFilter",[
-        {value:"2025-27 PGDM",label:"2025-27 PGDM"},
-        {value:"2026-28 PGDM",label:"2026-28 PGDM"}
-      ],"value",item => item.label,"All batches");
+      fillSelect("resultBatchFilter",activeBatchLabels().map(label => ({value:batchDatabaseValue(label),label})),"value",item => item.label,"All batches");
       ["assignmentStudentFilter","resultStudentFilter"].forEach(id => fillSelect(id,reportData.students,"studentUuid",student => `${student.fullName} (${student.studentId})`,"All students"));
       ["assignmentTaskFilter","resultTaskFilter"].forEach(id => fillSelect(id,reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks"));
       const testStudents = reportData.students.filter(student => String(student.studentId || "").trim().toUpperCase().startsWith("ASCENTTEST"));
@@ -939,6 +952,50 @@
       return value === "FIRST_YEAR" ? "First Year" : value === "SECOND_YEAR" ? "Second Year" : "Not set";
     }
 
+
+    function formatBatchLabel(startYear) {
+      return `${startYear}-${String(startYear + 2).slice(-2)}`;
+    }
+
+    function activeBatchLabels(asOf=new Date()) {
+      const year = asOf.getFullYear();
+      const rollover = new Date(year,3,30,0,0,0,0);
+      const newestStartYear = asOf >= rollover ? year : year - 1;
+      return [formatBatchLabel(newestStartYear - 1),formatBatchLabel(newestStartYear)];
+    }
+
+    function batchDatabaseValue(label) {
+      return label ? `${label} PGDM` : "";
+    }
+
+    function canonicalBatchLabel(value) {
+      const match = String(value || "").trim().match(/(20\d{2})\s*[-–]\s*(\d{2})/);
+      return match ? `${match[1]}-${match[2]}` : "";
+    }
+
+    function batchLabelFromRollNumber(value) {
+      const match = String(value || "").trim().toUpperCase().match(/^([0-9]{2})PGDM(?:FM)?[0-9]{3}$/);
+      if (!match) return "";
+      const startYear = 2000 + Number(match[1]);
+      return formatBatchLabel(startYear);
+    }
+
+    function studentBatchLabel(student) {
+      return batchLabelFromRollNumber(studentField(student,["rollNo","studentId","student_id"])) ||
+        canonicalBatchLabel(studentField(student,["batch","batchName"]));
+    }
+
+    function academicYearForBatch(label) {
+      const batches = activeBatchLabels();
+      if (label === batches[0]) return "SECOND_YEAR";
+      if (label === batches[1]) return "FIRST_YEAR";
+      return "";
+    }
+
+    function validStudentRollNumber(value) {
+      return /^[0-9]{2}PGDM(?:FM)?[0-9]{3}$/i.test(String(value || "").trim());
+    }
+
     async function loadCohortData() {
       const data = await callRpc(
         RPC.cohortRoster,
@@ -952,6 +1009,25 @@
         groups:Array.isArray(data.groups) ? data.groups : []
       };
       return cohortData;
+    }
+
+
+    async function loadArchiveData() {
+      try {
+        const data = await callRpc(
+          RPC.archiveRoster,
+          {p_session_token:currentSession.sessionToken}
+        );
+        if (!data || data.ok !== true) throw new Error(data && data.message ? data.message : "Archive data could not be loaded.");
+        archiveData = {
+          archives:Array.isArray(data.archives) ? data.archives : [],
+          students:Array.isArray(data.students) ? data.students : []
+        };
+      } catch (error) {
+        console.warn("Archive roster is not available yet.",error);
+        archiveData = {archives:[],students:[]};
+      }
+      return archiveData;
     }
 
     function cohortStudentUuidsForYear(year) {
@@ -981,7 +1057,8 @@
       try {
         const [data] = await Promise.all([
           callRpc(RPC.workbookExport,{p_session_token:currentSession.sessionToken}),
-          loadCohortData()
+          loadCohortData(),
+          loadArchiveData()
         ]);
         if (!data || data.ok !== true) {
           throw new Error(data && data.message ? data.message : "Student performance data could not be loaded.");
@@ -998,21 +1075,52 @@
       }
     }
 
-    function renderStudentRoster() {
-      const data = studentPerformanceData;
-      const students = (cohortData.students.length ? cohortData.students : (data && Array.isArray(data.students) ? data.students : [])).slice()
-        .sort((left,right) => exportText(studentField(left,["batch","batchName"])).localeCompare(exportText(studentField(right,["batch","batchName"]))) || exportText(studentField(left,["name","fullName"])).localeCompare(exportText(studentField(right,["name","fullName"]))));
-      byId("studentRosterCount").textContent = `${students.length} student${students.length === 1 ? "" : "s"}`;
+    function rosterStudentRow(student, data) {
+      const studentUuid = studentUuidOf(student);
+      const lastScore = latestStudentScore(data,studentUuid);
+      const batchLabel = studentBatchLabel(student);
+      const academicYear = student.academicYear || academicYearForBatch(batchLabel);
+      const editing = editingStudentUuid === studentUuid;
+
+      if (editing) {
+        const batchOptions = activeBatchLabels().map(label => `<option value="${escapeHtml(label)}" ${label === batchLabel ? "selected" : ""}>${escapeHtml(label)}</option>`).join("");
+        return `<tr data-student-row="${escapeHtml(studentUuid)}"><td><input class="student-edit-input edit-student-roll" value="${escapeHtml(studentField(student,["rollNo","studentId","student_id"]))}" aria-label="Roll number"></td><td><input class="student-edit-input edit-student-name" value="${escapeHtml(studentField(student,["name","fullName"]))}" aria-label="Student name"><br><span class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</span></td><td><select class="student-edit-select edit-student-batch" aria-label="Batch">${batchOptions}</select></td><td>${escapeHtml(academicYearLabel(academicYear))}</td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])))}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])))}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="student-row-actions"><button class="small-button save-student-edit" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button cancel-student-edit" type="button">Cancel</button></div></td></tr>`;
+      }
+
+      return `<tr><td>${escapeHtml(studentField(student,["rollNo","studentId","student_id"]) || "—")}</td><td><strong>${escapeHtml(studentField(student,["name","fullName"]) || "—")}</strong><br>${escapeHtml(studentField(student,["emailId","email"]) || "")}</td><td>${escapeHtml(batchLabel || "—")}</td><td><select class="academic-year-select" data-student="${escapeHtml(studentUuid)}"><option value="">Not set</option><option value="FIRST_YEAR" ${academicYear === "FIRST_YEAR" ? "selected" : ""}>First Year</option><option value="SECOND_YEAR" ${academicYear === "SECOND_YEAR" ? "selected" : ""}>Second Year</option></select></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])))}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])))}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="student-row-actions"><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button><button class="small-button edit-student-button" type="button" data-student="${escapeHtml(studentUuid)}">Edit</button></div></td></tr>`;
+    }
+
+    function rosterTable(students, data) {
+      return `<div class="table-wrap"><table><thead><tr><th>Roll Number</th><th>Name</th><th>Batch</th><th>Academic Year</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th>Action</th></tr></thead><tbody>${students.map(student => rosterStudentRow(student,data)).join("")}</tbody></table></div>`;
+    }
+
+    function renderArchivedStudentRoster() {
+      const students = (archiveData.students || []).slice().sort((left,right) => exportText(left.archiveLabel).localeCompare(exportText(right.archiveLabel)) || exportText(left.rollNo).localeCompare(exportText(right.rollNo)) || exportText(left.fullName).localeCompare(exportText(right.fullName)));
+      byId("studentRosterCount").textContent = `${students.length} archived student${students.length === 1 ? "" : "s"}`;
       if (!students.length) {
-        byId("studentRosterTableWrap").innerHTML = `<div class="empty-state">No student records are available yet.</div>`;
+        byId("studentRosterTableWrap").innerHTML = `<div class="empty-state">No archived cohorts yet.</div>`;
         return;
       }
-      byId("studentRosterTableWrap").innerHTML = `<table><thead><tr><th>Roll Number</th><th>Name</th><th>Academic Year</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th></th></tr></thead><tbody>${students.map(student => {
-        const studentUuid = studentUuidOf(student);
-        const lastScore = latestStudentScore(data,studentUuid);
-        return `<tr><td>${escapeHtml(studentField(student,["rollNo","studentId","student_id"]) || "—")}</td><td><strong>${escapeHtml(studentField(student,["name","fullName"]) || "—")}</strong><br>${escapeHtml(studentField(student,["emailId","email"]) || "")}</td><td><select class="academic-year-select" data-student="${escapeHtml(studentUuid)}"><option value="">Not set</option><option value="FIRST_YEAR" ${student.academicYear === "FIRST_YEAR" ? "selected" : ""}>First Year</option><option value="SECOND_YEAR" ${student.academicYear === "SECOND_YEAR" ? "selected" : ""}>Second Year</option></select></td><td>${escapeHtml(studentField(student,["batch","batchName"]) || "—")}</td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button></td></tr>`;
-      }).join("")}</tbody></table>`;
+      const groups = new Map();
+      students.forEach(student => {
+        const label = student.archiveLabel || student.batch || "Archive";
+        if (!groups.has(label)) groups.set(label,[]);
+        groups.get(label).push(student);
+      });
+      byId("studentRosterTableWrap").innerHTML = Array.from(groups.entries()).map(([label,items]) => `<details class="batch-folder" open><summary><span>${escapeHtml(label)}</span><span class="batch-folder-count">${items.length} student${items.length === 1 ? "" : "s"}</span></summary><div class="table-wrap"><table><thead><tr><th>Roll Number</th><th>Name</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Archived At</th></tr></thead><tbody>${items.map(student => `<tr><td>${escapeHtml(student.rollNo || "—")}</td><td><strong>${escapeHtml(student.fullName || "—")}</strong><br>${escapeHtml(student.email || "")}</td><td>${escapeHtml(canonicalBatchLabel(student.batch) || student.batch || "—")}</td><td>${escapeHtml(formatDate(student.dateJoined))}</td><td>${escapeHtml(formatDate(student.lastAccessedAt))}</td><td>${escapeHtml(formatDate(student.archivedAt))}</td></tr>`).join("")}</tbody></table></div></details>`).join("");
+    }
+
+    function bindStudentRosterEvents() {
       document.querySelectorAll(".student-profile-button").forEach(button => button.addEventListener("click",() => renderStudentProfile(button.dataset.student)));
+      document.querySelectorAll(".edit-student-button").forEach(button => button.addEventListener("click",() => {
+        editingStudentUuid = button.dataset.student;
+        renderStudentRoster();
+      }));
+      document.querySelectorAll(".cancel-student-edit").forEach(button => button.addEventListener("click",() => {
+        editingStudentUuid = "";
+        renderStudentRoster();
+      }));
+      document.querySelectorAll(".save-student-edit").forEach(button => button.addEventListener("click",() => saveStudentEdit(button.dataset.student)));
       document.querySelectorAll(".academic-year-select").forEach(select => select.addEventListener("change",async () => {
         select.disabled = true;
         try {
@@ -1027,6 +1135,91 @@
           select.disabled = false;
         }
       }));
+    }
+
+    async function saveStudentEdit(studentUuid) {
+      const row = document.querySelector(`[data-student-row="${CSS.escape(studentUuid)}"]`);
+      if (!row) return;
+      const rollNo = row.querySelector(".edit-student-roll").value.trim().toUpperCase();
+      const fullName = row.querySelector(".edit-student-name").value.trim();
+      const batchLabel = row.querySelector(".edit-student-batch").value;
+      if (!validStudentRollNumber(rollNo)) {
+        setStatus(byId("studentsStatus"),"Enter proper roll number.","error");
+        return;
+      }
+      if (!fullName) {
+        setStatus(byId("studentsStatus"),"Enter the student name.","error");
+        return;
+      }
+      showLoading("Saving student details…");
+      try {
+        const result = await callRpc(RPC.updateStudent,{
+          p_session_token:currentSession.sessionToken,
+          p_student_uuid:studentUuid,
+          p_roll_no:rollNo,
+          p_full_name:fullName,
+          p_batch:batchDatabaseValue(batchLabel)
+        });
+        if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Student details could not be saved.");
+        const yearResult = await callRpc(RPC.setAcademicYear,{
+          p_session_token:currentSession.sessionToken,
+          p_student_uuid:studentUuid,
+          p_academic_year:academicYearForBatch(batchLabel) || null
+        });
+        if (!yearResult || yearResult.ok !== true) throw new Error(yearResult && yearResult.message ? yearResult.message : "Student batch was saved, but academic year could not be updated.");
+        editingStudentUuid = "";
+        studentPerformanceData = null;
+        await loadReport("Refreshing student records…");
+        await loadStudentPerformance(true);
+        setStatus(byId("studentsStatus"),"Student details saved.","success");
+      } catch (error) {
+        console.error(error);
+        setStatus(byId("studentsStatus"),error.message || "Student details could not be saved.","error");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function renderStudentRoster() {
+      byId("activeStudentsTab").classList.toggle("active",studentRosterView === "active");
+      byId("archivedStudentsTab").classList.toggle("active",studentRosterView === "archives");
+      if (studentRosterView === "archives") {
+        renderArchivedStudentRoster();
+        return;
+      }
+
+      const data = studentPerformanceData;
+      const students = (cohortData.students.length ? cohortData.students : (data && Array.isArray(data.students) ? data.students : [])).slice();
+      const activeBatches = activeBatchLabels();
+      const grouped = new Map(activeBatches.map(label => [label,[]]));
+      const needsCorrection = [];
+      students.forEach(student => {
+        const label = studentBatchLabel(student);
+        if (grouped.has(label)) grouped.get(label).push(student);
+        else needsCorrection.push(student);
+      });
+      grouped.forEach(items => items.sort((left,right) =>
+        exportText(studentField(left,["rollNo","studentId","student_id"])).localeCompare(
+          exportText(studentField(right,["rollNo","studentId","student_id"])),
+          undefined,
+          {numeric:true,sensitivity:"base"}
+        ) || exportText(studentField(left,["name","fullName"])).localeCompare(
+          exportText(studentField(right,["name","fullName"]))
+        )
+      ));
+      needsCorrection.sort((left,right) => exportText(studentField(left,["rollNo","studentId","student_id"])).localeCompare(
+        exportText(studentField(right,["rollNo","studentId","student_id"])),
+        undefined,
+        {numeric:true,sensitivity:"base"}
+      ));
+      byId("studentRosterCount").textContent = `${students.length} active student${students.length === 1 ? "" : "s"} · ${activeBatches.join(" and ")}`;
+      const folders = activeBatches.map(label => {
+        const items = grouped.get(label) || [];
+        return `<details class="batch-folder" open><summary><span>${escapeHtml(label)}</span><span class="batch-folder-count">${items.length} student${items.length === 1 ? "" : "s"}</span></summary>${items.length ? rosterTable(items,data) : `<div class="empty-state">No students in this batch yet.</div>`}</details>`;
+      }).join("");
+      const warning = needsCorrection.length ? `<div class="student-batch-warning"><strong>${needsCorrection.length} record${needsCorrection.length === 1 ? " needs" : "s need"} batch correction.</strong> Use Edit to correct the roll number or batch.</div>${rosterTable(needsCorrection,data)}` : "";
+      byId("studentRosterTableWrap").innerHTML = folders + warning;
+      bindStudentRosterEvents();
     }
 
     function renderStudentProfile(studentUuid) {
@@ -3468,6 +3661,8 @@ function formatCriterionFeedback(criterion) {
       byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results,"dashboard"));
       byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows,"results"));
       byId("refreshStudentsButton").addEventListener("click",() => loadStudentPerformance(true));
+      byId("activeStudentsTab").addEventListener("click",() => { studentRosterView="active"; editingStudentUuid=""; renderStudentRoster(); });
+      byId("archivedStudentsTab").addEventListener("click",async () => { studentRosterView="archives"; editingStudentUuid=""; await loadArchiveData(); renderStudentRoster(); });
       byId("refreshFollowupsButton").addEventListener("click",() => loadReminderDashboard("Refreshing student follow-ups…"));
       byId("toggleFollowupsButton").addEventListener("click",toggleInstitutionalFollowups);
       byId("followupsExportButton").addEventListener("click",downloadFollowupExcel);
