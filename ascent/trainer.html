@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-ascent-build="2026-08-04.2">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -533,6 +533,7 @@
     let visibleAssignmentRows = [];
     let visibleResultRows = [];
     let studentPerformanceData = null;
+    const STUDENT_PERFORMANCE_VIEWER_BUILD = "2026-08-04.2";
     let cohortData = { students:[], groups:[] };
     let archiveData = { archives:[], students:[] };
     let audioFilingData = { cohorts:[] };
@@ -1051,12 +1052,82 @@
       return name ? `name:${name}` : "";
     }
 
+    function newStudentIdentityCluster() {
+      return {
+        __studentIdentityCluster:true,
+        uuids:new Set(),
+        emails:new Set(),
+        rolls:new Set(),
+        names:new Set()
+      };
+    }
+
+    function addStudentIdentity(cluster,row) {
+      if (!cluster || !row) return false;
+      let changed = false;
+      const add = (set,value) => {
+        if (!value || set.has(value)) return;
+        set.add(value);
+        changed = true;
+      };
+      add(cluster.uuids,studentUuidOf(row));
+      add(cluster.emails,normalisedStudentEmail(row));
+      add(cluster.rolls,normalisedStudentRoll(row));
+      add(cluster.names,normalisedStudentName(row));
+      return changed;
+    }
+
+    function studentMatchesIdentityCluster(row,cluster) {
+      if (!row || !cluster) return false;
+      const uuid = studentUuidOf(row);
+      if (uuid && cluster.uuids.has(uuid)) return true;
+      const email = normalisedStudentEmail(row);
+      if (email && cluster.emails.has(email)) return true;
+      const roll = normalisedStudentRoll(row);
+      if (roll && cluster.rolls.has(roll)) return true;
+      const name = normalisedStudentName(row);
+      return Boolean(name && cluster.names.has(name));
+    }
+
+    function buildStudentIdentityCluster(student,data) {
+      const cluster = newStudentIdentityCluster();
+      addStudentIdentity(cluster,student);
+      const pools = [
+        cohortData && Array.isArray(cohortData.students) ? cohortData.students : [],
+        data && Array.isArray(data.students) ? data.students : [],
+        data && Array.isArray(data.assignments) ? data.assignments : [],
+        data && Array.isArray(data.submissions) ? data.submissions : [],
+        reportData && Array.isArray(reportData.results) ? reportData.results : []
+      ];
+
+      // Several passes allow one matching record to reveal an alternate UUID,
+      // which can then connect assignments and submissions stored under that UUID.
+      for (let pass = 0; pass < 5; pass += 1) {
+        let changed = false;
+        pools.forEach(rows => rows.forEach(row => {
+          if (studentMatchesIdentityCluster(row,cluster)) {
+            changed = addStudentIdentity(cluster,row) || changed;
+          }
+        }));
+        if (!changed) break;
+      }
+      return cluster;
+    }
+
     function sameStudentRecord(row, studentOrKey) {
       if (!row || !studentOrKey) return false;
 
+      if (studentOrKey.__studentIdentityCluster) {
+        return studentMatchesIdentityCluster(row,studentOrKey);
+      }
+
       if (typeof studentOrKey === "string") {
         const key = String(studentOrKey);
-        return studentProfileKey(row) === key || studentUuidOf(row) === key;
+        if (key.startsWith("uuid:")) return studentUuidOf(row) === key.slice(5);
+        if (key.startsWith("email:")) return normalisedStudentEmail(row) === key.slice(6);
+        if (key.startsWith("roll:")) return normalisedStudentRoll(row) === key.slice(5);
+        if (key.startsWith("name:")) return normalisedStudentName(row) === key.slice(5);
+        return studentUuidOf(row) === key;
       }
 
       const rowUuid = studentUuidOf(row);
@@ -1656,7 +1727,7 @@
         else if (!isValidRollNumber(rollNumberValue(student))) folders.get(newestFolder).push(student);
       });
       const liveStudentCount = Array.from(folders.values()).reduce((total,folderStudents) => total + folderStudents.length,0);
-      byId("studentRosterCount").textContent = `${students.length} students · ${liveStudentCount} in live batches · ${invalidRollStudents.length} need roll-number correction`;
+      byId("studentRosterCount").textContent = `${students.length} students · ${liveStudentCount} in live batches · ${invalidRollStudents.length} need roll-number correction · viewer ${STUDENT_PERFORMANCE_VIEWER_BUILD}`;
       byId("studentRosterSort").value = studentRosterSort;
       const groupStudents = groupUuid => cohortData.students.filter(student => (student.groups || []).some(group => group.groupUuid === groupUuid));
       const groupsForBatch = batch => cohortData.groups.filter(group => {
@@ -1670,7 +1741,7 @@
         const profileKey = studentProfileKey(student);
         const lastScore = latestStudentScore(data,student);
         const storedRoll = studentField(student,["rollNo","studentId","student_id"]);
-        return `<tr${isCorrectionSection ? ` class="roll-correction-row"` : ""}><td><input class="student-edit-input student-roll-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(storedRoll || "")}" placeholder="e.g. 26PGDM001" maxlength="11"></td><td><input class="student-edit-input student-name-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["name","fullName"]) || "")}" placeholder="Enter name"><div class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</div></td><td><input class="student-edit-input student-batch-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["batch","batchName"]) || "")}" placeholder="Enter batch"></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="bank-actions"><button class="small-button student-save-button" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button student-profile-button" type="button" data-student-key="${escapeHtml(profileKey)}" ${profileKey ? "" : "disabled"}>View performance</button></div></td>${mayAddToGroup ? `<td><input class="student-group-roster-check" type="checkbox" data-student="${escapeHtml(studentUuid)}" ${selectedStudentGroupUuids.has(studentUuid) ? "checked" : ""} aria-label="Add ${escapeHtml(studentField(student,["name","fullName"]) || "student")} to group"></td>` : ""}</tr>`;
+        return `<tr${isCorrectionSection ? ` class="roll-correction-row"` : ""}><td><input class="student-edit-input student-roll-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(storedRoll || "")}" placeholder="e.g. 26PGDM001" maxlength="11"></td><td><input class="student-edit-input student-name-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["name","fullName"]) || "")}" placeholder="Enter name"><div class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</div></td><td><input class="student-edit-input student-batch-input" data-student="${escapeHtml(studentUuid)}" value="${escapeHtml(studentField(student,["batch","batchName"]) || "")}" placeholder="Enter batch"></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])) )}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])) )}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="bank-actions"><button class="small-button student-save-button" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button student-profile-button" type="button" data-student-key="${escapeHtml(profileKey)}" data-student-name="${escapeHtml(studentField(student,["name","fullName"]) || "Student")}" data-viewer-build="${STUDENT_PERFORMANCE_VIEWER_BUILD}" ${profileKey ? "" : "disabled"}>View performance</button></div></td>${mayAddToGroup ? `<td><input class="student-group-roster-check" type="checkbox" data-student="${escapeHtml(studentUuid)}" ${selectedStudentGroupUuids.has(studentUuid) ? "checked" : ""} aria-label="Add ${escapeHtml(studentField(student,["name","fullName"]) || "student")} to group"></td>` : ""}</tr>`;
         }).join("")}</tbody></table>`;
       };
       const batchFoldersHtml = Array.from(folders.entries())
@@ -1690,7 +1761,6 @@
         .join("");
       byId("studentRosterTableWrap").innerHTML = batchFoldersHtml;
       byId("studentRosterSort").addEventListener("change",event => { studentRosterSort = event.target.value; renderStudentRoster(); });
-      document.querySelectorAll(".student-profile-button").forEach(button => button.addEventListener("click",() => renderStudentProfile(button.dataset.studentKey || button.dataset.student)));
       document.querySelectorAll(".student-save-button").forEach(button => button.addEventListener("click",() => saveStudentDetails(button)));
       document.querySelectorAll(".student-roll-input").forEach(input => input.addEventListener("input",() => { input.value = normaliseRollNumber(input.value); }));
       document.querySelectorAll(".student-group-roster-check").forEach(box => box.addEventListener("change",() => {
@@ -1733,16 +1803,17 @@
     }
 
     function renderStudentProfile(studentKey) {
-      const data = studentPerformanceData;
-      const key = String(studentKey || "");
-      const student = cohortData.students.find(item => studentProfileKey(item) === key || studentUuidOf(item) === key) ||
-        (data && Array.isArray(data.students) ? data.students : []).find(item => studentProfileKey(item) === key || studentUuidOf(item) === key);
-      if (!student) {
-        setStatus(byId("studentsStatus"),"ASCENT could not match this roster record to a student profile. Refresh the student list and try again.","error");
-        return;
-      }
-      const assignments = uniqueStudentAssignments(data,student);
-      const submissions = studentSubmissions(data,student);
+      try {
+        const data = studentPerformanceData;
+        const key = String(studentKey || "");
+        const student = cohortData.students.find(item => studentProfileKey(item) === key || studentUuidOf(item) === key) ||
+          (data && Array.isArray(data.students) ? data.students : []).find(item => studentProfileKey(item) === key || studentUuidOf(item) === key);
+        if (!student) {
+          throw new Error("ASCENT could not match this roster entry to a student record.");
+        }
+        const identity = buildStudentIdentityCluster(student,data);
+        const assignments = uniqueStudentAssignments(data,identity);
+        const submissions = studentSubmissions(data,identity);
       const scored = submissions.map(row => ({row,score:scoreOf(row)})).filter(item => item.score !== null);
       const answeredAssignments = assignments.filter(item => Boolean(item.submissionUuid) || submissions.some(submission => String(submission.assignmentUuid || "") === String(item.assignmentUuid || "")));
       const questionsSent = assignments.length;
@@ -1768,6 +1839,11 @@
       const completion = questionsSent ? Math.round(answeredAssignments.length / questionsSent * 100) : 0;
       byId("studentCompletionRing").style.background = `conic-gradient(#27679d 0 ${completion}%, #e4edf5 ${completion}% 100%)`;
       profile.scrollIntoView({behavior:"smooth",block:"start"});
+      setStatus(byId("studentsStatus"),`Opened ${studentField(student,["name","fullName"]) || "student"} · ${submissions.length} submitted response${submissions.length === 1 ? "" : "s"} · viewer ${STUDENT_PERFORMANCE_VIEWER_BUILD}`,"success");
+      } catch (error) {
+        console.error("Student performance viewer failed",error);
+        setStatus(byId("studentsStatus"),`${error.message || "Student performance could not be opened."} Viewer ${STUDENT_PERFORMANCE_VIEWER_BUILD}.`,"error");
+      }
     }
 
     function bankCategoriesForType(bankType="") {
@@ -4312,6 +4388,15 @@ function formatCriterionFeedback(criterion) {
       byId("clearTestRegisterButton").addEventListener("click",clearSelectedTestRegister);
       byId("applyResultFiltersButton").addEventListener("click",renderResultsTable);
       byId("clearResultFiltersButton").addEventListener("click",() => clearFilters("result"));
+      byId("studentRosterTableWrap").addEventListener("click",event => {
+        const button = event.target.closest(".student-profile-button");
+        if (!button) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const studentName = button.dataset.studentName || "student";
+        setStatus(byId("studentsStatus"),`Opening ${studentName}… viewer ${STUDENT_PERFORMANCE_VIEWER_BUILD}`,"");
+        renderStudentProfile(button.dataset.studentKey || button.dataset.student || "");
+      });
       byId("addTrainerForm").addEventListener("submit",createTrainer);
     }
 
