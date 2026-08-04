@@ -376,7 +376,7 @@
 
         <section id="studentsSection" class="section-panel">
           <div class="workspace-header"><div><h2>Students</h2><p>Open an individual student record to see question-wise performance, score movement and response completion.</p></div><div class="header-actions"><button id="refreshStudentsButton" class="secondary-button" type="button">Refresh</button></div></div>
-          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle"></div></div><div class="student-roster-tabs"><button id="activeStudentsTab" class="secondary-button student-roster-tab active" type="button">Active Batches</button><button id="archivedStudentsTab" class="secondary-button student-roster-tab" type="button">Archives</button></div></div><div id="studentRosterTableWrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
+          <div class="panel"><div class="panel-title-row"><div><h3>Student Register</h3><div id="studentRosterCount" class="panel-subtitle"></div></div></div><div class="form-grid"><div class="form-group"><label for="studentBatchFilter">Active Batch</label><select id="studentBatchFilter"><option value="">Choose batch</option></select></div></div><div id="studentRosterTableWrap"></div><div id="studentsStatus" class="form-status" role="status" aria-live="polite"></div></div>
           <div id="studentProfilePanel" class="panel" hidden></div>
         </section>
 
@@ -1079,19 +1079,18 @@
       const studentUuid = studentUuidOf(student);
       const lastScore = latestStudentScore(data,studentUuid);
       const batchLabel = studentBatchLabel(student);
-      const academicYear = student.academicYear || academicYearForBatch(batchLabel);
       const editing = editingStudentUuid === studentUuid;
 
       if (editing) {
         const batchOptions = activeBatchLabels().map(label => `<option value="${escapeHtml(label)}" ${label === batchLabel ? "selected" : ""}>${escapeHtml(label)}</option>`).join("");
-        return `<tr data-student-row="${escapeHtml(studentUuid)}"><td><input class="student-edit-input edit-student-roll" value="${escapeHtml(studentField(student,["rollNo","studentId","student_id"]))}" aria-label="Roll number"></td><td><input class="student-edit-input edit-student-name" value="${escapeHtml(studentField(student,["name","fullName"]))}" aria-label="Student name"><br><span class="bank-meta">${escapeHtml(studentField(student,["emailId","email"]) || "")}</span></td><td><select class="student-edit-select edit-student-batch" aria-label="Batch">${batchOptions}</select></td><td>${escapeHtml(academicYearLabel(academicYear))}</td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])))}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])))}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="student-row-actions"><button class="small-button save-student-edit" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button cancel-student-edit" type="button">Cancel</button></div></td></tr>`;
+        return `<tr data-student-row="${escapeHtml(studentUuid)}"><td><input class="student-edit-input edit-student-roll" value="${escapeHtml(studentField(student,["rollNo","studentId","student_id"]))}" aria-label="Roll number"></td><td><input class="student-edit-input edit-student-name" value="${escapeHtml(studentField(student,["name","fullName"]))}" aria-label="Student name"></td><td><input class="student-edit-input edit-student-email" type="email" value="${escapeHtml(studentField(student,["emailId","email"]) || "")}" aria-label="Email"></td><td><select class="student-edit-select edit-student-batch" aria-label="Batch">${batchOptions}</select></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])))}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])))}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="student-row-actions"><button class="small-button save-student-edit" type="button" data-student="${escapeHtml(studentUuid)}">Save</button><button class="small-button cancel-student-edit" type="button">Cancel</button></div></td></tr>`;
       }
 
-      return `<tr><td>${escapeHtml(studentField(student,["rollNo","studentId","student_id"]) || "—")}</td><td><strong>${escapeHtml(studentField(student,["name","fullName"]) || "—")}</strong><br>${escapeHtml(studentField(student,["emailId","email"]) || "")}</td><td>${escapeHtml(batchLabel || "—")}</td><td><select class="academic-year-select" data-student="${escapeHtml(studentUuid)}"><option value="">Not set</option><option value="FIRST_YEAR" ${academicYear === "FIRST_YEAR" ? "selected" : ""}>First Year</option><option value="SECOND_YEAR" ${academicYear === "SECOND_YEAR" ? "selected" : ""}>Second Year</option></select></td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])))}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])))}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="student-row-actions"><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button><button class="small-button edit-student-button" type="button" data-student="${escapeHtml(studentUuid)}">Edit</button></div></td></tr>`;
+      return `<tr><td>${escapeHtml(studentField(student,["rollNo","studentId","student_id"]) || "—")}</td><td><strong>${escapeHtml(studentField(student,["name","fullName"]) || "—")}</strong></td><td>${escapeHtml(studentField(student,["emailId","email"]) || "—")}</td><td>${escapeHtml(batchLabel || "—")}</td><td>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])))}</td><td>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])))}</td><td>${escapeHtml(formatNumber(lastScore))}</td><td><div class="student-row-actions"><button class="small-button student-profile-button" type="button" data-student="${escapeHtml(studentUuid)}">View performance</button><button class="small-button edit-student-button" type="button" data-student="${escapeHtml(studentUuid)}">Edit</button></div></td></tr>`;
     }
 
     function rosterTable(students, data) {
-      return `<div class="table-wrap"><table><thead><tr><th>Roll Number</th><th>Name</th><th>Batch</th><th>Academic Year</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th>Action</th></tr></thead><tbody>${students.map(student => rosterStudentRow(student,data)).join("")}</tbody></table></div>`;
+      return `<div class="table-wrap"><table><thead><tr><th>Roll Number</th><th>Name</th><th>Email</th><th>Batch</th><th>Date of Joining</th><th>Date Last Accessed</th><th>Last Score</th><th>Action</th></tr></thead><tbody>${students.map(student => rosterStudentRow(student,data)).join("")}</tbody></table></div>`;
     }
 
     function renderArchivedStudentRoster() {
@@ -1111,30 +1110,32 @@
     }
 
     function bindStudentRosterEvents() {
-      document.querySelectorAll(".student-profile-button").forEach(button => button.addEventListener("click",() => renderStudentProfile(button.dataset.student)));
-      document.querySelectorAll(".edit-student-button").forEach(button => button.addEventListener("click",() => {
+      const roster = byId("studentRosterTableWrap");
+      roster.querySelectorAll(".student-profile-button").forEach(button => {
+        button.disabled = false;
+        button.style.pointerEvents = "auto";
+        button.onclick = function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          const studentUuid = String(button.dataset.student || "");
+          if (!studentUuid) return;
+          try {
+            renderStudentProfile(studentUuid);
+          } catch (error) {
+            console.error(error);
+            setStatus(byId("studentsStatus"),error.message || "Student performance could not be opened.","error");
+          }
+        };
+      });
+      roster.querySelectorAll(".edit-student-button").forEach(button => button.addEventListener("click",() => {
         editingStudentUuid = button.dataset.student;
         renderStudentRoster();
       }));
-      document.querySelectorAll(".cancel-student-edit").forEach(button => button.addEventListener("click",() => {
+      roster.querySelectorAll(".cancel-student-edit").forEach(button => button.addEventListener("click",() => {
         editingStudentUuid = "";
         renderStudentRoster();
       }));
-      document.querySelectorAll(".save-student-edit").forEach(button => button.addEventListener("click",() => saveStudentEdit(button.dataset.student)));
-      document.querySelectorAll(".academic-year-select").forEach(select => select.addEventListener("change",async () => {
-        select.disabled = true;
-        try {
-          const result = await callRpc(RPC.setAcademicYear,{p_session_token:currentSession.sessionToken,p_student_uuid:select.dataset.student,p_academic_year:select.value || null});
-          if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Academic year could not be saved.");
-          await loadCohortData();
-          renderStudentRoster();
-          setStatus(byId("studentsStatus"),"Academic year saved.","success");
-        } catch (error) {
-          console.error(error);
-          setStatus(byId("studentsStatus"),error.message || "Academic year could not be saved.","error");
-          select.disabled = false;
-        }
-      }));
+      roster.querySelectorAll(".save-student-edit").forEach(button => button.addEventListener("click",() => saveStudentEdit(button.dataset.student)));
     }
 
     async function saveStudentEdit(studentUuid) {
@@ -1142,6 +1143,7 @@
       if (!row) return;
       const rollNo = row.querySelector(".edit-student-roll").value.trim().toUpperCase();
       const fullName = row.querySelector(".edit-student-name").value.trim();
+      const email = row.querySelector(".edit-student-email").value.trim().toLowerCase();
       const batchLabel = row.querySelector(".edit-student-batch").value;
       if (!validStudentRollNumber(rollNo)) {
         setStatus(byId("studentsStatus"),"Enter proper roll number.","error");
@@ -1151,6 +1153,10 @@
         setStatus(byId("studentsStatus"),"Enter the student name.","error");
         return;
       }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setStatus(byId("studentsStatus"),"Enter a valid email address.","error");
+        return;
+      }
       showLoading("Saving student details…");
       try {
         const result = await callRpc(RPC.updateStudent,{
@@ -1158,19 +1164,16 @@
           p_student_uuid:studentUuid,
           p_roll_no:rollNo,
           p_full_name:fullName,
+          p_email:email,
           p_batch:batchDatabaseValue(batchLabel)
         });
         if (!result || result.ok !== true) throw new Error(result && result.message ? result.message : "Student details could not be saved.");
-        const yearResult = await callRpc(RPC.setAcademicYear,{
-          p_session_token:currentSession.sessionToken,
-          p_student_uuid:studentUuid,
-          p_academic_year:academicYearForBatch(batchLabel) || null
-        });
-        if (!yearResult || yearResult.ok !== true) throw new Error(yearResult && yearResult.message ? yearResult.message : "Student batch was saved, but academic year could not be updated.");
         editingStudentUuid = "";
         studentPerformanceData = null;
         await loadReport("Refreshing student records…");
         await loadStudentPerformance(true);
+        byId("studentBatchFilter").value = batchLabel;
+        renderStudentRoster();
         setStatus(byId("studentsStatus"),"Student details saved.","success");
       } catch (error) {
         console.error(error);
@@ -1181,50 +1184,47 @@
     }
 
     function renderStudentRoster() {
-      byId("activeStudentsTab").classList.toggle("active",studentRosterView === "active");
-      byId("archivedStudentsTab").classList.toggle("active",studentRosterView === "archives");
-      if (studentRosterView === "archives") {
-        renderArchivedStudentRoster();
+      const data = studentPerformanceData;
+      const students = (cohortData.students.length ? cohortData.students : (data && Array.isArray(data.students) ? data.students : [])).slice();
+      const batchSelect = byId("studentBatchFilter");
+      const activeBatches = activeBatchLabels();
+      const previousValue = batchSelect.value;
+      batchSelect.innerHTML = `<option value="">Choose batch</option>` + activeBatches.map(label => `<option value="${escapeHtml(label)}">${escapeHtml(label)}</option>`).join("");
+      if (activeBatches.includes(previousValue)) batchSelect.value = previousValue;
+
+      if (!batchSelect.dataset.bound) {
+        batchSelect.addEventListener("change",() => {
+          editingStudentUuid = "";
+          renderStudentRoster();
+        });
+        batchSelect.dataset.bound = "true";
+      }
+
+      const selectedBatch = batchSelect.value;
+      byId("studentRosterCount").textContent = selectedBatch ? selectedBatch : "Choose one of the two active batches.";
+      if (!selectedBatch) {
+        byId("studentRosterTableWrap").innerHTML = "";
         return;
       }
 
-      const data = studentPerformanceData;
-      const students = (cohortData.students.length ? cohortData.students : (data && Array.isArray(data.students) ? data.students : [])).slice();
-      const activeBatches = activeBatchLabels();
-      const grouped = new Map(activeBatches.map(label => [label,[]]));
-      const needsCorrection = [];
-      students.forEach(student => {
-        const label = studentBatchLabel(student);
-        if (grouped.has(label)) grouped.get(label).push(student);
-        else needsCorrection.push(student);
-      });
-      grouped.forEach(items => items.sort((left,right) =>
-        exportText(studentField(left,["rollNo","studentId","student_id"])).localeCompare(
-          exportText(studentField(right,["rollNo","studentId","student_id"])),
-          undefined,
-          {numeric:true,sensitivity:"base"}
-        ) || exportText(studentField(left,["name","fullName"])).localeCompare(
-          exportText(studentField(right,["name","fullName"]))
-        )
-      ));
-      needsCorrection.sort((left,right) => exportText(studentField(left,["rollNo","studentId","student_id"])).localeCompare(
-        exportText(studentField(right,["rollNo","studentId","student_id"])),
-        undefined,
-        {numeric:true,sensitivity:"base"}
-      ));
-      byId("studentRosterCount").textContent = `${students.length} active student${students.length === 1 ? "" : "s"} · ${activeBatches.join(" and ")}`;
-      const folders = activeBatches.map(label => {
-        const items = grouped.get(label) || [];
-        return `<details class="batch-folder"><summary><span>${escapeHtml(label)}</span><span class="batch-folder-count">${items.length} student${items.length === 1 ? "" : "s"}</span></summary>${items.length ? rosterTable(items,data) : `<div class="empty-state">No students in this batch yet.</div>`}</details>`;
-      }).join("");
-      const warning = needsCorrection.length ? `<div class="student-batch-warning"><strong>${needsCorrection.length} record${needsCorrection.length === 1 ? " needs" : "s need"} batch correction.</strong> Use Edit to correct the roll number or batch.</div>${rosterTable(needsCorrection,data)}` : "";
-      byId("studentRosterTableWrap").innerHTML = folders + warning;
-      document.querySelectorAll("#studentRosterTableWrap .batch-folder").forEach(folder => folder.addEventListener("toggle",() => {
-        if (!folder.open) return;
-        document.querySelectorAll("#studentRosterTableWrap .batch-folder").forEach(other => {
-          if (other !== folder) other.open = false;
-        });
-      }));
+      const filtered = students
+        .filter(student => studentBatchLabel(student) === selectedBatch)
+        .sort((left,right) =>
+          exportText(studentField(left,["rollNo","studentId","student_id"])).localeCompare(
+            exportText(studentField(right,["rollNo","studentId","student_id"])),
+            undefined,
+            {numeric:true,sensitivity:"base"}
+          ) || exportText(studentField(left,["name","fullName"])).localeCompare(
+            exportText(studentField(right,["name","fullName"])),
+            undefined,
+            {sensitivity:"base"}
+          )
+        );
+
+      byId("studentRosterCount").textContent = `${selectedBatch} · ${filtered.length} student${filtered.length === 1 ? "" : "s"}`;
+      byId("studentRosterTableWrap").innerHTML = filtered.length
+        ? rosterTable(filtered,data)
+        : `<div class="empty-state">No students in this batch yet.</div>`;
       bindStudentRosterEvents();
     }
 
@@ -1252,7 +1252,7 @@
       });
       const profile = byId("studentProfilePanel");
       profile.hidden = false;
-      profile.innerHTML = `<div class="student-profile"><div class="student-profile-head"><div><h3>${escapeHtml(studentField(student,["name","fullName"]) || "Student")}</h3><div class="panel-subtitle">Individual ASCENT performance record</div></div><button id="closeStudentProfileButton" class="secondary-button" type="button">Close</button></div><div class="student-detail-grid"><div class="student-detail"><strong>Roll Number</strong><span>${escapeHtml(studentField(student,["rollNo","studentId"]) || "—")}</span></div><div class="student-detail"><strong>Academic Year</strong><span>${escapeHtml(academicYearLabel(student.academicYear))}</span></div><div class="student-detail"><strong>Batch</strong><span>${escapeHtml(studentField(student,["batch","batchName"]) || "—")}</span></div><div class="student-detail"><strong>Date of Joining</strong><span>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])))}</span></div><div class="student-detail"><strong>Date Last Accessed</strong><span>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])))}</span></div><div class="student-detail"><strong>Last Score</strong><span>${escapeHtml(formatNumber(scored.length ? scored[scored.length - 1].score : null))}</span></div></div><div class="student-progress-grid"><div class="panel chart-box"><div class="panel-title-row"><div><h3>Score progress</h3><div class="panel-subtitle">Scores in the order responses were submitted.</div></div></div><div id="studentProgressLine"></div></div><div class="panel"><div class="panel-title-row"><div><h3>Response completion</h3><div class="panel-subtitle">Questions sent versus submitted.</div></div></div><div class="completion-ring-wrap"><div id="studentCompletionRing" class="completion-ring"><div class="completion-ring-copy"><strong>${answeredAssignments.length}/${questionsSent}</strong><span>submitted / sent</span></div></div></div></div></div><div class="panel"><div class="panel-title-row"><div><h3>Question-wise performance</h3><div class="panel-subtitle">Criterion scores shown for the latest response to each question.</div></div></div><div class="table-wrap"><table class="student-question-table"><thead><tr><th>Question Type</th><th>Question</th><th>Criterion-wise Scores</th><th>First Score</th><th>Last Score</th></tr></thead><tbody>${questionRows.length ? questionRows.map(row => `<tr><td>${escapeHtml(rubricLabel(row.rubricType))}</td><td class="question-cell">${escapeHtml(row.question || "—")}</td><td>${escapeHtml(row.criteria)}</td><td>${escapeHtml(formatNumber(row.firstScore))}</td><td>${escapeHtml(formatNumber(row.lastScore))}</td></tr>`).join("") : `<tr><td colspan="5" class="empty-state">No submitted responses yet.</td></tr>`}</tbody></table></div></div></div>`;
+      profile.innerHTML = `<div class="student-profile"><div class="student-profile-head"><div><h3>${escapeHtml(studentField(student,["name","fullName"]) || "Student")}</h3><div class="panel-subtitle">Individual ASCENT performance record</div></div><button id="closeStudentProfileButton" class="secondary-button" type="button">Close</button></div><div class="student-detail-grid"><div class="student-detail"><strong>Roll Number</strong><span>${escapeHtml(studentField(student,["rollNo","studentId"]) || "—")}</span></div><div class="student-detail"><strong>Batch</strong><span>${escapeHtml(studentField(student,["batch","batchName"]) || "—")}</span></div><div class="student-detail"><strong>Date of Joining</strong><span>${escapeHtml(formatDate(studentField(student,["dateJoined","joinedAt","registeredAt","createdAt","created_at"])))}</span></div><div class="student-detail"><strong>Date Last Accessed</strong><span>${escapeHtml(formatDate(studentField(student,["lastAccessedAt","lastLoginAt","lastSeenAt","last_accessed_at"])))}</span></div><div class="student-detail"><strong>Last Score</strong><span>${escapeHtml(formatNumber(scored.length ? scored[scored.length - 1].score : null))}</span></div></div><div class="student-progress-grid"><div class="panel chart-box"><div class="panel-title-row"><div><h3>Score progress</h3><div class="panel-subtitle">Scores in the order responses were submitted.</div></div></div><div id="studentProgressLine"></div></div><div class="panel"><div class="panel-title-row"><div><h3>Response completion</h3><div class="panel-subtitle">Questions sent versus submitted.</div></div></div><div class="completion-ring-wrap"><div id="studentCompletionRing" class="completion-ring"><div class="completion-ring-copy"><strong>${answeredAssignments.length}/${questionsSent}</strong><span>submitted / sent</span></div></div></div></div></div><div class="panel"><div class="panel-title-row"><div><h3>Question-wise performance</h3><div class="panel-subtitle">Criterion scores shown for the latest response to each question.</div></div></div><div class="table-wrap"><table class="student-question-table"><thead><tr><th>Question Type</th><th>Question</th><th>Criterion-wise Scores</th><th>First Score</th><th>Last Score</th></tr></thead><tbody>${questionRows.length ? questionRows.map(row => `<tr><td>${escapeHtml(rubricLabel(row.rubricType))}</td><td class="question-cell">${escapeHtml(row.question || "—")}</td><td>${escapeHtml(row.criteria)}</td><td>${escapeHtml(formatNumber(row.firstScore))}</td><td>${escapeHtml(formatNumber(row.lastScore))}</td></tr>`).join("") : `<tr><td colspan="5" class="empty-state">No submitted responses yet.</td></tr>`}</tbody></table></div></div></div>`;
       byId("closeStudentProfileButton").addEventListener("click",() => { profile.hidden = true; profile.innerHTML = ""; });
       const points = scored.map(item => ({label:formatDate(studentField(item.row,["submittedAt","submitted_at"])),shortLabel:String(scored.indexOf(item) + 1),value:item.score}));
       renderLineSvg("studentProgressLine",points,"Scores will appear after the student submits responses.");
@@ -3667,8 +3667,6 @@ function formatCriterionFeedback(criterion) {
       byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results,"dashboard"));
       byId("resultsExportButton").addEventListener("click",() => exportExcel(visibleResultRows,"results"));
       byId("refreshStudentsButton").addEventListener("click",() => loadStudentPerformance(true));
-      byId("activeStudentsTab").addEventListener("click",() => { studentRosterView="active"; editingStudentUuid=""; renderStudentRoster(); });
-      byId("archivedStudentsTab").addEventListener("click",async () => { studentRosterView="archives"; editingStudentUuid=""; await loadArchiveData(); renderStudentRoster(); });
       byId("refreshFollowupsButton").addEventListener("click",() => loadReminderDashboard("Refreshing student follow-ups…"));
       byId("toggleFollowupsButton").addEventListener("click",toggleInstitutionalFollowups);
       byId("followupsExportButton").addEventListener("click",downloadFollowupExcel);
