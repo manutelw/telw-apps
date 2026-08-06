@@ -193,9 +193,10 @@
     .student-edit-input, .student-edit-select { min-width:130px; width:100%; padding:8px 9px; border:1px solid #aebfce; border-radius:7px; font:inherit; background:#fff; }
     .student-row-actions { display:flex; gap:7px; flex-wrap:wrap; }
     .student-batch-warning { margin-top:14px; padding:12px 14px; border:1px solid #e4c982; background:#fff9e8; border-radius:10px; color:#6c5311; }
+    body.brand-prepaint .app-shell { visibility:hidden; }
   </style>
 </head>
-<body>
+<body class="brand-prepaint">
   <div id="loadingOverlay" class="loading-overlay"><div id="loadingText" class="loading-card">Loading ASCENT…</div></div>
   <div class="app-shell">
     <header class="topbar">
@@ -430,7 +431,57 @@
   </div>
 
   <script>
+    (function prepaintTrainerBranding() {
+      const SESSION_KEY = "ascent_trainer_session";
+      const CACHE_KEY = "ascent_trainer_branding_cache_v1";
+      const reveal = () => document.body.classList.remove("brand-prepaint");
+      window.__revealTrainerWorkspace = reveal;
+
+      try {
+        const session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+        const role = String(session && session.role || "TRAINER").toUpperCase();
+        if (!session || role === "ADMIN") { reveal(); return; }
+
+        const identity = String(session.trainerUuid || session.email || "").trim().toLowerCase();
+        const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+        if (!cache || cache.identity !== identity || cache.isInstitutional !== true) return;
+
+        const title = String(cache.portalName || cache.shortName || "Institution Portal").trim();
+        const shortName = String(cache.shortName || title).trim();
+        const logoUrl = String(cache.logoUrl || "").trim();
+        const slug = String(cache.portalSlug || "").trim();
+
+        document.getElementById("trainerBrandTitle").textContent = title;
+        document.getElementById("trainerBrandSubtitle").textContent = "Trainer & Admin Portal";
+        document.getElementById("trainerBrandLink").setAttribute("aria-label", "Go to " + shortName + " access page");
+        if (slug) document.getElementById("trainerBrandLink").href = "./?institution=" + encodeURIComponent(slug);
+
+        const mark = document.getElementById("trainerBrandMark");
+        if (logoUrl) {
+          const img = document.createElement("img");
+          img.src = logoUrl;
+          img.alt = shortName + " logo";
+          mark.replaceChildren(img);
+        } else {
+          mark.textContent = shortName.charAt(0).toUpperCase() || "I";
+        }
+
+        document.title = title + " · Trainer Portal";
+        document.getElementById("loadingText").textContent = "Loading " + shortName + "…";
+        document.getElementById("trainerFooter").hidden = true;
+        const dashboardIntro = document.querySelector('#dashboardSection .workspace-header p');
+        if (dashboardIntro) dashboardIntro.textContent = "Live participation, performance and progress across " + shortName + ".";
+        reveal();
+      } catch (error) {
+        console.error("Could not apply cached trainer branding before paint:", error);
+        reveal();
+      }
+    })();
+  </script>
+
+  <script>
     const SESSION_STORAGE_KEY = "ascent_trainer_session";
+    const TRAINER_BRANDING_CACHE_KEY = "ascent_trainer_branding_cache_v1";
     const SUPABASE_URL = "https://vtqatrhwfvzyodiftvkc.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
     const RPC = {
@@ -568,20 +619,34 @@
 
 
     async function applyTrainerPortalBranding() {
+      const revealWorkspace = () => {
+        if (typeof window.__revealTrainerWorkspace === "function") window.__revealTrainerWorkspace();
+        else document.body.classList.remove("brand-prepaint");
+      };
+
       // The master administrator keeps ASCENT branding.
-      if (isAdmin()) return;
+      if (isAdmin()) {
+        localStorage.removeItem(TRAINER_BRANDING_CACHE_KEY);
+        revealWorkspace();
+        return;
+      }
 
       try {
         const branding = await callRpc(RPC.portalBranding, {
           p_session_token: currentSession.sessionToken
         });
 
-        if (!branding || branding.ok !== true || branding.isInstitutional !== true) return;
+        if (!branding || branding.ok !== true || branding.isInstitutional !== true) {
+          localStorage.removeItem(TRAINER_BRANDING_CACHE_KEY);
+          revealWorkspace();
+          return;
+        }
 
         const title = String(branding.portalName || branding.shortName || "Institution Portal").trim();
         const shortName = String(branding.shortName || title).trim();
         const logoUrl = String(branding.logoUrl || "").trim();
         const slug = String(branding.portalSlug || "").trim();
+        const identity = String(currentSession.trainerUuid || currentSession.email || "").trim().toLowerCase();
 
         byId("trainerBrandTitle").textContent = title;
         byId("trainerBrandSubtitle").textContent = "Trainer & Admin Portal";
@@ -600,9 +665,21 @@
 
         const dashboardIntro = document.querySelector('#dashboardSection .workspace-header p');
         if (dashboardIntro) dashboardIntro.textContent = "Live participation, performance and progress across " + shortName + ".";
+
+        localStorage.setItem(TRAINER_BRANDING_CACHE_KEY, JSON.stringify({
+          identity,
+          isInstitutional: true,
+          portalName: title,
+          shortName,
+          logoUrl,
+          portalSlug: slug,
+          savedAt: Date.now()
+        }));
       } catch (error) {
         console.error("Could not load institution branding:", error);
-        // Branding failure must never block trainer access.
+        // Branding failure must never block trainer access. Keep a valid matching cache if one exists.
+      } finally {
+        revealWorkspace();
       }
     }
 
