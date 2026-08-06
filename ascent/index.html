@@ -7,6 +7,16 @@
     name="viewport"
     content="width=device-width, initial-scale=1.0"
   >
+  <script>
+    (function(){
+      var host=String(window.location.hostname||"").toLowerCase();
+      var parts=host.split(".");
+      var sub=parts.length>2?parts[0]:"";
+      if(sub && sub!=="www" && sub!=="app"){
+        window.location.replace("./institution.html?slug="+encodeURIComponent(sub));
+      }
+    })();
+  </script>
 
   <title>ASCENT · Login</title>
 
