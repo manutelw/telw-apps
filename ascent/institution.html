@@ -70,6 +70,17 @@
       color:var(--navy-dark);
       background:linear-gradient(145deg,#ffe4a0,#f4bd45);
     }
+    .institution-logo {
+      display:block;
+      width:auto;
+      height:48px;
+      max-width:230px;
+      object-fit:contain;
+      flex:0 1 auto;
+      background:#fff;
+      border-radius:8px;
+      padding:3px 7px;
+    }
     .brand-text { min-width:0; }
     .brand-kicker {
       font-size:.72rem;
@@ -637,9 +648,10 @@
 <body>
   <header class="topbar">
     <div class="brand-wrap">
-      <div class="brand-mark">A</div>
+      <div class="brand-mark" id="brandMark">A</div>
+      <img id="institutionLogo" class="institution-logo" alt="" hidden>
       <div class="brand-text">
-        <div class="brand-kicker">ClarionPrep.com · ASCENT</div>
+        <div class="brand-kicker">Secure Institutional Portal</div>
         <div id="topbarTitle" class="brand-title">Institutional Performance Portal</div>
       </div>
     </div>
@@ -654,7 +666,7 @@
   <main id="portalShell" class="shell" hidden>
     <section class="hero">
       <div class="hero-card">
-        <div class="eyebrow">ASCENT institutional analytics</div>
+        <div class="eyebrow">Institutional performance analytics</div>
         <h1 id="portalHeading">Performance that can be seen, tracked and acted upon.</h1>
         <p class="hero-copy">
           A live view of learner participation, question completion, score progression and individual development across the institution.
@@ -752,14 +764,14 @@
       </article>
     </section>
 
-    <div class="footer" style="background:#143a60;color:#fff;padding:18px 16px;font-size:14px;line-height:1.6;text-align:center"><strong style="display:block;font-size:15px">A Manu Vikraman Career-Readiness Product</strong><span>manuvikraman.com | clarionprep.com</span></div>
+    <div id="institutionFooter" class="footer" style="background:#143a60;color:#fff;padding:18px 16px;font-size:14px;line-height:1.6;text-align:center"><strong id="footerPortalName" style="display:block;font-size:15px">Institutional Performance Portal</strong><span>Secure access for authorised users</span></div>
   </main>
 
   <section id="loginOverlay" class="overlay">
     <form id="loginForm" class="login-card" novalidate>
       <div class="eyebrow">Secure institutional access</div>
       <h2 id="loginHeading">Sign in to the performance portal</h2>
-      <p>Use an authorised ASCENT trainer, administrator or CEO account for this institution.</p>
+      <p>Use an authorised trainer, administrator or institutional account.</p>
 
       <div class="form-group">
         <label for="emailInput">Email address</label>
@@ -774,7 +786,7 @@
         </div>
       </div>
 
-      <button id="loginButton" class="primary-button login-button" type="submit">Open Institutional Portal</button>
+      <button id="loginButton" class="primary-button login-button" type="submit">Open Portal</button>
       <div id="loginStatus" class="form-status" role="status" aria-live="polite"></div>
     </form>
   </section>
@@ -800,10 +812,13 @@
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
     const SESSION_STORAGE_KEY = "ascent_trainer_session";
     const ADMIN_MASTER_SESSION_KEY = "ascent_admin_master_session";
-    const PORTAL_SLUG = String(new URLSearchParams(window.location.search).get("slug") || "").trim().toLowerCase();
+    const HOST_PARTS = String(window.location.hostname || "").toLowerCase().split(".");
+    const HOST_SLUG = HOST_PARTS.length > 2 && !["www","app"].includes(HOST_PARTS[0]) ? HOST_PARTS[0] : "";
+    const PORTAL_SLUG = String(new URLSearchParams(window.location.search).get("slug") || HOST_SLUG || "").trim().toLowerCase();
 
     const RPC = {
       login: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_login",
+      status: SUPABASE_URL + "/rest/v1/rpc/ascent_public_institution_portal_status",
       overview: SUPABASE_URL + "/rest/v1/rpc/ascent_institution_portal_overview",
       studentDetail: SUPABASE_URL + "/rest/v1/rpc/ascent_institution_portal_student_detail"
     };
@@ -996,9 +1011,27 @@
       const overview = portalData.overview || {};
       const institution = portalData.institution || {};
 
-      document.title = (institution.shortName || "ASCENT") + " · Institutional Performance";
-      byId("topbarTitle").textContent = institution.portalName || "Institutional Performance Portal";
-      byId("portalHeading").textContent = (institution.shortName || institution.accessPointName || "Institution") + " performance, visible at a glance.";
+      const portalName = institution.portalName || "Institutional Performance Portal";
+      const shortName = institution.shortName || institution.accessPointName || "Institution";
+      document.title = portalName;
+      byId("topbarTitle").textContent = portalName;
+      byId("portalHeading").textContent = shortName + " performance, visible at a glance.";
+      byId("loginHeading").textContent = "Sign in to " + portalName;
+      byId("footerPortalName").textContent = portalName;
+
+      const logoUrl = String(institution.logoUrl || institution.logo_url || "").trim();
+      const logo = byId("institutionLogo");
+      const mark = byId("brandMark");
+      if (logoUrl) {
+        logo.src = logoUrl;
+        logo.alt = shortName + " logo";
+        logo.hidden = false;
+        mark.hidden = true;
+      } else {
+        logo.hidden = true;
+        mark.hidden = false;
+        mark.textContent = shortName.slice(0,1).toUpperCase() || "I";
+      }
 
       byId("activeLearnersValue").textContent = overview.activeLearners ?? 0;
       byId("assignedQuestionsValue").textContent = overview.assignedQuestions ?? 0;
@@ -1266,9 +1299,37 @@
       document.body.style.overflow = "";
     }
 
+    async function checkPortalAvailability() {
+      if (!PORTAL_SLUG) return {available:false,message:"The institutional portal address is incomplete."};
+      try {
+        const data = await callRpc(RPC.status,{p_portal_slug:PORTAL_SLUG});
+        if (!data || data.ok !== true) return {available:false,message:(data && data.message) || "This institutional portal is unavailable."};
+        if (data.available !== true) return {available:false,message:data.message || "This institutional portal is currently inactive."};
+        const name = data.portalName || "Institutional Performance Portal";
+        const shortName = data.shortName || "Institution";
+        document.title = name;
+        byId("topbarTitle").textContent = name;
+        byId("loginHeading").textContent = "Sign in to " + name;
+        byId("footerPortalName").textContent = name;
+        const logo = byId("institutionLogo");
+        const mark = byId("brandMark");
+        if (data.logoUrl) { logo.src=data.logoUrl; logo.alt=shortName+" logo"; logo.hidden=false; mark.hidden=true; }
+        else { logo.hidden=true; mark.hidden=false; mark.textContent=shortName.slice(0,1).toUpperCase() || "I"; }
+        return {available:true};
+      } catch (error) {
+        return {available:false,message:"This institutional portal could not be checked."};
+      }
+    }
+
     async function loadPortal() {
       if (!PORTAL_SLUG) {
         setLoginStatus("The institutional portal address is incomplete.","error");
+        return;
+      }
+
+      const availability = await checkPortalAvailability();
+      if (!availability.available) {
+        window.location.replace("https://clarionprep.com/ascent/");
         return;
       }
 
@@ -1382,11 +1443,7 @@
         currentSession &&
         currentSession.role || ""
       ).toUpperCase() !== "ADMIN";
-    if (currentSession) {
-      loadPortal();
-    } else {
-      byId("loginOverlay").hidden = false;
-    }
+    loadPortal();
   </script>
 </body>
 </html>
