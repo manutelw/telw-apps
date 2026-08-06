@@ -807,6 +807,49 @@ body.commercial-entry #panelTitle {
   }
 }
 
+
+    .institution-branding {
+      display: none;
+      text-align: center;
+      margin: 0 0 22px;
+    }
+
+    .institution-branding.visible {
+      display: block;
+    }
+
+    .institution-logo {
+      display: block;
+      max-width: min(360px, 90%);
+      max-height: 150px;
+      width: auto;
+      height: auto;
+      margin: 0 auto 18px;
+      object-fit: contain;
+    }
+
+    .institution-portal-title {
+      color: var(--navy-dark);
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1.18;
+      margin: 0;
+    }
+
+    body.institution-selected .intro-panel,
+    body.institution-selected .mobile-brand,
+    body.institution-selected .footer {
+      display: none !important;
+    }
+
+    body.institution-selected .page-shell {
+      grid-template-columns: 1fr;
+      max-width: 920px;
+    }
+
+    body.institution-selected .login-panel {
+      padding-top: 42px;
+    }
+
   </style>
 </head>
 
@@ -905,6 +948,11 @@ body.commercial-entry #panelTitle {
   id="resolvedAccessPanel"
   hidden
 >
+  <div id="institutionBranding" class="institution-branding" aria-live="polite">
+    <img id="institutionLogo" class="institution-logo" alt="" hidden>
+    <h2 id="institutionPortalTitle" class="institution-portal-title"></h2>
+  </div>
+
   <div
     id="resolvedAccessName"
     class="resolved-access-name"
@@ -1236,6 +1284,10 @@ body.commercial-entry #panelTitle {
   SUPABASE_URL +
   "/rest/v1/rpc/ascent_resolve_access_point";
 
+const INSTITUTION_PORTAL_STATUS_RPC_URL =
+  SUPABASE_URL +
+  "/rest/v1/rpc/ascent_public_institution_portal_status";
+
 const STUDENT_LOGIN_RPC_URL =
   SUPABASE_URL +
   "/rest/v1/rpc/ascent_student_login_for_access_point";
@@ -1295,6 +1347,15 @@ const trainerRoleButton =
 
 const institutionRoleButton =
   document.getElementById("institutionRoleButton");
+
+const institutionBranding =
+  document.getElementById("institutionBranding");
+
+const institutionLogo =
+  document.getElementById("institutionLogo");
+
+const institutionPortalTitle =
+  document.getElementById("institutionPortalTitle");
 
 const loginForm =
   document.getElementById("loginForm");
@@ -1841,6 +1902,66 @@ function rpcHeaders() {
 }
 
 
+async function applyInstitutionBranding(accessPoint) {
+  const slug = String(
+    accessPoint.access_point_slug ||
+    accessPoint.url_slug ||
+    ""
+  ).trim().toLowerCase();
+
+  institutionBranding.classList.remove("visible");
+  institutionLogo.hidden = true;
+  institutionLogo.removeAttribute("src");
+  institutionPortalTitle.textContent = "";
+  document.body.classList.remove("institution-selected");
+
+  if (!slug || slug.includes("private")) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      INSTITUTION_PORTAL_STATUS_RPC_URL,
+      {
+        method: "POST",
+        headers: rpcHeaders(),
+        body: JSON.stringify({ p_portal_slug: slug })
+      }
+    );
+
+    if (!response.ok) {
+      return;
+    }
+
+    const portal = await response.json();
+
+    if (!portal || portal.available !== true) {
+      return;
+    }
+
+    const title = String(
+      portal.portalName ||
+      accessPoint.display_name ||
+      "Institutional Access"
+    );
+
+    institutionPortalTitle.textContent = title;
+    document.title = title;
+
+    const logoUrl = String(portal.logoUrl || "").trim();
+    if (logoUrl) {
+      institutionLogo.src = logoUrl;
+      institutionLogo.alt = String(portal.shortName || accessPoint.display_name || "Institution") + " logo";
+      institutionLogo.hidden = false;
+    }
+
+    institutionBranding.classList.add("visible");
+    document.body.classList.add("institution-selected");
+  } catch (error) {
+    console.warn("Institution branding could not be loaded:", error);
+  }
+}
+
 accessForm.addEventListener(
   "submit",
   async function (event) {
@@ -1906,6 +2027,8 @@ accessForm.addEventListener(
 
       selectedAccessPoint =
         result[0];
+
+      await applyInstitutionBranding(selectedAccessPoint);
 
       selectedLoginRole = "";
 
@@ -2090,6 +2213,12 @@ institutionRoleButton.addEventListener(
   function () {
     selectedAccessPoint = null;
     selectedLoginRole = "";
+    institutionBranding.classList.remove("visible");
+    institutionLogo.hidden = true;
+    institutionLogo.removeAttribute("src");
+    institutionPortalTitle.textContent = "";
+    document.body.classList.remove("institution-selected");
+    document.title = "ASCENT · Login";
 
     resolvedAccessPanel.hidden = true;
     loginForm.hidden = true;
