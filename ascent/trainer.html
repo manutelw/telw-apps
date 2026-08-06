@@ -28,7 +28,8 @@
       padding:16px 20px; border-radius:18px; background:rgba(255,255,255,.98); box-shadow:var(--shadow);
     }
     .brand-wrap { display:flex; align-items:center; gap:14px; color:inherit; text-decoration:none; cursor:pointer; }
-    .brand-mark { width:46px; height:46px; display:grid; place-items:center; border-radius:13px; background:linear-gradient(145deg,var(--navy),var(--blue)); color:#fff; font-size:22px; font-weight:800; }
+    .brand-mark { width:46px; height:46px; display:grid; place-items:center; border-radius:13px; background:linear-gradient(145deg,var(--navy),var(--blue)); color:#fff; font-size:22px; font-weight:800; overflow:hidden; }
+    .brand-mark img { width:100%; height:100%; object-fit:contain; background:#fff; }
     .brand-text h1 { color:var(--navy); font-size:24px; letter-spacing:1.3px; line-height:1; margin-bottom:5px; }
     .brand-text p { color:var(--gold); font-size:13px; font-weight:700; }
     .topbar-actions { display:flex; align-items:center; gap:12px; }
@@ -198,7 +199,7 @@
   <div id="loadingOverlay" class="loading-overlay"><div id="loadingText" class="loading-card">Loading ASCENT…</div></div>
   <div class="app-shell">
     <header class="topbar">
-      <a class="brand-wrap" href="../" aria-label="Go to the ClarionPrep homepage"><div class="brand-mark">A</div><div class="brand-text"><h1>ASCENT</h1><p>Trainer &amp; Admin Portal</p></div></a>
+      <a id="trainerBrandLink" class="brand-wrap" href="../" aria-label="Go to the ClarionPrep homepage"><div id="trainerBrandMark" class="brand-mark">A</div><div class="brand-text"><h1 id="trainerBrandTitle">ASCENT</h1><p id="trainerBrandSubtitle">Trainer &amp; Admin Portal</p></div></a>
       <div class="topbar-actions"><div id="adminTouchpoint" class="user-summary" role="button" tabindex="0" aria-label="Open admin settings"><div id="trainerName" class="user-name">Trainer</div><div id="trainerRole" class="user-role">Trainer</div></div><button id="logoutButton" class="logout-button" type="button">Log Out</button></div>
     </header>
 
@@ -425,7 +426,7 @@
         </section>
       </section>
     </main>
-    <div class="footer">Created by Manu Vikraman<br>A separate application within ClarionPrep</div>
+    <div id="trainerFooter" class="footer">Created by Manu Vikraman<br>A separate application within ClarionPrep</div>
   </div>
 
   <script>
@@ -450,7 +451,8 @@
       clearTestRegister: SUPABASE_URL + "/rest/v1/rpc/ascent_admin_clear_test_student_register",
       reminderDashboard: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_dashboard",
       setRemindersEnabled: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_set_reminders_enabled",
-      reminderExport: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_export"
+      reminderExport: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_export",
+      portalBranding: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_portal_branding"
     };
     let currentSession = null;
     let reportData = { summary:{}, batches:[], students:[], tasks:[], results:[] };
@@ -561,6 +563,47 @@
       byId("bankAssignmentForm").hidden = isCeo();
       byId("bulkQuestionsNavItem").hidden = isCeo();
       byId("testRegisterAdminPanel").hidden = !isAdmin();
+    }
+
+
+
+    async function applyTrainerPortalBranding() {
+      // The master administrator keeps ASCENT branding.
+      if (isAdmin()) return;
+
+      try {
+        const branding = await callRpc(RPC.portalBranding, {
+          p_session_token: currentSession.sessionToken
+        });
+
+        if (!branding || branding.ok !== true || branding.isInstitutional !== true) return;
+
+        const title = String(branding.portalName || branding.shortName || "Institution Portal").trim();
+        const shortName = String(branding.shortName || title).trim();
+        const logoUrl = String(branding.logoUrl || "").trim();
+        const slug = String(branding.portalSlug || "").trim();
+
+        byId("trainerBrandTitle").textContent = title;
+        byId("trainerBrandSubtitle").textContent = "Trainer & Admin Portal";
+        byId("trainerBrandLink").setAttribute("aria-label", "Go to " + shortName + " access page");
+        if (slug) byId("trainerBrandLink").href = "./?institution=" + encodeURIComponent(slug);
+
+        if (logoUrl) {
+          byId("trainerBrandMark").innerHTML = '<img src="' + escapeHtml(logoUrl) + '" alt="' + escapeHtml(shortName) + ' logo">';
+        } else {
+          byId("trainerBrandMark").textContent = shortName.charAt(0).toUpperCase() || "I";
+        }
+
+        document.title = title + " · Trainer Portal";
+        byId("loadingText").textContent = "Loading " + shortName + "…";
+        byId("trainerFooter").hidden = true;
+
+        const dashboardIntro = document.querySelector('#dashboardSection .workspace-header p');
+        if (dashboardIntro) dashboardIntro.textContent = "Live participation, performance and progress across " + shortName + ".";
+      } catch (error) {
+        console.error("Could not load institution branding:", error);
+        // Branding failure must never block trainer access.
+      }
     }
 
     function normaliseQuestionForAssignment(value) {
@@ -3784,7 +3827,9 @@ function formatCriterionFeedback(criterion) {
       currentSession = loadTrainerSession(); if (!currentSession) return;
       byId("trainerName").textContent = currentSession.fullName || currentSession.email;
       byId("trainerRole").textContent = currentSession.role || "TRAINER";
-      applyRoleAccess(); setDefaultStartTime(); wireEvents(); initialiseAdminTouchpoint(); updateBankAssignmentFollowupControls(); updateQuestionCount(); resetBankQuestionEditor();
+      applyRoleAccess();
+      await applyTrainerPortalBranding();
+      setDefaultStartTime(); wireEvents(); initialiseAdminTouchpoint(); updateBankAssignmentFollowupControls(); updateQuestionCount(); resetBankQuestionEditor();
       await loadReport();
       await loadQuestionBank();
       await loadReminderDashboard();
