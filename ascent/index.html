@@ -814,6 +814,8 @@ body.commercial-entry #panelTitle {
       margin: 0 0 22px;
     }
 
+    .institution-co-brand { margin:8px 0 0; color:#6a7d90; font-size:13px; font-weight:700; letter-spacing:.3px; }
+
     .institution-branding.visible {
       display: block;
     }
@@ -951,6 +953,7 @@ body.commercial-entry #panelTitle {
   <div id="institutionBranding" class="institution-branding" aria-live="polite">
     <img id="institutionLogo" class="institution-logo" alt="" hidden>
     <h2 id="institutionPortalTitle" class="institution-portal-title"></h2>
+    <p id="institutionCoBrand" class="institution-co-brand" hidden>Powered by ASCENT</p>
   </div>
 
   <div
@@ -1913,6 +1916,8 @@ async function applyInstitutionBranding(accessPoint) {
   institutionLogo.hidden = true;
   institutionLogo.removeAttribute("src");
   institutionPortalTitle.textContent = "";
+  const institutionCoBrand = document.getElementById("institutionCoBrand");
+  institutionCoBrand.hidden = true;
   document.body.classList.remove("institution-selected");
 
   if (!slug || slug.includes("private")) {
@@ -1948,13 +1953,14 @@ async function applyInstitutionBranding(accessPoint) {
     institutionPortalTitle.textContent = title;
     document.title = title;
 
-    const logoUrl = String(portal.logoUrl || "").trim();
+    const logoUrl = portal.showLogo === false ? "" : String(portal.logoUrl || "").trim();
     if (logoUrl) {
       institutionLogo.src = logoUrl;
       institutionLogo.alt = String(portal.shortName || accessPoint.display_name || "Institution") + " logo";
       institutionLogo.hidden = false;
     }
 
+    institutionCoBrand.hidden = portal.brandingMode !== "CO_BRANDED";
     institutionBranding.classList.add("visible");
     document.body.classList.add("institution-selected");
   } catch (error) {
@@ -2027,6 +2033,18 @@ accessForm.addEventListener(
 
       selectedAccessPoint =
         result[0];
+
+      const selectedInstitutionSlug = String(
+        selectedAccessPoint.access_point_slug ||
+        selectedAccessPoint.url_slug ||
+        ""
+      ).trim().toLowerCase();
+
+      if (selectedInstitutionSlug && !selectedInstitutionSlug.includes("private")) {
+        const persistentUrl = new URL(window.location.href);
+        persistentUrl.searchParams.set("institution", selectedInstitutionSlug);
+        window.history.replaceState({}, "", persistentUrl.toString());
+      }
 
       await applyInstitutionBranding(selectedAccessPoint);
 
@@ -2219,6 +2237,10 @@ institutionRoleButton.addEventListener(
     institutionPortalTitle.textContent = "";
     document.body.classList.remove("institution-selected");
     document.title = "ASCENT · Login";
+
+    const resetUrl = new URL(window.location.href);
+    resetUrl.searchParams.delete("institution");
+    window.history.replaceState({}, "", resetUrl.toString());
 
     resolvedAccessPanel.hidden = true;
     loginForm.hidden = true;
@@ -2644,6 +2666,26 @@ function initialiseDirectInstitutionEntry() {
 
 initialiseDirectInstitutionEntry();
 
+
+async function restoreInstitutionSelectionFromUrl() {
+  const requestedInstitution = String(
+    ENTRY_PARAMETERS.get("institution") || ""
+  ).trim();
+
+  if (!requestedInstitution || IS_MANUVIKRAMAN_COMMERCIAL) {
+    return;
+  }
+
+  accessSearchInput.value = requestedInstitution;
+
+  if (typeof accessForm.requestSubmit === "function") {
+    accessForm.requestSubmit();
+  } else {
+    findAccessButton.click();
+  }
+}
+
+restoreInstitutionSelectionFromUrl();
 </script>
 </body>
 </html>
