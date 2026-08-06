@@ -19,29 +19,18 @@
 
       var params=new URLSearchParams(window.location.search);
       var institution=String(params.get("institution")||"").trim().toLowerCase();
-      if(institution){
-        var root=document.documentElement;
-        root.classList.add("institution-boot");
-        root.setAttribute("data-boot-title","Opening your institutional portal…");
-        try {
-          var cached=JSON.parse(localStorage.getItem("ascent_institution_branding_"+institution)||"null");
-          if(cached){
-            var cachedTitle=String(cached.portalName||cached.shortName||"Institutional Portal").trim();
-            var cachedLogo=String(cached.logoUrl||"").trim();
-            if(cachedTitle){
-              root.setAttribute("data-boot-title",cachedTitle);
-            }
-            if(cachedLogo){
-              root.style.setProperty("--institution-boot-logo",'url("'+cachedLogo.replace(/"/g,"%22")+'")');
-              root.classList.add("institution-boot-has-logo");
-            }
-          }
-        } catch (error) {
-          console.warn("Cached institution branding could not be read:", error);
-        }
-        window.setTimeout(function(){
-          root.classList.remove("institution-boot","institution-boot-has-logo");
-        },8000);
+      if(!institution){ return; }
+
+      document.documentElement.classList.add("institution-boot");
+      try {
+        window.__ASCENT_INSTITUTION_BOOT__ = {
+          slug: institution,
+          cached: JSON.parse(
+            localStorage.getItem("ascent_institution_branding_"+institution) || "null"
+          )
+        };
+      } catch (error) {
+        window.__ASCENT_INSTITUTION_BOOT__ = { slug: institution, cached: null };
       }
     })();
   </script>
@@ -79,46 +68,8 @@
       min-height: 100%;
     }
 
-    html.institution-boot {
-      background: linear-gradient(145deg, #102a46, #214d79);
-    }
-
-    html.institution-boot body > * {
-      visibility: hidden !important;
-    }
-
-    html.institution-boot::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: 99998;
-      background:
-        radial-gradient(circle at top right, rgba(244, 201, 107, 0.72) 0, rgba(244, 201, 107, 0.2) 18%, transparent 40%),
-        linear-gradient(145deg, #102a46, #214d79);
-    }
-
-    html.institution-boot::after {
-      content: attr(data-boot-title);
-      position: fixed;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 99999;
-      width: min(560px, calc(100vw - 40px));
-      min-height: 190px;
-      padding: 118px 28px 30px;
-      border-radius: 24px;
-      background: #ffffff var(--institution-boot-logo, none) no-repeat center 28px / auto 76px;
-      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
-      color: #143a60;
-      font: 700 26px/1.25 Arial, Helvetica, sans-serif;
-      text-align: center;
-      visibility: visible !important;
-    }
-
-    html.institution-boot:not(.institution-boot-has-logo)::after {
-      min-height: 128px;
-      padding-top: 46px;
+    html.institution-boot body {
+      visibility: hidden;
     }
 
     body {
@@ -1976,7 +1927,7 @@ function rpcHeaders() {
 
 
 function finishInstitutionBoot() {
-  document.documentElement.classList.remove("institution-boot", "institution-boot-has-logo");
+  document.documentElement.classList.remove("institution-boot");
 }
 
 async function applyInstitutionBranding(accessPoint) {
@@ -1986,15 +1937,15 @@ async function applyInstitutionBranding(accessPoint) {
     ""
   ).trim().toLowerCase();
 
-  institutionBranding.classList.remove("visible");
-  institutionLogo.hidden = true;
-  institutionLogo.removeAttribute("src");
-  institutionPortalTitle.textContent = "";
   const institutionCoBrand = document.getElementById("institutionCoBrand");
-  institutionCoBrand.hidden = true;
-  document.body.classList.remove("institution-selected");
 
   if (!slug || slug.includes("private")) {
+    institutionBranding.classList.remove("visible");
+    institutionLogo.hidden = true;
+    institutionLogo.removeAttribute("src");
+    institutionPortalTitle.textContent = "";
+    institutionCoBrand.hidden = true;
+    document.body.classList.remove("institution-selected");
     finishInstitutionBoot();
     return;
   }
@@ -2027,6 +1978,12 @@ async function applyInstitutionBranding(accessPoint) {
           shortName: portal.shortName || accessPoint.display_name || "",
           logoUrl: portal.showLogo === false ? "" : String(portal.logoUrl || "").trim(),
           brandingMode: portal.brandingMode || "INSTITUTION",
+          accessPoint: {
+            access_point_uuid: accessPoint.access_point_uuid || "",
+            access_point_slug: accessPoint.access_point_slug || accessPoint.url_slug || slug,
+            url_slug: accessPoint.url_slug || accessPoint.access_point_slug || slug,
+            display_name: accessPoint.display_name || portal.shortName || portal.portalName || slug.toUpperCase()
+          },
           savedAt: Date.now()
         })
       );
@@ -2059,6 +2016,57 @@ async function applyInstitutionBranding(accessPoint) {
     finishInstitutionBoot();
   }
 }
+
+function hydrateInstitutionFromCache() {
+  const boot = window.__ASCENT_INSTITUTION_BOOT__;
+  if (!boot || !boot.slug || !boot.cached) {
+    return false;
+  }
+
+  const cached = boot.cached;
+  const title = String(
+    cached.portalName || cached.shortName || "Institutional Access"
+  ).trim();
+  const shortName = String(cached.shortName || boot.slug.toUpperCase()).trim();
+  const logoUrl = String(cached.logoUrl || "").trim();
+
+  selectedAccessPoint = cached.accessPoint || {
+    access_point_uuid: "",
+    access_point_slug: boot.slug,
+    url_slug: boot.slug,
+    display_name: shortName
+  };
+
+  institutionPortalTitle.textContent = title;
+  resolvedAccessName.textContent = shortName;
+  document.title = title;
+
+  if (logoUrl) {
+    institutionLogo.src = logoUrl;
+    institutionLogo.alt = shortName + " logo";
+    institutionLogo.hidden = false;
+  } else {
+    institutionLogo.hidden = true;
+    institutionLogo.removeAttribute("src");
+  }
+
+  const institutionCoBrand = document.getElementById("institutionCoBrand");
+  institutionCoBrand.hidden = cached.brandingMode !== "CO_BRANDED";
+  institutionBranding.classList.add("visible");
+  document.body.classList.add("institution-selected");
+
+  accessForm.hidden = true;
+  resolvedAccessPanel.hidden = false;
+  roleChoice.hidden = false;
+  loginForm.hidden = true;
+  institutionRoleButton.hidden = false;
+  trainerRoleButton.hidden = false;
+
+  finishInstitutionBoot();
+  return true;
+}
+
+hydrateInstitutionFromCache();
 
 accessForm.addEventListener(
   "submit",
@@ -2778,6 +2786,10 @@ async function restoreInstitutionSelectionFromUrl() {
 }
 
 restoreInstitutionSelectionFromUrl();
+
+window.setTimeout(function () {
+  finishInstitutionBoot();
+}, 5000);
 </script>
 </body>
 </html>
