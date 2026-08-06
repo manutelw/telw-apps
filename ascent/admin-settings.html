@@ -606,6 +606,17 @@
         font-size:10px;
       }
     }
+  
+    .portal-manager-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+    .portal-manager-field { display:flex; flex-direction:column; gap:7px; }
+    .portal-manager-field label { font-weight:700; color:#173b61; }
+    .portal-manager-field input,.portal-manager-field select { width:100%; padding:11px 12px; border:1px solid #b8c7d6; border-radius:10px; background:#fff; color:#102f4f; font:inherit; }
+    .portal-manager-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+    .portal-switch-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px; border:1px solid #c7d4df; border-radius:12px; background:#f7fafc; margin-bottom:16px; }
+    .portal-switch-row strong { display:block; color:#173b61; }
+    .portal-switch-row span { color:#586b7d; font-size:.9rem; }
+    .portal-check { display:flex; align-items:center; gap:8px; font-weight:700; color:#173b61; }
+    .portal-check input { width:20px; height:20px; }
   </style>
 </head>
 
@@ -805,6 +816,51 @@
       </section>
     </div>
 
+    <section class="panel" id="institutionPortalManagerPanel">
+      <div class="panel-heading">
+        <h2>Institutional Portal Manager</h2>
+        <p>Control every paid institution or company portal without changing the flagship ASCENT service.</p>
+      </div>
+
+      <div class="portal-switch-row">
+        <div>
+          <strong>All institutional portals</strong>
+          <span>This master switch affects only white-label institutional portals.</span>
+        </div>
+        <label class="portal-check"><input id="allPortalsEnabled" type="checkbox"> ON</label>
+      </div>
+
+      <div class="portal-manager-grid">
+        <div class="portal-manager-field">
+          <label for="portalManagerInstitution">Institution or company</label>
+          <select id="portalManagerInstitution"><option value="">Loading portals…</option></select>
+        </div>
+        <div class="portal-manager-field">
+          <label for="portalManagerName">Portal title</label>
+          <input id="portalManagerName" type="text" maxlength="160" placeholder="Institution Career Readiness Practice Portal">
+        </div>
+        <div class="portal-manager-field">
+          <label for="portalManagerShortName">Short name</label>
+          <input id="portalManagerShortName" type="text" maxlength="60" placeholder="Institution name">
+        </div>
+        <div class="portal-manager-field">
+          <label for="portalManagerLogo">Logo URL</label>
+          <input id="portalManagerLogo" type="url" placeholder="/ascent/assets/institution-logo.png">
+        </div>
+      </div>
+
+      <div class="portal-manager-actions">
+        <label class="portal-check"><input id="portalManagerActive" type="checkbox"> Portal active</label>
+        <label class="portal-check"><input id="portalManagerLeaderboard" type="checkbox"> Show leaderboard</label>
+      </div>
+
+      <div class="portal-manager-actions">
+        <button id="savePortalManagerButton" class="action-link primary" type="button">Save portal settings</button>
+        <a id="previewPortalManagerLink" class="action-link secondary" href="#" target="_blank" rel="noopener">Preview portal</a>
+      </div>
+      <div id="portalManagerStatus" class="admin-status" role="status" aria-live="polite"></div>
+    </section>
+
     <section class="panel statement-panel">
       <div class="panel-heading">
         <h2>ASCENT Payment Statement</h2>
@@ -945,6 +1001,20 @@
     const PAYMENT_STATEMENT_URL =
       SUPABASE_URL +
       "/rest/v1/rpc/ascent_admin_payment_statement";
+
+    const PORTAL_MANAGER_LIST_URL =
+      SUPABASE_URL +
+      "/rest/v1/rpc/ascent_admin_institution_portal_manager";
+
+    const PORTAL_MANAGER_UPDATE_URL =
+      SUPABASE_URL +
+      "/rest/v1/rpc/ascent_admin_update_institution_portal";
+
+    const PORTAL_MANAGER_GLOBAL_URL =
+      SUPABASE_URL +
+      "/rest/v1/rpc/ascent_admin_set_institutional_portals_enabled";
+
+    let portalManagerRecords = [];
 
     let allPaymentRecords = [];
     let displayedPaymentRecords = [];
@@ -1228,6 +1298,89 @@
           error.message ||
           "The institution list could not be loaded.";
       }
+    }
+
+    function setPortalManagerStatus(message,type="") {
+      const element = document.getElementById("portalManagerStatus");
+      element.className = "admin-status" + (type ? " " + type : "");
+      element.textContent = message || "";
+    }
+
+    function selectedPortalRecord() {
+      const id = document.getElementById("portalManagerInstitution").value;
+      return portalManagerRecords.find(item => item.accessPointUuid === id) || null;
+    }
+
+    function renderSelectedPortal() {
+      const item = selectedPortalRecord();
+      const controls = ["portalManagerName","portalManagerShortName","portalManagerLogo","portalManagerActive","portalManagerLeaderboard","savePortalManagerButton"];
+      controls.forEach(id => { document.getElementById(id).disabled = !item; });
+      if (!item) return;
+      document.getElementById("portalManagerName").value = item.portalName || "";
+      document.getElementById("portalManagerShortName").value = item.shortName || "";
+      document.getElementById("portalManagerLogo").value = item.logoUrl || "";
+      document.getElementById("portalManagerActive").checked = item.isActive === true;
+      document.getElementById("portalManagerLeaderboard").checked = item.showLeaderboard === true;
+      const slug = encodeURIComponent(item.portalSlug || item.urlSlug || "");
+      const link = document.getElementById("previewPortalManagerLink");
+      link.href = slug ? "./institution.html?slug=" + slug : "#";
+      link.style.pointerEvents = slug ? "auto" : "none";
+    }
+
+    async function loadInstitutionPortalManager() {
+      const select = document.getElementById("portalManagerInstitution");
+      try {
+        const result = await callAdminRpc(PORTAL_MANAGER_LIST_URL,{p_session_token:session.sessionToken});
+        document.getElementById("allPortalsEnabled").checked = result.globalEnabled === true;
+        portalManagerRecords = Array.isArray(result.portals) ? result.portals : [];
+        select.innerHTML = '<option value="">Choose institution</option>' + portalManagerRecords.map(item =>
+          '<option value="' + escapeHtml(item.accessPointUuid) + '">' + escapeHtml(item.displayName || item.shortName || item.portalSlug || "Institution") + '</option>'
+        ).join("");
+        select.disabled = portalManagerRecords.length === 0;
+        if (portalManagerRecords.length === 1) select.value = portalManagerRecords[0].accessPointUuid;
+        renderSelectedPortal();
+      } catch (error) {
+        select.innerHTML = '<option value="">Portals unavailable</option>';
+        select.disabled = true;
+        setPortalManagerStatus(error.message || "Institutional portals could not be loaded.","error");
+      }
+    }
+
+    async function saveInstitutionPortal() {
+      const item = selectedPortalRecord();
+      if (!item) { setPortalManagerStatus("Choose an institution first.","error"); return; }
+      const button = document.getElementById("savePortalManagerButton");
+      button.disabled = true;
+      setPortalManagerStatus("Saving portal settings…");
+      try {
+        await callAdminRpc(PORTAL_MANAGER_UPDATE_URL,{
+          p_session_token:session.sessionToken,
+          p_access_point_uuid:item.accessPointUuid,
+          p_portal_name:document.getElementById("portalManagerName").value.trim(),
+          p_short_name:document.getElementById("portalManagerShortName").value.trim(),
+          p_logo_url:document.getElementById("portalManagerLogo").value.trim() || null,
+          p_is_active:document.getElementById("portalManagerActive").checked,
+          p_show_leaderboard:document.getElementById("portalManagerLeaderboard").checked
+        });
+        setPortalManagerStatus("Portal settings saved.","success");
+        await loadInstitutionPortalManager();
+      } catch (error) {
+        setPortalManagerStatus(error.message || "Portal settings were not saved.","error");
+      } finally { button.disabled = false; }
+    }
+
+    async function setAllInstitutionalPortals() {
+      const checkbox = document.getElementById("allPortalsEnabled");
+      const requested = checkbox.checked;
+      checkbox.disabled = true;
+      setPortalManagerStatus(requested ? "Turning institutional portals on…" : "Turning institutional portals off…");
+      try {
+        await callAdminRpc(PORTAL_MANAGER_GLOBAL_URL,{p_session_token:session.sessionToken,p_enabled:requested});
+        setPortalManagerStatus(requested ? "All institutional portals are ON." : "All institutional portals are OFF. Flagship ASCENT is unchanged.","success");
+      } catch (error) {
+        checkbox.checked = !requested;
+        setPortalManagerStatus(error.message || "The master switch could not be changed.","error");
+      } finally { checkbox.disabled = false; }
     }
 
     async function loadTrainerEntries() {
@@ -1658,8 +1811,13 @@
           }
         );
 
+      document.getElementById("portalManagerInstitution").addEventListener("change",renderSelectedPortal);
+      document.getElementById("savePortalManagerButton").addEventListener("click",saveInstitutionPortal);
+      document.getElementById("allPortalsEnabled").addEventListener("change",setAllInstitutionalPortals);
+
       loadTrainerEntries();
       loadAdminInstitutions();
+      loadInstitutionPortalManager();
       loadPaymentStatement();
 
       document.getElementById(
