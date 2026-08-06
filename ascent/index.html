@@ -14,6 +14,16 @@
       var sub=parts.length>2?parts[0]:"";
       if(sub && sub!=="www" && sub!=="app"){
         window.location.replace("./institution.html?slug="+encodeURIComponent(sub));
+        return;
+      }
+
+      var params=new URLSearchParams(window.location.search);
+      var institution=String(params.get("institution")||"").trim();
+      if(institution){
+        document.documentElement.classList.add("institution-boot");
+        window.setTimeout(function(){
+          document.documentElement.classList.remove("institution-boot");
+        },8000);
       }
     })();
   </script>
@@ -49,6 +59,19 @@
     html,
     body {
       min-height: 100%;
+    }
+
+    html.institution-boot body > * {
+      visibility: hidden !important;
+    }
+
+    html.institution-boot body::before {
+      content: "";
+      visibility: visible !important;
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: #ffffff;
     }
 
     body {
@@ -1905,6 +1928,10 @@ function rpcHeaders() {
 }
 
 
+function finishInstitutionBoot() {
+  document.documentElement.classList.remove("institution-boot");
+}
+
 async function applyInstitutionBranding(accessPoint) {
   const slug = String(
     accessPoint.access_point_slug ||
@@ -1921,6 +1948,7 @@ async function applyInstitutionBranding(accessPoint) {
   document.body.classList.remove("institution-selected");
 
   if (!slug || slug.includes("private")) {
+    finishInstitutionBoot();
     return;
   }
 
@@ -1965,6 +1993,8 @@ async function applyInstitutionBranding(accessPoint) {
     document.body.classList.add("institution-selected");
   } catch (error) {
     console.warn("Institution branding could not be loaded:", error);
+  } finally {
+    finishInstitutionBoot();
   }
 }
 
