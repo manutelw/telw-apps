@@ -2,6 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <script>
+    (function () {
+      var host = window.location.hostname.toLowerCase();
+      var base = 'clarionprep.com';
+      var suffix = '.' + base;
+
+      if (host.endsWith(suffix)) {
+        var slug = host.slice(0, -suffix.length).split('.')[0];
+        if (slug && slug !== 'www') {
+          var destination = '/ascent/institution.html?slug=' + encodeURIComponent(slug);
+          if (window.location.pathname !== '/ascent/institution.html' ||
+              new URLSearchParams(window.location.search).get('slug') !== slug) {
+            window.location.replace(destination);
+          }
+        }
+      }
+    }());
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ASCENT · Communication Practice and Performance</title>
   <meta name="description" content="ASCENT helps students and professionals practise managerial communication, interviews, group discussions and structured workplace speaking.">
