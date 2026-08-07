@@ -87,3 +87,4 @@ Before any public release, complete every item in `DEPLOY-CHECKLIST.md`. This St
 ## Trainer lab visibility
 
 Approved addresses in `LAB_ADMIN_EMAILS` can open `/trainer.html`. Its backend endpoint is separately admin-gated and reads only `ascent_lab_` staging results.
+
