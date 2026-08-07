@@ -1,0 +1,38 @@
+ASCENT Dialogue Lab Stage 1 — Build Manifest
+Built: 2026-08-07
+
+Validation performed:
+- JavaScript syntax checked with Node.js for every functions/ and public/ JS file
+- SQL quote and parenthesis balance checked
+- Feature-off endpoint response tested
+- Missing Access JWT rejection tested
+- Source tree checked for the live Supabase project ID and publishable key; none found
+
+SHA-256 files:
+807794564a0a10a08ddaaacaba46303f5b66ebfcf90c99f8624ecfc033d46205  ./.env.example
+e76fb82ab987daac06a35bd56d8b1e632a84e497efbd40b007f35c0eb4b61752  ./AUDIT-AND-CHANGE-PLAN.md
+9bdc83e7489a5c89f8386215aafb38b123d897cc9fc63b5e5f6217d285239ce7  ./DEPLOY-CHECKLIST.md
+6a0a5bcf2796b77678e9ce684f47c57a9a0c223a01555d1494177f1c94336b8d  ./README-DEPLOY.md
+49fa1798ea6d770ae649acefddf7772fc96ca2f291b9ebee545b15fb3915d00f  ./functions/_lib/access.js
+c7916fddc4905662bbb0c9a58c15a084b9ea5b659e6d6a034713ba0ff44293e5  ./functions/_lib/gemini.js
+ecff629411bce8bd74391c9e22e67a5157d503fe5d7404ab930fa34ddabd8cd2  ./functions/_lib/http.js
+6abf46cf3312e6c1bbbc9ca4b2af0eb473499c0edcaeba552cc4d68dffd1a22e  ./functions/_lib/scenarios.js
+b1d0bc32d141b2dfc787d8684bff91106ac95c93c4912f31c8d93aee37c4f12a  ./functions/_lib/supabase.js
+50090a4feea7623776aeaaa65b29ae7c31a37eb843b3c115cd38bd19f7ebd687  ./functions/_lib/tts.js
+6588d78d76fc5f8774dd9cfe958c85a6116512237f894e5594172fd604ba014d  ./functions/_lib/types.js
+c9e9c2ed174bc01a774e7d9f8ba720fc5dcc6e8806fafea4a5c812dff8a84bfc  ./functions/api/admin/results.js
+b8d54369d119b02384cc8c14d6c0f8e27dc87b31c3d50e6bea0d972d20683f24  ./functions/api/health.js
+84a95f2f4bf383942fd7bc71a92cc0e92e9a795f0057c74e6b95a4f87bd27e7d  ./functions/api/session/evaluate.js
+95d888431fb7a62e16e746d14cdcd01e34b1b3204ffd0398870a1b7ddea0b949  ./functions/api/session/history.js
+c1c77409c35008081291ad68a361d79b52e9077eb5ce4940ba63ce2de1f436f6  ./functions/api/session/start.js
+4995ba02adc4d01486e0c5b47393321b133425de045a679817f65f49bbe5670a  ./functions/api/session/turn.js
+857c5828cb2a62841920c4f4047d2963427e73cd54a7341ff14395f66536e088  ./package.json
+0e2c9ca770493b10b999f82db71297aa438f3d682ffc4c6890711ce78daf3f3a  ./public/_headers
+ee3c9f47ce209abe1c6c6a5f65576d0030121ada1d64739de8ec8db46fdc77ba  ./public/app.js
+5a74014dee771c96164f65d22bd8d87fe8f7005ae88a08229145601472d122f5  ./public/index.html
+331ea9090db0c9f6f597bd9840fd5b171830f6e0b3ba1cb24dfa91f0c95aedc1  ./public/robots.txt
+86b1377ffb10a3953f8ad3c2252fc69c4e9dc3d40e4a79fff465f1f8af922ac9  ./public/styles.css
+991f8fe69024ad084c3a09b013fac3f60a0c64c815a1c3769256ed8417e42af8  ./public/trainer.html
+4b3cb4128f54032f579d9d690445529d656b1da93eeefdce6edcc69515ea8a30  ./public/trainer.js
+a3d1a02672c7b9c6b8effe8adb70544cde059b6d94493fafee43638af4067c9c  ./supabase/migrations/20260807_ascent_dialogue_lab.sql
+34d0572958685fec57be5234996388fed5fe337738a0c0becb35ec8061d92fea  ./wrangler.toml.example

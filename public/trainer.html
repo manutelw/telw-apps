@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>ASCENT Dialogue Lab — Trainer Results</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div><div class="brand">ASCENT</div><div class="subtitle">Dialogue Lab · Trainer View</div></div>
+    <div class="test-badge">TEST VERSION</div>
+  </header>
+  <main class="shell">
+    <section class="notice">Lab-only results. This page does not read live ASCENT scores or student records.</section>
+    <section class="panel">
+      <div class="conversation-header">
+        <div><p class="eyebrow">Approved administrators only</p><h1>Dialogue Test Results</h1></div>
+        <a class="secondary link-button" href="./">Open Learner Lab</a>
+      </div>
+      <div class="form-grid trainer-filters">
+        <label><span>Practice type</span><select id="practiceTypeFilter"><option value="">All</option><option value="STUDENT_QA">Student Q&amp;A</option><option value="STUDENT_INTERVIEW">Student Interview</option><option value="WORKPLACE_DIALOGUE">Workplace &amp; Leadership</option></select></label>
+        <label><span>Difficulty</span><select id="difficultyFilter"><option value="">All</option><option>GUIDED</option><option>REALISTIC</option><option>PRESSURE</option></select></label>
+        <label><span>Tester email</span><input id="testerFilter" type="email" placeholder="Leave blank for all"></label>
+      </div>
+      <div class="button-row"><button id="applyButton" class="primary" type="button">Apply Filters</button></div>
+      <p id="trainerMessage" class="message" role="status"></p>
+      <div class="table-wrap"><table><thead><tr><th>Tester</th><th>Conversation</th><th>Level</th><th>Score</th><th>Professional impression</th><th>Practice instruction</th><th>Completed</th></tr></thead><tbody id="resultsBody"></tbody></table></div>
+    </section>
+  </main>
+  <footer>ASCENT Dialogue Lab · Trainer test visibility only</footer>
+  <script type="module" src="./trainer.js"></script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>ASCENT Dialogue Lab — Test Version</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="brand">ASCENT</div>
+      <div class="subtitle">Spoken Dialogue Lab</div>
+    </div>
+    <div class="test-badge">TEST VERSION</div>
+  </header>
+
+  <main class="shell">
+    <section class="notice" aria-label="Test notice">
+      This is a protected development environment. It does not affect live ASCENT scores, assignments, emails or leaderboards.
+    </section>
+
+    <section id="setupPanel" class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Choose the conversation</p>
+          <h1>Practise a live spoken exchange</h1>
+          <p class="lede">The AI speaks first. Listen, answer by voice and handle the follow-up.</p>
+        </div>
+        <div id="apiStatus" class="status-chip">Checking lab…</div>
+      </div>
+
+      <div class="form-grid">
+        <label>
+          <span>Practice type</span>
+          <select id="practiceType">
+            <option value="STUDENT_QA">Student Q&amp;A</option>
+            <option value="STUDENT_INTERVIEW">Student Interview Dialogue</option>
+            <option value="WORKPLACE_DIALOGUE">Workplace &amp; Leadership Dialogue</option>
+          </select>
+        </label>
+
+        <label id="profileField">
+          <span>Profile</span>
+          <select id="profileKey">
+            <option value="MBA">MBA</option>
+            <option value="BTECH">BTech</option>
+            <option value="ARCHITECTURE">Architecture</option>
+            <option value="OTHER_STUDENT">Other Student</option>
+          </select>
+        </label>
+
+        <label id="levelField" hidden>
+          <span>Level</span>
+          <select id="levelKey">
+            <option value="PROFESSIONAL">Professional</option>
+            <option value="MANAGER">Manager</option>
+            <option value="SENIOR_LEADER">Senior Leader</option>
+            <option value="CXO">CXO</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Difficulty</span>
+          <select id="difficulty">
+            <option value="GUIDED">Guided</option>
+            <option value="REALISTIC" selected>Realistic</option>
+            <option value="PRESSURE">Pressure</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Topic</span>
+          <select id="topicKey"></select>
+        </label>
+      </div>
+
+      <div class="button-row">
+        <button id="startButton" class="primary" type="button">Start Conversation</button>
+        <button id="historyButton" class="secondary" type="button">My Test History</button>
+      </div>
+      <p id="setupMessage" class="message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="conversationPanel" class="panel" hidden>
+      <div class="conversation-header">
+        <div>
+          <p class="eyebrow">Live exchange</p>
+          <h2 id="scenarioTitle">Scenario</h2>
+          <p id="scenarioMeta" class="muted"></p>
+        </div>
+        <div id="turnCounter" class="status-chip"></div>
+      </div>
+
+      <div id="timeline" class="timeline" aria-live="polite"></div>
+
+      <div class="audio-card">
+        <p class="audio-label">AI speaking</p>
+        <p id="aiPrompt" class="prompt-text"></p>
+        <audio id="aiAudio" controls></audio>
+      </div>
+
+      <div class="recorder-card">
+        <div id="recordingState" class="recording-state">Ready to record</div>
+        <div id="recordingTimer" class="timer">00:00</div>
+        <div class="button-row compact">
+          <button id="recordButton" class="primary" type="button">Record Answer</button>
+          <button id="stopButton" class="danger" type="button" disabled>Stop</button>
+          <button id="submitButton" class="secondary" type="button" disabled>Submit Answer</button>
+        </div>
+        <audio id="answerPreview" controls hidden></audio>
+        <p id="conversationMessage" class="message" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="resultPanel" class="panel" hidden>
+      <p class="eyebrow">Complete-dialogue evaluation</p>
+      <div class="result-topline">
+        <h2>Conversation Feedback</h2>
+        <div id="overallScore" class="score-ring">—</div>
+      </div>
+
+      <div id="criterionScores" class="score-grid"></div>
+
+      <div class="feedback-grid">
+        <article><h3>What worked</h3><ul id="strengths"></ul></article>
+        <article><h3>Where it weakened</h3><ul id="weaknesses"></ul></article>
+        <article><h3>Real concern answered?</h3><p id="concernAnswer"></p></article>
+        <article><h3>Professional impression</h3><p id="professionalImpression"></p></article>
+        <article><h3>Missed evidence or next step</h3><p id="missedEvidence"></p></article>
+        <article><h3>One focused practice instruction</h3><p id="practiceInstruction"></p></article>
+      </div>
+
+      <article class="wide-card">
+        <h3>Improved response</h3>
+        <p id="improvedResponse"></p>
+      </article>
+
+      <article class="wide-card">
+        <h3>Full transcript</h3>
+        <div id="finalTranscript" class="final-transcript"></div>
+      </article>
+
+      <div class="button-row">
+        <button id="retryButton" class="primary" type="button">Retry Same Scenario</button>
+        <button id="newVersionButton" class="secondary" type="button">Try a New Version</button>
+        <button id="backButton" class="text-button" type="button">Back to selection</button>
+      </div>
+      <p id="resultMessage" class="message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="historyPanel" class="panel" hidden>
+      <div class="conversation-header">
+        <div>
+          <p class="eyebrow">Private lab records</p>
+          <h2>My Test History</h2>
+        </div>
+        <button id="closeHistoryButton" class="secondary" type="button">Close</button>
+      </div>
+      <div id="historyList" class="history-list"></div>
+      <p id="historyMessage" class="message" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <footer>ASCENT Dialogue Lab · Protected development build · No live student data</footer>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

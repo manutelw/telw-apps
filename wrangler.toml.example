@@ -1,0 +1,22 @@
+name = "ascent-dialogue-lab"
+compatibility_date = "2026-08-01"
+pages_build_output_dir = "public"
+
+[vars]
+LAB_FEATURE_ENABLED = "true"
+GEMINI_TURN_MODEL = "gemini-3.5-flash-lite"
+GEMINI_EVALUATION_MODEL = "gemini-3.6-flash"
+OPENAI_TTS_MODEL = "tts-1"
+OPENAI_TTS_VOICE = "alloy"
+LAB_MAX_AUDIO_BYTES = "8388608"
+LAB_DAILY_SESSION_LIMIT = "25"
+
+# Add secrets in Cloudflare, not in this file:
+# LAB_ALLOWED_EMAILS
+# LAB_ADMIN_EMAILS
+# CLOUDFLARE_ACCESS_TEAM_DOMAIN
+# CLOUDFLARE_ACCESS_AUD
+# SUPABASE_LAB_URL
+# SUPABASE_LAB_SERVICE_ROLE_KEY
+# GEMINI_API_KEY
+# OPENAI_API_KEY

@@ -1,0 +1,8 @@
+{
+  "name": "ascent-dialogue-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "find functions public -name '*.js' -print0 | xargs -0 -n1 node --check"
+  }
+}
