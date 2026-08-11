@@ -19,7 +19,7 @@ const evaluationSchema = {
       maxItems: 8
     },
     strengths: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 1 },
-weaknesses: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 1 },,
+    weaknesses: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 1 },
     concern_answer: { type: "string" },
     professional_impression: { type: "string" },
     missed_evidence: { type: "string" },
