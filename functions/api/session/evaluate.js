@@ -18,8 +18,8 @@ const evaluationSchema = {
       minItems: 5,
       maxItems: 8
     },
-    strengths: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 3 },
-    weaknesses: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 3 },
+    strengths: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 1 },
+weaknesses: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 1 },,
     concern_answer: { type: "string" },
     professional_impression: { type: "string" },
     missed_evidence: { type: "string" },
@@ -31,9 +31,90 @@ const evaluationSchema = {
 
 function evaluationPrompt(session, turns) {
   const criteria = SCORE_CRITERIA[session.practice_type];
-  return `Evaluate the COMPLETE ASCENT spoken exchange, not each answer in isolation.\n\nSCENARIO\n${JSON.stringify(session.scenario_snapshot, null, 2)}\n\nSELECTION\n${JSON.stringify({ practice_type: session.practice_type, profile_key: session.profile_key, level_key: session.level_key, difficulty: session.difficulty }, null, 2)}\n\nTRANSCRIPT AND TURN ANALYSIS\n${JSON.stringify(turns.map((turn) => ({ speaker: turn.speaker, kind: turn.turn_kind, text: turn.text, analysis: turn.analysis })), null, 2)}\n\nMANDATORY SCORING CRITERIA\n${JSON.stringify(criteria)}\n\nSCORING RULES\n- Score only what is clearly demonstrated. Do not infer what the learner may have intended.\n- When an answer sits between two scores and the higher score requires inference, award the lower score.\n- Consider listening, responsiveness and recovery across turns.\n- Do not reward invented evidence.\n- Explain whether the learner answered the real concern and sounded defensive, vague, passive, mixed or professional.\n- The improved response may organise and strengthen only facts already present in the learner's answers. It must not invent achievements, numbers, actions or outcomes.\n- Use all and only the mandatory criterion labels, in the same order.\n- Give one focused practice instruction, not a long plan.`;
-}
 
+  return `Evaluate the COMPLETE ASCENT spoken exchange, not each answer in isolation.
+
+SCENARIO
+${JSON.stringify(session.scenario_snapshot, null, 2)}
+
+SELECTION
+${JSON.stringify({
+  practice_type: session.practice_type,
+  profile_key: session.profile_key,
+  level_key: session.level_key,
+  difficulty: session.difficulty
+}, null, 2)}
+
+TRANSCRIPT AND TURN ANALYSIS
+${JSON.stringify(
+  turns.map((turn) => ({
+    speaker: turn.speaker,
+    kind: turn.turn_kind,
+    text: turn.text,
+    analysis: turn.analysis
+  })),
+  null,
+  2
+)}
+
+MANDATORY SCORING CRITERIA
+${JSON.stringify(criteria)}
+
+SCORING RULES
+- Score only what the learner clearly demonstrated.
+- Do not infer what the learner may have intended.
+- When a higher score requires inference, award the lower score.
+- Consider listening, responsiveness and recovery across turns.
+- Do not reward invented evidence.
+- Use all and only the mandatory criterion labels, in the same order.
+- The improved response may use only facts already provided by the learner.
+- Never invent achievements, numbers, actions or results.
+- Use short, clear, student-facing language.
+
+MANDATORY COACHING FORMAT
+
+1. strengths
+Return exactly one specific success.
+Use this pattern:
+"You [state exactly what the learner did]. This helped because [state its positive effect]."
+
+Do not give vague praise such as:
+"Good answer", "Well done", "You were confident" or "Nice attempt".
+
+2. weaknesses
+Return exactly one specific action that weakened the response.
+Use this pattern:
+"You [state exactly what the learner did]. This weakened your response because [effect]. Instead, [give an exact replacement action, structure or speaking chunk]."
+
+3. missed_evidence
+Identify the most important element the learner did not include.
+Use this pattern:
+"You did not [state the missing element]. Do it this way: [give the exact step, structure or speaking chunk to use]."
+
+4. practice_instruction
+Give one compulsory and immediately usable retry instruction.
+It must begin:
+"Retry now:"
+
+Tell the learner exactly what to change in the next attempt.
+Do not give a long improvement plan.
+
+5. improved_response
+Show how the learner could organise the same facts more effectively.
+Use only information already present in the transcript.
+If an essential fact is missing, use a bracketed prompt such as:
+"[state the result]" or "[give one example]".
+Do not invent the missing information.
+
+FEEDBACK QUALITY RULES
+- Refer to observable evidence from the learner's response.
+- Explain why the successful or weak action mattered.
+- Give replacement language wherever useful.
+- Focus on one correction and one missing element.
+- Make the next attempt easier to perform.
+- Keep the language suitable for a B1 learner.
+- The feedback must help the learner retry immediately.`;
+}
 export async function onRequestPost(context) {
   const access = await requireLabAccess(context);
   if (access.response) return access.response;
