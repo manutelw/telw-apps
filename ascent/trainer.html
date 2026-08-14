@@ -2474,7 +2474,7 @@
           institutionBatches:Array.isArray(data.batches) ? data.batches : [],
           batches:liveAscentBatches(),
           students:Array.isArray(data.students) ? data.students.map(withDerivedCohortDetails) : [],
-          results:Array.isArray(data.results) ? data.results.map(withDerivedCohortDetails) : [],
+          results:Array.isArray(data.results) ? data.results : [],
           releaseProgress:Array.isArray(data.releaseProgress) ? data.releaseProgress : []
         };
         renderAll(); setStatus(byId("dashboardStatus"),"Dashboard updated " + new Date().toLocaleTimeString(),"success");
