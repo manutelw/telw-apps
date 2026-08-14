@@ -4338,6 +4338,75 @@ function formatCriterionFeedback(criterion) {
       return map;
     }
 
+    // Converts a storage://bucket/path reference (not directly clickable)
+    // into a temporary signed HTTPS URL that actually opens the file.
+    // The ascent-audio bucket is private, so a fresh signed link is
+    // generated at export time rather than baked in permanently.
+    async function signStorageUrl(rawUri, expiresInSeconds) {
+      const match = /^storage:\/\/([^/]+)\/(.+)$/.exec(String(rawUri || "").trim());
+      if (!match) return null;
+      const bucket = match[1];
+      const path = match[2];
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/storage/v1/object/sign/${bucket}/${path}`,
+          {method:"POST",headers:rpcHeaders(),body:JSON.stringify({expiresIn:expiresInSeconds})}
+        );
+        if (!response.ok) return null;
+        const data = await response.json();
+        if (!data || !data.signedURL) return null;
+        return `${SUPABASE_URL}/storage/v1${data.signedURL}`;
+      } catch (error) {
+        console.warn("ASCENT could not sign a storage URL:",rawUri,error);
+        return null;
+      }
+    }
+
+    // Replaces every storage:// audioLink across students/assignments/
+    // submissions with a working signed URL, valid for 7 days from the
+    // moment this Excel report is downloaded. Requests run with limited
+    // concurrency so a large export doesn't fire hundreds of calls at
+    // once. Links that fail to sign are left as-is rather than blanked,
+    // so there's still a visible trace of the original file reference.
+    async function signAudioLinksInWorkbook(workbookData) {
+      const uniqueUris = new Set();
+      ["students","assignments","submissions"].forEach(collection => {
+        const rows = Array.isArray(workbookData[collection]) ? workbookData[collection] : [];
+        rows.forEach(row => {
+          if (typeof row.audioLink === "string" && row.audioLink.startsWith("storage://")) {
+            uniqueUris.add(row.audioLink);
+          }
+        });
+      });
+      if (!uniqueUris.size) return;
+
+      const expiresInSeconds = 7 * 24 * 60 * 60;
+      const uris = Array.from(uniqueUris);
+      const signedByUri = new Map();
+      const concurrency = 8;
+      let cursor = 0;
+
+      async function worker() {
+        while (cursor < uris.length) {
+          const uri = uris[cursor];
+          cursor += 1;
+          const signedUrl = await signStorageUrl(uri,expiresInSeconds);
+          if (signedUrl) signedByUri.set(uri,signedUrl);
+        }
+      }
+
+      await Promise.all(Array.from({length:Math.min(concurrency,uris.length)},worker));
+
+      ["students","assignments","submissions"].forEach(collection => {
+        const rows = Array.isArray(workbookData[collection]) ? workbookData[collection] : [];
+        rows.forEach(row => {
+          if (typeof row.audioLink === "string" && signedByUri.has(row.audioLink)) {
+            row.audioLink = signedByUri.get(row.audioLink);
+          }
+        });
+      });
+    }
+
     async function addMobileNumbersToWorkbook(workbookData) {
       let mobileByStudent = new Map();
       try {
@@ -4423,6 +4492,7 @@ function formatCriterionFeedback(criterion) {
         }
 
         await addMobileNumbersToWorkbook(workbookData);
+        await signAudioLinksInWorkbook(workbookData);
 
         const allQuestions = (Array.isArray(workbookData.questions) ? workbookData.questions : [])
           .slice()
