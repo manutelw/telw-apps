@@ -284,10 +284,11 @@
             <div class="summary-card"><div class="summary-label">Not Attempted</div><div id="notAttemptedValue" class="summary-value">—</div></div>
             <div class="summary-card"><div class="summary-label">Average Score</div><div id="averageScoreValue" class="summary-value">—</div></div>
           </div>
-          <div class="workspace-header"><div><h3>Diagnostic</h3><p id="diagnosticReleaseLabel" class="panel-subtitle">Latest diagnostic release for the current selection.</p></div></div>
+          <div class="workspace-header"><div><h3 id="releaseSectionTitle">Diagnostic</h3><p id="diagnosticReleaseLabel" class="panel-subtitle">Progress for the current selection.</p></div><div class="form-group" style="min-width:200px;"><label for="dashboardQuestionSetFilter">Question set</label><select id="dashboardQuestionSetFilter"></select></div></div>
           <div class="card-grid">
             <div class="summary-card"><div class="summary-label">Questions Released</div><div id="diagnosticQuestionsValue" class="summary-value">—</div></div>
-            <div class="summary-card"><div class="summary-label">Students Attempted</div><div id="diagnosticAttemptedValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label" id="diagnosticCompletedLabel">Students Completed</div><div id="diagnosticAttemptedValue" class="summary-value">—</div></div>
+            <div class="summary-card" id="diagnosticStartedCard" hidden><div class="summary-label">Students Started (Not Completed)</div><div id="diagnosticStartedValue" class="summary-value">—</div></div>
             <div class="summary-card"><div class="summary-label">Students Not Started</div><div id="diagnosticNotStartedValue" class="summary-value">—</div></div>
             <div class="summary-card"><div class="summary-label">Average Score</div><div id="diagnosticAverageScoreValue" class="summary-value">—</div></div>
           </div>
@@ -550,7 +551,7 @@
       reminderExport: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_export"
     };
     let currentSession = null;
-    let reportData = { summary:{}, accessPoints:[], batches:[], students:[], tasks:[], results:[], diagnosticProgress:[] };
+    let reportData = { summary:{}, accessPoints:[], batches:[], students:[], tasks:[], results:[], releaseProgress:[] };
     let currentAccessPointUuid = null;
     let questionBankData = { questions:[], categories:[], difficultyScale:[], totalMatching:0 };
     let selectedBankQuestions = new Set();
@@ -938,6 +939,8 @@
       const privateCurrent = privateSelect.value;
       privateSelect.innerHTML = `<option value="">All private learners</option>` + (reportData.students || []).map(student => `<option value="${escapeHtml(student.studentUuid)}">${escapeHtml(student.fullName)}</option>`).join("");
       if (Array.from(privateSelect.options).some(option => option.value === privateCurrent)) privateSelect.value = privateCurrent;
+
+      populateQuestionSetFilter();
     }
 
     function populateControls() {
@@ -992,62 +995,82 @@
       byId("completionChart").innerHTML = `<div class="completion-bar"><div class="completion-segment completed" style="width:${pct(completed)}%" title="Completed: ${completed}"></div><div class="completion-segment not-attempted" style="width:${pct(pending)}%" title="Not attempted: ${pending}"></div><div class="completion-segment other" style="width:${pct(other)}%" title="Scheduled/withdrawn: ${other}"></div></div><div class="chart-legend"><span><i class="legend-dot completed"></i>Completed: <strong>${completed}</strong></span><span><i class="legend-dot not-attempted"></i>Not attempted: <strong>${pending}</strong></span><span><i class="legend-dot other"></i>Scheduled/withdrawn: <strong>${other}</strong></span></div>`;
     }
 
-    function filteredDiagnosticProgress() {
-      const rows = reportData.diagnosticProgress || [];
+    const QUESTION_SET_LABELS = { DIAGNOSTIC:"Diagnostic", LUM:"LUM", PI:"PI", GD:"GD", OTHER:"Other" };
+    const QUESTION_SET_ORDER = ["DIAGNOSTIC","LUM","PI","GD","OTHER"];
+
+    function populateQuestionSetFilter() {
+      const select = byId("dashboardQuestionSetFilter");
+      const present = new Set((reportData.releaseProgress || []).map(row => row.bankType));
+      const options = QUESTION_SET_ORDER.filter(type => present.has(type));
+      const current = select.value;
+      select.innerHTML = options.map(type => `<option value="${type}">${QUESTION_SET_LABELS[type] || type}</option>`).join("");
+      if (options.includes(current)) select.value = current;
+      else if (options.length) select.value = options[0];
+    }
+
+    function filteredReleaseProgress() {
+      const rows = reportData.releaseProgress || [];
       const active = selectedDashboardAccessPoint();
       const isPrivate = active && active.accessType === "PRIVATE_LEARNERS";
       const batchValue = byId("dashboardBatchFilter").value;
       const privateStudentValue = byId("dashboardPrivateFilter").value;
+      const questionSet = byId("dashboardQuestionSetFilter").value;
       return rows.filter(row => {
+        if (questionSet && row.bankType !== questionSet) return false;
         if (!isPrivate && batchValue && row.batch !== batchValue) return false;
         if (isPrivate && privateStudentValue && row.studentUuid !== privateStudentValue) return false;
         return true;
       });
     }
 
-    function latestDiagnosticReleaseUuid(rows) {
-      let latestUuid = null; let latestTime = -Infinity;
-      rows.forEach(row => {
-        const time = Date.parse(row.releasedAt || "") || 0;
-        if (time >= latestTime) { latestTime = time; latestUuid = row.questionBatchUuid; }
-      });
-      return latestUuid;
-    }
-
     function renderDiagnosticSummary() {
-      const filtered = filteredDiagnosticProgress();
-      const releaseUuid = latestDiagnosticReleaseUuid(filtered);
-      const releaseRows = releaseUuid ? filtered.filter(row => row.questionBatchUuid === releaseUuid) : [];
+      const questionSet = byId("dashboardQuestionSetFilter").value || "DIAGNOSTIC";
+      const isDiagnostic = questionSet === "DIAGNOSTIC";
+      byId("releaseSectionTitle").textContent = QUESTION_SET_LABELS[questionSet] || "Question Set";
+      byId("diagnosticCompletedLabel").textContent = "Students Completed";
+      byId("diagnosticStartedCard").hidden = isDiagnostic;
 
-      if (!releaseRows.length) {
-        byId("diagnosticReleaseLabel").textContent = "No diagnostic has been released yet for this selection.";
+      const rows = filteredReleaseProgress();
+
+      if (!rows.length) {
+        byId("diagnosticReleaseLabel").textContent = "No questions of this type have been released yet for this selection.";
         summaryValue("diagnosticQuestionsValue",0); summaryValue("diagnosticAttemptedValue",0);
-        summaryValue("diagnosticNotStartedValue",0); summaryValue("diagnosticAverageScoreValue",null);
-        renderDiagnosticPie(0,0);
+        summaryValue("diagnosticStartedValue",0); summaryValue("diagnosticNotStartedValue",0);
+        summaryValue("diagnosticAverageScoreValue",null);
+        renderDiagnosticPie(0,0,0,isDiagnostic);
         return;
       }
 
-      const questionsReleased = releaseRows[0].questionsInRelease || 0;
-      const attempted = releaseRows.filter(row => row.isComplete).length;
-      const notStarted = releaseRows.length - attempted;
-      const scored = releaseRows.filter(row => row.isComplete && row.averageScore !== null && row.averageScore !== undefined);
+      const questionsReleased = rows[0].questionsInRelease || 0;
+      const completed = rows.filter(row => row.questionsAnswered >= questionsReleased && questionsReleased > 0).length;
+      const started = isDiagnostic ? 0 : rows.filter(row => row.questionsAnswered > 0 && row.questionsAnswered < questionsReleased).length;
+      const notStarted = rows.length - completed - started;
+      const scored = rows.filter(row => row.questionsAnswered > 0 && row.averageScore !== null && row.averageScore !== undefined);
       const averageScore = scored.length ? Math.round((scored.reduce((sum,row) => sum + Number(row.averageScore),0) / scored.length) * 100) / 100 : null;
 
-      byId("diagnosticReleaseLabel").textContent = `Released ${formatDate(releaseRows[0].releasedAt)} · ${questionsReleased} question${questionsReleased === 1 ? "" : "s"}. A learner counts as attempted only after completing every question in this release in one go.`;
+      byId("diagnosticReleaseLabel").textContent = isDiagnostic
+        ? `${questionsReleased} question${questionsReleased === 1 ? "" : "s"} currently released. A learner counts as completed only after answering every question in one go — any partial progress counts as not started.`
+        : `${questionsReleased} question${questionsReleased === 1 ? "" : "s"} currently released.`;
       summaryValue("diagnosticQuestionsValue",questionsReleased);
-      summaryValue("diagnosticAttemptedValue",attempted);
+      summaryValue("diagnosticAttemptedValue",completed);
+      summaryValue("diagnosticStartedValue",started);
       summaryValue("diagnosticNotStartedValue",notStarted);
       summaryValue("diagnosticAverageScoreValue",averageScore);
-      renderDiagnosticPie(attempted,notStarted);
+      renderDiagnosticPie(completed,started,notStarted,isDiagnostic);
     }
 
-    function renderDiagnosticPie(completed,notStarted) {
-      const total = completed + notStarted;
+    function renderDiagnosticPie(completed,started,notStarted,isDiagnostic) {
+      const total = completed + started + notStarted;
       const wrap = byId("diagnosticPieChart");
-      if (!total) { wrap.innerHTML = `<div class="line-empty">No diagnostic assignments yet.</div>`; return; }
+      if (!total) { wrap.innerHTML = `<div class="line-empty">No assignments yet.</div>`; return; }
       const completedPct = (completed / total) * 100;
-      const pieStyle = `background:conic-gradient(#2e8b68 0% ${completedPct}%, #d48c24 ${completedPct}% 100%);width:160px;height:160px;border-radius:50%;margin:0 auto;`;
-      wrap.innerHTML = `<div style="${pieStyle}"></div><div class="chart-legend" style="justify-content:center;margin-top:12px;"><span><i class="legend-dot completed"></i>Completed: <strong>${completed}</strong></span><span><i class="legend-dot not-attempted"></i>Not started: <strong>${notStarted}</strong></span></div>`;
+      const startedPct = (started / total) * 100;
+      const gradient = isDiagnostic
+        ? `conic-gradient(#2e8b68 0% ${completedPct}%, #d48c24 ${completedPct}% 100%)`
+        : `conic-gradient(#2e8b68 0% ${completedPct}%, #9eafbd ${completedPct}% ${completedPct+startedPct}%, #d48c24 ${completedPct+startedPct}% 100%)`;
+      const pieStyle = `background:${gradient};width:160px;height:160px;border-radius:50%;margin:0 auto;`;
+      const startedLegend = isDiagnostic ? "" : `<span><i class="legend-dot other"></i>Started (not completed): <strong>${started}</strong></span>`;
+      wrap.innerHTML = `<div style="${pieStyle}"></div><div class="chart-legend" style="justify-content:center;margin-top:12px;"><span><i class="legend-dot completed"></i>Completed: <strong>${completed}</strong></span>${startedLegend}<span><i class="legend-dot not-attempted"></i>Not started: <strong>${notStarted}</strong></span></div>`;
     }
 
     function collectNumericCriteria(object,prefix="",output={}) {
@@ -2452,7 +2475,7 @@
           batches:liveAscentBatches(),
           students:Array.isArray(data.students) ? data.students.map(withDerivedCohortDetails) : [],
           results:Array.isArray(data.results) ? data.results.map(withDerivedCohortDetails) : [],
-          diagnosticProgress:Array.isArray(data.diagnosticProgress) ? data.diagnosticProgress : []
+          releaseProgress:Array.isArray(data.releaseProgress) ? data.releaseProgress : []
         };
         renderAll(); setStatus(byId("dashboardStatus"),"Dashboard updated " + new Date().toLocaleTimeString(),"success");
       } catch (error) { console.error(error); setStatus(byId("dashboardStatus"),"ASCENT could not load the dashboard. " + error.message,"error"); }
@@ -4514,6 +4537,7 @@ function formatCriterionFeedback(criterion) {
       });
       byId("dashboardBatchFilter").addEventListener("change",() => renderDashboardMetrics());
       byId("dashboardPrivateFilter").addEventListener("change",() => renderDashboardMetrics());
+      byId("dashboardQuestionSetFilter").addEventListener("change",() => renderDiagnosticSummary());
       byId("refreshTasksButton").addEventListener("click",() => loadReport("Refreshing tasks…"));
       byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results,"dashboard"));
       byId("refreshLeaderboardButton").addEventListener("click",() => loadPlacementReadinessBoard(true));
