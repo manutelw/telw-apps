@@ -2438,10 +2438,11 @@
       return {start,end};
     }
 
-    // Top 10 students by average of their latest scores among submissions
-    // made within the current Monday-Sunday week, scoped to whichever
-    // Institution/Batch/Private learner is currently selected on the
-    // dashboard. Rolls into a new week automatically as time passes.
+    // Top 10 students per batch, by average of their latest scores among
+    // submissions made within the current Monday-Sunday week, scoped to
+    // whichever Institution/Private learner is currently selected.
+    // Batches are always shown as separate rankings, never blended -
+    // if the Batch filter narrows to one batch, only that one appears.
     function renderWeeklyLeaderboard() {
       const {start,end} = currentWeekBounds();
       byId("leaderboardWeekLabel").textContent = `Top 10 by average score, ${start.toLocaleDateString(undefined,{month:"short",day:"numeric"})} – ${new Date(end.getTime()-86400000).toLocaleDateString(undefined,{month:"short",day:"numeric"})}.`;
@@ -2453,21 +2454,27 @@
         return submitted >= start && submitted < end;
       });
 
-      const byStudent = new Map();
+      const byBatch = new Map();
       rows.forEach(row => {
+        const batchKey = row.batch || "No batch";
+        if (!byBatch.has(batchKey)) byBatch.set(batchKey,new Map());
+        const byStudent = byBatch.get(batchKey);
         const key = row.studentUuid;
         if (!byStudent.has(key)) byStudent.set(key,{fullName:row.fullName,studentId:row.studentId,scores:[]});
         byStudent.get(key).scores.push(Number(row.latestScore));
       });
 
-      const ranked = Array.from(byStudent.values())
-        .map(entry => ({fullName:entry.fullName,studentId:entry.studentId,average:entry.scores.reduce((a,b) => a+b,0) / entry.scores.length}))
-        .sort((a,b) => b.average - a.average)
-        .slice(0,10);
-
       const wrap = byId("weeklyLeaderboard");
-      if (!ranked.length) { wrap.innerHTML = `<div class="line-empty">No scored submissions yet this week.</div>`; return; }
-      wrap.innerHTML = `<table style="width:100%;min-width:0;border-collapse:collapse;font-size:13px;"><thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">#</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">Student</th><th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">Avg Score</th></tr></thead><tbody>${ranked.map((entry,index) => `<tr><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);">${index+1}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);">${escapeHtml(entry.fullName)}<br><span class="form-note">${escapeHtml(entry.studentId)}</span></td><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);text-align:right;font-weight:600;">${entry.average.toFixed(2)}</td></tr>`).join("")}</tbody></table>`;
+      if (!byBatch.size) { wrap.innerHTML = `<div class="line-empty">No scored submissions yet this week.</div>`; return; }
+
+      const batchNames = Array.from(byBatch.keys()).sort();
+      wrap.innerHTML = batchNames.map(batchName => {
+        const ranked = Array.from(byBatch.get(batchName).values())
+          .map(entry => ({fullName:entry.fullName,studentId:entry.studentId,average:entry.scores.reduce((a,b) => a+b,0) / entry.scores.length}))
+          .sort((a,b) => b.average - a.average)
+          .slice(0,10);
+        return `<div style="margin-bottom:16px;"><div style="font-weight:600;font-size:13px;margin-bottom:6px;">${escapeHtml(batchName)}</div><table style="width:100%;min-width:0;border-collapse:collapse;font-size:13px;"><thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">#</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">Student</th><th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">Avg Score</th></tr></thead><tbody>${ranked.map((entry,index) => `<tr><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);">${index+1}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);">${escapeHtml(entry.fullName)}<br><span class="form-note">${escapeHtml(entry.studentId)}</span></td><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);text-align:right;font-weight:600;">${entry.average.toFixed(2)}</td></tr>`).join("")}</tbody></table></div>`;
+      }).join("");
     }
 
     async function loadReport(message="Loading dashboard…") {
@@ -3931,20 +3938,27 @@ function formatCriterionFeedback(criterion) {
       return start;
     }
 
-    // One column per calendar week (Monday-start) that has any scored
-    // submissions, oldest to newest - so a fresh export each week simply
-    // gains one more column on the right, with the top 10 students that
-    // week ranked by their average score across that week's submissions.
-    function buildWeeklyLeaderboardSheet(workbookData) {
+    // One sheet per batch, each with one column per calendar week
+    // (Monday-start, oldest to newest) that has scored submissions for
+    // that batch - so a fresh export each week simply gains one more
+    // column on the right, per batch, with that batch's top 10 students
+    // ranked by their average score across that week's submissions.
+    // Batches are never blended together.
+    function buildWeeklyLeaderboardSheets(workbookData) {
       const assignments = (Array.isArray(workbookData.assignments) ? workbookData.assignments : [])
         .filter(assignment => Boolean(assignment.submissionUuid) && assignment.submittedAt);
 
-      const weeks = new Map();
+      const byBatch = new Map();
       assignments.forEach(assignment => {
         const score = exportNumber(assignment.finalScore ?? assignment.totalScore);
         if (score === null || score === undefined || score === "") return;
         const submittedAt = new Date(assignment.submittedAt);
         if (isNaN(submittedAt.getTime())) return;
+
+        const batchName = exportText(assignment.batch) || "No batch";
+        if (!byBatch.has(batchName)) byBatch.set(batchName,new Map());
+        const weeks = byBatch.get(batchName);
+
         const weekStart = weekStartLabel(submittedAt);
         const weekKey = weekStart.toISOString().slice(0,10);
         if (!weeks.has(weekKey)) weeks.set(weekKey,{weekStart,students:new Map()});
@@ -3954,24 +3968,26 @@ function formatCriterionFeedback(criterion) {
         weekEntry.students.get(studentKey).scores.push(Number(score));
       });
 
-      const orderedWeeks = Array.from(weeks.values()).sort((a,b) => a.weekStart - b.weekStart);
+      return Array.from(byBatch.keys()).sort().map(batchName => {
+        const orderedWeeks = Array.from(byBatch.get(batchName).values()).sort((a,b) => a.weekStart - b.weekStart);
 
-      const headerRow = ["Rank",...orderedWeeks.map(week => {
-        const end = new Date(week.weekStart); end.setDate(end.getDate() + 6);
-        return `${week.weekStart.toLocaleDateString(undefined,{month:"short",day:"numeric"})} – ${end.toLocaleDateString(undefined,{month:"short",day:"numeric"})}`;
-      })];
+        const headerRow = ["Rank",...orderedWeeks.map(week => {
+          const end = new Date(week.weekStart); end.setDate(end.getDate() + 6);
+          return `${week.weekStart.toLocaleDateString(undefined,{month:"short",day:"numeric"})} – ${end.toLocaleDateString(undefined,{month:"short",day:"numeric"})}`;
+        })];
 
-      const weekTop10 = orderedWeeks.map(week => Array.from(week.students.values())
-        .map(student => ({name:student.name,rollNo:student.rollNo,average:student.scores.reduce((a,b) => a+b,0) / student.scores.length}))
-        .sort((a,b) => b.average - a.average)
-        .slice(0,10));
+        const weekTop10 = orderedWeeks.map(week => Array.from(week.students.values())
+          .map(student => ({name:student.name,rollNo:student.rollNo,average:student.scores.reduce((a,b) => a+b,0) / student.scores.length}))
+          .sort((a,b) => b.average - a.average)
+          .slice(0,10));
 
-      const rows = [headerRow];
-      for (let rank=0; rank<10; rank+=1) {
-        rows.push([rank+1,...weekTop10.map(top10 => top10[rank] ? `${top10[rank].name} (${top10[rank].rollNo}) — ${top10[rank].average.toFixed(2)}` : "")]);
-      }
+        const rows = [headerRow];
+        for (let rank=0; rank<10; rank+=1) {
+          rows.push([rank+1,...weekTop10.map(top10 => top10[rank] ? `${top10[rank].name} (${top10[rank].rollNo}) — ${top10[rank].average.toFixed(2)}` : "")]);
+        }
 
-      return XLSX.utils.aoa_to_sheet(rows);
+        return {batchName,sheet:XLSX.utils.aoa_to_sheet(rows)};
+      });
     }
 
     function workbookProgressSummary(first, latest, firstScore, latestScore, scoreChange, criteria) {
@@ -4408,7 +4424,7 @@ function formatCriterionFeedback(criterion) {
           workbookData,
           questionNumberByTask
         );
-        const leaderboardSheet = buildWeeklyLeaderboardSheet(workbookData);
+        const leaderboardSheets = buildWeeklyLeaderboardSheets(workbookData);
 
         const workbook = XLSX.utils.book_new();
         workbook.Props = {
@@ -4433,11 +4449,10 @@ function formatCriterionFeedback(criterion) {
           progressSheet,
           "FIRST VS LATEST PROGRESS"
         );
-        XLSX.utils.book_append_sheet(
-          workbook,
-          leaderboardSheet,
-          "WEEKLY LEADERBOARD"
-        );
+        leaderboardSheets.forEach(({batchName,sheet}) => {
+          const safeName = `LEADERBOARD ${batchName}`.replace(/[\\/?*[\]:]/g,"-").slice(0,31);
+          XLSX.utils.book_append_sheet(workbook,sheet,safeName);
+        });
 
         const institutionName = exportText(workbookData.institutionName)
           .replace(/[^A-Za-z0-9_-]+/g,"_")
