@@ -936,7 +936,7 @@
 
     function populateControls() {
       populateDashboardFilters();
-      const batches = liveAscentBatches().map(batch => ({value:batch,label:batch}));
+      const batches = (reportData.institutionBatches || []).map(name => ({value:name,label:name}));
       ["targetBatch","bankTargetBatch","assignmentBatchFilter","resultBatchFilter"].forEach(id => fillSelect(id,batches,"value",item => item.label,["targetBatch","bankTargetBatch"].includes(id) ? "Choose batch" : "All batches"));
       ["assignmentStudentFilter","resultStudentFilter"].forEach(id => fillSelect(id,reportData.students,"studentUuid",student => `${student.fullName} (${student.studentId})`,"All students"));
       ["assignmentTaskFilter","resultTaskFilter"].forEach(id => fillSelect(id,reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks"));
