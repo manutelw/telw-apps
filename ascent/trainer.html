@@ -995,13 +995,15 @@
       byId("completionChart").innerHTML = `<div class="completion-bar"><div class="completion-segment completed" style="width:${pct(completed)}%" title="Completed: ${completed}"></div><div class="completion-segment not-attempted" style="width:${pct(pending)}%" title="Not attempted: ${pending}"></div><div class="completion-segment other" style="width:${pct(other)}%" title="Scheduled/withdrawn: ${other}"></div></div><div class="chart-legend"><span><i class="legend-dot completed"></i>Completed: <strong>${completed}</strong></span><span><i class="legend-dot not-attempted"></i>Not attempted: <strong>${pending}</strong></span><span><i class="legend-dot other"></i>Scheduled/withdrawn: <strong>${other}</strong></span></div>`;
     }
 
-    const QUESTION_SET_LABELS = { DIAGNOSTIC:"Diagnostic", LUM:"LUM", PI:"PI", GD:"GD", OTHER:"Other" };
-    const QUESTION_SET_ORDER = ["DIAGNOSTIC","LUM","PI","GD","OTHER"];
+    const QUESTION_SET_LABELS = { DIAGNOSTIC:"Diagnostic", LUM:"LUM", PI:"PI", GD:"GD", CUSTOM:"Custom", OTHER:"Other" };
+    const QUESTION_SET_ORDER = ["DIAGNOSTIC","LUM","PI","GD","CUSTOM","OTHER"];
+
+    const QUESTION_SET_ALWAYS_SHOWN = ["DIAGNOSTIC","LUM","PI","GD"];
 
     function populateQuestionSetFilter() {
       const select = byId("dashboardQuestionSetFilter");
       const present = new Set((reportData.releaseProgress || []).map(row => row.bankType));
-      const options = QUESTION_SET_ORDER.filter(type => present.has(type));
+      const options = QUESTION_SET_ORDER.filter(type => QUESTION_SET_ALWAYS_SHOWN.includes(type) || present.has(type));
       const current = select.value;
       select.innerHTML = options.map(type => `<option value="${type}">${QUESTION_SET_LABELS[type] || type}</option>`).join("");
       if (options.includes(current)) select.value = current;
