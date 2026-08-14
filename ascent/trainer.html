@@ -3984,22 +3984,39 @@ function formatCriterionFeedback(criterion) {
       return Array.from(byBatch.keys()).sort().map(batchName => {
         const orderedWeeks = Array.from(byBatch.get(batchName).values()).sort((a,b) => a.weekStart - b.weekStart);
 
-        const headerRow = ["Rank",...orderedWeeks.map(week => {
-          const end = new Date(week.weekStart); end.setDate(end.getDate() + 6);
-          return `${week.weekStart.toLocaleDateString(undefined,{month:"short",day:"numeric"})} – ${end.toLocaleDateString(undefined,{month:"short",day:"numeric"})}`;
-        })];
-
         const weekTop10 = orderedWeeks.map(week => Array.from(week.students.values())
-          .map(student => ({name:student.name,rollNo:student.rollNo,average:student.scores.reduce((a,b) => a+b,0) / student.scores.length}))
+          .map(student => ({name:`${student.name} (${student.rollNo})`,average:student.scores.reduce((a,b) => a+b,0) / student.scores.length}))
           .sort((a,b) => b.average - a.average)
           .slice(0,10));
 
-        const rows = [headerRow];
+        // Row 1: week date range, merged across its Name+Score column pair.
+        // Row 2: Name / Score sub-headers. Row 3 onward: rank 1-10 data.
+        const dateRow = ["Rank"];
+        const subHeaderRow = [""];
+        orderedWeeks.forEach(week => {
+          const end = new Date(week.weekStart); end.setDate(end.getDate() + 6);
+          const label = `${week.weekStart.toLocaleDateString(undefined,{month:"short",day:"numeric"})} – ${end.toLocaleDateString(undefined,{month:"short",day:"numeric"})}`;
+          dateRow.push(label,"");
+          subHeaderRow.push("Name","Score");
+        });
+
+        const rows = [dateRow,subHeaderRow];
         for (let rank=0; rank<10; rank+=1) {
-          rows.push([rank+1,...weekTop10.map(top10 => top10[rank] ? `${top10[rank].name} (${top10[rank].rollNo}) — ${top10[rank].average.toFixed(2)}` : "")]);
+          const dataRow = [rank+1];
+          weekTop10.forEach(top10 => {
+            const entry = top10[rank];
+            dataRow.push(entry ? entry.name : "", entry ? Number(entry.average.toFixed(2)) : "");
+          });
+          rows.push(dataRow);
         }
 
-        return {batchName,sheet:XLSX.utils.aoa_to_sheet(rows)};
+        const sheet = XLSX.utils.aoa_to_sheet(rows);
+        sheet["!merges"] = orderedWeeks.map((week,index) => ({
+          s:{r:0,c:1 + index*2},
+          e:{r:0,c:2 + index*2}
+        }));
+
+        return {batchName,sheet};
       });
     }
 
