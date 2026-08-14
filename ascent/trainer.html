@@ -272,6 +272,11 @@
             <div><h2>Dashboard</h2><p>Live participation, performance and progress across ASCENT.</p></div>
             <div class="header-actions"><button id="refreshDashboardButton" class="secondary-button" type="button">Refresh</button><button id="dashboardExportButton" class="primary-button" type="button">Download Excel</button></div>
           </div>
+          <div class="panel"><div class="filter-grid">
+            <div class="form-group"><label for="dashboardInstitutionFilter">Institution / Group</label><select id="dashboardInstitutionFilter"></select></div>
+            <div class="form-group" id="dashboardBatchFilterGroup"><label for="dashboardBatchFilter">Batch</label><select id="dashboardBatchFilter"><option value="">All batches</option></select></div>
+            <div class="form-group" id="dashboardPrivateFilterGroup" hidden><label for="dashboardPrivateFilter">Private learner</label><select id="dashboardPrivateFilter"><option value="">All private learners</option></select></div>
+          </div></div>
           <div class="card-grid">
             <div class="summary-card"><div class="summary-label">Active Tasks</div><div id="activeTasksValue" class="summary-value">—</div></div>
             <div class="summary-card"><div class="summary-label">Assigned Students</div><div id="assignedStudentsValue" class="summary-value">—</div></div>
@@ -279,7 +284,15 @@
             <div class="summary-card"><div class="summary-label">Not Attempted</div><div id="notAttemptedValue" class="summary-value">—</div></div>
             <div class="summary-card"><div class="summary-label">Average Score</div><div id="averageScoreValue" class="summary-value">—</div></div>
           </div>
+          <div class="workspace-header"><div><h3>Diagnostic</h3><p id="diagnosticReleaseLabel" class="panel-subtitle">Latest diagnostic release for the current selection.</p></div></div>
+          <div class="card-grid">
+            <div class="summary-card"><div class="summary-label">Questions Released</div><div id="diagnosticQuestionsValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label">Students Attempted</div><div id="diagnosticAttemptedValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label">Students Not Started</div><div id="diagnosticNotStartedValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label">Average Score</div><div id="diagnosticAverageScoreValue" class="summary-value">—</div></div>
+          </div>
           <div class="dashboard-grid">
+            <div class="panel chart-box"><div class="panel-title-row"><div><h3>Diagnostic Completion</h3><div class="panel-subtitle">Students who completed every diagnostic question in one release vs. not started.</div></div></div><div id="diagnosticPieChart"></div></div>
             <div class="panel chart-box"><div class="panel-title-row"><div><h3>Completion</h3><div class="panel-subtitle">Completed, pending and other assignments.</div></div></div><div id="completionChart"></div></div>
             <div class="panel chart-box"><div class="panel-title-row"><div><h3>Criterion Performance</h3><div class="panel-subtitle">Average of the latest criterion scores.</div></div></div><div id="criterionChart"></div></div>
             <div class="panel chart-box"><div class="panel-title-row"><div><h3>Score Progress</h3><div class="panel-subtitle">Average latest score by submission date.</div></div></div><div id="progressChart"></div></div>
@@ -537,7 +550,8 @@
       reminderExport: SUPABASE_URL + "/rest/v1/rpc/ascent_trainer_reminder_export"
     };
     let currentSession = null;
-    let reportData = { summary:{}, batches:[], students:[], tasks:[], results:[] };
+    let reportData = { summary:{}, accessPoints:[], batches:[], students:[], tasks:[], results:[], diagnosticProgress:[] };
+    let currentAccessPointUuid = null;
     let questionBankData = { questions:[], categories:[], difficultyScale:[], totalMatching:0 };
     let selectedBankQuestions = new Set();
     let visibleBankQuestions = [];
@@ -899,7 +913,35 @@
       if (Array.from(select.options).some(option => option.value === current)) select.value = current;
     }
 
+    function selectedDashboardAccessPoint() {
+      return (reportData.accessPoints || []).find(ap => ap.accessPointUuid === currentAccessPointUuid) || null;
+    }
+
+    function populateDashboardFilters() {
+      const institutionSelect = byId("dashboardInstitutionFilter");
+      const accessPoints = reportData.accessPoints || [];
+      const currentValue = currentAccessPointUuid || (accessPoints[0] && accessPoints[0].accessPointUuid) || "";
+      institutionSelect.innerHTML = accessPoints.map(ap => `<option value="${escapeHtml(ap.accessPointUuid)}">${escapeHtml(ap.displayName)}</option>`).join("");
+      if (currentValue) institutionSelect.value = currentValue;
+
+      const active = selectedDashboardAccessPoint();
+      const isPrivate = active && active.accessType === "PRIVATE_LEARNERS";
+      byId("dashboardBatchFilterGroup").hidden = !!isPrivate;
+      byId("dashboardPrivateFilterGroup").hidden = !isPrivate;
+
+      const batchSelect = byId("dashboardBatchFilter");
+      const batchCurrent = batchSelect.value;
+      batchSelect.innerHTML = `<option value="">All batches</option>` + (reportData.institutionBatches || []).map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("");
+      if (Array.from(batchSelect.options).some(option => option.value === batchCurrent)) batchSelect.value = batchCurrent;
+
+      const privateSelect = byId("dashboardPrivateFilter");
+      const privateCurrent = privateSelect.value;
+      privateSelect.innerHTML = `<option value="">All private learners</option>` + (reportData.students || []).map(student => `<option value="${escapeHtml(student.studentUuid)}">${escapeHtml(student.fullName)}</option>`).join("");
+      if (Array.from(privateSelect.options).some(option => option.value === privateCurrent)) privateSelect.value = privateCurrent;
+    }
+
     function populateControls() {
+      populateDashboardFilters();
       const batches = liveAscentBatches().map(batch => ({value:batch,label:batch}));
       ["targetBatch","bankTargetBatch","assignmentBatchFilter","resultBatchFilter"].forEach(id => fillSelect(id,batches,"value",item => item.label,["targetBatch","bankTargetBatch"].includes(id) ? "Choose batch" : "All batches"));
       ["assignmentStudentFilter","resultStudentFilter"].forEach(id => fillSelect(id,reportData.students,"studentUuid",student => `${student.fullName} (${student.studentId})`,"All students"));
@@ -913,18 +955,99 @@
 
     function summaryValue(id,value,suffix="") { byId(id).textContent = value === null || value === undefined ? "—" : formatNumber(value) + suffix; }
 
+    function filteredDashboardResults() {
+      const rows = reportData.results || [];
+      const active = selectedDashboardAccessPoint();
+      const isPrivate = active && active.accessType === "PRIVATE_LEARNERS";
+      const batchValue = byId("dashboardBatchFilter").value;
+      const privateStudentValue = byId("dashboardPrivateFilter").value;
+      return rows.filter(row => {
+        if (!isPrivate && batchValue && row.batch !== batchValue) return false;
+        if (isPrivate && privateStudentValue && row.studentUuid !== privateStudentValue) return false;
+        return true;
+      });
+    }
+
     function renderSummary() {
-      const s = reportData.summary || {};
-      summaryValue("activeTasksValue",s.activeTasks || 0); summaryValue("assignedStudentsValue",s.assignedStudents || 0);
-      summaryValue("completedValue",s.completed || 0); summaryValue("notAttemptedValue",s.notAttempted || 0);
-      summaryValue("averageScoreValue",s.averageScore);
+      const rows = filteredDashboardResults().filter(row => row.status !== "WITHDRAWN");
+      const activeTasks = new Set(rows.map(row => row.taskUuid)).size;
+      const assignedStudents = new Set(rows.map(row => row.studentUuid)).size;
+      const completed = rows.filter(row => Number(row.attemptCount || 0) > 0).length;
+      const notAttempted = rows.filter(row => Number(row.attemptCount || 0) === 0 && row.status !== "SCHEDULED").length;
+      const scored = rows.filter(row => row.latestScore !== null && row.latestScore !== undefined);
+      const averageScore = scored.length ? Math.round((scored.reduce((sum,row) => sum + Number(row.latestScore),0) / scored.length) * 100) / 100 : null;
+      summaryValue("activeTasksValue",activeTasks); summaryValue("assignedStudentsValue",assignedStudents);
+      summaryValue("completedValue",completed); summaryValue("notAttemptedValue",notAttempted);
+      summaryValue("averageScoreValue",averageScore);
     }
 
     function renderCompletionChart() {
-      const s = reportData.summary || {}; const total = Number(s.totalAssignments || 0); const completed = Number(s.completed || 0); const pending = Number(s.notAttempted || 0); const other = Math.max(total-completed-pending,0);
+      const rows = filteredDashboardResults();
+      const total = rows.length;
+      const completed = rows.filter(row => Number(row.attemptCount || 0) > 0).length;
+      const pending = rows.filter(row => Number(row.attemptCount || 0) === 0 && row.status !== "SCHEDULED" && row.status !== "WITHDRAWN").length;
+      const other = Math.max(total-completed-pending,0);
       if (!total) { byId("completionChart").innerHTML = `<div class="line-empty">No assignments yet.</div>`; return; }
       const pct = value => (value / total * 100).toFixed(2);
       byId("completionChart").innerHTML = `<div class="completion-bar"><div class="completion-segment completed" style="width:${pct(completed)}%" title="Completed: ${completed}"></div><div class="completion-segment not-attempted" style="width:${pct(pending)}%" title="Not attempted: ${pending}"></div><div class="completion-segment other" style="width:${pct(other)}%" title="Scheduled/withdrawn: ${other}"></div></div><div class="chart-legend"><span><i class="legend-dot completed"></i>Completed: <strong>${completed}</strong></span><span><i class="legend-dot not-attempted"></i>Not attempted: <strong>${pending}</strong></span><span><i class="legend-dot other"></i>Scheduled/withdrawn: <strong>${other}</strong></span></div>`;
+    }
+
+    function filteredDiagnosticProgress() {
+      const rows = reportData.diagnosticProgress || [];
+      const active = selectedDashboardAccessPoint();
+      const isPrivate = active && active.accessType === "PRIVATE_LEARNERS";
+      const batchValue = byId("dashboardBatchFilter").value;
+      const privateStudentValue = byId("dashboardPrivateFilter").value;
+      return rows.filter(row => {
+        if (!isPrivate && batchValue && row.batch !== batchValue) return false;
+        if (isPrivate && privateStudentValue && row.studentUuid !== privateStudentValue) return false;
+        return true;
+      });
+    }
+
+    function latestDiagnosticReleaseUuid(rows) {
+      let latestUuid = null; let latestTime = -Infinity;
+      rows.forEach(row => {
+        const time = Date.parse(row.releasedAt || "") || 0;
+        if (time >= latestTime) { latestTime = time; latestUuid = row.questionBatchUuid; }
+      });
+      return latestUuid;
+    }
+
+    function renderDiagnosticSummary() {
+      const filtered = filteredDiagnosticProgress();
+      const releaseUuid = latestDiagnosticReleaseUuid(filtered);
+      const releaseRows = releaseUuid ? filtered.filter(row => row.questionBatchUuid === releaseUuid) : [];
+
+      if (!releaseRows.length) {
+        byId("diagnosticReleaseLabel").textContent = "No diagnostic has been released yet for this selection.";
+        summaryValue("diagnosticQuestionsValue",0); summaryValue("diagnosticAttemptedValue",0);
+        summaryValue("diagnosticNotStartedValue",0); summaryValue("diagnosticAverageScoreValue",null);
+        renderDiagnosticPie(0,0);
+        return;
+      }
+
+      const questionsReleased = releaseRows[0].questionsInRelease || 0;
+      const attempted = releaseRows.filter(row => row.isComplete).length;
+      const notStarted = releaseRows.length - attempted;
+      const scored = releaseRows.filter(row => row.isComplete && row.averageScore !== null && row.averageScore !== undefined);
+      const averageScore = scored.length ? Math.round((scored.reduce((sum,row) => sum + Number(row.averageScore),0) / scored.length) * 100) / 100 : null;
+
+      byId("diagnosticReleaseLabel").textContent = `Released ${formatDate(releaseRows[0].releasedAt)} · ${questionsReleased} question${questionsReleased === 1 ? "" : "s"}. A learner counts as attempted only after completing every question in this release in one go.`;
+      summaryValue("diagnosticQuestionsValue",questionsReleased);
+      summaryValue("diagnosticAttemptedValue",attempted);
+      summaryValue("diagnosticNotStartedValue",notStarted);
+      summaryValue("diagnosticAverageScoreValue",averageScore);
+      renderDiagnosticPie(attempted,notStarted);
+    }
+
+    function renderDiagnosticPie(completed,notStarted) {
+      const total = completed + notStarted;
+      const wrap = byId("diagnosticPieChart");
+      if (!total) { wrap.innerHTML = `<div class="line-empty">No diagnostic assignments yet.</div>`; return; }
+      const completedPct = (completed / total) * 100;
+      const pieStyle = `background:conic-gradient(#2e8b68 0% ${completedPct}%, #d48c24 ${completedPct}% 100%);width:160px;height:160px;border-radius:50%;margin:0 auto;`;
+      wrap.innerHTML = `<div style="${pieStyle}"></div><div class="chart-legend" style="justify-content:center;margin-top:12px;"><span><i class="legend-dot completed"></i>Completed: <strong>${completed}</strong></span><span><i class="legend-dot not-attempted"></i>Not started: <strong>${notStarted}</strong></span></div>`;
     }
 
     function collectNumericCriteria(object,prefix="",output={}) {
@@ -949,7 +1072,7 @@
     }
 
     function renderCriterionChart() {
-      const data = criterionAverages(reportData.results.filter(row => row.attemptCount > 0));
+      const data = criterionAverages(filteredDashboardResults().filter(row => row.attemptCount > 0));
       if (!data.length) { byId("criterionChart").innerHTML = `<div class="line-empty">Criterion scores will appear after submissions.</div>`; return; }
       const max = Math.max(...data.map(item => item.average),1);
       byId("criterionChart").innerHTML = `<div class="criterion-chart">${data.map(item => `<div class="criterion-row"><div class="criterion-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div><div class="criterion-track"><div class="criterion-fill" style="width:${Math.min(item.average/max*100,100)}%"></div></div><div class="criterion-value">${item.average.toFixed(2)}</div></div>`).join("")}</div>`;
@@ -968,7 +1091,7 @@
 
     function renderProgressChart() {
       const groups = {};
-      reportData.results.filter(row => row.latestSubmittedAt && row.latestScore !== null).forEach(row => { const key = new Date(row.latestSubmittedAt).toISOString().slice(0,10); if (!groups[key]) groups[key] = []; groups[key].push(Number(row.latestScore)); });
+      filteredDashboardResults().filter(row => row.latestSubmittedAt && row.latestScore !== null).forEach(row => { const key = new Date(row.latestSubmittedAt).toISOString().slice(0,10); if (!groups[key]) groups[key] = []; groups[key].push(Number(row.latestScore)); });
       const points = Object.keys(groups).sort().map(key => ({label:new Date(key+"T00:00:00").toLocaleDateString(),shortLabel:new Date(key+"T00:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"}),value:groups[key].reduce((a,b)=>a+b,0)/groups[key].length}));
       renderLineSvg("progressChart",points,"Scores will appear after submissions.");
     }
@@ -2306,22 +2429,30 @@
       }
     }
 
+    function renderDashboardMetrics() {
+      renderSummary(); renderCompletionChart(); renderCriterionChart(); renderProgressChart(); renderDiagnosticSummary();
+    }
+
     function renderAll() {
-      renderSummary(); renderCompletionChart(); renderCriterionChart(); renderProgressChart(); renderTasksTable(); populateControls(); renderAssignmentsTable(); renderResultsTable(); updateAssignmentEstimate();
+      populateControls(); renderSummary(); renderCompletionChart(); renderCriterionChart(); renderProgressChart(); renderTasksTable(); renderAssignmentsTable(); renderResultsTable(); updateAssignmentEstimate(); renderDiagnosticSummary();
     }
 
     async function loadReport(message="Loading dashboard…") {
       showLoading(message);
       try {
-        const data = await callRpc(RPC.report,{ p_session_token:currentSession.sessionToken, p_batch:null, p_student_uuid:null, p_task_uuid:null });
+        const data = await callRpc(RPC.report,{ p_session_token:currentSession.sessionToken, p_batch:null, p_student_uuid:null, p_task_uuid:null, p_access_point_uuid:currentAccessPointUuid });
         if (!data || data.ok !== true) {
           throw new Error(data && data.message ? data.message : "Report data could not be loaded.");
         }
+        currentAccessPointUuid = data.accessPoint && data.accessPoint.accessPointUuid ? data.accessPoint.accessPointUuid : currentAccessPointUuid;
         reportData = {
           ...data,
+          accessPoints:Array.isArray(data.accessPoints) ? data.accessPoints : [],
+          institutionBatches:Array.isArray(data.batches) ? data.batches : [],
           batches:liveAscentBatches(),
           students:Array.isArray(data.students) ? data.students.map(withDerivedCohortDetails) : [],
-          results:Array.isArray(data.results) ? data.results.map(withDerivedCohortDetails) : []
+          results:Array.isArray(data.results) ? data.results.map(withDerivedCohortDetails) : [],
+          diagnosticProgress:Array.isArray(data.diagnosticProgress) ? data.diagnosticProgress : []
         };
         renderAll(); setStatus(byId("dashboardStatus"),"Dashboard updated " + new Date().toLocaleTimeString(),"success");
       } catch (error) { console.error(error); setStatus(byId("dashboardStatus"),"ASCENT could not load the dashboard. " + error.message,"error"); }
@@ -4375,6 +4506,14 @@ function formatCriterionFeedback(criterion) {
       document.querySelectorAll(".nav-item").forEach(item => item.addEventListener("click",() => showSection(item.dataset.section)));
       byId("logoutButton").addEventListener("click",() => { localStorage.removeItem(SESSION_STORAGE_KEY); window.location.href="./trainer-login.html"; });
       byId("refreshDashboardButton").addEventListener("click",() => loadReport("Refreshing dashboard…"));
+      byId("dashboardInstitutionFilter").addEventListener("change",(event) => {
+        currentAccessPointUuid = event.target.value || null;
+        byId("dashboardBatchFilter").value = "";
+        byId("dashboardPrivateFilter").value = "";
+        loadReport("Switching institution…");
+      });
+      byId("dashboardBatchFilter").addEventListener("change",() => renderDashboardMetrics());
+      byId("dashboardPrivateFilter").addEventListener("change",() => renderDashboardMetrics());
       byId("refreshTasksButton").addEventListener("click",() => loadReport("Refreshing tasks…"));
       byId("dashboardExportButton").addEventListener("click",() => exportExcel(reportData.results,"dashboard"));
       byId("refreshLeaderboardButton").addEventListener("click",() => loadPlacementReadinessBoard(true));
