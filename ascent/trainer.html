@@ -277,24 +277,15 @@
             <div class="form-group" id="dashboardBatchFilterGroup"><label for="dashboardBatchFilter">Batch</label><select id="dashboardBatchFilter"><option value="">All batches</option></select></div>
             <div class="form-group" id="dashboardPrivateFilterGroup" hidden><label for="dashboardPrivateFilter">Private learner</label><select id="dashboardPrivateFilter"><option value="">All private learners</option></select></div>
           </div></div>
-          <div class="card-grid">
-            <div class="summary-card"><div class="summary-label">Active Tasks</div><div id="activeTasksValue" class="summary-value">—</div></div>
-            <div class="summary-card"><div class="summary-label">Assigned Students</div><div id="assignedStudentsValue" class="summary-value">—</div></div>
-            <div class="summary-card"><div class="summary-label">Completed</div><div id="completedValue" class="summary-value">—</div></div>
-            <div class="summary-card"><div class="summary-label">Not Attempted</div><div id="notAttemptedValue" class="summary-value">—</div></div>
-            <div class="summary-card"><div class="summary-label">Average Score</div><div id="averageScoreValue" class="summary-value">—</div></div>
-          </div>
           <div class="workspace-header"><div><h3 id="releaseSectionTitle">Diagnostic</h3><p id="diagnosticReleaseLabel" class="panel-subtitle">Progress for the current selection.</p></div><div class="form-group" style="min-width:200px;"><label for="dashboardQuestionSetFilter">Question set</label><select id="dashboardQuestionSetFilter"></select></div></div>
           <div class="card-grid">
             <div class="summary-card"><div class="summary-label">Questions Released</div><div id="diagnosticQuestionsValue" class="summary-value">—</div></div>
-            <div class="summary-card"><div class="summary-label" id="diagnosticCompletedLabel">Students Completed</div><div id="diagnosticAttemptedValue" class="summary-value">—</div></div>
-            <div class="summary-card" id="diagnosticStartedCard" hidden><div class="summary-label">Students Started (Not Completed)</div><div id="diagnosticStartedValue" class="summary-value">—</div></div>
-            <div class="summary-card"><div class="summary-label">Students Not Started</div><div id="diagnosticNotStartedValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label" id="diagnosticCompletedLabel">Completed</div><div id="diagnosticAttemptedValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label">Not Completed</div><div id="diagnosticNotStartedValue" class="summary-value">—</div></div>
             <div class="summary-card"><div class="summary-label">Average Score</div><div id="diagnosticAverageScoreValue" class="summary-value">—</div></div>
           </div>
           <div class="dashboard-grid">
-            <div class="panel chart-box"><div class="panel-title-row"><div><h3>Diagnostic Completion</h3><div class="panel-subtitle">Students who completed every diagnostic question in one release vs. not started.</div></div></div><div id="diagnosticPieChart"></div></div>
-            <div class="panel chart-box"><div class="panel-title-row"><div><h3>Completion</h3><div class="panel-subtitle">Completed, pending and other assignments.</div></div></div><div id="completionChart"></div></div>
+            <div class="panel chart-box"><div class="panel-title-row"><div><h3 id="releaseChartTitle">Diagnostic Completion</h3><div class="panel-subtitle">Completed vs. not completed for the current selection.</div></div></div><div id="diagnosticPieChart"></div></div>
             <div class="panel chart-box"><div class="panel-title-row"><div><h3>Criterion Performance</h3><div class="panel-subtitle">Average of the latest criterion scores.</div></div></div><div id="criterionChart"></div></div>
             <div class="panel chart-box"><div class="panel-title-row"><div><h3>Score Progress</h3><div class="panel-subtitle">Average latest score by submission date.</div></div></div><div id="progressChart"></div></div>
           </div>
@@ -971,30 +962,6 @@
       });
     }
 
-    function renderSummary() {
-      const rows = filteredDashboardResults().filter(row => row.status !== "WITHDRAWN");
-      const activeTasks = new Set(rows.map(row => row.taskUuid)).size;
-      const assignedStudents = new Set(rows.map(row => row.studentUuid)).size;
-      const completed = rows.filter(row => Number(row.attemptCount || 0) > 0).length;
-      const notAttempted = rows.filter(row => Number(row.attemptCount || 0) === 0 && row.status !== "SCHEDULED").length;
-      const scored = rows.filter(row => row.latestScore !== null && row.latestScore !== undefined);
-      const averageScore = scored.length ? Math.round((scored.reduce((sum,row) => sum + Number(row.latestScore),0) / scored.length) * 100) / 100 : null;
-      summaryValue("activeTasksValue",activeTasks); summaryValue("assignedStudentsValue",assignedStudents);
-      summaryValue("completedValue",completed); summaryValue("notAttemptedValue",notAttempted);
-      summaryValue("averageScoreValue",averageScore);
-    }
-
-    function renderCompletionChart() {
-      const rows = filteredDashboardResults();
-      const total = rows.length;
-      const completed = rows.filter(row => Number(row.attemptCount || 0) > 0).length;
-      const pending = rows.filter(row => Number(row.attemptCount || 0) === 0 && row.status !== "SCHEDULED" && row.status !== "WITHDRAWN").length;
-      const other = Math.max(total-completed-pending,0);
-      if (!total) { byId("completionChart").innerHTML = `<div class="line-empty">No assignments yet.</div>`; return; }
-      const pct = value => (value / total * 100).toFixed(2);
-      byId("completionChart").innerHTML = `<div class="completion-bar"><div class="completion-segment completed" style="width:${pct(completed)}%" title="Completed: ${completed}"></div><div class="completion-segment not-attempted" style="width:${pct(pending)}%" title="Not attempted: ${pending}"></div><div class="completion-segment other" style="width:${pct(other)}%" title="Scheduled/withdrawn: ${other}"></div></div><div class="chart-legend"><span><i class="legend-dot completed"></i>Completed: <strong>${completed}</strong></span><span><i class="legend-dot not-attempted"></i>Not attempted: <strong>${pending}</strong></span><span><i class="legend-dot other"></i>Scheduled/withdrawn: <strong>${other}</strong></span></div>`;
-    }
-
     const QUESTION_SET_LABELS = { DIAGNOSTIC:"Diagnostic", LUM:"LUM", PI:"PI", GD:"GD", CUSTOM:"Custom", OTHER:"Other" };
     const QUESTION_SET_ORDER = ["DIAGNOSTIC","LUM","PI","GD","CUSTOM","OTHER"];
 
@@ -1025,54 +992,51 @@
       });
     }
 
+    // "Not Completed" merges two underlying states into one number: a
+    // learner who never started, and (for non-diagnostic sets only) a
+    // learner who answered some but not all questions. Diagnostic sets
+    // only ever have the first kind, since partial diagnostic progress
+    // is treated as not started, not as a distinct state.
     function renderDiagnosticSummary() {
       const questionSet = byId("dashboardQuestionSetFilter").value || "DIAGNOSTIC";
-      const isDiagnostic = questionSet === "DIAGNOSTIC";
-      byId("releaseSectionTitle").textContent = QUESTION_SET_LABELS[questionSet] || "Question Set";
-      byId("diagnosticCompletedLabel").textContent = "Students Completed";
-      byId("diagnosticStartedCard").hidden = isDiagnostic;
+      const label = QUESTION_SET_LABELS[questionSet] || "Question Set";
+      byId("releaseSectionTitle").textContent = label;
+      byId("releaseChartTitle").textContent = `${label} Completion`;
 
       const rows = filteredReleaseProgress();
 
       if (!rows.length) {
         byId("diagnosticReleaseLabel").textContent = "No questions of this type have been released yet for this selection.";
         summaryValue("diagnosticQuestionsValue",0); summaryValue("diagnosticAttemptedValue",0);
-        summaryValue("diagnosticStartedValue",0); summaryValue("diagnosticNotStartedValue",0);
+        summaryValue("diagnosticNotStartedValue",0);
         summaryValue("diagnosticAverageScoreValue",null);
-        renderDiagnosticPie(0,0,0,isDiagnostic);
+        renderDiagnosticPie(0,0);
         return;
       }
 
       const questionsReleased = rows[0].questionsInRelease || 0;
       const completed = rows.filter(row => row.questionsAnswered >= questionsReleased && questionsReleased > 0).length;
-      const started = isDiagnostic ? 0 : rows.filter(row => row.questionsAnswered > 0 && row.questionsAnswered < questionsReleased).length;
-      const notStarted = rows.length - completed - started;
+      const notCompleted = rows.length - completed;
       const scored = rows.filter(row => row.questionsAnswered > 0 && row.averageScore !== null && row.averageScore !== undefined);
       const averageScore = scored.length ? Math.round((scored.reduce((sum,row) => sum + Number(row.averageScore),0) / scored.length) * 100) / 100 : null;
 
-      byId("diagnosticReleaseLabel").textContent = isDiagnostic
-        ? `${questionsReleased} question${questionsReleased === 1 ? "" : "s"} currently released. A learner counts as completed only after answering every question in one go — any partial progress counts as not started.`
-        : `${questionsReleased} question${questionsReleased === 1 ? "" : "s"} currently released.`;
+      byId("diagnosticReleaseLabel").textContent = questionSet === "DIAGNOSTIC"
+        ? `${questionsReleased} question${questionsReleased === 1 ? "" : "s"} currently released. A learner counts as completed only after answering every question in one go — any partial progress counts as not completed.`
+        : `${questionsReleased} question${questionsReleased === 1 ? "" : "s"} currently released. A learner counts as completed only after answering every question — partial or no progress both count as not completed.`;
       summaryValue("diagnosticQuestionsValue",questionsReleased);
       summaryValue("diagnosticAttemptedValue",completed);
-      summaryValue("diagnosticStartedValue",started);
-      summaryValue("diagnosticNotStartedValue",notStarted);
+      summaryValue("diagnosticNotStartedValue",notCompleted);
       summaryValue("diagnosticAverageScoreValue",averageScore);
-      renderDiagnosticPie(completed,started,notStarted,isDiagnostic);
+      renderDiagnosticPie(completed,notCompleted);
     }
 
-    function renderDiagnosticPie(completed,started,notStarted,isDiagnostic) {
-      const total = completed + started + notStarted;
+    function renderDiagnosticPie(completed,notCompleted) {
+      const total = completed + notCompleted;
       const wrap = byId("diagnosticPieChart");
       if (!total) { wrap.innerHTML = `<div class="line-empty">No assignments yet.</div>`; return; }
       const completedPct = (completed / total) * 100;
-      const startedPct = (started / total) * 100;
-      const gradient = isDiagnostic
-        ? `conic-gradient(#2e8b68 0% ${completedPct}%, #d48c24 ${completedPct}% 100%)`
-        : `conic-gradient(#2e8b68 0% ${completedPct}%, #9eafbd ${completedPct}% ${completedPct+startedPct}%, #d48c24 ${completedPct+startedPct}% 100%)`;
-      const pieStyle = `background:${gradient};width:160px;height:160px;border-radius:50%;margin:0 auto;`;
-      const startedLegend = isDiagnostic ? "" : `<span><i class="legend-dot other"></i>Started (not completed): <strong>${started}</strong></span>`;
-      wrap.innerHTML = `<div style="${pieStyle}"></div><div class="chart-legend" style="justify-content:center;margin-top:12px;"><span><i class="legend-dot completed"></i>Completed: <strong>${completed}</strong></span>${startedLegend}<span><i class="legend-dot not-attempted"></i>Not started: <strong>${notStarted}</strong></span></div>`;
+      const pieStyle = `background:conic-gradient(#2e8b68 0% ${completedPct}%, #d48c24 ${completedPct}% 100%);width:160px;height:160px;border-radius:50%;margin:0 auto;`;
+      wrap.innerHTML = `<div style="${pieStyle}"></div><div class="chart-legend" style="justify-content:center;margin-top:12px;"><span><i class="legend-dot completed"></i>Completed: <strong>${completed}</strong></span><span><i class="legend-dot not-attempted"></i>Not completed: <strong>${notCompleted}</strong></span></div>`;
     }
 
     function collectNumericCriteria(object,prefix="",output={}) {
@@ -2455,11 +2419,11 @@
     }
 
     function renderDashboardMetrics() {
-      renderSummary(); renderCompletionChart(); renderCriterionChart(); renderProgressChart(); renderDiagnosticSummary();
+      renderCriterionChart(); renderProgressChart(); renderDiagnosticSummary();
     }
 
     function renderAll() {
-      populateControls(); renderSummary(); renderCompletionChart(); renderCriterionChart(); renderProgressChart(); renderTasksTable(); renderAssignmentsTable(); renderResultsTable(); updateAssignmentEstimate(); renderDiagnosticSummary();
+      populateControls(); renderCriterionChart(); renderProgressChart(); renderTasksTable(); renderAssignmentsTable(); renderResultsTable(); updateAssignmentEstimate(); renderDiagnosticSummary();
     }
 
     async function loadReport(message="Loading dashboard…") {
