@@ -1010,7 +1010,35 @@
       line-height: 1.65;
       white-space: pre-wrap;
     }
+    .next-practice-card {
+      margin-top: 20px;
+      padding: 18px;
+      border: 2px solid #183b5b;
+      border-radius: 14px;
+      background: #ffffff;
+    }
 
+    .next-practice-kicker {
+      margin-bottom: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #183b5b;
+    }
+
+    .next-practice-focus {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.5;
+      color: #183b5b;
+    }
+
+    .next-practice-progress {
+      margin: 12px 0 16px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #465d73;
+    }
     .result-action-row {
       margin-top: 18px;
       display: flex;
@@ -1739,7 +1767,33 @@
     class="other-issues-list"
   ></ul>
 </section>
+          <section
+            id="nextPracticeCard"
+            class="next-practice-card"
+            hidden
+          >
+            <div class="next-practice-kicker">
+              YOUR NEXT PRACTICE
+            </div>
 
+            <div
+              id="nextPracticeFocus"
+              class="next-practice-focus"
+            ></div>
+
+            <div
+              id="nextPracticeProgress"
+              class="next-practice-progress"
+            ></div>
+
+            <button
+              id="retryNextFixButton"
+              class="action-button submit-button"
+              type="button"
+            >
+              Retry This Response
+            </button>
+          </section>
           <div class="result-action-row">
             <button
               id="newResponseButton"
@@ -1899,7 +1953,25 @@
 
 const otherIssuesList =
   document.getElementById("otherIssuesList");
+    const nextPracticeCard =
+      document.getElementById(
+        "nextPracticeCard"
+      );
 
+    const nextPracticeFocus =
+      document.getElementById(
+        "nextPracticeFocus"
+      );
+
+    const nextPracticeProgress =
+      document.getElementById(
+        "nextPracticeProgress"
+      );
+
+    const retryNextFixButton =
+      document.getElementById(
+        "retryNextFixButton"
+      );
     const practiceContextLoading =
       document.getElementById(
         "practiceContextLoading"
@@ -3708,6 +3780,7 @@ clearElement(otherIssuesList);
 resultSummary.style.display = "";
 criteriaGrid.style.display = "";
 otherIssuesSection.hidden = true;
+nextPracticeCard.hidden = true;
     }
 
 
@@ -4263,6 +4336,63 @@ otherIssues.forEach(function (issue) {
 
 otherIssuesSection.hidden =
   otherIssues.length === 0;
+          if (
+          result.nextPractice &&
+          result.nextPractice.focus
+        ) {
+          nextPracticeCard.hidden =
+            false;
+
+          nextPracticeFocus.textContent =
+            String(
+              result.nextPractice.focus
+            );
+
+          const latest =
+            Number(
+              result.nextPractice.latestScore
+            );
+
+          const previous =
+            result.nextPractice.previousScore;
+
+          const best =
+            Number(
+              result.nextPractice.bestScore
+            );
+
+          let progressText =
+            "Latest: " +
+            (
+              Number.isFinite(latest)
+                ? latest.toFixed(1)
+                : "—"
+            ) +
+            " / 10";
+
+          if (
+            previous !== null &&
+            previous !== undefined &&
+            Number.isFinite(
+              Number(previous)
+            )
+          ) {
+            progressText =
+              "Previous: " +
+              Number(previous).toFixed(1) +
+              " → Latest: " +
+              latest.toFixed(1);
+          }
+
+          if (Number.isFinite(best)) {
+            progressText +=
+              " · Best: " +
+              best.toFixed(1);
+          }
+
+          nextPracticeProgress.textContent =
+            progressText;
+        }
       }
 
       recordAgainButton.disabled =
@@ -5734,7 +5864,37 @@ otherIssuesSection.hidden =
       "click",
       submitRecording
     );
+retryNextFixButton.addEventListener(
+  "click",
+  function () {
+    if (!canRecordAgain()) {
+      showStatus(
+        "Use your Next Fix on your next question.",
+        ""
+      );
 
+      return;
+    }
+
+    resetRecording();
+
+    nextPracticeCard.hidden =
+      true;
+
+    showStatus(
+      "Retry now. Focus only on your Next Fix.",
+      "success"
+    );
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  }
+);
+    });
+  }
+);
     newResponseButton.addEventListener(
       "click",
       async function () {
