@@ -4392,6 +4392,8 @@ otherIssuesSection.hidden =
 
           nextPracticeProgress.textContent =
             progressText;
+          retryNextFixButton.style.display =
+            canRecordAgain() ? "" : "none";
         }
       }
 
