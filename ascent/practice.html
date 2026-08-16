@@ -2709,16 +2709,19 @@ const otherIssuesList =
           };
         }
 
-        if (
-          answeredQuestionBankUuids.has(questionBankUuid) ||
-          questionWasAnswered(selected.question)
-        ) {
-          return {
-            valid: false,
-            message:
-              "You have already answered this question. Choose a different question."
-          };
-        }
+       if (
+  practiceContext.is_private_learner !== true &&
+  (
+    answeredQuestionBankUuids.has(questionBankUuid) ||
+    questionWasAnswered(selected.question)
+  )
+) {
+  return {
+    valid: false,
+    message:
+      "You have already answered this question. Choose a different question."
+  };
+}
 
         return {
           valid: true,
@@ -2776,13 +2779,16 @@ const otherIssuesList =
           };
         }
 
-        if (questionWasAnswered(question)) {
-          return {
-            valid: false,
-            message:
-              "You have already answered this question. Enter a different question."
-          };
-        }
+        if (
+  practiceContext.is_private_learner !== true &&
+  questionWasAnswered(question)
+) {
+  return {
+    valid: false,
+    message:
+      "You have already answered this question. Enter a different question."
+  };
+}
 
         return {
           valid: true,
@@ -3712,20 +3718,26 @@ const otherIssuesList =
             .slice(0, 1);
 
         questionBank =
-          normalisePracticeArray(
-            result.question_bank
-          ).filter(function (item) {
-            return !(
-              answeredQuestionBankUuids.has(
-                String(
-                  item.questionBankUuid || ""
-                )
-              ) ||
-              questionWasAnswered(
-                item.question
-              )
-            );
-          });
+  normalisePracticeArray(
+    result.question_bank
+  ).filter(function (item) {
+    if (
+      practiceContext.is_private_learner === true
+    ) {
+      return true;
+    }
+
+    return !(
+      answeredQuestionBankUuids.has(
+        String(
+          item.questionBankUuid || ""
+        )
+      ) ||
+      questionWasAnswered(
+        item.question
+      )
+    );
+  });
 
         displayedResponsesRemaining =
           result.submissions_remaining ===
