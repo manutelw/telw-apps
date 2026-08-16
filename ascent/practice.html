@@ -5093,7 +5093,7 @@ otherIssuesSection.hidden =
     "Testing…";
 
   audioTestStatus.textContent =
-    "Speak normally for about 4 seconds.";
+    "Say: Testing one two."
 
   audioTestPlayback.hidden = true;
 
@@ -5146,12 +5146,24 @@ otherIssuesSection.hidden =
         }
 
         audioTestPlayback.src =
-          URL.createObjectURL(testBlob);
+  URL.createObjectURL(testBlob);
 
-        audioTestPlayback.hidden = false;
+audioTestPlayback.hidden = false;
 
-        audioTestStatus.textContent =
-          "Test complete. Play the recording. If you can hear yourself clearly, your microphone and speaker are working.";
+audioTestStatus.textContent =
+  "Test complete. Playing your recording now.";
+
+audioTestPlayback.play().catch(
+  function (error) {
+    console.error(
+      "ASCENT audio test playback failed:",
+      error
+    );
+
+    audioTestStatus.textContent =
+      "Test recorded. Tap Play if your browser blocked automatic playback.";
+  }
+);
 
         audioTestButton.disabled = false;
         audioTestButton.textContent =
@@ -5170,7 +5182,7 @@ otherIssuesSection.hidden =
           testRecorder.stop();
         }
       },
-      4000
+      1500
     );
 
   } catch (error) {
