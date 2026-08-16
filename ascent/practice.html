@@ -1425,10 +1425,25 @@
   class="practice-note"
   hidden
 >
-  <strong>Retry previous question or continue.</strong>
-  Choose <strong>Retry previous question</strong> to use your feedback
-  and improve your last response, or choose
-  <strong>Next question</strong> to continue with a new one.
+  <div>
+    <strong>Retry previous question or continue.</strong>
+  </div>
+
+  <div>
+    Choose
+    <a id="retryPreviousQuestionLink" href="#">
+      <strong>Retry previous question</strong>
+    </a>
+    to use your feedback and improve your last response, or
+  </div>
+
+  <div>
+    Choose
+    <a id="nextQuestionLink" href="#">
+      <strong>Next question</strong>
+    </a>
+    to continue with a new one.
+  </div>
 </div>
 
 <select
@@ -2104,6 +2119,15 @@ const otherIssuesList =
     const privateRetrySelectionNote =
   document.getElementById(
     "privateRetrySelectionNote"
+  );
+    const retryPreviousQuestionLink =
+  document.getElementById(
+    "retryPreviousQuestionLink"
+  );
+
+const nextQuestionLink =
+  document.getElementById(
+    "nextQuestionLink"
   );
     const customQuestionField =
       document.getElementById(
@@ -6279,7 +6303,62 @@ audioTestPlayback.play().catch(
         "change",
         populateQuestionBank
       );
+retryPreviousQuestionLink.addEventListener(
+  "click",
+  function (event) {
+    event.preventDefault();
 
+    const retryOption =
+      Array.from(
+        questionBankSelect.options
+      ).find(function (option) {
+        return String(
+          option.textContent || ""
+        ).startsWith(
+          "Retry previous question"
+        );
+      });
+
+    if (!retryOption) {
+      return;
+    }
+
+    questionBankSelect.value =
+      retryOption.value;
+
+    questionBankSelect.dispatchEvent(
+      new Event("change")
+    );
+  }
+);
+    nextQuestionLink.addEventListener(
+  "click",
+  function (event) {
+    event.preventDefault();
+
+    const nextOption =
+      Array.from(
+        questionBankSelect.options
+      ).find(function (option) {
+        return String(
+          option.textContent || ""
+        ).startsWith(
+          "Next question"
+        );
+      });
+
+    if (!nextOption) {
+      return;
+    }
+
+    questionBankSelect.value =
+      nextOption.value;
+
+    questionBankSelect.dispatchEvent(
+      new Event("change")
+    );
+  }
+);
     questionBankSelect.addEventListener(
   "change",
   function () {
