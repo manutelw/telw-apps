@@ -1585,6 +1585,43 @@
         </section>
 
         <div class="recorder-box">
+          
+          <section
+  id="audioTestPanel"
+  style="
+    margin-bottom: 22px;
+    padding: 16px;
+    border: 1px solid #d7e1eb;
+    border-radius: 12px;
+    background: #f7fafc;
+  "
+>
+  <strong>Test microphone & speaker</strong>
+
+  <p style="margin: 7px 0 12px;">
+    Record a short test, then play it back.
+    This test is not submitted or saved.
+  </p>
+
+  <button
+    id="audioTestButton"
+    type="button"
+  >
+    Start Audio Test
+  </button>
+
+  <audio
+    id="audioTestPlayback"
+    controls
+    hidden
+    style="width: 100%; margin-top: 12px;"
+  ></audio>
+
+  <div
+    id="audioTestStatus"
+    style="margin-top: 10px;"
+  ></div>
+</section>
 
           <div class="recording-display">
             <div
@@ -1863,6 +1900,20 @@
         "answerBuilderLink"
       );
 
+    const audioTestButton =
+  document.getElementById(
+    "audioTestButton"
+  );
+
+const audioTestPlayback =
+  document.getElementById(
+    "audioTestPlayback"
+  );
+
+const audioTestStatus =
+  document.getElementById(
+    "audioTestStatus"
+  );
     const startButton =
       document.getElementById("startButton");
 
@@ -5026,6 +5077,116 @@ otherIssuesSection.hidden =
       stopMicrophoneTracks();
     }
 
+    async function runAudioTest() {
+  if (
+    !navigator.mediaDevices ||
+    !navigator.mediaDevices.getUserMedia ||
+    typeof MediaRecorder === "undefined"
+  ) {
+    audioTestStatus.textContent =
+      "Audio testing is not supported by this browser.";
+    return;
+  }
+
+  audioTestButton.disabled = true;
+  audioTestButton.textContent =
+    "Testing…";
+
+  audioTestStatus.textContent =
+    "Speak normally for about 4 seconds.";
+
+  audioTestPlayback.hidden = true;
+
+  try {
+    const testStream =
+      await navigator.mediaDevices.getUserMedia({
+        audio: true
+      });
+
+    const chunks = [];
+
+    const testRecorder =
+      new MediaRecorder(testStream);
+
+    testRecorder.addEventListener(
+      "dataavailable",
+      function (event) {
+        if (
+          event.data &&
+          event.data.size > 0
+        ) {
+          chunks.push(event.data);
+        }
+      }
+    );
+
+    testRecorder.addEventListener(
+      "stop",
+      function () {
+        testStream
+          .getTracks()
+          .forEach(function (track) {
+            track.stop();
+          });
+
+        const testBlob =
+          new Blob(
+            chunks,
+            {
+              type:
+                testRecorder.mimeType ||
+                "audio/webm"
+            }
+          );
+
+        if (audioTestPlayback.src) {
+          URL.revokeObjectURL(
+            audioTestPlayback.src
+          );
+        }
+
+        audioTestPlayback.src =
+          URL.createObjectURL(testBlob);
+
+        audioTestPlayback.hidden = false;
+
+        audioTestStatus.textContent =
+          "Test complete. Play the recording. If you can hear yourself clearly, your microphone and speaker are working.";
+
+        audioTestButton.disabled = false;
+        audioTestButton.textContent =
+          "Test Again";
+      }
+    );
+
+    testRecorder.start();
+
+    window.setTimeout(
+      function () {
+        if (
+          testRecorder.state ===
+          "recording"
+        ) {
+          testRecorder.stop();
+        }
+      },
+      4000
+    );
+
+  } catch (error) {
+    console.error(
+      "ASCENT audio test failed:",
+      error
+    );
+
+    audioTestStatus.textContent =
+      "ASCENT could not use the microphone. Check microphone permission and try again.";
+
+    audioTestButton.disabled = false;
+    audioTestButton.textContent =
+      "Try Audio Test Again";
+  }
+}
 
     async function startRecording() {
       showStatus("", "");
@@ -5839,7 +6000,11 @@ otherIssuesSection.hidden =
       }
     );
 
-
+audioTestButton.addEventListener(
+  "click",
+  runAudioTest
+);
+    
     startButton.addEventListener(
       "click",
       startRecording
