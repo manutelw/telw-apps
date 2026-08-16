@@ -794,6 +794,23 @@
         <div class="plain-links">
           <a class="plain-link" href="../">Main homepage</a>
           <a class="plain-link" href="./">ASCENT login</a>
+          <button
+            id="adminPrivateDemoButton"
+            class="trainer-entry-button"
+            type="button"
+>
+  Private Learner Demo
+  <span>· free admin access</span>
+</button>
+
+<button
+  id="adminInstitutionalDemoButton"
+  class="trainer-entry-button"
+  type="button"
+>
+  Institutional Learner Demo
+  <span>· free admin access</span>
+</button>
           <a id="adminTrainerPortalLink" class="plain-link" href="./trainer.html">Administrator’s trainer portal</a>
           <a id="adminStudentsReviewLink" class="plain-link" href="./trainer.html?section=students">Students review</a>
           <a class="plain-link" href="./institution.html?slug=fiib">FIIB institution portal</a>
@@ -973,6 +990,9 @@
     const SESSION_STORAGE_KEY =
       "ascent_trainer_session";
 
+    const STUDENT_SESSION_STORAGE_KEY =
+  "ascent_student_session";
+
     const ADMIN_MASTER_SESSION_KEY =
       "ascent_admin_master_session";
 
@@ -997,6 +1017,10 @@
     const ENTER_ADMIN_WORKSPACE_URL =
       SUPABASE_URL +
       "/rest/v1/rpc/ascent_admin_open_institution_workspace";
+    
+    const ADMIN_DEMO_STUDENT_URL =
+  SUPABASE_URL +
+  "/rest/v1/rpc/ascent_admin_open_demo_student";
 
     const PAYMENT_STATEMENT_URL =
       SUPABASE_URL +
@@ -1137,7 +1161,57 @@
 
       return result;
     }
+async function enterDemoStudent(
+  demoMode
+) {
+  const status =
+    document.getElementById(
+      "adminWorkspaceStatus"
+    );
 
+  status.className =
+    "admin-status";
+
+  status.textContent =
+    "Opening " +
+    demoMode.toLowerCase() +
+    " learner demo…";
+
+  try {
+    const result =
+      await callAdminRpc(
+        ADMIN_DEMO_STUDENT_URL,
+        {
+          p_session_token:
+            session.sessionToken,
+
+          p_demo_mode:
+            demoMode
+        }
+      );
+
+    localStorage.setItem(
+      STUDENT_SESSION_STORAGE_KEY,
+      JSON.stringify(result)
+    );
+
+    localStorage.setItem(
+      ADMIN_MASTER_SESSION_KEY,
+      JSON.stringify(session)
+    );
+
+    window.location.href =
+      "./practice.html";
+
+  } catch (error) {
+    status.className =
+      "admin-status error";
+
+    status.textContent =
+      error.message ||
+      "The demo learner could not be opened.";
+  }
+}
     async function enterTrainerPortal(
       trainerUuid,
       accessPointUuid
@@ -1782,7 +1856,31 @@
             window.location.replace("./");
           }
         );
+document
+  .getElementById(
+    "adminPrivateDemoButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+      void enterDemoStudent(
+        "PRIVATE"
+      );
+    }
+  );
 
+document
+  .getElementById(
+    "adminInstitutionalDemoButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+      void enterDemoStudent(
+        "INSTITUTIONAL"
+      );
+    }
+  );
       document
         .getElementById(
           "adminTrainerPortalLink"
