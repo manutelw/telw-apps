@@ -780,12 +780,9 @@
     }
 
     .result-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 18px;
-      margin-bottom: 20px;
-    }
+  display: block;
+  margin-bottom: 20px;
+}
 
     .result-heading {
       color: var(--navy);
@@ -800,19 +797,28 @@
     }
 
     .result-summary {
-      display: flex;
-      flex: 0 0 auto;
-      align-items: stretch;
-      gap: 10px;
-    }
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin-top: 16px;
+  width: 100%;
+}
 
     .score-box,
-    .category-box {
-      min-width: 116px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      text-align: center;
-    }
+.category-box {
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.score-box {
+  flex: 0 0 200px;
+}
+
+.category-box {
+  flex: 1 1 auto;
+}
 
     .score-box {
       background: linear-gradient(
@@ -5673,11 +5679,11 @@ audioTestPlayback.play().catch(
           : "Submitting…";
 
       showStatus(
-        responsePhase === "pressure"
-          ? "Uploading your pressure response securely…"
-          : "Uploading your recording securely…",
-        ""
-      );
+  responsePhase === "pressure"
+    ? "Evaluating your pressure response…"
+    : "Evaluating your response…",
+  ""
+);
 
       const audioMimeType =
         String(
