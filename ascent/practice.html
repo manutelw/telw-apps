@@ -3687,6 +3687,33 @@ if (
 savedLearnerFocus = savedFocus;
       if (
   practiceContext &&
+  practiceContext.is_private_learner === true &&
+  savedFocus.questionBankUuid
+) {
+  const previousAlreadyLoaded =
+    questionBank.some(function (item) {
+      return String(item.questionBankUuid || "") ===
+        String(savedFocus.questionBankUuid);
+    });
+
+  if (!previousAlreadyLoaded) {
+    questionBank.push({
+      questionBankUuid:
+        String(savedFocus.questionBankUuid),
+      title:
+        String(
+          savedFocus.questionTitle ||
+          "Previous question"
+        ),
+      question:
+        String(savedFocus.question || ""),
+      rubricType:
+        String(savedFocus.rubricType || "")
+    });
+  }
+}
+      if (
+  practiceContext &&
   practiceContext.is_private_learner === true
 ) {
   populateQuestionBank();
