@@ -3115,15 +3115,30 @@ const nextQuestionLink =
         questionBank.filter(
           function (item) {
             if (
-              practiceContext &&
-              practiceContext.is_private_learner === true &&
-              savedLearnerFocus &&
-              String(savedLearnerFocus.question || "").trim() &&
-              String(item.question || "").trim() ===
-                String(savedLearnerFocus.question || "").trim()
-          ) {
-            return false;
-          }
+  practiceContext &&
+  practiceContext.is_private_learner === true &&
+  savedLearnerFocus
+) {
+  const bankQuestion =
+    String(item.question || "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+
+  const savedQuestion =
+    String(savedLearnerFocus.question || "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+
+  if (
+    bankQuestion &&
+    savedQuestion &&
+    bankQuestion === savedQuestion
+  ) {
+    return false;
+  }
+}
             const itemCategory = String(
               item.categoryCode ||
               item.category ||
@@ -3158,12 +3173,25 @@ const nextQuestionLink =
   String(savedLearnerFocus.question || "").trim()
 ) {
   const previousQuestion =
-    questionBank.find(function (item) {
-      return (
-        String(item.question || "").trim() ===
-        String(savedLearnerFocus.question || "").trim()
-      );
-    });
+  questionBank.find(function (item) {
+    const bankQuestion =
+      String(item.question || "")
+        .trim()
+        .replace(/\s+/g, " ")
+        .toLowerCase();
+
+    const savedQuestion =
+      String(savedLearnerFocus.question || "")
+        .trim()
+        .replace(/\s+/g, " ")
+        .toLowerCase();
+
+    return (
+      bankQuestion &&
+      savedQuestion &&
+      bankQuestion === savedQuestion
+    );
+  });
 
   if (previousQuestion) {
     const retryOption =
