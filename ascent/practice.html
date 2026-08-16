@@ -1413,17 +1413,33 @@
                 </div>
               </div>
 
-              <label
-                class="practice-label"
-                for="questionBankSelect"
-              >
-                Your next question
-              </label>
+             <label
+  class="practice-label"
+  for="questionBankSelect"
+>
+  Your next question
+</label>
 
-              <select
-                id="questionBankSelect"
-                class="practice-select"
-              ></select>
+<div
+  id="privateRetryGuidance"
+  class="practice-note"
+  hidden
+>
+  <strong>Retry previous question or continue.</strong>
+  Choose <strong>Retry previous question</strong> to use your feedback
+  and improve your last response, or choose
+  <strong>Next question</strong> to continue with a new one.
+</div>
+
+<select
+  id="questionBankSelect"
+  class="practice-select"
+></select>
+<div
+  id="privateRetrySelectionNote"
+  class="practice-note"
+  hidden
+></div>
             </div>
 
             <div
@@ -2081,6 +2097,14 @@ const otherIssuesList =
         "questionBankSelect"
       );
 
+    const privateRetryGuidance =
+  document.getElementById(
+    "privateRetryGuidance"
+  );
+    const privateRetrySelectionNote =
+  document.getElementById(
+    "privateRetrySelectionNote"
+  );
     const customQuestionField =
       document.getElementById(
         "customQuestionField"
@@ -2172,6 +2196,7 @@ const otherIssuesList =
     let activeAssignments = [];
     let questionBank = [];
     let filteredQuestionBank = [];
+    let savedLearnerFocus = null;
     let answeredAssignmentUuids = new Set();
     let answeredQuestionBankUuids = new Set();
     let answeredQuestionKeys = new Set();
@@ -3065,6 +3090,16 @@ const otherIssuesList =
       filteredQuestionBank =
         questionBank.filter(
           function (item) {
+            if (
+              practiceContext &&
+              practiceContext.is_private_learner === true &&
+              savedLearnerFocus &&
+              String(savedLearnerFocus.question || "").trim() &&
+              String(item.question || "").trim() ===
+                String(savedLearnerFocus.question || "").trim()
+          ) {
+            return false;
+          }
             const itemCategory = String(
               item.categoryCode ||
               item.category ||
@@ -3091,6 +3126,47 @@ const otherIssuesList =
         .slice(0, 1);
 
       clearElement(questionBankSelect);
+
+      if (
+  practiceContext &&
+  practiceContext.is_private_learner === true &&
+  savedLearnerFocus &&
+  String(savedLearnerFocus.question || "").trim()
+) {
+  const previousQuestion =
+    questionBank.find(function (item) {
+      return (
+        String(item.question || "").trim() ===
+        String(savedLearnerFocus.question || "").trim()
+      );
+    });
+
+  if (previousQuestion) {
+    const retryOption =
+      document.createElement("option");
+
+    retryOption.value =
+      String(
+        previousQuestion.questionBankUuid || ""
+      );
+
+    retryOption.textContent =
+      "Retry previous question — [" +
+      rubricLabel(
+        previousQuestion.rubricType
+      ) +
+      "] " +
+      String(
+        previousQuestion.title ||
+        previousQuestion.question ||
+        "Previous question"
+      );
+
+    questionBankSelect.appendChild(
+      retryOption
+    );
+  }
+}
 
       if (
         filteredQuestionBank.length === 0
@@ -3131,13 +3207,18 @@ const otherIssuesList =
               "ASCENT Question"
             );
 
-          option.textContent =
-            "[" +
-            rubricLabel(
-              item.rubricType
-            ) +
-            "] " +
-            title;
+         option.textContent =
+  (
+    practiceContext &&
+    practiceContext.is_private_learner === true
+      ? "Next question — ["
+      : "["
+  ) +
+  rubricLabel(
+    item.rubricType
+  ) +
+  "] " +
+  title;
 
           questionBankSelect.appendChild(
             option
@@ -3206,7 +3287,14 @@ const otherIssuesList =
 
       customQuestionField.hidden =
         mode !== "custom";
-
+if (privateRetryGuidance) {
+  privateRetryGuidance.hidden =
+    !(
+      practiceContext &&
+      practiceContext.is_private_learner === true &&
+      mode === "question_bank"
+    );
+}
       updateSelectedQuestion();
     }
 
@@ -3522,14 +3610,23 @@ const otherIssuesList =
   }
 
   const savedFocus =
-    await loadLearnerFocus();
+  await loadLearnerFocus();
 
-  if (
-    !savedFocus ||
-    savedFocus.hasFocus !== true
-  ) {
-    return;
-  }
+if (
+  !savedFocus ||
+  savedFocus.hasFocus !== true
+) {
+  savedLearnerFocus = null;
+  return;
+}
+
+savedLearnerFocus = savedFocus;
+      if (
+  practiceContext &&
+  practiceContext.is_private_learner === true
+) {
+  populateQuestionBank();
+}
 
   const card =
     document.getElementById(
@@ -5391,7 +5488,44 @@ audioTestPlayback.play().catch(
         if (responsePhase === "main") {
           setPracticeContextLocked(false);
           updateSelectedQuestion();
-        }
+
+if (
+  privateRetrySelectionNote &&
+  practiceContext &&
+  practiceContext.is_private_learner === true
+) {
+  const selectedOption =
+    questionBankSelect.options[
+      questionBankSelect.selectedIndex
+    ];
+
+  const selectedText =
+    selectedOption
+      ? String(selectedOption.textContent || "")
+      : "";
+
+  if (
+    selectedText.startsWith(
+      "Retry previous question"
+    )
+  ) {
+    privateRetrySelectionNote.textContent =
+      "Use the feedback from your last attempt and try to improve your response.";
+
+    privateRetrySelectionNote.hidden = false;
+  } else if (
+    selectedText.startsWith(
+      "Next question"
+    )
+  ) {
+    privateRetrySelectionNote.textContent =
+      "Continue to a new practice question.";
+
+    privateRetrySelectionNote.hidden = false;
+  } else {
+    privateRetrySelectionNote.hidden = true;
+  }
+}
 
         showStatus(
           "Audio recording is not supported in this browser. Please use an updated version of Chrome, Edge or Safari.",
@@ -6146,9 +6280,55 @@ audioTestPlayback.play().catch(
       );
 
     questionBankSelect.addEventListener(
-      "change",
-      updateSelectedQuestion
-    );
+  "change",
+  function () {
+    updateSelectedQuestion();
+
+    if (
+      !privateRetrySelectionNote ||
+      !practiceContext ||
+      practiceContext.is_private_learner !== true
+    ) {
+      return;
+    }
+
+    const selectedOption =
+      questionBankSelect.options[
+        questionBankSelect.selectedIndex
+      ];
+
+    const selectedText =
+      selectedOption
+        ? String(selectedOption.textContent || "")
+        : "";
+
+    if (
+      selectedText.startsWith(
+        "Retry previous question"
+      )
+    ) {
+      privateRetrySelectionNote.textContent =
+        "Use the feedback from your last attempt and try to improve your response.";
+
+      privateRetrySelectionNote.hidden = false;
+      return;
+    }
+
+    if (
+      selectedText.startsWith(
+        "Next question"
+      )
+    ) {
+      privateRetrySelectionNote.textContent =
+        "Continue to a new practice question.";
+
+      privateRetrySelectionNote.hidden = false;
+      return;
+    }
+
+    privateRetrySelectionNote.hidden = true;
+  }
+);
 
     customQuestionInput.addEventListener(
       "input",
