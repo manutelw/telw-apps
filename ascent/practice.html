@@ -3227,6 +3227,44 @@ const otherIssuesList =
       );
 
       updateSelectedQuestion();
+
+      if (
+        privateRetrySelectionNote &&
+        practiceContext &&
+        practiceContext.is_private_learner === true
+      ) {
+        const selectedOption =
+          questionBankSelect.options[
+            questionBankSelect.selectedIndex
+          ];
+
+        const selectedText =
+          selectedOption
+            ? String(selectedOption.textContent || "")
+            : "";
+
+        if (
+          selectedText.startsWith(
+            "Retry previous question"
+          )
+        ) {
+          privateRetrySelectionNote.textContent =
+            "Use the feedback from your last attempt and try to improve your response.";
+
+          privateRetrySelectionNote.hidden = false;
+        } else if (
+          selectedText.startsWith(
+            "Next question"
+          )
+        ) {
+          privateRetrySelectionNote.textContent =
+            "Continue to a new practice question.";
+
+          privateRetrySelectionNote.hidden = false;
+        } else {
+          privateRetrySelectionNote.hidden = true;
+        }
+      }
     }
 
 
@@ -5488,44 +5526,7 @@ audioTestPlayback.play().catch(
         if (responsePhase === "main") {
           setPracticeContextLocked(false);
           updateSelectedQuestion();
-
-if (
-  privateRetrySelectionNote &&
-  practiceContext &&
-  practiceContext.is_private_learner === true
-) {
-  const selectedOption =
-    questionBankSelect.options[
-      questionBankSelect.selectedIndex
-    ];
-
-  const selectedText =
-    selectedOption
-      ? String(selectedOption.textContent || "")
-      : "";
-
-  if (
-    selectedText.startsWith(
-      "Retry previous question"
-    )
-  ) {
-    privateRetrySelectionNote.textContent =
-      "Use the feedback from your last attempt and try to improve your response.";
-
-    privateRetrySelectionNote.hidden = false;
-  } else if (
-    selectedText.startsWith(
-      "Next question"
-    )
-  ) {
-    privateRetrySelectionNote.textContent =
-      "Continue to a new practice question.";
-
-    privateRetrySelectionNote.hidden = false;
-  } else {
-    privateRetrySelectionNote.hidden = true;
-  }
-}
+        }
 
         showStatus(
           "Audio recording is not supported in this browser. Please use an updated version of Chrome, Edge or Safari.",
