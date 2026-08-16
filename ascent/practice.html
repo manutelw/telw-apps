@@ -3597,12 +3597,14 @@ const otherIssuesList =
           );
 
         answeredQuestionBankUuids =
-          new Set(
-            normalisePracticeArray(
-              singleAttemptHistory
-                .answeredQuestionBankUuids
-            ).map(String)
-          );
+  practiceContext.is_private_learner === true
+    ? new Set()
+    : new Set(
+        normalisePracticeArray(
+          singleAttemptHistory
+            .answeredQuestionBankUuids
+        ).map(String)
+      );
 
         answeredQuestionKeys =
           new Set(
