@@ -3131,13 +3131,15 @@ const nextQuestionLink =
       .replace(/\s+/g, " ")
       .toLowerCase();
 
-  if (
-    bankQuestion &&
-    savedQuestion &&
-    bankQuestion === savedQuestion
-  ) {
-    return false;
-  }
+ if (
+  practiceContext &&
+  practiceContext.is_private_learner === true &&
+  savedLearnerFocus &&
+  savedLearnerFocus.questionBankUuid &&
+  String(item.questionBankUuid || "") ===
+    String(savedLearnerFocus.questionBankUuid)
+) {
+  return false;
 }
             const itemCategory = String(
               item.categoryCode ||
@@ -3172,24 +3174,12 @@ const nextQuestionLink =
   savedLearnerFocus &&
   String(savedLearnerFocus.question || "").trim()
 ) {
-  const previousQuestion =
+const previousQuestion =
   questionBank.find(function (item) {
-    const bankQuestion =
-      String(item.question || "")
-        .trim()
-        .replace(/\s+/g, " ")
-        .toLowerCase();
-
-    const savedQuestion =
-      String(savedLearnerFocus.question || "")
-        .trim()
-        .replace(/\s+/g, " ")
-        .toLowerCase();
-
     return (
-      bankQuestion &&
-      savedQuestion &&
-      bankQuestion === savedQuestion
+      savedLearnerFocus.questionBankUuid &&
+      String(item.questionBankUuid || "") ===
+        String(savedLearnerFocus.questionBankUuid)
     );
   });
 
