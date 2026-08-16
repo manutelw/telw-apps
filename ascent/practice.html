@@ -3118,18 +3118,6 @@ const nextQuestionLink =
   practiceContext &&
   practiceContext.is_private_learner === true &&
   savedLearnerFocus
-) {
-  const bankQuestion =
-    String(item.question || "")
-      .trim()
-      .replace(/\s+/g, " ")
-      .toLowerCase();
-
-  const savedQuestion =
-    String(savedLearnerFocus.question || "")
-      .trim()
-      .replace(/\s+/g, " ")
-      .toLowerCase();
 
  if (
   practiceContext &&
