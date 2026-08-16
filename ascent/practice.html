@@ -1881,6 +1881,10 @@
       SUPABASE_URL +
       "/rest/v1/rpc/ascent_student_single_attempt_history";
 
+    const LEARNER_FOCUS_URL =
+  SUPABASE_URL +
+  "/rest/v1/rpc/ascent_get_learner_focus";
+
     const studentName =
       document.getElementById("studentName");
 
@@ -3459,6 +3463,143 @@ const otherIssuesList =
       return result;
     }
 
+    async function loadLearnerFocus() {
+  try {
+    const response =
+      await fetch(
+        LEARNER_FOCUS_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            "apikey":
+              SUPABASE_PUBLISHABLE_KEY,
+
+            "Authorization":
+              "Bearer " +
+              SUPABASE_PUBLISHABLE_KEY
+          },
+
+          body: JSON.stringify({
+            p_session_token:
+              currentSession.sessionToken
+          })
+        }
+      );
+
+    const result =
+      await response.json();
+
+    if (
+      !response.ok ||
+      result.ok !== true ||
+      result.hasFocus !== true
+    ) {
+      return null;
+    }
+
+    return result;
+
+  } catch (error) {
+    console.error(
+      "ASCENT learner focus load failed:",
+      error
+    );
+
+    return null;
+  }
+}
+
+    async function showSavedLearnerFocus() {
+  if (
+    !practiceContext ||
+    practiceContext.is_private_learner !== true
+  ) {
+    return;
+  }
+
+  const savedFocus =
+    await loadLearnerFocus();
+
+  if (
+    !savedFocus ||
+    savedFocus.hasFocus !== true
+  ) {
+    return;
+  }
+
+  const card =
+    document.getElementById(
+      "nextPracticeCard"
+    );
+
+  const focusElement =
+    document.getElementById(
+      "nextPracticeFocus"
+    );
+
+  const progressElement =
+    document.getElementById(
+      "nextPracticeProgress"
+    );
+
+  if (
+    !card ||
+    !focusElement ||
+    !progressElement
+  ) {
+    return;
+  }
+
+  focusElement.textContent =
+    String(savedFocus.focus || "");
+
+  const progressParts = [];
+
+  if (
+    Number.isFinite(
+      Number(savedFocus.previousScore)
+    )
+  ) {
+    progressParts.push(
+      "Previous: " +
+      Number(savedFocus.previousScore)
+        .toFixed(1)
+    );
+  }
+
+  if (
+    Number.isFinite(
+      Number(savedFocus.latestScore)
+    )
+  ) {
+    progressParts.push(
+      "Latest: " +
+      Number(savedFocus.latestScore)
+        .toFixed(1)
+    );
+  }
+
+  if (
+    Number.isFinite(
+      Number(savedFocus.bestScore)
+    )
+  ) {
+    progressParts.push(
+      "Best: " +
+      Number(savedFocus.bestScore)
+        .toFixed(1)
+    );
+  }
+
+  progressElement.textContent =
+    progressParts.join("   •   ");
+
+  card.hidden = false;
+}
 
     async function loadPracticeContext() {
       startButton.disabled = true;
@@ -5971,9 +6112,13 @@ audioTestPlayback.play().catch(
       loadStudentSession();
 
     if (currentSession) {
-      displayStudent(currentSession);
-      void loadPracticeContext();
-    }
+  displayStudent(currentSession);
+
+  void loadPracticeContext()
+    .then(function () {
+      void showSavedLearnerFocus();
+    });
+}
 
 
     practiceModeSelect.addEventListener(
