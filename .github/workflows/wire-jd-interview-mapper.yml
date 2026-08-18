@@ -1,0 +1,52 @@
+name: Wire JD Interview Mapper links
+
+on:
+  push:
+    branches:
+      - jd-interview-mapper
+
+permissions:
+  contents: write
+
+jobs:
+  wire-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: jd-interview-mapper
+      - name: Add portal links if missing
+        shell: python
+        run: |
+          from pathlib import Path
+
+          dashboard = Path("ascent/dashboard.html")
+          text = dashboard.read_text(encoding="utf-8")
+          student_link = '<a class="nav-button" href="./jd-interview-mapper.html">JD Interview</a>'
+          practice_link = '<a class="nav-button practice-button" href="./practice.html">Practice</a>'
+          if student_link not in text:
+              if practice_link not in text:
+                  raise SystemExit("Student Practice link anchor was not found.")
+              text = text.replace(practice_link, student_link + "\n        " + practice_link, 1)
+              dashboard.write_text(text, encoding="utf-8")
+
+          trainer = Path("ascent/trainer.html")
+          text = trainer.read_text(encoding="utf-8")
+          trainer_link = '<a id="jdInterviewMapperLink" class="restricted-tool-link" href="./jd-interview-trainer.html">JD Interview Mapper</a>'
+          briefing_link = '<a id="jdBriefingLink" class="restricted-tool-link" href="../jd-briefing/" target="_blank" rel="noopener noreferrer" hidden>JD Briefing Builder</a>'
+          if trainer_link not in text:
+              if briefing_link not in text:
+                  raise SystemExit("Trainer JD Briefing link anchor was not found.")
+              text = text.replace(briefing_link, trainer_link + "\n        " + briefing_link, 1)
+              trainer.write_text(text, encoding="utf-8")
+      - name: Commit exact link insertions
+        run: |
+          if git diff --quiet; then
+            echo "Links already present."
+            exit 0
+          fi
+          git config user.name "ASCENT Build Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add ascent/dashboard.html ascent/trainer.html
+          git commit -m "Wire JD Interview Mapper into portals"
+          git push origin HEAD:jd-interview-mapper
