@@ -1223,6 +1223,14 @@
         </a>
 
         <a
+          class="performance-button"
+          href="./jd-interview-mapper.html"
+          aria-label="Open ASCENT JD Interview Mapper"
+        >
+          JD Interview
+        </a>
+
+        <a
           id="answerBuilderLink"
           class="performance-button"
           href="./answer-builder.html"
@@ -2717,7 +2725,7 @@ const nextQuestionLink =
           };
         }
 
-               if (
+        if (
           answeredAssignmentUuids.has(
             assignmentUuid
           )
@@ -2772,19 +2780,19 @@ const nextQuestionLink =
           };
         }
 
-       if (
-  practiceContext.is_private_learner !== true &&
-  (
-    answeredQuestionBankUuids.has(questionBankUuid) ||
-    questionWasAnswered(selected.question)
-  )
-) {
-  return {
-    valid: false,
-    message:
-      "You have already answered this question. Choose a different question."
-  };
-}
+        if (
+          practiceContext.is_private_learner !== true &&
+          (
+            answeredQuestionBankUuids.has(questionBankUuid) ||
+            questionWasAnswered(selected.question)
+          )
+        ) {
+          return {
+            valid: false,
+            message:
+              "You have already answered this question. Choose a different question."
+          };
+        }
 
         return {
           valid: true,
@@ -2843,15 +2851,15 @@ const nextQuestionLink =
         }
 
         if (
-  practiceContext.is_private_learner !== true &&
-  questionWasAnswered(question)
-) {
-  return {
-    valid: false,
-    message:
-      "You have already answered this question. Enter a different question."
-  };
-}
+          practiceContext.is_private_learner !== true &&
+          questionWasAnswered(question)
+        ) {
+          return {
+            valid: false,
+            message:
+              "You have already answered this question. Enter a different question."
+          };
+        }
 
         return {
           valid: true,
@@ -2885,8 +2893,7 @@ const nextQuestionLink =
 
       const expiry =
         formatPassExpiry(
-          practiceContext
-            .entitlement_expires_at
+          practiceContext.entitlement_expires_at
         );
 
       const parts = [];
@@ -2993,8 +3000,7 @@ const nextQuestionLink =
         (
           selected.mode === "assigned"
             ? "Assigned task"
-            : selected.mode ===
-                "question_bank"
+            : selected.mode === "question_bank"
               ? "Question bank"
               : "Your own question"
         );
@@ -3023,9 +3029,7 @@ const nextQuestionLink =
       activeAssignments.forEach(
         function (item) {
           const option =
-            document.createElement(
-              "option"
-            );
+            document.createElement("option");
 
           option.value =
             String(
@@ -3097,9 +3101,7 @@ const nextQuestionLink =
         })
         .forEach(function (category) {
           const option =
-            document.createElement(
-              "option"
-            );
+            document.createElement("option");
 
           option.value = category.code;
           option.textContent =
@@ -3117,24 +3119,23 @@ const nextQuestionLink =
 
       const categoryValue =
         String(
-          questionBankRubricFilter
-            .value || ""
+          questionBankRubricFilter.value || ""
         );
 
       filteredQuestionBank =
         questionBank.filter(
           function (item) {
-           
- if (
-  practiceContext &&
-  practiceContext.is_private_learner === true &&
-  savedLearnerFocus &&
-  savedLearnerFocus.questionBankUuid &&
-  String(item.questionBankUuid || "") ===
-    String(savedLearnerFocus.questionBankUuid)
-) {
-  return false;
-}
+            if (
+              practiceContext &&
+              practiceContext.is_private_learner === true &&
+              savedLearnerFocus &&
+              savedLearnerFocus.questionBankUuid &&
+              String(item.questionBankUuid || "") ===
+                String(savedLearnerFocus.questionBankUuid)
+            ) {
+              return false;
+            }
+
             const itemCategory = String(
               item.categoryCode ||
               item.category ||
@@ -3163,54 +3164,52 @@ const nextQuestionLink =
       clearElement(questionBankSelect);
 
       if (
-  practiceContext &&
-  practiceContext.is_private_learner === true &&
-  savedLearnerFocus &&
-  String(savedLearnerFocus.question || "").trim()
-) {
-const previousQuestion =
-  questionBank.find(function (item) {
-    return (
-      savedLearnerFocus.questionBankUuid &&
-      String(item.questionBankUuid || "") ===
-        String(savedLearnerFocus.questionBankUuid)
-    );
-  });
+        practiceContext &&
+        practiceContext.is_private_learner === true &&
+        savedLearnerFocus &&
+        String(savedLearnerFocus.question || "").trim()
+      ) {
+        const previousQuestion =
+          questionBank.find(function (item) {
+            return (
+              savedLearnerFocus.questionBankUuid &&
+              String(item.questionBankUuid || "") ===
+                String(savedLearnerFocus.questionBankUuid)
+            );
+          });
 
-  if (previousQuestion) {
-    const retryOption =
-      document.createElement("option");
+        if (previousQuestion) {
+          const retryOption =
+            document.createElement("option");
 
-    retryOption.value =
-      String(
-        previousQuestion.questionBankUuid || ""
-      );
+          retryOption.value =
+            String(
+              previousQuestion.questionBankUuid || ""
+            );
 
-    retryOption.textContent =
-      "Retry previous question — [" +
-      rubricLabel(
-        previousQuestion.rubricType
-      ) +
-      "] " +
-      String(
-        previousQuestion.title ||
-        previousQuestion.question ||
-        "Previous question"
-      );
+          retryOption.textContent =
+            "Retry previous question — [" +
+            rubricLabel(
+              previousQuestion.rubricType
+            ) +
+            "] " +
+            String(
+              previousQuestion.title ||
+              previousQuestion.question ||
+              "Previous question"
+            );
 
-    questionBankSelect.appendChild(
-      retryOption
-    );
-  }
-}
+          questionBankSelect.appendChild(
+            retryOption
+          );
+        }
+      }
 
       if (
         filteredQuestionBank.length === 0
       ) {
         const emptyOption =
-          document.createElement(
-            "option"
-          );
+          document.createElement("option");
 
         emptyOption.value = "";
         emptyOption.textContent =
@@ -3227,9 +3226,7 @@ const previousQuestion =
       filteredQuestionBank.forEach(
         function (item) {
           const option =
-            document.createElement(
-              "option"
-            );
+            document.createElement("option");
 
           option.value =
             String(
@@ -3243,18 +3240,18 @@ const previousQuestion =
               "ASCENT Question"
             );
 
-         option.textContent =
-  (
-    practiceContext &&
-    practiceContext.is_private_learner === true
-      ? "Next question — ["
-      : "["
-  ) +
-  rubricLabel(
-    item.rubricType
-  ) +
-  "] " +
-  title;
+          option.textContent =
+            (
+              practiceContext &&
+              practiceContext.is_private_learner === true
+                ? "Next question — ["
+                : "["
+            ) +
+            rubricLabel(
+              item.rubricType
+            ) +
+            "] " +
+            title;
 
           questionBankSelect.appendChild(
             option
@@ -3361,14 +3358,16 @@ const previousQuestion =
 
       customQuestionField.hidden =
         mode !== "custom";
-if (privateRetryGuidance) {
-  privateRetryGuidance.hidden =
-    !(
-      practiceContext &&
-      practiceContext.is_private_learner === true &&
-      mode === "question_bank"
-    );
-}
+
+      if (privateRetryGuidance) {
+        privateRetryGuidance.hidden =
+          !(
+            practiceContext &&
+            practiceContext.is_private_learner === true &&
+            mode === "question_bank"
+          );
+      }
+
       updateSelectedQuestion();
     }
 
@@ -3377,14 +3376,13 @@ if (privateRetryGuidance) {
       clearElement(practiceModeSelect);
 
       const isPrivateLearner =
-  practiceContext &&
-  practiceContext
-    .is_private_learner === true;
+        practiceContext &&
+        practiceContext.is_private_learner === true;
 
-const isInstitutionalDemo =
-  currentSession &&
-  currentSession.studentId ===
-    "ADMIN-DEMO-INSTITUTIONAL";
+      const isInstitutionalDemo =
+        currentSession &&
+        currentSession.studentId ===
+          "ADMIN-DEMO-INSTITUTIONAL";
 
       const trainerGuided =
         isPrivateLearner &&
@@ -3393,9 +3391,7 @@ const isInstitutionalDemo =
 
       if (activeAssignments.length > 0) {
         const assignedOption =
-          document.createElement(
-            "option"
-          );
+          document.createElement("option");
 
         assignedOption.value =
           "assigned";
@@ -3409,14 +3405,12 @@ const isInstitutionalDemo =
       }
 
       if (
-  (isPrivateLearner || isInstitutionalDemo) &&
-  !trainerGuided
-) {
+        (isPrivateLearner || isInstitutionalDemo) &&
+        !trainerGuided
+      ) {
         if (questionBank.length > 0) {
           const bankOption =
-            document.createElement(
-              "option"
-            );
+            document.createElement("option");
 
           bankOption.value =
             "question_bank";
@@ -3430,9 +3424,7 @@ const isInstitutionalDemo =
         }
 
         const customOption =
-          document.createElement(
-            "option"
-          );
+          document.createElement("option");
 
         customOption.value = "custom";
         customOption.textContent =
@@ -3446,11 +3438,8 @@ const isInstitutionalDemo =
       populateAssignedTasks();
       populateQuestionBanks();
 
-      practiceContextLoading.hidden =
-        true;
-
-      practiceContextControls.hidden =
-        false;
+      practiceContextLoading.hidden = true;
+      practiceContextControls.hidden = false;
 
       if (
         practiceModeSelect.options.length === 0
@@ -3477,7 +3466,7 @@ const isInstitutionalDemo =
             ? "question_bank"
             : activeAssignments.length > 0
               ? "assigned"
-            : "custom";
+              : "custom";
 
       updatePassStatus();
       updatePracticeMode();
@@ -3555,8 +3544,7 @@ const isInstitutionalDemo =
         practiceContextNote.textContent =
           "Your Answer Builder question is ready. Record the response in your own words.";
 
-        practiceContextNote.hidden =
-          false;
+        practiceContextNote.hidden = false;
 
         sessionStorage.removeItem(
           ANSWER_BUILDER_HANDOFF_KEY
@@ -3634,189 +3622,189 @@ const isInstitutionalDemo =
     }
 
     async function loadLearnerFocus() {
-  try {
-    const response =
-      await fetch(
-        LEARNER_FOCUS_URL,
-        {
-          method: "POST",
+      try {
+        const response =
+          await fetch(
+            LEARNER_FOCUS_URL,
+            {
+              method: "POST",
 
-          headers: {
-            "Content-Type":
-              "application/json",
+              headers: {
+                "Content-Type":
+                  "application/json",
 
-            "apikey":
-              SUPABASE_PUBLISHABLE_KEY,
+                "apikey":
+                  SUPABASE_PUBLISHABLE_KEY,
 
-            "Authorization":
-              "Bearer " +
-              SUPABASE_PUBLISHABLE_KEY
-          },
+                "Authorization":
+                  "Bearer " +
+                  SUPABASE_PUBLISHABLE_KEY
+              },
 
-          body: JSON.stringify({
-            p_session_token:
-              currentSession.sessionToken
-          })
+              body: JSON.stringify({
+                p_session_token:
+                  currentSession.sessionToken
+              })
+            }
+          );
+
+        const result =
+          await response.json();
+
+        if (
+          !response.ok ||
+          result.ok !== true ||
+          result.hasFocus !== true
+        ) {
+          return null;
         }
-      );
 
-    const result =
-      await response.json();
+        return result;
 
-    if (
-      !response.ok ||
-      result.ok !== true ||
-      result.hasFocus !== true
-    ) {
-      return null;
+      } catch (error) {
+        console.error(
+          "ASCENT learner focus load failed:",
+          error
+        );
+
+        return null;
+      }
     }
 
-    return result;
-
-  } catch (error) {
-    console.error(
-      "ASCENT learner focus load failed:",
-      error
-    );
-
-    return null;
-  }
-}
-
     async function showSavedLearnerFocus() {
-  if (
-    !practiceContext ||
-    practiceContext.is_private_learner !== true
-  ) {
-    return;
-  }
-
-  const savedFocus =
-  await loadLearnerFocus();
-
-if (
-  !savedFocus ||
-  savedFocus.hasFocus !== true
-) {
-  savedLearnerFocus = null;
-  return;
-}
-
-savedLearnerFocus = savedFocus;
       if (
-  practiceContext &&
-  practiceContext.is_private_learner === true &&
-  savedFocus.questionBankUuid
-) {
-  const previousAlreadyLoaded =
-    questionBank.some(function (item) {
-      return String(item.questionBankUuid || "") ===
-        String(savedFocus.questionBankUuid);
-    });
+        !practiceContext ||
+        practiceContext.is_private_learner !== true
+      ) {
+        return;
+      }
 
-  if (!previousAlreadyLoaded) {
-    questionBank.push({
-      questionBankUuid:
-        String(savedFocus.questionBankUuid),
-      title:
-        String(
-          savedFocus.questionTitle ||
-          "Previous question"
-        ),
-      question:
-        String(savedFocus.question || ""),
-      rubricType:
-        String(savedFocus.rubricType || "")
-    });
-  }
-}
+      const savedFocus =
+        await loadLearnerFocus();
+
       if (
-  practiceContext &&
-  practiceContext.is_private_learner === true
-) {
-  populateQuestionBank();
-}
+        !savedFocus ||
+        savedFocus.hasFocus !== true
+      ) {
+        savedLearnerFocus = null;
+        return;
+      }
 
-  const card =
-    document.getElementById(
-      "nextPracticeCard"
-    );
+      savedLearnerFocus = savedFocus;
 
-  const focusElement =
-    document.getElementById(
-      "nextPracticeFocus"
-    );
+      if (
+        practiceContext &&
+        practiceContext.is_private_learner === true &&
+        savedFocus.questionBankUuid
+      ) {
+        const previousAlreadyLoaded =
+          questionBank.some(function (item) {
+            return String(item.questionBankUuid || "") ===
+              String(savedFocus.questionBankUuid);
+          });
 
-  const progressElement =
-    document.getElementById(
-      "nextPracticeProgress"
-    );
+        if (!previousAlreadyLoaded) {
+          questionBank.push({
+            questionBankUuid:
+              String(savedFocus.questionBankUuid),
+            title:
+              String(
+                savedFocus.questionTitle ||
+                "Previous question"
+              ),
+            question:
+              String(savedFocus.question || ""),
+            rubricType:
+              String(savedFocus.rubricType || "")
+          });
+        }
+      }
 
-  if (
-    !card ||
-    !focusElement ||
-    !progressElement
-  ) {
-    return;
-  }
+      if (
+        practiceContext &&
+        practiceContext.is_private_learner === true
+      ) {
+        populateQuestionBank();
+      }
 
-  focusElement.textContent =
-    String(savedFocus.focus || "");
+      const card =
+        document.getElementById(
+          "nextPracticeCard"
+        );
 
-  const progressParts = [];
+      const focusElement =
+        document.getElementById(
+          "nextPracticeFocus"
+        );
 
-  if (
-    Number.isFinite(
-      Number(savedFocus.previousScore)
-    )
-  ) {
-    progressParts.push(
-      "Previous: " +
-      Number(savedFocus.previousScore)
-        .toFixed(1)
-    );
-  }
+      const progressElement =
+        document.getElementById(
+          "nextPracticeProgress"
+        );
 
-  if (
-    Number.isFinite(
-      Number(savedFocus.latestScore)
-    )
-  ) {
-    progressParts.push(
-      "Latest: " +
-      Number(savedFocus.latestScore)
-        .toFixed(1)
-    );
-  }
+      if (
+        !card ||
+        !focusElement ||
+        !progressElement
+      ) {
+        return;
+      }
 
-  if (
-    Number.isFinite(
-      Number(savedFocus.bestScore)
-    )
-  ) {
-    progressParts.push(
-      "Best: " +
-      Number(savedFocus.bestScore)
-        .toFixed(1)
-    );
-  }
+      focusElement.textContent =
+        String(savedFocus.focus || "");
 
-  progressElement.textContent =
-    progressParts.join("   •   ");
+      const progressParts = [];
 
-  card.hidden = false;
-}
+      if (
+        Number.isFinite(
+          Number(savedFocus.previousScore)
+        )
+      ) {
+        progressParts.push(
+          "Previous: " +
+          Number(savedFocus.previousScore)
+            .toFixed(1)
+        );
+      }
+
+      if (
+        Number.isFinite(
+          Number(savedFocus.latestScore)
+        )
+      ) {
+        progressParts.push(
+          "Latest: " +
+          Number(savedFocus.latestScore)
+            .toFixed(1)
+        );
+      }
+
+      if (
+        Number.isFinite(
+          Number(savedFocus.bestScore)
+        )
+      ) {
+        progressParts.push(
+          "Best: " +
+          Number(savedFocus.bestScore)
+            .toFixed(1)
+        );
+      }
+
+      progressElement.textContent =
+        progressParts.join("   •   ");
+
+      card.hidden = false;
+    }
 
     async function loadPracticeContext() {
       startButton.disabled = true;
-      practiceContextLoading.hidden =
-        false;
+      practiceContextLoading.hidden = false;
 
       practiceContextLoading.textContent =
         "Loading your practice options…";
 
-      practiceContextControls.hidden =
-        true;
+      practiceContextControls.hidden = true;
 
       try {
         const response =
@@ -3839,8 +3827,7 @@ savedLearnerFocus = savedFocus;
 
               body: JSON.stringify({
                 p_session_token:
-                  currentSession
-                    .sessionToken
+                  currentSession.sessionToken
               })
             }
           );
@@ -3938,26 +3925,23 @@ savedLearnerFocus = savedFocus;
         answeredAssignmentUuids =
           new Set(
             normalisePracticeArray(
-              singleAttemptHistory
-                .answeredAssignmentUuids
+              singleAttemptHistory.answeredAssignmentUuids
             ).map(String)
           );
 
         answeredQuestionBankUuids =
-  practiceContext.is_private_learner === true
-    ? new Set()
-    : new Set(
-        normalisePracticeArray(
-          singleAttemptHistory
-            .answeredQuestionBankUuids
-        ).map(String)
-      );
+          practiceContext.is_private_learner === true
+            ? new Set()
+            : new Set(
+                normalisePracticeArray(
+                  singleAttemptHistory.answeredQuestionBankUuids
+                ).map(String)
+              );
 
         answeredQuestionKeys =
           new Set(
             normalisePracticeArray(
-              singleAttemptHistory
-                .answeredQuestionKeys
+              singleAttemptHistory.answeredQuestionKeys
             )
               .map(normaliseQuestionKey)
               .filter(Boolean)
@@ -3986,20 +3970,19 @@ savedLearnerFocus = savedFocus;
           paidPracticeControl &&
           paidPracticeControl.trainerGuided === true
             ? String(
-                paidPracticeControl
-                  .guidedQuestionBatchUuid || ""
+                paidPracticeControl.guidedQuestionBatchUuid || ""
               )
             : "";
 
         const newestBatchKey = controlledBatchKey ||
           (newestAssignment
-          ? String(
-              newestAssignment.questionBatchUuid ||
-              newestAssignment.taskUuid ||
-              newestAssignment.assignmentUuid ||
-              ""
-            )
-          : "");
+            ? String(
+                newestAssignment.questionBatchUuid ||
+                newestAssignment.taskUuid ||
+                newestAssignment.assignmentUuid ||
+                ""
+              )
+            : "");
 
         activeAssignments =
           rawAssignments.filter(function (item) {
@@ -4026,7 +4009,7 @@ savedLearnerFocus = savedFocus;
               !Number.isFinite(dueAt) ||
               dueAt >= now;
 
-                       return (
+            return (
               (!newestBatchKey || batchKey === newestBatchKey) &&
               isReleased &&
               isOpen &&
@@ -4036,9 +4019,6 @@ savedLearnerFocus = savedFocus;
             );
           });
 
-        // A question bank is practised in sequence. The complete batch may be
-        // assigned at once, but a learner sees only the earliest unanswered
-        // question. Once it is submitted, the next question becomes available.
         activeAssignments =
           activeAssignments
             .slice()
@@ -4067,32 +4047,30 @@ savedLearnerFocus = savedFocus;
             .slice(0, 1);
 
         questionBank =
-  normalisePracticeArray(
-    result.question_bank
-  ).filter(function (item) {
-    if (
-      practiceContext.is_private_learner === true
-    ) {
-      return true;
-    }
+          normalisePracticeArray(
+            result.question_bank
+          ).filter(function (item) {
+            if (
+              practiceContext.is_private_learner === true
+            ) {
+              return true;
+            }
 
-    return !(
-      answeredQuestionBankUuids.has(
-        String(
-          item.questionBankUuid || ""
-        )
-      ) ||
-      questionWasAnswered(
-        item.question
-      )
-    );
-  });
+            return !(
+              answeredQuestionBankUuids.has(
+                String(
+                  item.questionBankUuid || ""
+                )
+              ) ||
+              questionWasAnswered(
+                item.question
+              )
+            );
+          });
 
         displayedResponsesRemaining =
-          result.submissions_remaining ===
-            null ||
-          result.submissions_remaining ===
-            undefined
+          result.submissions_remaining === null ||
+          result.submissions_remaining === undefined
             ? null
             : Number(
                 result.submissions_remaining
@@ -4124,15 +4102,13 @@ savedLearnerFocus = savedFocus;
           error
         );
 
-        practiceContextLoading.hidden =
-          false;
+        practiceContextLoading.hidden = false;
 
         practiceContextLoading.textContent =
           error.message ||
           "ASCENT could not load your practice options.";
 
-        practiceContextControls.hidden =
-          true;
+        practiceContextControls.hidden = true;
 
         startButton.disabled = true;
 
@@ -4148,8 +4124,7 @@ savedLearnerFocus = savedFocus;
     function consumeDisplayedResponse() {
       if (
         !practiceContext ||
-        practiceContext
-          .is_private_learner !== true
+        practiceContext.is_private_learner !== true
       ) {
         return;
       }
@@ -4190,13 +4165,13 @@ savedLearnerFocus = savedFocus;
       scoreSubtext.textContent = "";
       resultRubric.textContent = "—";
 
-clearElement(criteriaGrid);
-clearElement(otherIssuesList);
+      clearElement(criteriaGrid);
+      clearElement(otherIssuesList);
 
-resultSummary.style.display = "";
-criteriaGrid.style.display = "";
-otherIssuesSection.hidden = true;
-nextPracticeCard.hidden = true;
+      resultSummary.style.display = "";
+      criteriaGrid.style.display = "";
+      otherIssuesSection.hidden = true;
+      nextPracticeCard.hidden = true;
     }
 
 
@@ -4234,56 +4209,55 @@ nextPracticeCard.hidden = true;
       line.appendChild(valueElement);
       container.appendChild(line);
     }
-function criterionMeaning(criterion) {
-  const key = String(
-    criterion &&
-    criterion.key ||
-    ""
-  ).trim();
 
-  const meanings = {
-    structure_and_clarity:
-      "This shows whether the listener can follow your answer easily. A clear order makes your main point easier to understand and remember.",
+    function criterionMeaning(criterion) {
+      const key = String(
+        criterion && criterion.key || ""
+      ).trim();
 
-    content_depth_and_evidence:
-      "This shows whether your answer is supported by real details. Specific examples make your claims believable.",
+      const meanings = {
+        structure_and_clarity:
+          "This shows whether the listener can follow your answer easily. A clear order makes your main point easier to understand and remember.",
 
-    business_thinking:
-      "This shows whether you can explain reasons, options, risks and impact. It makes your answer practical and manager-like.",
+        content_depth_and_evidence:
+          "This shows whether your answer is supported by real details. Specific examples make your claims believable.",
 
-    communication_and_professionalism:
-      "This shows whether your language is clear, respectful and suitable for an interview. It affects how mature and workplace-ready you sound.",
+        business_thinking:
+          "This shows whether you can explain reasons, options, risks and impact. It makes your answer practical and manager-like.",
 
-    composure_under_pressure:
-      "This shows whether you can stay calm and think clearly when challenged. A steady response builds trust in your judgement.",
+        communication_and_professionalism:
+          "This shows whether your language is clear, respectful and suitable for an interview. It affects how mature and workplace-ready you sound.",
 
-    entry_and_clarity:
-      "This shows whether you can enter the discussion at the right time with a clear point. A strong entry helps others notice and understand your contribution.",
+        composure_under_pressure:
+          "This shows whether you can stay calm and think clearly when challenged. A steady response builds trust in your judgement.",
 
-    reasoning_content_and_logic:
-      "This shows whether your point is supported by clear reasons and examples. Good logic makes your contribution convincing.",
+        entry_and_clarity:
+          "This shows whether you can enter the discussion at the right time with a clear point. A strong entry helps others notice and understand your contribution.",
 
-    listening_and_response:
-      "This shows whether you listen to others and respond to what they actually said. It makes the discussion connected rather than a set of separate speeches.",
+        reasoning_content_and_logic:
+          "This shows whether your point is supported by clear reasons and examples. Good logic makes your contribution convincing.",
 
-    leadership_moves:
-      "This shows whether you help the group organise ideas and move forward. Useful leadership makes the discussion more focused and productive.",
+        listening_and_response:
+          "This shows whether you listen to others and respond to what they actually said. It makes the discussion connected rather than a set of separate speeches.",
 
-    language_control:
-      "This shows whether your sentences are correct and easy to understand. Clear language keeps attention on your idea instead of your mistakes.",
+        leadership_moves:
+          "This shows whether you help the group organise ideas and move forward. Useful leadership makes the discussion more focused and productive.",
 
-    confidence_and_delivery:
-      "This shows how steady and controlled you sound. Good pace, pauses and voice control make the listener more confident in you.",
+        language_control:
+          "This shows whether your sentences are correct and easy to understand. Clear language keeps attention on your idea instead of your mistakes.",
 
-    professionalism:
-      "This shows whether your words and tone fit a workplace setting. Professional language makes you sound mature, dependable and ready for responsibility."
-  };
+        confidence_and_delivery:
+          "This shows how steady and controlled you sound. Good pace, pauses and voice control make the listener more confident in you.",
 
-  return (
-    meanings[key] ||
-    "This shows how effectively this part of your communication helps the listener understand and trust your message."
-  );
-}
+        professionalism:
+          "This shows whether your words and tone fit a workplace setting. Professional language makes you sound mature, dependable and ready for responsibility."
+      };
+
+      return (
+        meanings[key] ||
+        "This shows how effectively this part of your communication helps the listener understand and trust your message."
+      );
+    }
 
     function addCriterionCard(
       criterion
@@ -4335,24 +4309,24 @@ function criterionMeaning(criterion) {
 
         card.appendChild(topLine);
 
-const meaningFeedback =
-  document.createElement("div");
+        const meaningFeedback =
+          document.createElement("div");
 
-meaningFeedback.className =
-  "criterion-feedback";
+        meaningFeedback.className =
+          "criterion-feedback";
 
-addFeedbackLine(
-  meaningFeedback,
-  "Why this matters:",
-  criterionMeaning(criterion)
-);
+        addFeedbackLine(
+          meaningFeedback,
+          "Why this matters:",
+          criterionMeaning(criterion)
+        );
 
-card.appendChild(
-  meaningFeedback
-);
+        card.appendChild(
+          meaningFeedback
+        );
 
-const note =
-  document.createElement("div");
+        const note =
+          document.createElement("div");
 
         note.className =
           "not-assessed-note";
@@ -4436,104 +4410,105 @@ const note =
 
       feedback.className =
         "criterion-feedback";
+
       addFeedbackLine(
-  feedback,
-  "Why this matters:",
-  criterionMeaning(criterion)
-);
+        feedback,
+        "Why this matters:",
+        criterionMeaning(criterion)
+      );
 
-     const level =
-  Number(criterion.level);
+      const level =
+        Number(criterion.level);
 
-const rawPraise =
-  String(
-    criterion.praise || ""
-  ).trim();
+      const rawPraise =
+        String(
+          criterion.praise || ""
+        ).trim();
 
-const usefulPraise =
-  rawPraise.toLowerCase() ===
-  "this criterion did not have a separate material weakness."
-    ? ""
-    : rawPraise;
+      const usefulPraise =
+        rawPraise.toLowerCase() ===
+        "this criterion did not have a separate material weakness."
+          ? ""
+          : rawPraise;
 
-const evidence =
-  String(
-    criterion.evidenceQuote || ""
-  ).trim();
+      const evidence =
+        String(
+          criterion.evidenceQuote || ""
+        ).trim();
 
-const weakLine =
-  String(
-    criterion.weakLine || ""
-  ).trim();
+      const weakLine =
+        String(
+          criterion.weakLine || ""
+        ).trim();
 
-const explanation =
-  String(
-    criterion.explanation || ""
-  ).trim();
+      const explanation =
+        String(
+          criterion.explanation || ""
+        ).trim();
 
-const correctedVersion =
-  String(
-    criterion.correctedVersion || ""
-  ).trim();
+      const correctedVersion =
+        String(
+          criterion.correctedVersion || ""
+        ).trim();
 
-addFeedbackLine(
-  feedback,
-  "What you did well:",
-  usefulPraise
-);
+      addFeedbackLine(
+        feedback,
+        "What you did well:",
+        usefulPraise
+      );
 
-if (level === 5) {
-  addFeedbackLine(
-    feedback,
-    "Your strong line:",
-    evidence
-      ? "“" + evidence + "”"
-      : ""
-  );
+      if (level === 5) {
+        addFeedbackLine(
+          feedback,
+          "Your strong line:",
+          evidence
+            ? "“" + evidence + "”"
+            : ""
+        );
 
-} else if (weakLine) {
-  addFeedbackLine(
-    feedback,
-    "Your line:",
-    "“" + weakLine + "”"
-  );
+      } else if (weakLine) {
+        addFeedbackLine(
+          feedback,
+          "Your line:",
+          "“" + weakLine + "”"
+        );
 
-  addFeedbackLine(
-    feedback,
-    "Why this weakens your answer:",
-    explanation
-  );
+        addFeedbackLine(
+          feedback,
+          "Why this weakens your answer:",
+          explanation
+        );
 
-  addFeedbackLine(
-    feedback,
-    "Use this instead:",
-    correctedVersion
-  );
+        addFeedbackLine(
+          feedback,
+          "Use this instead:",
+          correctedVersion
+        );
 
-} else {
-  if (
-    usefulPraise &&
-    evidence
-  ) {
-    addFeedbackLine(
-      feedback,
-      "Your strong line:",
-      "“" + evidence + "”"
-    );
-  }
+      } else {
+        if (
+          usefulPraise &&
+          evidence
+        ) {
+          addFeedbackLine(
+            feedback,
+            "Your strong line:",
+            "“" + evidence + "”"
+          );
+        }
 
-  addFeedbackLine(
-    feedback,
-    "What to improve:",
-    explanation
-  );
+        addFeedbackLine(
+          feedback,
+          "What to improve:",
+          explanation
+        );
 
-  addFeedbackLine(
-    feedback,
-    "Use this instead:",
-    correctedVersion
-  );
-}
+        addFeedbackLine(
+          feedback,
+          "Use this instead:",
+          correctedVersion
+        );
+      }
 
       card.appendChild(feedback);
       criteriaGrid.appendChild(card);
@@ -4547,8 +4522,7 @@ if (level === 5) {
 
       const evaluable =
         result.evaluable !== false &&
-        result.status !==
-          "not_evaluable";
+        result.status !== "not_evaluable";
 
       if (!evaluable) {
         resultPanel.classList.add(
@@ -4586,8 +4560,7 @@ if (level === 5) {
           String(
             (
               result.feedback &&
-              result.feedback
-                .overallComment
+              result.feedback.overallComment
             ) ||
             "Review each criterion before your next attempt."
           );
@@ -4659,23 +4632,56 @@ if (level === 5) {
         );
 
         const otherIssues =
-  result.feedback &&
-  Array.isArray(
-    result.feedback.otherIssues
-  )
-    ? result.feedback.otherIssues
-        .map(function (issue) {
-          if (
-            !issue ||
-            typeof issue !== "object"
-          ) {
-            return null;
-          }
+          result.feedback &&
+          Array.isArray(
+            result.feedback.otherIssues
+          )
+            ? result.feedback.otherIssues
+                .map(function (issue) {
+                  if (
+                    !issue ||
+                    typeof issue !== "object"
+                  ) {
+                    return null;
+                  }
+
+                  const label =
+                    String(
+                      issue.label || ""
+                    ).trim();
+
+                  const evidenceQuote =
+                    String(
+                      issue.evidenceQuote ||
+                      issue.evidence_quote ||
+                      ""
+                    ).trim();
+
+                  const explanation =
+                    String(
+                      issue.explanation || ""
+                    ).trim();
+
+                  if (!label) {
+                    return null;
+                  }
+
+                  return {
+                    label,
+                    evidenceQuote,
+                    explanation
+                  };
+                })
+                .filter(Boolean)
+            : [];
+
+        clearElement(otherIssuesList);
+
+        otherIssues.forEach(function (issue) {
+          const item = document.createElement("li");
 
           const label =
-            String(
-              issue.label || ""
-            ).trim();
+            String(issue.label || "Other issue").trim();
 
           const evidenceQuote =
             String(
@@ -4685,79 +4691,46 @@ if (level === 5) {
             ).trim();
 
           const explanation =
-            String(
-              issue.explanation || ""
-            ).trim();
+            String(issue.explanation || "").trim();
 
-          if (!label) {
-            return null;
+          const title =
+            document.createElement("strong");
+
+          title.textContent = label;
+          item.appendChild(title);
+
+          if (evidenceQuote) {
+            const example =
+              document.createElement("div");
+
+            example.textContent =
+              "Example: “" + evidenceQuote + "”";
+
+            item.appendChild(example);
           }
 
-          return {
-            label,
-            evidenceQuote,
-            explanation
-          };
-        })
-        .filter(Boolean)
-    : [];
+          if (explanation) {
+            const reason =
+              document.createElement("div");
 
-clearElement(otherIssuesList);
+            reason.textContent =
+              "Why this is a problem: " +
+              explanation;
 
-otherIssues.forEach(function (issue) {
-  const item = document.createElement("li");
+            item.appendChild(reason);
+          }
 
-  const label =
-    String(issue.label || "Other issue").trim();
+          otherIssuesList.appendChild(item);
+        });
 
-  const evidenceQuote =
-    String(
-      issue.evidenceQuote ||
-      issue.evidence_quote ||
-      ""
-    ).trim();
+        otherIssuesSection.hidden =
+          otherIssues.length === 0;
 
-  const explanation =
-    String(issue.explanation || "").trim();
-
-  const title =
-    document.createElement("strong");
-
-  title.textContent = label;
-  item.appendChild(title);
-
-  if (evidenceQuote) {
-    const example =
-      document.createElement("div");
-
-    example.textContent =
-      "Example: “" + evidenceQuote + "”";
-
-    item.appendChild(example);
-  }
-
-  if (explanation) {
-    const reason =
-      document.createElement("div");
-
-    reason.textContent =
-      "Why this is a problem: " +
-      explanation;
-
-    item.appendChild(reason);
-  }
-
-  otherIssuesList.appendChild(item);
-});
-
-otherIssuesSection.hidden =
-  otherIssues.length === 0;
-          if (
+        if (
           result.nextPractice &&
           result.nextPractice.focus
         ) {
-          nextPracticeCard.hidden =
-            false;
+          nextPracticeCard.hidden = false;
 
           nextPracticeFocus.textContent =
             String(
@@ -4808,16 +4781,14 @@ otherIssuesSection.hidden =
 
           nextPracticeProgress.textContent =
             progressText;
+
           retryNextFixButton.style.display =
             canRecordAgain() ? "" : "none";
         }
       }
 
-      recordAgainButton.disabled =
-        true;
-
-      recordAgainButton.style.display =
-        "none";
+      recordAgainButton.disabled = true;
+      recordAgainButton.style.display = "none";
 
       const privateLearnerCanContinue =
         practiceContext &&
@@ -4828,13 +4799,11 @@ otherIssuesSection.hidden =
           ? "Choose Another Question"
           : "Return to Dashboard";
 
-      newResponseButton.disabled =
-        false;
+      newResponseButton.disabled = false;
 
       const resultScrollTarget =
         isPrivateAudioMode() &&
-        downloadRecordingButton
-          .classList.contains("visible")
+        downloadRecordingButton.classList.contains("visible")
           ? privateAudioPanel
           : resultPanel;
 
@@ -4994,16 +4963,14 @@ otherIssuesSection.hidden =
 
       const countdownStartedAt =
         window.performance &&
-        typeof window.performance.now ===
-          "function"
+        typeof window.performance.now === "function"
           ? window.performance.now()
           : Date.now();
 
       function currentCountdownTime() {
         return (
           window.performance &&
-          typeof window.performance.now ===
-            "function"
+          typeof window.performance.now === "function"
             ? window.performance.now()
             : Date.now()
         );
@@ -5174,8 +5141,7 @@ otherIssuesSection.hidden =
       targetSampleRate
     ) {
       if (
-        targetSampleRate >=
-        sourceSampleRate
+        targetSampleRate >= sourceSampleRate
       ) {
         return inputBuffer;
       }
@@ -5383,8 +5349,7 @@ otherIssuesSection.hidden =
           true
         );
 
-        byteOffset +=
-          bytesPerSample;
+        byteOffset += bytesPerSample;
       }
 
       return new Blob(
@@ -5400,12 +5365,10 @@ otherIssuesSection.hidden =
       isRecording = false;
 
       if (audioProcessorNode) {
-        audioProcessorNode
-          .onaudioprocess = null;
+        audioProcessorNode.onaudioprocess = null;
 
         try {
-          audioProcessorNode
-            .disconnect();
+          audioProcessorNode.disconnect();
         } catch {
           // The node may already be disconnected.
         }
@@ -5415,8 +5378,7 @@ otherIssuesSection.hidden =
 
       if (audioSourceNode) {
         try {
-          audioSourceNode
-            .disconnect();
+          audioSourceNode.disconnect();
         } catch {
           // The node may already be disconnected.
         }
@@ -5443,127 +5405,126 @@ otherIssuesSection.hidden =
     }
 
     async function runAudioTest() {
-  if (
-    !navigator.mediaDevices ||
-    !navigator.mediaDevices.getUserMedia ||
-    typeof MediaRecorder === "undefined"
-  ) {
-    audioTestStatus.textContent =
-      "Audio testing is not supported by this browser.";
-    return;
-  }
-
-  audioTestButton.disabled = true;
-  audioTestButton.textContent =
-    "Testing…";
-
-  audioTestStatus.textContent =
-    "Say: Hello."
-
-  audioTestPlayback.hidden = true;
-
-  try {
-    const testStream =
-      await navigator.mediaDevices.getUserMedia({
-        audio: true
-      });
-
-    const chunks = [];
-
-    const testRecorder =
-      new MediaRecorder(testStream);
-
-    testRecorder.addEventListener(
-      "dataavailable",
-      function (event) {
-        if (
-          event.data &&
-          event.data.size > 0
-        ) {
-          chunks.push(event.data);
-        }
+      if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia ||
+        typeof MediaRecorder === "undefined"
+      ) {
+        audioTestStatus.textContent =
+          "Audio testing is not supported by this browser.";
+        return;
       }
-    );
 
-    testRecorder.addEventListener(
-      "stop",
-      function () {
-        testStream
-          .getTracks()
-          .forEach(function (track) {
-            track.stop();
+      audioTestButton.disabled = true;
+      audioTestButton.textContent =
+        "Testing…";
+
+      audioTestStatus.textContent =
+        "Say: Hello.";
+
+      audioTestPlayback.hidden = true;
+
+      try {
+        const testStream =
+          await navigator.mediaDevices.getUserMedia({
+            audio: true
           });
 
-        const testBlob =
-          new Blob(
-            chunks,
-            {
-              type:
-                testRecorder.mimeType ||
-                "audio/webm"
+        const chunks = [];
+
+        const testRecorder =
+          new MediaRecorder(testStream);
+
+        testRecorder.addEventListener(
+          "dataavailable",
+          function (event) {
+            if (
+              event.data &&
+              event.data.size > 0
+            ) {
+              chunks.push(event.data);
             }
-          );
+          }
+        );
 
-        if (audioTestPlayback.src) {
-          URL.revokeObjectURL(
-            audioTestPlayback.src
-          );
-        }
+        testRecorder.addEventListener(
+          "stop",
+          function () {
+            testStream
+              .getTracks()
+              .forEach(function (track) {
+                track.stop();
+              });
 
-        audioTestPlayback.src =
-  URL.createObjectURL(testBlob);
+            const testBlob =
+              new Blob(
+                chunks,
+                {
+                  type:
+                    testRecorder.mimeType ||
+                    "audio/webm"
+                }
+              );
 
-audioTestPlayback.hidden = false;
+            if (audioTestPlayback.src) {
+              URL.revokeObjectURL(
+                audioTestPlayback.src
+              );
+            }
 
-audioTestStatus.textContent =
-  "Test complete. Playing your recording now.";
+            audioTestPlayback.src =
+              URL.createObjectURL(testBlob);
 
-audioTestPlayback.play().catch(
-  function (error) {
-    console.error(
-      "ASCENT audio test playback failed:",
-      error
-    );
+            audioTestPlayback.hidden = false;
 
-    audioTestStatus.textContent =
-      "Test recorded. Tap Play if your browser blocked automatic playback.";
-  }
-);
+            audioTestStatus.textContent =
+              "Test complete. Playing your recording now.";
+
+            audioTestPlayback.play().catch(
+              function (error) {
+                console.error(
+                  "ASCENT audio test playback failed:",
+                  error
+                );
+
+                audioTestStatus.textContent =
+                  "Test recorded. Tap Play if your browser blocked automatic playback.";
+              }
+            );
+
+            audioTestButton.disabled = false;
+            audioTestButton.textContent =
+              "Test Again";
+          }
+        );
+
+        testRecorder.start();
+
+        window.setTimeout(
+          function () {
+            if (
+              testRecorder.state === "recording"
+            ) {
+              testRecorder.stop();
+            }
+          },
+          1500
+        );
+
+      } catch (error) {
+        console.error(
+          "ASCENT audio test failed:",
+          error
+        );
+
+        audioTestStatus.textContent =
+          "ASCENT could not use the microphone. Check microphone permission and try again.";
 
         audioTestButton.disabled = false;
         audioTestButton.textContent =
-          "Test Again";
+          "Try Audio Test Again";
       }
-    );
-
-    testRecorder.start();
-
-    window.setTimeout(
-      function () {
-        if (
-          testRecorder.state ===
-          "recording"
-        ) {
-          testRecorder.stop();
-        }
-      },
-      1500
-    );
-
-  } catch (error) {
-    console.error(
-      "ASCENT audio test failed:",
-      error
-    );
-
-    audioTestStatus.textContent =
-      "ASCENT could not use the microphone. Check microphone permission and try again.";
-
-    audioTestButton.disabled = false;
-    audioTestButton.textContent =
-      "Try Audio Test Again";
-  }
-}
+    }
 
     async function startRecording() {
       showStatus("", "");
@@ -5640,8 +5601,7 @@ audioTestPlayback.play().catch(
           new AudioContextConstructor();
 
         if (
-          audioContext.state ===
-          "suspended"
+          audioContext.state === "suspended"
         ) {
           await audioContext.resume();
         }
@@ -5650,29 +5610,25 @@ audioTestPlayback.play().catch(
           audioContext.sampleRate;
 
         audioSourceNode =
-          audioContext
-            .createMediaStreamSource(
-              mediaStream
-            );
+          audioContext.createMediaStreamSource(
+            mediaStream
+          );
 
         audioProcessorNode =
-          audioContext
-            .createScriptProcessor(
-              4096,
-              1,
-              1
-            );
+          audioContext.createScriptProcessor(
+            4096,
+            1,
+            1
+          );
 
-        audioProcessorNode
-          .onaudioprocess =
+        audioProcessorNode.onaudioprocess =
           function (event) {
             if (!isRecording) {
               return;
             }
 
             const inputSamples =
-              event.inputBuffer
-                .getChannelData(0);
+              event.inputBuffer.getChannelData(0);
 
             recordedAudioBuffers.push(
               new Float32Array(
@@ -5769,8 +5725,7 @@ audioTestPlayback.play().catch(
           );
         }
 
-        const targetSampleRate =
-          16000;
+        const targetSampleRate = 16000;
 
         const speechAudio =
           downsampleAudioBuffer(
@@ -5787,13 +5742,13 @@ audioTestPlayback.play().catch(
 
         if (isPrivateAudioMode()) {
           if (responsePhase === "main") {
-            privateMainAudioBlob =
-              audioBlob;
+            privateMainAudioBlob = audioBlob;
 
             privateFinalAudioBlob = null;
 
-            downloadRecordingButton
-              .classList.remove("visible");
+            downloadRecordingButton.classList.remove(
+              "visible"
+            );
           } else if (
             responsePhase === "pressure" &&
             privateMainAudioBlob
@@ -5841,10 +5796,8 @@ audioTestPlayback.play().catch(
             "visible"
           );
 
-          audioPlayback.style.display =
-            "none";
-          recordAgainButton.style.display =
-            "none";
+          audioPlayback.style.display = "none";
+          recordAgainButton.style.display = "none";
           playbackTitle.textContent =
             "Pressure response recorded";
 
@@ -6040,11 +5993,11 @@ audioTestPlayback.play().catch(
           : "Submitting…";
 
       showStatus(
-  responsePhase === "pressure"
-    ? "Evaluating your pressure response…"
-    : "Evaluating your response…",
-  ""
-);
+        responsePhase === "pressure"
+          ? "Evaluating your pressure response…"
+          : "Evaluating your response…",
+        ""
+      );
 
       const audioMimeType =
         String(
@@ -6100,26 +6053,21 @@ audioTestPlayback.play().catch(
         );
       } else if (selectedPractice) {
         if (
-          selectedPractice.mode ===
-          "assigned"
+          selectedPractice.mode === "assigned"
         ) {
           formData.append(
             "assignment_uuid",
-            selectedPractice
-              .assignmentUuid
+            selectedPractice.assignmentUuid
           );
         } else if (
-          selectedPractice.mode ===
-          "question_bank"
+          selectedPractice.mode === "question_bank"
         ) {
           formData.append(
             "question_bank_uuid",
-            selectedPractice
-              .questionBankUuid
+            selectedPractice.questionBankUuid
           );
         } else if (
-          selectedPractice.mode ===
-          "custom"
+          selectedPractice.mode === "custom"
         ) {
           formData.append(
             "custom_question",
@@ -6128,8 +6076,7 @@ audioTestPlayback.play().catch(
 
           formData.append(
             "custom_rubric_type",
-            selectedPractice
-              .rubricType
+            selectedPractice.rubricType
           );
         }
       }
@@ -6187,8 +6134,7 @@ audioTestPlayback.play().catch(
           result.ok !== true
         ) {
           throw new Error(
-            result &&
-            result.message
+            result && result.message
               ? result.message
               : "ASCENT could not submit the recording."
           );
@@ -6249,8 +6195,7 @@ audioTestPlayback.play().catch(
 
         showStatus(
           isPrivateAudioMode() &&
-          downloadRecordingButton
-            .classList.contains("visible")
+          downloadRecordingButton.classList.contains("visible")
             ? "Your evaluation is ready. Download your recording before you leave or refresh this page."
             : result.message ||
               "Your response has been submitted successfully.",
@@ -6318,13 +6263,13 @@ audioTestPlayback.play().catch(
       loadStudentSession();
 
     if (currentSession) {
-  displayStudent(currentSession);
+      displayStudent(currentSession);
 
-  void loadPracticeContext()
-    .then(function () {
-      void showSavedLearnerFocus();
-    });
-}
+      void loadPracticeContext()
+        .then(function () {
+          void showSavedLearnerFocus();
+        });
+    }
 
 
     practiceModeSelect.addEventListener(
@@ -6345,117 +6290,119 @@ audioTestPlayback.play().catch(
       }
     );
 
-    questionBankRubricFilter
-      .addEventListener(
-        "change",
-        populateQuestionBank
-      );
-retryPreviousQuestionLink.addEventListener(
-  "click",
-  function (event) {
-    event.preventDefault();
-
-    const retryOption =
-      Array.from(
-        questionBankSelect.options
-      ).find(function (option) {
-        return String(
-          option.textContent || ""
-        ).startsWith(
-          "Retry previous question"
-        );
-      });
-
-    if (!retryOption) {
-      return;
-    }
-
-    questionBankSelect.value =
-      retryOption.value;
-
-    questionBankSelect.dispatchEvent(
-      new Event("change")
+    questionBankRubricFilter.addEventListener(
+      "change",
+      populateQuestionBank
     );
-  }
-);
+
+    retryPreviousQuestionLink.addEventListener(
+      "click",
+      function (event) {
+        event.preventDefault();
+
+        const retryOption =
+          Array.from(
+            questionBankSelect.options
+          ).find(function (option) {
+            return String(
+              option.textContent || ""
+            ).startsWith(
+              "Retry previous question"
+            );
+          });
+
+        if (!retryOption) {
+          return;
+        }
+
+        questionBankSelect.value =
+          retryOption.value;
+
+        questionBankSelect.dispatchEvent(
+          new Event("change")
+        );
+      }
+    );
+
     nextQuestionLink.addEventListener(
-  "click",
-  function (event) {
-    event.preventDefault();
+      "click",
+      function (event) {
+        event.preventDefault();
 
-    const nextOption =
-      Array.from(
-        questionBankSelect.options
-      ).find(function (option) {
-        return String(
-          option.textContent || ""
-        ).startsWith(
-          "Next question"
+        const nextOption =
+          Array.from(
+            questionBankSelect.options
+          ).find(function (option) {
+            return String(
+              option.textContent || ""
+            ).startsWith(
+              "Next question"
+            );
+          });
+
+        if (!nextOption) {
+          return;
+        }
+
+        questionBankSelect.value =
+          nextOption.value;
+
+        questionBankSelect.dispatchEvent(
+          new Event("change")
         );
-      });
-
-    if (!nextOption) {
-      return;
-    }
-
-    questionBankSelect.value =
-      nextOption.value;
-
-    questionBankSelect.dispatchEvent(
-      new Event("change")
+      }
     );
-  }
-);
+
     questionBankSelect.addEventListener(
-  "change",
-  function () {
-    updateSelectedQuestion();
+      "change",
+      function () {
+        updateSelectedQuestion();
 
-    if (
-      !privateRetrySelectionNote ||
-      !practiceContext ||
-      practiceContext.is_private_learner !== true
-    ) {
-      return;
-    }
+        if (
+          !privateRetrySelectionNote ||
+          !practiceContext ||
+          practiceContext.is_private_learner !== true
+        ) {
+          return;
+        }
 
-    const selectedOption =
-      questionBankSelect.options[
-        questionBankSelect.selectedIndex
-      ];
+        const selectedOption =
+          questionBankSelect.options[
+            questionBankSelect.selectedIndex
+          ];
 
-    const selectedText =
-      selectedOption
-        ? String(selectedOption.textContent || "")
-        : "";
+        const selectedText =
+          selectedOption
+            ? String(selectedOption.textContent || "")
+            : "";
 
-    if (
-      selectedText.startsWith(
-        "Retry previous question"
-      )
-    ) {
-      privateRetrySelectionNote.textContent =
-        "Use the feedback from your last attempt and try to improve your response.";
+        if (
+          selectedText.startsWith(
+            "Retry previous question"
+          )
+        ) {
+          privateRetrySelectionNote.textContent =
+            "Use the feedback from your last attempt and try to improve your response.";
 
-      privateRetrySelectionNote.hidden = false;
-      return;
-    }
+          privateRetrySelectionNote.hidden = false;
+          return;
+        }
 
-    if (
-      selectedText.startsWith(
-        "Next question"
-      )
-    ) {
-      privateRetrySelectionNote.textContent =
-        "Continue to a new practice question.";
+        if (
+          selectedText.startsWith(
+            "Next question"
+          )
+        ) {
+          privateRetrySelectionNote.textContent =
+            "Continue to a new practice question.";
 
-      privateRetrySelectionNote.hidden = false;
-      return;
-    }
+          privateRetrySelectionNote.hidden = false;
+          return;
+        }
 
-    privateRetrySelectionNote.hidden = true;
-  }
-);
+        privateRetrySelectionNote.hidden = true;
+      }
+    );
 
     customQuestionInput.addEventListener(
       "input",
@@ -6482,11 +6429,11 @@ retryPreviousQuestionLink.addEventListener(
       }
     );
 
-audioTestButton.addEventListener(
-  "click",
-  runAudioTest
-);
-    
+    audioTestButton.addEventListener(
+      "click",
+      runAudioTest
+    );
+
     startButton.addEventListener(
       "click",
       startRecording
@@ -6513,34 +6460,35 @@ audioTestButton.addEventListener(
       "click",
       submitRecording
     );
-retryNextFixButton.addEventListener(
-  "click",
-  function () {
-    if (!canRecordAgain()) {
-      showStatus(
-        "Use your Next Fix on your next question.",
-        ""
-      );
 
-      return;
-    }
+    retryNextFixButton.addEventListener(
+      "click",
+      function () {
+        if (!canRecordAgain()) {
+          showStatus(
+            "Use your Next Fix on your next question.",
+            ""
+          );
 
-    resetRecording();
+          return;
+        }
 
-    nextPracticeCard.hidden =
-      true;
+        resetRecording();
 
-    showStatus(
-      "Retry now. Focus only on your Next Fix.",
-      "success"
+        nextPracticeCard.hidden = true;
+
+        showStatus(
+          "Retry now. Focus only on your Next Fix.",
+          "success"
+        );
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
+      }
     );
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-  }
-);
     newResponseButton.addEventListener(
       "click",
       async function () {
