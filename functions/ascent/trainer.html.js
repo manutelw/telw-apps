@@ -1,5 +1,5 @@
 export async function onRequest(context) {
-  const response = await context.env.ASSETS.fetch(context.request);
+  const response = await context.next();
   if (!response.ok) return response;
 
   let html = await response.text();
@@ -37,7 +37,7 @@ export async function onRequest(context) {
 
   html = html.replace(
     'data-ascent-build="2026-08-04.5"',
-    'data-ascent-build="2026-08-19.2"'
+    'data-ascent-build="2026-08-19.3"'
   );
 
   const headers = new Headers(response.headers);
