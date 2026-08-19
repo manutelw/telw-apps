@@ -1,0 +1,66 @@
+name: Patch trainer Excel download
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patch-trainer-export.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace XLSX.writeFile with Blob download
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('ascent/trainer.html')
+          text = path.read_text(encoding='utf-8')
+
+          old = '''        XLSX.writeFile(
+          workbook,
+          `ASCENT_${institutionName}_Trainer_Report_${new Date().toISOString().slice(0,10)}.xlsx`,
+          {cellStyles:true,cellDates:true}
+        );'''
+
+          new = '''        const fileName = `ASCENT_${institutionName}_Trainer_Report_${new Date().toISOString().slice(0,10)}.xlsx`;
+        const workbookBytes = XLSX.write(workbook,{
+          bookType:"xlsx",
+          type:"array",
+          cellStyles:true,
+          cellDates:true
+        });
+        const workbookBlob = new Blob(
+          [workbookBytes],
+          {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+        );
+        const downloadUrl = URL.createObjectURL(workbookBlob);
+        const downloadLink = document.createElement("a");
+        downloadLink.href = downloadUrl;
+        downloadLink.download = fileName;
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        window.setTimeout(() => URL.revokeObjectURL(downloadUrl),30000);'''
+
+          if old not in text:
+              raise SystemExit('Expected XLSX.writeFile block not found; no change made.')
+
+          text = text.replace(old, new, 1)
+          text = text.replace('data-ascent-build="2026-08-04.5"','data-ascent-build="2026-08-19.1"',1)
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit trainer export fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ascent/trainer.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Fix trainer Excel download with Blob"
+          git push
