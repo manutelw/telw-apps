@@ -4566,12 +4566,15 @@ const nextQuestionLink =
             result.feedback.overallComment
           ) ||
           "Use the most important correction below in your next response."
-        ).trim();
+        )
+          .trim()
+          .replace(
+            /^(?:your next fix|focus for your next response):\s*/i,
+            ""
+          );
 
         resultVerdict.textContent =
-          /^your next fix:/i.test(overallComment)
-            ? overallComment
-            : "Your next fix: " + overallComment;
+          "Your next fix: " + overallComment;
 
         resultRubric.textContent =
           String(
