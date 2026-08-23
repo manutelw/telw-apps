@@ -5,76 +5,63 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>ASCENT · Practice</title>
   <style>
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#102a46}
-    #practiceFrame{display:block;width:100%;height:100%;border:0;background:#fff}
+    :root{--navy:#143a60;--blue:#27679d;--gold:#c67b00;--border:#d7e1eb;--text:#24364a;--muted:#5f7184}
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#102a46;font-family:Arial,Helvetica,sans-serif}
+    body{display:flex;flex-direction:column}
+    .live-mock-strip{
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      padding:13px 24px;
+      border-bottom:1px solid #c8d7e5;
+      background:linear-gradient(90deg,#f8fbfe,#eef5fb);
+      box-shadow:0 3px 12px rgba(0,0,0,.08);
+      color:var(--text);
+      z-index:2;
+    }
+    .live-mock-copy{min-width:0}
+    .live-mock-kicker{margin:0 0 3px;color:var(--gold);font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+    .live-mock-title{margin:0;color:var(--navy);font-size:18px;font-weight:800;line-height:1.25}
+    .live-mock-text{margin:3px 0 0;color:var(--muted);font-size:12px;line-height:1.4}
+    .live-mock-actions{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+    .live-mock-primary,.live-mock-more{display:inline-flex;align-items:center;justify-content:center;min-height:38px;border-radius:9px;padding:9px 13px;text-decoration:none;font-size:12px;font-weight:800;white-space:nowrap}
+    .live-mock-primary{background:var(--navy);color:#fff}
+    .live-mock-primary:hover{background:#102b47}
+    .live-mock-more{border:1px solid var(--border);background:#fff;color:var(--navy)}
+    #practiceFrame{display:block;flex:1 1 auto;width:100%;min-height:0;border:0;background:#fff}
+    @media(max-width:760px){
+      .live-mock-strip{align-items:flex-start;padding:11px 13px;gap:10px;flex-wrap:wrap}
+      .live-mock-title{font-size:16px}
+      .live-mock-text{font-size:11px}
+      .live-mock-actions{width:100%}
+      .live-mock-primary,.live-mock-more{flex:1 1 0;text-align:center;white-space:normal}
+    }
   </style>
 </head>
 <body>
-  <iframe id="practiceFrame" src="./practice-core.html" title="ASCENT Practice"></iframe>
+  <section class="live-mock-strip" aria-label="ASCENT Live AI Mock Interview">
+    <div class="live-mock-copy">
+      <div class="live-mock-kicker">Live interview practice</div>
+      <h2 class="live-mock-title">Live AI Mock Interview</h2>
+      <p class="live-mock-text">Answer aloud, handle adaptive follow-up questions, and receive an ASCENT PI score with spoken and written feedback.</p>
+    </div>
+    <div class="live-mock-actions">
+      <a class="live-mock-primary" href="./live-mock-info.html">Live AI Mock Interview</a>
+      <a class="live-mock-more" href="./live-mock-info.html">More information, pricing &amp; access</a>
+    </div>
+  </section>
+
+  <iframe id="practiceFrame" src="./practice-core.html?v=20260823-live-mock" title="ASCENT Practice"></iframe>
+
   <script>
     const frame=document.getElementById('practiceFrame');
-
-    function addLiveMockCallout(childWindow,childDocument){
-      if(childDocument.getElementById('liveMockPracticeCallout'))return;
-      const target=childDocument.getElementById('practiceContextPanel');
-      if(!target)return;
-
-      const style=childDocument.createElement('style');
-      style.id='liveMockPracticeCalloutStyle';
-      style.textContent=`
-        .live-mock-callout{
-          margin:0 0 24px;
-          padding:22px 24px;
-          border:1px solid #c7d8e8;
-          border-left:5px solid #143a60;
-          border-radius:16px;
-          background:linear-gradient(135deg,#f8fbfe,#eef5fb);
-          box-shadow:0 8px 22px rgba(20,58,96,.08);
-        }
-        .live-mock-callout-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;}
-        .live-mock-callout-kicker{margin:0 0 6px;color:#9a5c00;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;}
-        .live-mock-callout h3{margin:0 0 8px;color:#143a60;font-size:22px;line-height:1.25;}
-        .live-mock-callout p{margin:0;color:#49647d;font-size:14px;line-height:1.6;max-width:650px;}
-        .live-mock-callout-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:17px;}
-        .live-mock-primary{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:11px 17px;border-radius:10px;background:#143a60;color:#fff!important;font-size:14px;font-weight:800;text-decoration:none;}
-        .live-mock-primary:hover{background:#102b47;}
-        .live-mock-more{color:#143a60!important;font-size:13px;font-weight:800;text-decoration:underline;text-underline-offset:3px;}
-        .live-mock-badge{flex:0 0 auto;padding:8px 11px;border:1px solid #d9c397;border-radius:999px;background:#fff8e8;color:#7a4b00;font-size:11px;font-weight:800;white-space:nowrap;}
-        @media(max-width:650px){.live-mock-callout-top{display:block}.live-mock-badge{display:inline-block;margin-top:13px}.live-mock-primary{width:100%}.live-mock-callout-actions{align-items:stretch}}
-      `;
-      childDocument.head.appendChild(style);
-
-      const card=childDocument.createElement('section');
-      card.id='liveMockPracticeCallout';
-      card.className='live-mock-callout';
-      card.setAttribute('aria-label','ASCENT Live AI Mock Interview');
-      card.innerHTML=`
-        <div class="live-mock-callout-top">
-          <div>
-            <div class="live-mock-callout-kicker">Live interview practice</div>
-            <h3>Live AI Mock Interview</h3>
-            <p>Speak with an AI interviewer, handle adaptive follow-up questions, and receive an ASCENT PI score with detailed spoken and written feedback.</p>
-          </div>
-          <div class="live-mock-badge">30-day access</div>
-        </div>
-        <div class="live-mock-callout-actions">
-          <a class="live-mock-primary" href="./live-mock-info.html">Live AI Mock Interview</a>
-          <a class="live-mock-more" href="./live-mock-info.html">More information, pricing &amp; access</a>
-        </div>
-      `;
-      target.parentNode.insertBefore(card,target);
-    }
-
     frame.addEventListener('load',function(){
       try{
-        const childWindow=frame.contentWindow;
         const childDocument=frame.contentDocument;
-        if(!childWindow||!childDocument)return;
-        const path=String(childWindow.location.pathname||'');
-        if(!path.endsWith('/practice-core.html'))return;
-
-        addLiveMockCallout(childWindow,childDocument);
-
+        if(!childDocument)return;
         if(!childDocument.getElementById('ascentPracticeAccessV2')){
           const script=childDocument.createElement('script');
           script.id='ascentPracticeAccessV2';
