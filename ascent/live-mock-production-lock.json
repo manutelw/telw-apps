@@ -1,0 +1,33 @@
+{
+  "status": "FROZEN_KNOWN_GOOD",
+  "frozen_at": "2026-08-23T21:45:00+05:30",
+  "supabase_project_id": "vtqatrhwfvzyodiftvkc",
+  "components": {
+    "live_interviewer": {
+      "slug": "ascent-openai-live-interview",
+      "version": 17,
+      "sha256": "7397a69935b1bf16ac3c831702189a094882f1b4dc0936945774693b4b927a9a"
+    },
+    "evaluator": {
+      "slug": "ascent-realtime-mock-interview",
+      "version": 17,
+      "sha256": "b6daf4c069bf997669c2471a50e2510553742891c43bf6fd5493f142edfabbad"
+    },
+    "feedback_audio": {
+      "slug": "ascent-feedback-audio",
+      "version": 6,
+      "sha256": "48d27d22c737a05d93a2ad02e1685570157a8fce79bdaf61fcdb73a9b847e7c2"
+    },
+    "learner_page": {
+      "repository": "manutelw/telw-apps",
+      "path": "ascent/live-mock-interview.html",
+      "commit": "9e6477cac0169aa20617e5e17798a50251e90a10",
+      "blob_sha": "f10ade0d2aaef6504956c944d8930a4236c369ec"
+    }
+  },
+  "change_control": {
+    "direct_production_experiments": false,
+    "requires_full_regression_check": true,
+    "requires_explicit_production_approval_before_baseline_update": true
+  }
+}
