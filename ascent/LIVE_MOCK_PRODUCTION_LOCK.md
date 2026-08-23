@@ -2,36 +2,69 @@
 
 **Status:** FROZEN / KNOWN-GOOD BASELINE  
 **Frozen on:** 2026-08-23, 21:45 IST  
+**Paid access overlay added:** 2026-08-23  
 **Purpose:** Preserve the exact Live AI Mock Interview behaviour that passed user testing. Do not casually modify, redeploy, or refactor this path.
 
 ## Frozen production components
 
-### 1. Live interviewer — Supabase Edge Function
+### 1. Live interviewer behaviour baseline — Supabase Edge Function
 - Function: `ascent-openai-live-interview`
 - Project: `vtqatrhwfvzyodiftvkc`
-- Frozen active version: **17**
-- SHA-256: `7397a69935b1bf16ac3c831702189a094882f1b4dc0936945774693b4b927a9a`
-- `verify_jwt`: false (custom ASCENT session authentication is enforced in the function)
+- Frozen behaviour baseline: **version 17**
+- Baseline SHA-256: `7397a69935b1bf16ac3c831702189a094882f1b4dc0936945774693b4b927a9a`
+- Current production access-protected version: **18**
+- Current SHA-256: `8c5ac7dbde98d21aeb2cf1cfc0e40f8c58631dc73582cbd35beba528feaa6209`
+- Version 18 adds only the internal paid-gateway authorization check and required request header support. The interview prompt, voice, turn rules, model configuration and closing behaviour remain the frozen version-17 behaviour.
+- Version 17 remains the rollback reference for interview behaviour.
 
 ### 2. Evaluator — Supabase Edge Function
 - Function: `ascent-realtime-mock-interview`
 - Project: `vtqatrhwfvzyodiftvkc`
 - Frozen active version: **17**
 - SHA-256: `b6daf4c069bf997669c2471a50e2510553742891c43bf6fd5493f142edfabbad`
-- `verify_jwt`: false (custom ASCENT session authentication is enforced in the function)
 
 ### 3. Feedback audio — Supabase Edge Function
 - Function: `ascent-feedback-audio`
 - Project: `vtqatrhwfvzyodiftvkc`
 - Frozen active version: **6**
 - SHA-256: `48d27d22c737a05d93a2ad02e1685570157a8fce79bdaf61fcdb73a9b847e7c2`
-- `verify_jwt`: false (custom ASCENT session authentication is enforced in the function)
 
-### 4. Learner page — GitHub
+### 4. Learner interview page — GitHub
 - Repository: `manutelw/telw-apps`
 - Path: `ascent/live-mock-interview.html`
 - Frozen known-good commit: `9e6477cac0169aa20617e5e17798a50251e90a10`
 - Frozen content/blob SHA: `f10ade0d2aaef6504956c944d8930a4236c369ec`
+- The frozen interview page itself remains unchanged. Paid access is added outside it through the wrapper/gateway below.
+
+## Paid access overlay — production components
+
+### Commerce and entitlement
+- Function: `ascent-live-mock-commerce`
+- Active version: **1**
+- SHA-256: `47d15cc931a153b9aed07182e9b23c95527b3da7cca4cd581d016ba96279ce94`
+- Institutional product: `ASCENT_LIVE_MOCK_INSTITUTIONAL_30D_40` — ₹2,499 / 30 days / 40 mocks / maximum 3 per day.
+- Private product: `ASCENT_LIVE_MOCK_PRIVATE_30D_40` — ₹2,999 / 30 days / 40 mocks / maximum 3 per day.
+- The server derives the learner's access type from the authenticated ASCENT session and returns only the applicable price.
+- The learner-facing page must never expose or compare the alternative price.
+- Razorpay order creation, signature verification, provider payment verification/capture and entitlement activation are performed server-side.
+
+### Paid interview gateway
+- Function: `ascent-paid-live-interview`
+- Active version: **2**
+- SHA-256: `8a4afbbd7dd1f5b9930ec0627e12b805ec23bcd50b2f775539c7a118a0f2b3f0`
+- Requires an active Live Mock entitlement before obtaining a Realtime token.
+- Enforces 40 total attempts and maximum 3 per India calendar day.
+- If the protected interviewer cannot issue a Realtime token, the reserved attempt is removed.
+- Direct browser calls to `ascent-openai-live-interview` are denied; only the internal paid gateway may call it.
+
+### Paid wrapper and information page
+- `ascent/live-mock-paid.html` wraps the frozen interview page and redirects only the Realtime-token request through the paid gateway. Evaluation and feedback-audio paths remain unchanged.
+- `ascent/live-mock-info.html` obtains price/access information from the server, opens Razorpay checkout when access is absent, verifies payment, and becomes the Start button when entitlement is active.
+- The Practice page callout remains price-free and links to the information/access page.
+
+### Database protection
+- `ascent_live_mock_entitlements`: RLS enabled; accessed server-side through service-role Edge Functions only.
+- `ascent_live_mock_attempts`: RLS enabled; accessed server-side through service-role Edge Functions only.
 
 ## Non-negotiable behaviour contract
 
@@ -42,7 +75,7 @@
 4. Clarification, repetition or rephrasing requests do **not** count as substantive answers.
 5. A question that has started must be completed before any closing decision. The interviewer must never switch from a question into the closing line mid-turn.
 6. A question, clarification, repetition or repair must always be followed by a learner turn before closing is permitted.
-7. If the interviewer itself begins a question badly, it may naturally repair and restate the **same underlying question**; the repair is not a new question.
+7. If the interviewer begins a question badly, it may naturally repair and restate the **same underlying question**; the repair is not a new question.
 8. The interviewer never coaches, praises, scores or admonishes the learner during the live interview.
 9. Closing line before evaluation remains: `Thank you, [first name]. Please wait while I prepare your feedback.`
 10. After that closing line, the live interviewer produces no further audio.
@@ -81,8 +114,6 @@
 
 ## Regression checklist — MUST PASS before any future production change
 
-A future change to the live interviewer, evaluator, feedback audio function or learner page is not production-safe until all of these pass:
-
 - [ ] Opening question is spoken completely.
 - [ ] First adaptive follow-up is spoken completely.
 - [ ] Final adaptive follow-up is spoken completely.
@@ -90,7 +121,7 @@ A future change to the live interviewer, evaluator, feedback audio function or l
 - [ ] Clarification/repetition does not advance the answer count.
 - [ ] Interviewer never closes in the middle of a question.
 - [ ] Natural repair of a badly started question preserves the same underlying question.
-- [ ] No invented/unasked question appears in the feedback.
+- [ ] No invented/unasked question appears in feedback.
 - [ ] No learner is penalised for an interviewer-side truncation or omission.
 - [ ] Fixed five ASCENT PI criteria and deterministic score mapping remain unchanged.
 - [ ] Spoken total score exactly matches written total score.
@@ -100,6 +131,11 @@ A future change to the live interviewer, evaluator, feedback audio function or l
 - [ ] Final `Thank you.` is audible in full.
 - [ ] `Hear Feedback Again` replays the complete spoken sequence.
 - [ ] Modern neutral British English / light RP remains natural and non-caricatured.
+- [ ] Institutional learner sees only ₹2,499.
+- [ ] Private learner sees only ₹2,999.
+- [ ] Direct browser access to the underlying Realtime-token endpoint is denied.
+- [ ] Paid entitlement is required before a Realtime token is issued.
+- [ ] 40-total and 3-per-day limits are enforced server-side.
 - [ ] Mic denied, network failure, expired session and early manual termination fail safely.
 - [ ] Demo/test interviews are not persisted as production results.
 
@@ -115,4 +151,4 @@ For any future change:
 5. Only after the checklist passes should the new state replace this baseline.
 6. Update this file with the new approved versions/hashes only after explicit production approval.
 
-If a future deployment regresses behaviour, restore/redeploy the source corresponding to the frozen versions and hashes above rather than attempting multiple speculative fixes in production.
+If a future deployment regresses interview behaviour, restore/redeploy the version-17 interview source and the frozen learner-page source before attempting further changes. The paid overlay should then be re-applied as a separate access layer rather than altering the frozen interview logic.
