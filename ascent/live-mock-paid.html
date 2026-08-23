@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>ASCENT · Live AI Mock Interview</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#102a46}
+#mockFrame{display:block;width:100%;height:100%;border:0;background:#fff}
+</style>
+</head>
+<body>
+<iframe id="mockFrame" src="./live-mock-interview.html" title="ASCENT Live AI Mock Interview"></iframe>
+<script>
+const frame=document.getElementById('mockFrame');
+frame.addEventListener('load',()=>{
+  try{
+    const w=frame.contentWindow;
+    if(!w||w.__ascentPaidLiveMockGatewayInstalled)return;
+    w.__ascentPaidLiveMockGatewayInstalled=true;
+    const nativeFetch=w.fetch.bind(w);
+    w.fetch=async function(input,init){
+      const url=typeof input==='string'?input:String(input?.url||'');
+      if(url.includes('/functions/v1/ascent-openai-live-interview')){
+        const paidUrl=url.replace('/functions/v1/ascent-openai-live-interview','/functions/v1/ascent-paid-live-interview');
+        return nativeFetch(paidUrl,init);
+      }
+      return nativeFetch(input,init);
+    };
+  }catch(error){
+    console.error('ASCENT paid Live Mock gateway could not initialise:',error);
+  }
+});
+</script>
+</body>
+</html>
