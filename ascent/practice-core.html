@@ -4469,19 +4469,19 @@ const nextQuestionLink =
       } else if (weakLine) {
         addFeedbackLine(
           feedback,
-          "Your line:",
+          "What you said:",
           "“" + weakLine + "”"
         );
 
         addFeedbackLine(
           feedback,
-          "Why this weakens your answer:",
+          "Why this weakened your answer:",
           explanation
         );
 
         addFeedbackLine(
           feedback,
-          "Use this instead:",
+          "Do this instead:",
           correctedVersion
         );
 
@@ -4499,13 +4499,17 @@ const nextQuestionLink =
 
         addFeedbackLine(
           feedback,
-          "What to improve:",
+          /^you did not\b/i.test(explanation)
+            ? "What you did not do:"
+            : "What to improve:",
           explanation
         );
 
         addFeedbackLine(
           feedback,
-          "Use this instead:",
+          /^you did not\b/i.test(explanation)
+            ? "Do it this way:"
+            : "Do this instead:",
           correctedVersion
         );
       }
@@ -4556,14 +4560,21 @@ const nextQuestionLink =
         resultHeading.textContent =
           "Your Evaluation";
 
-        resultVerdict.textContent =
-          String(
-            (
-              result.feedback &&
-              result.feedback.overallComment
-            ) ||
-            "Review each criterion before your next attempt."
+        const overallComment = String(
+          (
+            result.feedback &&
+            result.feedback.overallComment
+          ) ||
+          "Use the most important correction below in your next response."
+        )
+          .trim()
+          .replace(
+            /^(?:your next fix|focus for your next response):\s*/i,
+            ""
           );
+
+        resultVerdict.textContent =
+          "Your next fix: " + overallComment;
 
         resultRubric.textContent =
           String(
