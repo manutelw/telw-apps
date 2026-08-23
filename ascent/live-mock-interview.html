@@ -24,7 +24,7 @@
 <div id="question" class="question" hidden></div>
 <div class="controls"><button id="start" class="btn primary" type="button">Start Live Interview</button><button id="showQuestion" class="btn" type="button" hidden>Show question</button><button id="end" class="btn red" type="button" hidden>End Interview</button></div>
 <div id="status" class="status" role="status" aria-live="polite"></div>
-<div id="feedbackLoader" class="feedback-loader" hidden aria-label="Preparing feedback"><div class="traveller"><span></span><span></span><span></span></div><div id="feedbackTimer" class="feedback-timer">00:00</div></div>
+<div id="feedbackLoader" class="feedback-loader" hidden aria-label="Preparing feedback"><div class="traveller"><span></span><span></span><span></span></div><div id="feedbackTimer" class="feedback-timer">26</div></div>
 </section>
 <section id="result" class="result" hidden>
 <h3>ASCENT Interview Feedback</h3><div id="score" class="score"></div>
@@ -46,8 +46,7 @@ const learnerItemIds=new Set();
 function clean(v){return String(v??'').replace(/\s+/g,' ').trim()}
 function escapeHtml(v){return clean(v).replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]))}
 function setStatus(m,t=''){const e=$('status');e.className='status'+(t?' '+t:'');e.textContent=m||''}
-function formatElapsed(ms){const s=Math.max(0,Math.floor(ms/1000)),m=Math.floor(s/60),r=s%60;return String(m).padStart(2,'0')+':'+String(r).padStart(2,'0')}
-function showFeedbackLoader(show){$('feedbackLoader').hidden=!show;if(show){if(!feedbackTimerInterval){feedbackStartedAt=Date.now();$('feedbackTimer').textContent='00:00';feedbackTimerInterval=setInterval(()=>{$('feedbackTimer').textContent=formatElapsed(Date.now()-feedbackStartedAt)},250)}}else{if(feedbackTimerInterval){clearInterval(feedbackTimerInterval);feedbackTimerInterval=null}feedbackStartedAt=0;$('feedbackTimer').textContent='00:00'}}
+function showFeedbackLoader(show){$('feedbackLoader').hidden=!show;if(show){if(!feedbackTimerInterval){feedbackStartedAt=Date.now();$('feedbackTimer').textContent='26';feedbackTimerInterval=setInterval(()=>{const elapsed=Math.floor((Date.now()-feedbackStartedAt)/1000);$('feedbackTimer').textContent=String(Math.max(0,26-elapsed))},250)}}else{if(feedbackTimerInterval){clearInterval(feedbackTimerInterval);feedbackTimerInterval=null}feedbackStartedAt=0;$('feedbackTimer').textContent='26'}}
 function isClosingText(v){const s=clean(v).toLowerCase().replace(/[’‘]/g,"'");return (s.includes('thank you')&&s.includes('please wait')&&s.includes('prepare your feedback'))||(s.includes('interview is over')&&s.includes('preparing your feedback'))||s.includes('interview complete')}
 function loadSession(){try{session=JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch{}if(!session?.sessionToken){location.href='./index.html';return false}if(session.expiresAt&&new Date(session.expiresAt)<=new Date()){localStorage.removeItem(SESSION_KEY);location.href='./index.html';return false}return true}
 function addTurn(role,text){text=clean(text);if(!text)return;const last=conversation[conversation.length-1];if(last&&last.role===role&&last.text===text)return;conversation.push({role,text})}
