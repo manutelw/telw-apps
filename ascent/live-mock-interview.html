@@ -69,7 +69,7 @@ if(e.type==='response.output_audio_transcript.delta'){responseTranscriptBuffer+=
 if(e.type==='conversation.item.input_audio_transcription.completed'){const id=clean(e.item_id||e.id||'');if(id&&learnerItemIds.has(id))return;if(id)learnerItemIds.add(id);const t=clean(e.transcript);if(t){addTurn('learner',t);$('liveText').textContent='Preparing the next question…'}return}
 if(e.type==='response.output_audio_transcript.done'){const t=clean(e.transcript);if(t){addTurn('interviewer',t);markClosing(t)}return}
 if(e.type==='response.output_audio.done'){return}
-if(e.type==='response.done'){const t=transcriptFromResponseDone(e);if(t){addTurn('interviewer',t);markClosing(t)}if(closingDetected){clearTimeout(finalTimer);finalTimer=setTimeout(()=>{if(!finished&&!evaluating){silenceLiveOutput();scheduleFinish(120)}},2200)}return}
+if(e.type==='response.done'){const t=transcriptFromResponseDone(e);if(t){addTurn('interviewer',t);markClosing(t)}if(closingDetected){clearTimeout(finalTimer);finalTimer=setTimeout(()=>{if(!finished&&!evaluating){silenceLiveOutput();scheduleFinish(120)}},6000)}return}
 if(e.type==='error'){console.error('Realtime error',e);showFeedbackLoader(false);setStatus(e.error?.message||'Realtime interview error.','error')}}
 function stopLiveAudio(){const a=$('remoteAudio');try{a.volume=0;a.muted=true;a.pause()}catch{}try{pc?.getReceivers().forEach(r=>{try{if(r.track?.kind==='audio')r.track.stop()}catch{}})}catch{}try{a.srcObject=null}catch{}try{dc?.close()}catch{}try{pc?.close()}catch{}if(micStream)micStream.getTracks().forEach(t=>t.stop());dc=pc=micStream=null}
 function closePeer(){clearTimeout(finalTimer);stopLiveAudio()}
