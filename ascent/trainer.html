@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-ascent-build="2026-08-24.22">
+<html lang="en" data-ascent-build="2026-08-24.23">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1027,13 +1027,15 @@
 
         const questionsReleased = rows.length ? Math.max(...rows.map(row => Number(row.released || 0))) : 0;
         const completed = rows.filter(row => Number(row.released || 0) > 0 && Number(row.answered || 0) >= Number(row.released || 0)).length;
-        const notCompleted = Math.max(rows.length - completed, 0);
+        const partlyCompleted = rows.filter(row => Number(row.answered || 0) > 0 && Number(row.answered || 0) < Number(row.released || 0)).length;
+        const zeroCompleted = rows.filter(row => Number(row.answered || 0) === 0).length;
+        const notCompleted = partlyCompleted + zeroCompleted;
         const averages = rows.map(row => Number(row.average)).filter(Number.isFinite).sort((a,b)=>a-b);
         const averageScore = averages.length ? Math.round((averages.reduce((sum,score) => sum + score,0) / averages.length) * 100) / 100 : null;
         const medianScore = averages.length
           ? (averages.length % 2
-              ? averages[(averages.length-1)/2]
-              : (averages[averages.length/2-1] + averages[averages.length/2]) / 2)
+              ? averages[(averages.length - 1) / 2]
+              : (averages[averages.length / 2 - 1] + averages[averages.length / 2]) / 2)
           : null;
         const frequency = new Map();
         averages.forEach(score => {
@@ -1071,7 +1073,7 @@
             insight.textContent = `Batch performance: Average ${meanText}, Median ${medianText}, Mode ${modeText}. ${interpretation}`;
           }
         }
-        renderDiagnosticPie(completed,notCompleted);
+        renderBulkCompletionPie(completed,partlyCompleted,zeroCompleted);
         return;
       }
 
@@ -1103,6 +1105,18 @@
       summaryValue("diagnosticNotStartedValue",notCompleted);
       summaryValue("diagnosticAverageScoreValue",averageScore);
       renderDiagnosticPie(completed,notCompleted);
+    }
+
+    function renderBulkCompletionPie(fullyCompleted,partlyCompleted,zeroCompleted) {
+      const total = fullyCompleted + partlyCompleted + zeroCompleted;
+      const wrap = byId("diagnosticPieChart");
+      if (!total) { wrap.innerHTML = `<div class="line-empty">No assignments yet.</div>`; return; }
+      const fullPct = (fullyCompleted / total) * 100;
+      const partialPct = (partlyCompleted / total) * 100;
+      const fullEnd = fullPct;
+      const partialEnd = fullPct + partialPct;
+      const pieStyle = `background:conic-gradient(#2e8b68 0% ${fullEnd}%, #d48c24 ${fullEnd}% ${partialEnd}%, #9eafbd ${partialEnd}% 100%);width:160px;height:160px;border-radius:50%;margin:0 auto;`;
+      wrap.innerHTML = `<div style="${pieStyle}"></div><div class="chart-legend" style="justify-content:center;margin-top:12px;"><span><i class="legend-dot completed"></i>Students fully completed: <strong>${fullyCompleted}</strong></span><span><i class="legend-dot not-attempted"></i>Students partly completed: <strong>${partlyCompleted}</strong></span><span><i class="legend-dot other"></i>Students with 0 completion: <strong>${zeroCompleted}</strong></span></div>`;
     }
 
     function renderDiagnosticPie(completed,notCompleted) {
