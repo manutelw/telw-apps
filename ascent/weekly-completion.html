@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>ASCENT · Weekly Completion</title>
+  <style>
+    :root {
+      --navy:#143a60; --blue:#27679d; --blue-soft:#edf4fb; --gold:#c67b00;
+      --text:#24364a; --muted:#6c7b8d; --border:#d7e1eb; --white:#fff;
+      --green:#18794e; --green-soft:#eaf8f1; --amber:#9a6700; --amber-soft:#fff7db;
+      --red:#b42318; --red-soft:#fff0ee; --shadow:0 22px 65px rgba(0,0,0,.2);
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; min-height:100vh; padding:20px; font-family:Arial,Helvetica,sans-serif; color:var(--text);
+      background:radial-gradient(circle at top right,rgba(244,201,107,.75) 0,rgba(244,201,107,.18) 18%,transparent 40%),linear-gradient(145deg,#102a46,#214d79);
+    }
+    button,select { font:inherit; }
+    .app-shell { width:100%; max-width:1480px; margin:0 auto; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:18px; margin-bottom:18px; padding:16px 20px; border-radius:18px; background:rgba(255,255,255,.98); box-shadow:var(--shadow); }
+    .brand-wrap { display:flex; align-items:center; gap:14px; color:inherit; text-decoration:none; }
+    .brand-mark { width:46px; height:46px; display:grid; place-items:center; border-radius:13px; background:linear-gradient(145deg,var(--navy),var(--blue)); color:#fff; font-size:22px; font-weight:800; }
+    .brand-text h1 { color:var(--navy); font-size:24px; letter-spacing:1.3px; line-height:1; margin:0 0 5px; }
+    .brand-text p { color:var(--gold); font-size:13px; font-weight:700; margin:0; }
+    .top-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .back-button,.refresh-button { min-height:42px; padding:0 14px; border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--navy); font-weight:800; text-decoration:none; cursor:pointer; }
+    .back-button { display:inline-flex; align-items:center; }
+    .refresh-button:hover,.back-button:hover { background:var(--blue-soft); }
+    .workspace { padding:28px; border-radius:20px; background:rgba(255,255,255,.98); box-shadow:var(--shadow); }
+    .workspace-header { display:flex; justify-content:space-between; align-items:flex-start; gap:18px; margin-bottom:20px; }
+    .workspace-header h2 { margin:0 0 8px; color:var(--navy); font-size:28px; }
+    .workspace-header p { margin:0; color:var(--muted); font-size:14px; line-height:1.55; }
+    .filters { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:20px; }
+    .filter-group label { display:block; margin-bottom:6px; color:var(--muted); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.7px; }
+    .filter-group select { min-width:180px; min-height:42px; padding:0 12px; border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--text); }
+    .scope-note { margin-left:auto; color:var(--muted); font-size:12px; line-height:1.45; }
+    .card-grid { display:grid; grid-template-columns:repeat(4,minmax(160px,1fr)); gap:14px; margin-bottom:20px; }
+    .summary-card { padding:18px; border:1px solid var(--border); border-radius:15px; background:#fbfdff; }
+    .summary-label { color:var(--muted); font-size:11px; font-weight:800; letter-spacing:.7px; text-transform:uppercase; margin-bottom:10px; }
+    .summary-value { color:var(--navy); font-size:30px; font-weight:800; line-height:1; }
+    .summary-card.green { border-color:#bfe3d1; background:var(--green-soft); }
+    .summary-card.green .summary-value { color:var(--green); }
+    .summary-card.amber { border-color:#ead798; background:var(--amber-soft); }
+    .summary-card.amber .summary-value { color:var(--amber); }
+    .summary-card.red { border-color:#efc0bb; background:var(--red-soft); }
+    .summary-card.red .summary-value { color:var(--red); }
+    .panel { padding:20px; border:1px solid var(--border); border-radius:16px; background:#fbfdff; margin-bottom:18px; }
+    .panel h3 { margin:0 0 5px; color:var(--navy); font-size:18px; }
+    .panel-subtitle { color:var(--muted); font-size:12px; line-height:1.5; margin-bottom:14px; }
+    .table-wrap { width:100%; overflow:auto; border:1px solid var(--border); border-radius:12px; background:#fff; }
+    table { width:100%; min-width:780px; border-collapse:collapse; }
+    th,td { padding:11px 12px; border-bottom:1px solid #e7edf3; text-align:left; font-size:12px; vertical-align:top; }
+    th { color:#51677c; background:#f6f9fc; font-size:10px; text-transform:uppercase; letter-spacing:.6px; }
+    tr:last-child td { border-bottom:0; }
+    .status-pill { display:inline-block; padding:5px 8px; border-radius:999px; font-size:10px; font-weight:800; }
+    .status-pill.amber { color:var(--amber); background:var(--amber-soft); }
+    .status-pill.red { color:var(--red); background:var(--red-soft); }
+    .empty { padding:20px; color:var(--muted); font-size:13px; text-align:center; }
+    .error { padding:14px 16px; margin-bottom:18px; border:1px solid #efc0bb; border-radius:12px; background:var(--red-soft); color:var(--red); font-size:13px; line-height:1.5; }
+    .loading { padding:28px; color:var(--muted); text-align:center; font-size:14px; }
+    @media(max-width:900px){ .card-grid{grid-template-columns:repeat(2,minmax(0,1fr));} .scope-note{width:100%;margin-left:0;} }
+    @media(max-width:560px){ body{padding:10px;} .topbar,.workspace{border-radius:14px;} .workspace{padding:18px;} .card-grid{grid-template-columns:1fr 1fr;} .summary-value{font-size:25px;} .brand-text p{display:none;} }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand-wrap" href="./trainer.html">
+        <div class="brand-mark">A</div>
+        <div class="brand-text"><h1>ASCENT</h1><p>Trainer &amp; Admin</p></div>
+      </a>
+      <div class="top-actions">
+        <button id="refreshButton" class="refresh-button" type="button">Refresh</button>
+        <a class="back-button" href="./trainer.html">Back to Trainer Portal</a>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <div class="workspace-header">
+        <div>
+          <h2>Weekly Completion</h2>
+          <p>Latest completed week only. Current-week releases are excluded until the week closes.</p>
+        </div>
+      </div>
+
+      <div id="errorBox" class="error" hidden></div>
+      <div id="loadingBox" class="loading">Loading weekly completion data…</div>
+
+      <div id="content" hidden>
+        <div class="filters">
+          <div class="filter-group">
+            <label for="batchSelect">Batch</label>
+            <select id="batchSelect"></select>
+          </div>
+          <div id="scopeNote" class="scope-note"></div>
+        </div>
+
+        <section class="card-grid" aria-label="Weekly completion summary">
+          <div class="summary-card green"><div class="summary-label">Complete</div><div id="completeValue" class="summary-value">—</div></div>
+          <div class="summary-card amber"><div class="summary-label">Partial</div><div id="partialValue" class="summary-value">—</div></div>
+          <div class="summary-card red"><div class="summary-label">Zero</div><div id="zeroValue" class="summary-value">—</div></div>
+          <div class="summary-card"><div class="summary-label">Cohort Score</div><div id="scoreValue" class="summary-value">—</div></div>
+        </section>
+
+        <section class="panel">
+          <h3>Amber — Partial Completion</h3>
+          <div class="panel-subtitle">Students who answered at least one, but not all, released Bulk Questions by the end of the completed week.</div>
+          <div id="amberTable"></div>
+        </section>
+
+        <section class="panel">
+          <h3>Red — Zero Completion</h3>
+          <div class="panel-subtitle">Students who answered none of the released Bulk Questions by the end of the completed week.</div>
+          <div id="redTable"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+  const SUPABASE_URL = "https://vtqatrhwfvzyodiftvkc.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
+  const SESSION_KEY = "ascent_trainer_session";
+  const loginUrl = "./trainer-login.html";
+
+  const byId = id => document.getElementById(id);
+  let reportData = null;
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+
+  function loadSession() {
+    const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    try {
+      const stored = JSON.parse(raw);
+      const session = {
+        ...stored,
+        sessionToken: stored.sessionToken || stored.session_token,
+        expiresAt: stored.expiresAt || stored.expires_at,
+      };
+      const expiry = new Date(session.expiresAt).getTime();
+      if (!session.sessionToken || !Number.isFinite(expiry) || expiry <= Date.now()) return null;
+      return session;
+    } catch { return null; }
+  }
+
+  async function rpc(name, body) {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`},
+      body:JSON.stringify(body)
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(payload?.message || payload?.error || `Request failed (${response.status})`);
+    return Array.isArray(payload) && payload.length === 1 ? payload[0] : payload;
+  }
+
+  async function loadData() {
+    const session = loadSession();
+    if (!session) { window.location.replace(loginUrl); return; }
+    byId("errorBox").hidden = true;
+    byId("loadingBox").hidden = false;
+    byId("content").hidden = true;
+
+    try {
+      const payload = await rpc("ascent_trainer_report_data", {
+        p_session_token: session.sessionToken,
+        p_batch: null,
+        p_student_uuid: null,
+        p_task_uuid: null,
+        p_access_point_uuid: null
+      });
+      if (!payload || payload.ok === false) throw new Error(payload?.message || "Could not load trainer report data.");
+      reportData = payload;
+      buildBatchOptions();
+      render();
+      byId("loadingBox").hidden = true;
+      byId("content").hidden = false;
+    } catch (error) {
+      byId("loadingBox").hidden = true;
+      byId("errorBox").textContent = error.message || "Could not load weekly completion data.";
+      byId("errorBox").hidden = false;
+    }
+  }
+
+  function canonicalBatch(value) {
+    return String(value || "").replace(/\s+PGDM\s*$/i,"").trim();
+  }
+
+  function buildBatchOptions() {
+    const students = Array.isArray(reportData?.students) ? reportData.students : [];
+    const batches = Array.from(new Set(students.map(s => canonicalBatch(s.batch)).filter(Boolean))).sort();
+    const select = byId("batchSelect");
+    select.innerHTML = batches.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join("");
+    if (batches.includes("2026-28")) select.value = "2026-28";
+  }
+
+  function latestCompletedRows(batch) {
+    const students = Array.isArray(reportData?.students) ? reportData.students : [];
+    const metrics = Array.isArray(reportData?.weeklyBulkMetrics) ? reportData.weeklyBulkMetrics : [];
+    const selectedStudents = students.filter(s => canonicalBatch(s.batch) === batch);
+    const studentIds = new Set(selectedStudents.map(s => String(s.studentUuid || "")));
+    const scoped = metrics.filter(m => studentIds.has(String(m.studentUuid || "")));
+    const weekNos = Array.from(new Set(scoped.map(m => Number(m.weekNo)).filter(Number.isFinite))).sort((a,b)=>a-b);
+    if (!weekNos.length) return {rows:[],students:selectedStudents,weekNo:null};
+    const weekNo = weekNos[weekNos.length - 1];
+    return {rows:scoped.filter(m => Number(m.weekNo) === weekNo),students:selectedStudents,weekNo};
+  }
+
+  function makeTable(rows, studentMap, statusClass) {
+    if (!rows.length) return `<div class="empty">No students in this group.</div>`;
+    const ordered = rows.slice().sort((a,b) => {
+      const sa = studentMap.get(String(a.studentUuid || "")) || {};
+      const sb = studentMap.get(String(b.studentUuid || "")) || {};
+      return String(sa.fullName || "").localeCompare(String(sb.fullName || ""));
+    });
+    return `<div class="table-wrap"><table><thead><tr><th>Student</th><th>Roll No.</th><th>Progress</th><th>Weekly Score</th><th>Email</th><th>Status</th></tr></thead><tbody>${ordered.map(row => {
+      const student = studentMap.get(String(row.studentUuid || "")) || {};
+      const avg = Number(row.average);
+      return `<tr>
+        <td><strong>${escapeHtml(student.fullName || "—")}</strong></td>
+        <td>${escapeHtml(student.studentId || "—")}</td>
+        <td>${Number(row.answered || 0)} / ${Number(row.released || 0)}</td>
+        <td>${Number.isFinite(avg) ? avg.toFixed(2) : "—"}</td>
+        <td>${escapeHtml(student.email || "—")}</td>
+        <td><span class="status-pill ${statusClass}">${statusClass === "amber" ? "PARTIAL" : "ZERO"}</span></td>
+      </tr>`;
+    }).join("")}</tbody></table></div>`;
+  }
+
+  function render() {
+    const batch = byId("batchSelect").value;
+    const {rows,students} = latestCompletedRows(batch);
+    const studentMap = new Map(students.map(s => [String(s.studentUuid || ""),s]));
+    const complete = rows.filter(r => Number(r.released || 0) > 0 && Number(r.answered || 0) >= Number(r.released || 0));
+    const partial = rows.filter(r => Number(r.answered || 0) > 0 && Number(r.answered || 0) < Number(r.released || 0));
+    const zero = rows.filter(r => Number(r.answered || 0) === 0);
+    const averages = rows.map(r => Number(r.average)).filter(Number.isFinite);
+    const cohortScore = averages.length ? averages.reduce((sum,n)=>sum+n,0)/averages.length : null;
+    const sample = rows[0] || null;
+
+    byId("completeValue").textContent = complete.length;
+    byId("partialValue").textContent = partial.length;
+    byId("zeroValue").textContent = zero.length;
+    byId("scoreValue").textContent = cohortScore === null ? "—" : cohortScore.toFixed(2);
+    byId("scopeNote").textContent = sample
+      ? `Week ${sample.weekStart} to ${sample.weekEnd} · ${rows.length} students in scope · ${students.length} active students in batch`
+      : `${students.length} active students in batch · no completed-week Bulk Question data yet`;
+    byId("amberTable").innerHTML = makeTable(partial,studentMap,"amber");
+    byId("redTable").innerHTML = makeTable(zero,studentMap,"red");
+  }
+
+  byId("batchSelect").addEventListener("change",render);
+  byId("refreshButton").addEventListener("click",loadData);
+  loadData();
+})();
+</script>
+</body>
+</html>
