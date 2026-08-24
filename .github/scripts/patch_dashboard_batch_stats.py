@@ -5,17 +5,22 @@ path = Path('ascent/trainer.html')
 text = path.read_text(encoding='utf-8')
 original = text
 
-# Card labels: keep questions due and average score, replace student-count cards with median/mode.
-text = text.replace(
-    '<div class="summary-card"><div class="summary-label" id="diagnosticCompletedLabel">Completed</div><div id="diagnosticAttemptedValue" class="summary-value">—</div></div>',
+# Replace the two middle summary cards regardless of whether an older patch
+# labelled them Completed/Not Completed or Students Completed/Students Not Completed.
+text, n1 = re.subn(
+    r'<div class="summary-card"><div class="summary-label" id="diagnosticCompletedLabel">(?:Completed|Students Completed|Median)</div><div id="diagnosticAttemptedValue" class="summary-value">—</div></div>',
     '<div class="summary-card"><div class="summary-label" id="diagnosticCompletedLabel">Median</div><div id="diagnosticAttemptedValue" class="summary-value">—</div></div>',
-    1,
+    text,
+    count=1,
 )
-text = text.replace(
-    '<div class="summary-card"><div class="summary-label">Not Completed</div><div id="diagnosticNotStartedValue" class="summary-value">—</div></div>',
+text, n2 = re.subn(
+    r'<div class="summary-card"><div class="summary-label"(?: id="diagnosticNotStartedLabel")?>(?:Not Completed|Students Not Completed|Mode)</div><div id="diagnosticNotStartedValue" class="summary-value">—</div></div>',
     '<div class="summary-card"><div class="summary-label" id="diagnosticNotStartedLabel">Mode</div><div id="diagnosticNotStartedValue" class="summary-value">—</div></div>',
-    1,
+    text,
+    count=1,
 )
+if n1 != 1 or n2 != 1:
+    raise SystemExit('Could not locate dashboard statistic cards')
 
 # Add a short interpretation under the four cards.
 needle = '          </div>\n          <div class="dashboard-grid">'
@@ -23,8 +28,8 @@ replacement = '          </div>\n          <div id="batchStatsInsight" class="pa
 if needle in text and 'id="batchStatsInsight"' not in text:
     text = text.replace(needle, replacement, 1)
 
-# Replace the Custom/Bulk summary calculations. The average values already include
-# unanswered due questions as 0 because they come from weeklyBulkMetrics.
+# The Custom/Bulk summary is rebuilt by patch_dashboard_custom_metrics.py just
+# before this script, so patch that known block into mean/median/mode statistics.
 old = '''        const questionsReleased = rows.length ? Math.max(...rows.map(row => Number(row.released || 0))) : 0;
         const completed = rows.filter(row => Number(row.released || 0) > 0 && Number(row.answered || 0) >= Number(row.released || 0)).length;
         const notCompleted = Math.max(rows.length - completed, 0);
@@ -51,10 +56,9 @@ new = '''        const questionsReleased = rows.length ? Math.max(...rows.map(ro
           if (count > modeCount) { modeCount = count; modeScore = Number(key); }
         });
         const sample = rows[0];'''
-if old not in text and 'const medianScore = averages.length' not in text:
+if old not in text:
     raise SystemExit('Custom metric calculation block not found')
-if old in text:
-    text = text.replace(old,new,1)
+text = text.replace(old,new,1)
 
 old_values = '''        summaryValue("diagnosticQuestionsValue",questionsReleased);
         summaryValue("diagnosticAttemptedValue",completed);
@@ -85,10 +89,9 @@ new_values = '''        summaryValue("diagnosticQuestionsValue",questionsRelease
         }
         renderDiagnosticPie(completed,notCompleted);
         return;'''
-if old_values not in text and 'Batch performance: Average ${meanText}' not in text:
+if old_values not in text:
     raise SystemExit('Custom summary value block not found')
-if old_values in text:
-    text = text.replace(old_values,new_values,1)
+text = text.replace(old_values,new_values,1)
 
 # For non-Custom sets restore the generic count labels and clear the Custom insight.
 marker = '''      const rows = filteredReleaseProgress();'''
@@ -99,7 +102,7 @@ insert = '''      byId("diagnosticCompletedLabel").textContent = "Students Compl
 if marker in text and insert not in text:
     text = text.replace(marker,insert,1)
 
-# Graph nomenclature requested by the user.
+# Completion counts stay in the graph, with explicit student nomenclature.
 text = text.replace('Completed: <strong>${completed}</strong>', 'No. of Students Completed: <strong>${completed}</strong>')
 text = text.replace('Not completed: <strong>${notCompleted}</strong>', 'No. of Students Not Completed: <strong>${notCompleted}</strong>')
 
@@ -119,8 +122,5 @@ failed=[k for k,v in checks.items() if not v]
 if failed:
     raise SystemExit('Patch verification failed: '+', '.join(failed))
 
-if text != original:
-    path.write_text(text,encoding='utf-8')
-    print('trainer.html patched: median, mode and batch performance insight added')
-else:
-    print('trainer.html already patched')
+path.write_text(text,encoding='utf-8')
+print('trainer.html patched: mean, median, mode and batch performance insight added')
