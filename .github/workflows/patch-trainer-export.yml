@@ -17,6 +17,8 @@ jobs:
           fetch-depth: 0
       - name: Patch trainer leaderboard
         run: python .github/scripts/patch_trainer_leaderboard.py
+      - name: Fix incomplete-response due count
+        run: python .github/scripts/fix_incomplete_response_due.py
       - name: Commit trainer fix
         run: |
           git config user.name "github-actions[bot]"
