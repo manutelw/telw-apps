@@ -23,6 +23,8 @@ jobs:
         run: python .github/scripts/patch_dashboard_custom_metrics.py
       - name: Remove extra Excel compliance tabs
         run: python .github/scripts/remove_excel_compliance_tabs.py
+      - name: Clarify dashboard completion labels
+        run: python .github/scripts/rename_dashboard_completion_labels.py
       - name: Commit trainer fix
         run: |
           git config user.name "github-actions[bot]"
