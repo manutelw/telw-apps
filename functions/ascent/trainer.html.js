@@ -50,9 +50,22 @@ export async function onRequest(context) {
     'visibleResultRows.slice(0,300).map(row =>'
   );
 
+  const oldLeaderboardSource = `      const assignments = (Array.isArray(workbookData.assignments) ? workbookData.assignments : [])
+        .filter(assignment => Boolean(assignment.submissionUuid) && assignment.submittedAt);`;
+
+  const newLeaderboardSource = `      const assignments = (
+        Array.isArray(workbookData.submissions) && workbookData.submissions.length
+          ? workbookData.submissions
+          : (Array.isArray(workbookData.assignments) ? workbookData.assignments : [])
+      ).filter(assignment => Boolean(assignment.submissionUuid) && assignment.submittedAt);`;
+
+  if (html.includes(oldLeaderboardSource)) {
+    html = html.replace(oldLeaderboardSource, newLeaderboardSource);
+  }
+
   html = html.replace(
     'data-ascent-build="2026-08-04.5"',
-    'data-ascent-build="2026-08-24.3"'
+    'data-ascent-build="2026-08-24.4"'
   );
 
   const headers = new Headers(response.headers);
