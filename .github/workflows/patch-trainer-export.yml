@@ -23,15 +23,17 @@ jobs:
         run: python .github/scripts/patch_dashboard_batch_stats.py
       - name: Add Weekly Completion navigation
         run: python .github/scripts/patch_weekly_completion_nav.py
+      - name: Split strong Diagnostic incomplete students
+        run: python .github/scripts/patch_weekly_completion_strong_diag.py
       - name: Commit trainer fix
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add ascent/trainer.html
+          git add ascent/trainer.html ascent/weekly-completion.html
           if git diff --cached --quiet; then
             echo "No trainer changes required"
             exit 0
           fi
-          git commit -m "Update trainer dashboard and weekly completion navigation"
+          git commit -m "Update trainer dashboard and weekly completion reporting"
           git pull --rebase origin main
           git push origin HEAD:main
