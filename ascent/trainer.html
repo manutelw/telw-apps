@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-ascent-build="2026-08-24.13">
+<html lang="en" data-ascent-build="2026-08-24.14">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -4026,24 +4026,20 @@ function formatCriterionFeedback(criterion) {
     // Batches are never blended together.
     function buildWeeklyLeaderboardSheets(workbookData) {
       const students = Array.isArray(workbookData.students) ? workbookData.students : [];
-      const results = Array.isArray(workbookData.results) ? workbookData.results : [];
+      const weeklyMetrics = Array.isArray(workbookData.weeklyBulkMetrics) ? workbookData.weeklyBulkMetrics : [];
+      const completeStudents = Array.isArray(workbookData.bulkCompleteStudents) ? workbookData.bulkCompleteStudents : [];
       const studentByUuid = new Map(students.map(student => [String(student.studentUuid || ""),student]));
       const palette = ["DDEBF7","E2F0D9","FFF2CC","FCE4D6","E4DFEC","D9EAD3"];
       const output = [];
 
-      function startOfMonday(value) {
-        const d = value ? new Date(value) : new Date();
-        d.setHours(0,0,0,0);
-        const day = d.getDay();
-        d.setDate(d.getDate() - ((day + 6) % 7));
-        return d;
+      function fmtDate(value) {
+        if (!value) return "";
+        const d = new Date(String(value) + "T00:00:00");
+        return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString(undefined,{day:"numeric",month:"short"});
       }
-      function fmtDate(d) {
-        return d.toLocaleDateString(undefined,{day:"numeric",month:"short"});
-      }
-      function applyFill(sheet, range, rgb) {
-        for (let r=range.s.r; r<=range.e.r; r+=1) {
-          for (let c=range.s.c; c<=range.e.c; c+=1) {
+      function applyFill(sheet,range,rgb) {
+        for (let r=range.s.r;r<=range.e.r;r+=1) {
+          for (let c=range.s.c;c<=range.e.c;c+=1) {
             const addr=XLSX.utils.encode_cell({r,c});
             if (!sheet[addr]) sheet[addr]={t:"s",v:""};
             sheet[addr].s=Object.assign({},sheet[addr].s||{},{fill:{patternType:"solid",fgColor:{rgb}}});
@@ -4051,53 +4047,40 @@ function formatCriterionFeedback(criterion) {
         }
       }
 
-      const bulkResults = results.filter(result =>
-        String(result.questionType || "").toUpperCase()==="BULK" &&
-        result.latestSubmittedAt && Number.isFinite(Number(result.latestScore))
-      );
-      const currentMonday = startOfMonday();
-      const completedBulkResults = bulkResults.filter(result => new Date(result.latestSubmittedAt) < currentMonday);
-      const weekStartKeys = Array.from(new Set(completedBulkResults.map(result => startOfMonday(result.latestSubmittedAt).toISOString().slice(0,10)))).sort();
-      const batchNames = Array.from(new Set(students.map(student=>exportText(student.batch)).filter(Boolean))).sort().reverse();
+      const weekNos = Array.from(new Set(weeklyMetrics.map(m=>Number(m.weekNo)).filter(Number.isFinite))).sort((a,b)=>a-b);
+      const batchNames = Array.from(new Set(students.map(s=>exportText(s.batch)).filter(Boolean))).sort().reverse();
 
       batchNames.forEach(batchName => {
         const blockWidth=4, gap=1;
         const rows=[[],[]];
         for (let r=0;r<10;r+=1) rows.push([]);
-        const merges=[];
-        const fills=[];
+        const merges=[], fills=[];
 
-        weekStartKeys.forEach((key,weekIndex)=>{
-          const weekStart=new Date(key+"T00:00:00");
-          const weekEndExclusive=new Date(weekStart); weekEndExclusive.setDate(weekEndExclusive.getDate()+7);
-          const weekEndLabel=new Date(weekEndExclusive); weekEndLabel.setDate(weekEndLabel.getDate()-1);
+        weekNos.forEach((weekNo,weekIndex)=>{
+          const entries=weeklyMetrics.filter(metric=>{
+            if (Number(metric.weekNo)!==weekNo) return false;
+            const student=studentByUuid.get(String(metric.studentUuid||""));
+            return student && exportText(student.batch)===batchName;
+          });
+          const sample=entries[0] || weeklyMetrics.find(metric=>Number(metric.weekNo)===weekNo);
           const startCol=weekIndex*(blockWidth+gap);
-          rows[0][startCol]=`Week ${weekIndex+1} · ${fmtDate(weekStart)} – ${fmtDate(weekEndLabel)}`;
+          rows[0][startCol]=`Week ${weekNo} · ${sample?fmtDate(sample.weekStart):""} – ${sample?fmtDate(sample.weekEnd):""}`;
           merges.push({s:{r:0,c:startCol},e:{r:0,c:startCol+blockWidth-1}});
           ["Rank","Roll number","Name","Average score"].forEach((value,i)=>rows[1][startCol+i]=value);
 
-          const grouped=new Map();
-          completedBulkResults.forEach(result=>{
-            const submitted=new Date(result.latestSubmittedAt);
-            if (!(submitted>=weekStart && submitted<weekEndExclusive)) return;
-            const student=studentByUuid.get(String(result.studentUuid||""));
-            if (!student || exportText(student.batch)!==batchName) return;
-            const studentKey=String(result.studentUuid||"");
-            if (!grouped.has(studentKey)) grouped.set(studentKey,[]);
-            grouped.get(studentKey).push(Number(result.latestScore));
-          });
-          const ranked=Array.from(grouped.entries()).map(([studentUuid,scores])=>{
-            const student=studentByUuid.get(studentUuid);
+          const ranked=entries.map(metric=>{
+            const student=studentByUuid.get(String(metric.studentUuid||""));
             return {
               rollNo:student?exportText(student.rollNo||student.studentId):"",
               name:student?exportText(student.name||student.fullName):"",
-              average:scores.reduce((sum,v)=>sum+v,0)/scores.length
+              average:Number(metric.average)
             };
-          }).sort((a,b)=>b.average-a.average || a.name.localeCompare(b.name)).slice(0,10);
+          }).filter(entry=>entry.name && Number.isFinite(entry.average))
+            .sort((a,b)=>b.average-a.average || a.name.localeCompare(b.name))
+            .slice(0,10);
 
-          for (let rank=0;rank<10;rank+=1) {
-            const entry=ranked[rank];
-            const row=rows[rank+2];
+          for(let rank=0;rank<10;rank+=1){
+            const entry=ranked[rank], row=rows[rank+2];
             row[startCol]=rank+1;
             row[startCol+1]=entry?entry.rollNo:"";
             row[startCol+2]=entry?entry.name:"";
@@ -4108,56 +4091,30 @@ function formatCriterionFeedback(criterion) {
 
         const sheet=XLSX.utils.aoa_to_sheet(rows);
         sheet["!merges"]=merges;
-        const cols=[]; weekStartKeys.forEach(()=>cols.push({wch:8},{wch:18},{wch:28},{wch:16},{wch:3}));
+        const cols=[]; weekNos.forEach(()=>cols.push({wch:8},{wch:18},{wch:28},{wch:16},{wch:3}));
         sheet["!cols"]=cols;
         fills.forEach(item=>applyFill(sheet,item.range,item.rgb));
         output.push({batchName,sheet});
       });
 
-      // Separate list of actual submitters in each completed week.
-      if (weekStartKeys.length) {
-        const blockWidth=4, gap=1;
-        const weeklyEntries=weekStartKeys.map(key=>{
-          const weekStart=new Date(key+"T00:00:00");
-          const weekEndExclusive=new Date(weekStart); weekEndExclusive.setDate(weekEndExclusive.getDate()+7);
-          const byStudent=new Map();
-          completedBulkResults.forEach(result=>{
-            const submitted=new Date(result.latestSubmittedAt);
-            if (!(submitted>=weekStart && submitted<weekEndExclusive)) return;
-            const student=studentByUuid.get(String(result.studentUuid||""));
-            if (!student) return;
-            const studentKey=String(result.studentUuid||"");
-            if (!byStudent.has(studentKey)) byStudent.set(studentKey,{student,count:0});
-            byStudent.get(studentKey).count+=1;
-          });
-          return Array.from(byStudent.values()).sort((a,b)=>exportText(a.student.batch).localeCompare(exportText(b.student.batch)) || exportText(a.student.name||a.student.fullName).localeCompare(exportText(b.student.name||b.student.fullName)));
-        });
-        const maxRows=Math.max(...weeklyEntries.map(items=>items.length),0);
-        const rows=[[],[]]; for(let r=0;r<maxRows;r+=1) rows.push([]);
-        const merges=[],fills=[];
-        weekStartKeys.forEach((key,weekIndex)=>{
-          const weekStart=new Date(key+"T00:00:00");
-          const weekEnd=new Date(weekStart); weekEnd.setDate(weekEnd.getDate()+6);
-          const startCol=weekIndex*(blockWidth+gap);
-          rows[0][startCol]=`Week ${weekIndex+1} · ${fmtDate(weekStart)} – ${fmtDate(weekEnd)}`;
-          merges.push({s:{r:0,c:startCol},e:{r:0,c:startCol+blockWidth-1}});
-          ["Batch","Roll number","Name","Responses submitted"].forEach((value,i)=>rows[1][startCol+i]=value);
-          weeklyEntries[weekIndex].forEach((entry,index)=>{
-            const row=rows[index+2];
-            row[startCol]=exportText(entry.student.batch);
-            row[startCol+1]=exportText(entry.student.rollNo||entry.student.studentId);
-            row[startCol+2]=exportText(entry.student.name||entry.student.fullName);
-            row[startCol+3]=entry.count;
-          });
-          fills.push({range:{s:{r:0,c:startCol},e:{r:Math.max(1,maxRows+1),c:startCol+blockWidth-1}},rgb:palette[weekIndex%palette.length]});
-        });
-        const sheet=XLSX.utils.aoa_to_sheet(rows);
-        sheet["!merges"]=merges;
-        const cols=[]; weekStartKeys.forEach(()=>cols.push({wch:14},{wch:18},{wch:28},{wch:20},{wch:3}));
-        sheet["!cols"]=cols;
-        fills.forEach(item=>applyFill(sheet,item.range,item.rgb));
-        output.push({batchName:"WEEKLY SUBMITTERS",sheet});
-      }
+      // ONE cumulative compliance list: students who have submitted every Bulk
+      // Question due by the start of the current week. Today's newly released
+      // question is therefore not included until next Monday.
+      const completeRows=[["Students who have submitted all Bulk Questions due through the latest completed week"],["Batch","Roll number","Name"]];
+      const completeEntries=completeStudents.map(metric=>{
+        const student=studentByUuid.get(String(metric.studentUuid||""));
+        return student ? {
+          batch:exportText(student.batch),
+          rollNo:exportText(student.rollNo||student.studentId),
+          name:exportText(student.name||student.fullName)
+        } : null;
+      }).filter(Boolean).sort((a,b)=>a.batch.localeCompare(b.batch)||a.name.localeCompare(b.name));
+      completeEntries.forEach(entry=>completeRows.push([entry.batch,entry.rollNo,entry.name]));
+      const completeSheet=XLSX.utils.aoa_to_sheet(completeRows);
+      completeSheet["!merges"]=[{s:{r:0,c:0},e:{r:0,c:2}}];
+      completeSheet["!cols"]=[{wch:14},{wch:18},{wch:30}];
+      applyFill(completeSheet,{s:{r:0,c:0},e:{r:1,c:2}},"E2F0D9");
+      output.push({batchName:"ALL RESPONSES SUBMITTED",sheet:completeSheet});
 
       return output;
     }
