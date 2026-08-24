@@ -14,7 +14,7 @@
     .brand{display:flex;gap:13px;align-items:center}.mark{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--navy);color:#fff;font-size:21px;font-weight:800}.brand h1{margin:0;color:var(--navy);font-size:23px}.brand p{margin:4px 0 0;color:var(--gold);font-size:12px;font-weight:700}
     main{padding:26px}.headrow{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;flex-wrap:wrap}.headrow h2{margin:0 0 6px;color:var(--navy);font-size:27px}.sub{font-size:13px;color:var(--muted);line-height:1.5}.controls{display:flex;align-items:flex-end;gap:10px}.controls label{display:block;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:5px}.controls select,.controls button{height:40px;border:1px solid var(--border);border-radius:9px;background:#fff;padding:0 11px;font:inherit}.controls button{font-weight:700;color:var(--navy);cursor:pointer}
     .scope{margin:16px 0 18px;color:var(--muted);font-size:12px}.cards{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:13px;margin-bottom:20px}.card{border:1px solid var(--border);border-radius:14px;padding:16px;background:#fbfdff}.card .k{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px}.card .v{font-size:29px;font-weight:800;color:var(--navy)}
-    .insight{border:1px solid var(--border);background:var(--bg);border-radius:12px;padding:14px 16px;margin-bottom:20px;font-size:13px;line-height:1.55;color:#43596e}
+    .insight{border:1px solid #e0c06f;background:#fff8e6;border-radius:12px;padding:16px 18px;margin-bottom:20px;font-size:13px;line-height:1.65;color:#3d4f61}
     .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{border:1px solid var(--border);border-radius:15px;padding:20px;background:#fbfdff}.panel h3{margin:0 0 6px;color:var(--navy);font-size:18px}.panel .note{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.45}
     .barrow{display:grid;grid-template-columns:150px 1fr 46px;gap:10px;align-items:center;margin:16px 0}.barlabel{font-size:12px;font-weight:700}.track{height:20px;background:#edf2f6;border-radius:999px;overflow:hidden}.fill{height:100%;border-radius:999px}.fill.complete{background:var(--green)}.fill.partial{background:var(--amber)}.fill.zero{background:var(--grey)}.barvalue{text-align:right;font-size:13px;font-weight:800;color:var(--navy)}
     .pie{width:200px;height:200px;border-radius:50%;margin:12px auto 18px}.legend{display:grid;gap:10px}.legendrow{display:flex;justify-content:space-between;gap:18px;font-size:12px}.legendleft{display:flex;align-items:center;gap:8px}.dot{width:10px;height:10px;border-radius:50%}.dot.complete{background:var(--green)}.dot.partial{background:var(--amber)}.dot.zero{background:var(--grey)}
@@ -58,12 +58,19 @@
   const fmt=v=>v==null?"—":Number(v).toFixed(2);
   function interpretation(d){
     if(d.mean==null||d.median==null||d.mode==null)return "No completed-week score data is available yet.";
-    let text=`Batch performance: Average ${fmt(d.mean)}, Median ${fmt(d.median)}, Mode ${fmt(d.mode)}. `;
-    if(Math.abs(Number(d.mean)-Number(d.median))<=0.25) text+="The mean and median are close, so the middle of the batch is broadly consistent with the overall average.";
-    else if(Number(d.mean)<Number(d.median)) text+="The mean is below the median, which suggests lower scores are pulling the overall average down.";
-    else text+="The mean is above the median, which suggests stronger scores at the top are lifting the overall average.";
-    if(Number(d.mode)===0) text+=" The mode of 0 shows that non-submission is still the single most common score outcome and is pulling overall performance down.";
-    return text;
+    const total=Math.max(Number(d.inScope||0),1);
+    const complete=Number(d.complete||0), partial=Number(d.partial||0), zero=Number(d.zero||0);
+    const incomplete=partial+zero;
+    const incompletePct=Math.round((incomplete/total)*100);
+    let middleSentence=Math.abs(Number(d.mean)-Number(d.median))<=0.25
+      ? "The mean and median are close, which suggests that the low overall level is not being caused by a small number of weak outliers; it is visible across the cohort."
+      : Number(d.mean)<Number(d.median)
+        ? "The mean is below the median, showing that lower scores are pulling the cohort average down."
+        : "The mean is above the median, suggesting that stronger scores at the top are lifting an otherwise weaker cohort average.";
+    const modeSentence=Number(d.mode)===0
+      ? "The mode of 0 is particularly serious because non-submission is the single most common score outcome."
+      : `The most common score is ${fmt(d.mode)}, which still needs to be read alongside the completion pattern.`;
+    return `FIIB should treat the current position as requiring immediate attention. The cohort average is ${fmt(d.mean)}, the median is ${fmt(d.median)}, and the mode is ${fmt(d.mode)}. ${middleSentence} ${modeSentence} Of ${total} students in scope, ${incomplete} (${incompletePct}%) have not completed all released work, including ${zero} with zero completion. This is now both a participation and a performance concern. Prompt institute-led follow-up is needed to get pending work completed, identify genuine access barriers, and prevent repeated non-submission from becoming normal behaviour. Training can improve performance only when students are participating consistently enough to provide evidence for coaching.`;
   }
   function renderGraph(d){
     const total=Math.max(Number(d.inScope||0),1);
