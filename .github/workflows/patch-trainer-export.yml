@@ -15,17 +15,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Patch trainer leaderboard
-        run: python .github/scripts/patch_trainer_leaderboard.py
-      - name: Fix incomplete-response due count
-        run: python .github/scripts/fix_incomplete_response_due.py
       - name: Fix Custom dashboard metrics
         run: python .github/scripts/patch_dashboard_custom_metrics.py
       - name: Remove extra Excel compliance tabs
         run: python .github/scripts/remove_excel_compliance_tabs.py
-      - name: Clarify dashboard completion labels
-        run: python .github/scripts/rename_dashboard_completion_labels.py
-      - name: Add dashboard median mode and insight
+      - name: Add dashboard mean median mode and insight
         run: python .github/scripts/patch_dashboard_batch_stats.py
       - name: Commit trainer fix
         run: |
@@ -36,6 +30,6 @@ jobs:
             echo "No trainer changes required"
             exit 0
           fi
-          git commit -m "Fix live dashboard and Excel leaderboard"
+          git commit -m "Update trainer dashboard batch statistics"
           git pull --rebase origin main
           git push origin HEAD:main
