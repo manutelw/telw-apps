@@ -1,0 +1,86 @@
+name: Build PCL Module 11
+on:
+  push:
+    branches: [pcl-dev]
+    paths: ['.github/workflows/pcl-module11-build.yml']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pcl-dev
+      - name: Build Module 11 from Module 10 pattern
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          src=Path('ascent/professional-communication-module-10.html')
+          dst=Path('ascent/professional-communication-module-11.html')
+          s=src.read_text(encoding='utf-8')
+          reps={
+          'Module 10':'Module 11',
+          'Explain a Decision When There Is No Perfect Option':'Escalate a Problem Without Passing It Upward',
+          'When two reasonable options compete, show the trade-off, make a recommendation and explain how you will manage the downside.':'Escalate when the problem needs authority, access or a decision you do not have — but take ownership of everything you can do first.',
+          '<b>A difficult decision is not solved by saying “I’ll do both”.</b> If time, quality or capacity forces a trade-off, make the choice visible and explain why it protects the work best.':'<b>Escalation is not handing the problem to your manager.</b> Show what is happening, what you have already done, why it now needs their involvement, and what decision or support you need.',
+          'The decision framework':'The escalation framework',
+          'Use this when there is no perfect option and the manager needs a recommendation, not just a list of problems.':'Use this when you have reached the limit of your authority, access or influence and the issue now needs your manager’s involvement.',
+          '<b>1. Frame</b><span>What decision is needed, and what is the main constraint?</span>':'<b>1. Flag</b><span>What is the issue, and why does it matter now?</span>',
+          '<b>2. Compare</b><span>What is the key trade-off between the realistic options?</span>':'<b>2. Act</b><span>What have I already done at my level?</span>',
+          '<b>3. Decide</b><span>Which option do I recommend, and why?</span>':'<b>3. Limit</b><span>What cannot I resolve without more authority, access or support?</span>',
+          '<b>4. Safeguard</b><span>What remaining risk will I manage or check?</span>':'<b>4. Ask</b><span>What exact decision, action or support do I need?</span>',
+          'Frame → Compare → Decide → Safeguard':'Flag → Act → Limit → Ask',
+          'Start with the real constraint: time, quality, customer impact, capacity or risk.':'Start with the issue and its current business impact or risk.',
+          'Compare only the options that are genuinely possible.':'State what you have already tried or completed before escalating.',
+          'Make a recommendation. Do not stop at “there are pros and cons”.':'Be clear about the boundary: what needs authority, access or cross-team intervention you do not have.',
+          'Give a work-focused reason for the choice.':'Ask for one specific decision or action from the manager.',
+          'Name the downside and show how you will reduce or monitor it.':'Keep ownership of the next step after the manager acts.',
+          'Do not sound certain when the choice has a real downside.':'Do not dramatise the problem or make the manager discover the facts through questions.',
+          'Do not pass the entire decision back to the manager if you have enough information to recommend one option.':'Do not escalate work you could reasonably solve yourself.',
+          'If the manager gives a new fact, update your recommendation rather than defending the first answer.':'If the manager gives a decision, confirm what you will do next.',
+          'Keep the explanation short enough to support a decision.':'Keep the escalation short enough for the manager to act quickly.',
+          'The client deck is due at three, and the internal summary is due at four. We do not have enough time to finish both properly. What do you recommend?':'The client approval has been waiting with another team for two days. What is the position now?',
+          'Both are important, so I’ll try to finish both. I can work faster and see how much I get done.':'I’m still waiting for them. I’ve sent a few messages, but they have not replied, so there is not much I can do.',
+          'And if that does not work?':'What exactly do you need from me?',
+          'Then I’ll let you know.':'Could you please handle it?',
+          '<b>Why this is weak:</b> there is no real decision. The learner ignores the stated capacity limit, gives no priority criterion and leaves the risk until the work is already late.':'<b>Why this is weak:</b> the learner passes the problem upward without showing the business impact, the actions already taken, the exact blocker or the specific help required.',
+          'We need to protect one deadline because we cannot complete both to the right standard. The client deck has the fixed external commitment, while the internal summary can move if we tell the team early. I recommend we finish the client deck first and send the internal summary at five-thirty. I’ll tell the internal team now and confirm whether they need any key figures before four.':'The client approval is now two days late, and it will hold up tomorrow’s release. I’ve followed up twice and sent the missing information they asked for. The blocker is that only their team lead can approve it. Could you contact the team lead today or authorise me to escalate it to them directly? Once we have that approval, I can finish the release check immediately.',
+          'What if the internal team says they need something at four?':'If I contact the team lead, what will you do next?',
+          'Then I’d send the key figures they need at four and keep the full summary for five-thirty. That protects the client deadline while reducing the impact on the internal team.':'I’ll send them the approval pack again with the release deadline, copy you for visibility, and follow up after an hour. If they approve it, I’ll complete the release check straight away.',
+          '<span class="framework-tag">Frame</span><span>“We need to protect one deadline because we cannot complete both to the right standard.”</span>':'<span class="framework-tag">Flag</span><span>“The client approval is now two days late, and it will hold up tomorrow’s release.”</span>',
+          '<span class="framework-tag">Compare</span><span>“The client deck has the fixed external commitment, while the internal summary can move if we tell the team early.”</span>':'<span class="framework-tag">Act</span><span>“I’ve followed up twice and sent the missing information they asked for.”</span>',
+          '<span class="framework-tag">Decide</span><span>“I recommend we finish the client deck first and send the internal summary at five-thirty.”</span>':'<span class="framework-tag">Limit</span><span>“The blocker is that only their team lead can approve it.”</span>',
+          '<span class="framework-tag">Safeguard</span><span>“I’ll tell the internal team now and confirm whether they need any key figures before four.”</span>':'<span class="framework-tag">Ask</span><span>“Could you contact the team lead today or authorise me to escalate it to them directly?”</span>',
+          '<b>Notice the shift:</b> the stronger response does not pretend both priorities can be fully protected. It makes a reasoned choice and manages the downside.':'<b>Notice the shift:</b> the stronger response does not dump the problem upward. It shows ownership first and asks the manager only for the part that genuinely needs their authority.',
+          '<h4>Weak decision</h4><ul><li>Avoids choosing</li><li>Ignores the real constraint</li><li>No business reason</li><li>Risk is handled too late</li>':'<h4>Weak escalation</h4><ul><li>Passes the problem upward</li><li>Does not show prior action</li><li>Blocker is unclear</li><li>Request is vague</li>',
+          '<h4>Professional decision</h4><ul><li>Names the constraint</li><li>Shows the trade-off</li><li>Makes a recommendation</li><li>Plans for the remaining risk</li>':'<h4>Professional escalation</h4><ul><li>Flags the impact</li><li>Shows ownership</li><li>Names the authority limit</li><li>Asks for specific help</li>',
+          '<b>Good judgement is not finding a perfect option. It is choosing the best available option for a clear reason and managing what remains.</b>':'<b>Good escalation means solving everything you can first, then asking for the smallest piece of help that genuinely requires more authority.</b>',
+          'Your manager will give you a two-priority decision. Make a recommendation and then handle one new':'Your manager will ask about a blocked task. Escalate only the part that needs their authority, then handle one follow-up',
+          'module:10':'module:11',
+          "module','10'":"module','11'",
+          'pcl_module_10':'pcl_module_11',
+          'Module 11 complete. Next recommended unit: Module 11 — escalate a problem without simply passing it upward.':'Module 11 complete. Next recommended unit: Module 12 — close a difficult workplace conversation with clear commitments.'
+          }
+          for a,b in reps.items(): s=s.replace(a,b)
+          # Replace remaining module-10-specific practice/test scenario strings conservatively.
+          s=s.replace("A supplier has not confirmed a delivery needed for tomorrow's client event. You have chased twice and offered an alternative delivery slot.","A cross-functional team has not approved a client item needed for tomorrow. You have followed up twice and supplied everything requested, but only their lead can approve it.")
+          s=s.replace("A colleague has not sent data needed for a report due today. You have reminded them twice and completed all sections that do not need the data.","A system access request is blocking a task due today. You have completed the work that does not need access and followed up with support, but only your manager can approve the access level.")
+          s=s.replace("What do you recommend?","What is the position now, and what do you need from me?")
+          s=s.replace("What if that option is not available?","What will you do once I take that action?")
+          dst.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify Module 11 essentials
+        run: |
+          grep -q 'Module 11' ascent/professional-communication-module-11.html
+          grep -q 'Flag → Act → Limit → Ask' ascent/professional-communication-module-11.html
+          grep -q "module','11'" ascent/professional-communication-module-11.html
+          grep -q 'Priority improvement' ascent/professional-communication-module-11.html
+      - name: Commit Module 11 and remove one-shot workflow
+        run: |
+          rm .github/workflows/pcl-module11-build.yml
+          git config user.name "manutelw"
+          git config user.email "manu@telw.co.in"
+          git add ascent/professional-communication-module-11.html .github/workflows/pcl-module11-build.yml
+          git commit -m 'Build PCL Module 11 escalation lab'
+          git push origin pcl-dev
