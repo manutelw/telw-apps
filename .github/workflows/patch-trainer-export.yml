@@ -25,6 +25,8 @@ jobs:
         run: python .github/scripts/patch_weekly_completion_nav.py
       - name: Split strong Diagnostic incomplete students
         run: python .github/scripts/patch_weekly_completion_strong_diag.py
+      - name: Add reminder system health panel
+        run: python .github/scripts/patch_reminder_health_panel.py
       - name: Commit trainer fix
         run: |
           git config user.name "github-actions[bot]"
