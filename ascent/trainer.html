@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-ascent-build="2026-08-04.5">
+<html lang="en" data-ascent-build="2026-08-24.7">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2428,14 +2428,35 @@
       populateControls(); renderCriterionChart(); renderProgressChart(); renderTasksTable(); renderAssignmentsTable(); renderResultsTable(); updateAssignmentEstimate(); renderDiagnosticSummary(); renderWeeklyLeaderboard();
     }
 
-    function currentWeekBounds() {
+    function currentWeekBounds(rows=null) {
       const now = new Date();
       const day = now.getDay();
       const mondayOffset = day === 0 ? -6 : 1 - day;
-      const start = new Date(now.getFullYear(),now.getMonth(),now.getDate() + mondayOffset);
+      let start = new Date(now.getFullYear(),now.getMonth(),now.getDate() + mondayOffset);
       start.setHours(0,0,0,0);
-      const end = new Date(start);
+      let end = new Date(start);
       end.setDate(end.getDate() + 7);
+
+      const source = Array.isArray(rows) ? rows.filter(row =>
+        row && row.latestSubmittedAt && row.latestScore !== null && row.latestScore !== undefined &&
+        !Number.isNaN(new Date(row.latestSubmittedAt).getTime())
+      ) : [];
+
+      const hasCurrentWeek = source.some(row => {
+        const submitted = new Date(row.latestSubmittedAt);
+        return submitted >= start && submitted < end;
+      });
+
+      if (!hasCurrentWeek && source.length) {
+        const latestTime = Math.max(...source.map(row => new Date(row.latestSubmittedAt).getTime()));
+        const latest = new Date(latestTime);
+        const latestDay = latest.getDay();
+        const latestMondayOffset = latestDay === 0 ? -6 : 1 - latestDay;
+        start = new Date(latest.getFullYear(),latest.getMonth(),latest.getDate() + latestMondayOffset);
+        start.setHours(0,0,0,0);
+        end = new Date(start);
+        end.setDate(end.getDate() + 7);
+      }
       return {start,end};
     }
 
@@ -2445,7 +2466,7 @@
     // real batch always appears (even with zero submissions this week,
     // shown as a placeholder) - batches are never blended or omitted.
     function renderWeeklyLeaderboard() {
-      const {start,end} = currentWeekBounds();
+      const {start,end} = currentWeekBounds(filteredDashboardResults());
       byId("leaderboardWeekLabel").textContent = `Top 10 by average score, ${start.toLocaleDateString(undefined,{month:"short",day:"numeric"})} – ${new Date(end.getTime()-86400000).toLocaleDateString(undefined,{month:"short",day:"numeric"})}.`;
 
       const active = selectedDashboardAccessPoint();
@@ -3959,8 +3980,11 @@ function formatCriterionFeedback(criterion) {
     // ranked by their average score across that week's submissions.
     // Batches are never blended together.
     function buildWeeklyLeaderboardSheets(workbookData) {
-      const assignments = (Array.isArray(workbookData.assignments) ? workbookData.assignments : [])
-        .filter(assignment => Boolean(assignment.submissionUuid) && assignment.submittedAt);
+      const assignments = (
+        Array.isArray(workbookData.submissions) && workbookData.submissions.length
+          ? workbookData.submissions
+          : (Array.isArray(workbookData.assignments) ? workbookData.assignments : [])
+      ).filter(assignment => Boolean(assignment.submissionUuid) && assignment.submittedAt);
 
       const byBatch = new Map();
       assignments.forEach(assignment => {
@@ -3982,7 +4006,7 @@ function formatCriterionFeedback(criterion) {
         weekEntry.students.get(studentKey).scores.push(Number(score));
       });
 
-      return Array.from(byBatch.keys()).sort().map(batchName => {
+      return Array.from(byBatch.keys()).sort().reverse().map(batchName => {
         const orderedWeeks = Array.from(byBatch.get(batchName).values()).sort((a,b) => a.weekStart - b.weekStart);
 
         const weekTop10 = orderedWeeks.map(week => Array.from(week.students.values())
