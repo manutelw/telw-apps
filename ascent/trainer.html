@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-ascent-build="2026-08-24.20">
+<html lang="en" data-ascent-build="2026-08-24.22">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -281,10 +281,11 @@
           <div class="workspace-header"><div><h3 id="releaseSectionTitle">Diagnostic</h3><p id="diagnosticReleaseLabel" class="panel-subtitle">Progress for the current selection.</p></div><div class="form-group" style="min-width:200px;"><label for="dashboardQuestionSetFilter">Question set</label><select id="dashboardQuestionSetFilter"></select></div></div>
           <div class="card-grid">
             <div class="summary-card"><div class="summary-label">Questions Released</div><div id="diagnosticQuestionsValue" class="summary-value">—</div></div>
-            <div class="summary-card"><div class="summary-label" id="diagnosticCompletedLabel">Completed</div><div id="diagnosticAttemptedValue" class="summary-value">—</div></div>
-            <div class="summary-card"><div class="summary-label">Not Completed</div><div id="diagnosticNotStartedValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label" id="diagnosticCompletedLabel">Median</div><div id="diagnosticAttemptedValue" class="summary-value">—</div></div>
+            <div class="summary-card"><div class="summary-label" id="diagnosticNotStartedLabel">Mode</div><div id="diagnosticNotStartedValue" class="summary-value">—</div></div>
             <div class="summary-card"><div class="summary-label">Average Score</div><div id="diagnosticAverageScoreValue" class="summary-value">—</div></div>
           </div>
+          <div id="batchStatsInsight" class="panel-subtitle" style="margin:-7px 0 18px;line-height:1.55;"></div>
           <div class="dashboard-grid">
             <div class="panel chart-box"><div class="panel-title-row"><div><h3 id="releaseChartTitle">Diagnostic Completion</h3><div class="panel-subtitle">Completed vs. not completed for the current selection.</div></div></div><div id="diagnosticPieChart"></div></div>
             <div class="panel chart-box"><div class="panel-title-row"><div><h3>Criterion Performance</h3><div class="panel-subtitle">Average of the latest criterion scores.</div></div></div><div id="criterionChart"></div></div>
@@ -1027,8 +1028,22 @@
         const questionsReleased = rows.length ? Math.max(...rows.map(row => Number(row.released || 0))) : 0;
         const completed = rows.filter(row => Number(row.released || 0) > 0 && Number(row.answered || 0) >= Number(row.released || 0)).length;
         const notCompleted = Math.max(rows.length - completed, 0);
-        const averages = rows.map(row => Number(row.average)).filter(Number.isFinite);
+        const averages = rows.map(row => Number(row.average)).filter(Number.isFinite).sort((a,b)=>a-b);
         const averageScore = averages.length ? Math.round((averages.reduce((sum,score) => sum + score,0) / averages.length) * 100) / 100 : null;
+        const medianScore = averages.length
+          ? (averages.length % 2
+              ? averages[(averages.length-1)/2]
+              : (averages[averages.length/2-1] + averages[averages.length/2]) / 2)
+          : null;
+        const frequency = new Map();
+        averages.forEach(score => {
+          const key = Number(score).toFixed(2);
+          frequency.set(key,(frequency.get(key)||0)+1);
+        });
+        let modeScore = null, modeCount = 0;
+        Array.from(frequency.entries()).sort((a,b)=>Number(a[0])-Number(b[0])).forEach(([key,count])=>{
+          if (count > modeCount) { modeCount = count; modeScore = Number(key); }
+        });
         const sample = rows[0];
         const weekText = sample ? ` through Week ${latestWeekNo}` : "";
 
@@ -1036,13 +1051,33 @@
           ? `${questionsReleased} Bulk Question${questionsReleased === 1 ? "" : "s"} due${weekText}. Questions released in the current week do not enter these completion figures until the following week.`
           : "No completed Bulk Question week is available yet for this selection.";
         summaryValue("diagnosticQuestionsValue",questionsReleased);
-        summaryValue("diagnosticAttemptedValue",completed);
-        summaryValue("diagnosticNotStartedValue",notCompleted);
+        byId("diagnosticCompletedLabel").textContent = "Median";
+        if (byId("diagnosticNotStartedLabel")) byId("diagnosticNotStartedLabel").textContent = "Mode";
+        summaryValue("diagnosticAttemptedValue",medianScore === null ? null : Math.round(medianScore*100)/100);
+        summaryValue("diagnosticNotStartedValue",modeScore === null ? null : Math.round(modeScore*100)/100);
         summaryValue("diagnosticAverageScoreValue",averageScore);
+        const insight = byId("batchStatsInsight");
+        if (insight) {
+          if (!averages.length) {
+            insight.textContent = "No completed-week Bulk Question scores are available yet.";
+          } else {
+            const meanText = Number(averageScore).toFixed(2);
+            const medianText = Number(medianScore).toFixed(2);
+            const modeText = Number(modeScore).toFixed(2);
+            let interpretation = "The mean and median are close, so the middle of the batch is broadly consistent with the overall average.";
+            if (Number(modeScore) === 0) interpretation += " The mode of 0 shows that non-submission is still the single most common score outcome and is pulling overall performance down.";
+            else if (averageScore < medianScore) interpretation += " The mean is below the median, which suggests lower scores are pulling the overall average down.";
+            else if (averageScore > medianScore) interpretation += " The mean is above the median, which suggests stronger scores at the top are lifting the overall average.";
+            insight.textContent = `Batch performance: Average ${meanText}, Median ${medianText}, Mode ${modeText}. ${interpretation}`;
+          }
+        }
         renderDiagnosticPie(completed,notCompleted);
         return;
       }
 
+      byId("diagnosticCompletedLabel").textContent = "Students Completed";
+      if (byId("diagnosticNotStartedLabel")) byId("diagnosticNotStartedLabel").textContent = "Students Not Completed";
+      if (byId("batchStatsInsight")) byId("batchStatsInsight").textContent = "";
       const rows = filteredReleaseProgress();
 
       if (!rows.length) {
@@ -1076,7 +1111,7 @@
       if (!total) { wrap.innerHTML = `<div class="line-empty">No assignments yet.</div>`; return; }
       const completedPct = (completed / total) * 100;
       const pieStyle = `background:conic-gradient(#2e8b68 0% ${completedPct}%, #d48c24 ${completedPct}% 100%);width:160px;height:160px;border-radius:50%;margin:0 auto;`;
-      wrap.innerHTML = `<div style="${pieStyle}"></div><div class="chart-legend" style="justify-content:center;margin-top:12px;"><span><i class="legend-dot completed"></i>Completed: <strong>${completed}</strong></span><span><i class="legend-dot not-attempted"></i>Not completed: <strong>${notCompleted}</strong></span></div>`;
+      wrap.innerHTML = `<div style="${pieStyle}"></div><div class="chart-legend" style="justify-content:center;margin-top:12px;"><span><i class="legend-dot completed"></i>No. of Students Completed: <strong>${completed}</strong></span><span><i class="legend-dot not-attempted"></i>No. of Students Not Completed: <strong>${notCompleted}</strong></span></div>`;
     }
 
     function collectNumericCriteria(object,prefix="",output={}) {
