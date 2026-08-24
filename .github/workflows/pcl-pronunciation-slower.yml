@@ -1,0 +1,41 @@
+name: Slow and emphasise PCL pronunciation model
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pcl-pronunciation-slower.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch Module 1 pronunciation teaching clip
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('ascent/professional-communication-module-1.html')
+          s=p.read_text(encoding='utf-8')
+          old='''<div class="model"><h3>Voice focus · London English</h3><p class="notice">Notice the stress change in <b>update</b>: <b>an UP-date</b> (noun), but <b>to up-DATE</b> (verb). In the verb, the first syllable is lighter and the main beat is clearly on <b>DATE</b>. Listen at a clear B1-friendly pace.</p><div class="actions"><button class="btn ghost" id="pronounceBtn">▶ Hear the pronunciation</button></div></div>'''
+          new='''<div class="model"><h3>Voice focus · London English</h3><p class="notice">Now let’s look at pronouncing the word <b>update</b>. If it is a noun, say <b>UP-date</b>: “Here’s an <b>UP-date</b>.” If it is a verb, say <b>up-DATE</b>: “I’ll <b>up-DATE</b> you on this.” Listen for the stressed syllable — it will be made deliberately stronger than in normal conversation so the difference is easy to hear.</p><div class="actions"><button class="btn ghost" id="pronounceBtn">▶ Hear the pronunciation</button></div></div>'''
+          assert old in s, 'voice-focus block not found'
+          s=s.replace(old,new,1)
+          old_js="""document.getElementById('pronounceBtn').onclick=async()=>{const b=document.getElementById('pronounceBtn'),old=b.textContent;b.disabled=true;b.textContent='Playing…';try{const text='Listen to the contrast. Noun: update. Put the main stress on the first syllable: UP-date. An update. Now the verb: update. Put the main stress clearly on the second syllable, DATE; keep the first syllable light. To update. I will update you tomorrow.';const clips=await prepareClips([['coach',text]]);player.playbackRate=.84;await playBlob(clips[0].blob)}catch(e){document.getElementById('trainStatus').textContent=e.message}finally{player.playbackRate=1;b.disabled=false;b.textContent=old}};"""
+          new_js="""document.getElementById('pronounceBtn').onclick=async()=>{const b=document.getElementById('pronounceBtn'),old=b.textContent;b.disabled=true;b.textContent='Playing…';try{const text='Now, let us look at pronouncing the word update. First, the noun. Listen carefully. UP-date. The first syllable is strong. UP-date. Here is an UP-date. Now, the verb. Listen carefully. up-DATE. The second syllable is strong. up-DATE. I will up-DATE you on this. Once more. Noun: UP-date. Verb: up-DATE.';const clips=await prepareClips([['coach',text]]);player.playbackRate=.68;await playBlob(clips[0].blob)}catch(e){document.getElementById('trainStatus').textContent=e.message}finally{player.playbackRate=1;b.disabled=false;b.textContent=old}};"""
+          assert old_js in s, 'pronunciation handler not found'
+          s=s.replace(old_js,new_js,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit patch and remove one-shot workflow
+        run: |
+          rm .github/workflows/pcl-pronunciation-slower.yml
+          git config user.name "manutelw"
+          git config user.email "manu@telw.co.in"
+          git add ascent/professional-communication-module-1.html .github/workflows/pcl-pronunciation-slower.yml
+          git commit -m "Slow and emphasise Module 1 pronunciation model"
+          git push origin main
