@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <title>ASCENT · Weekly Completion</title>
+  <style>
+    :root{--navy:#143a60;--blue:#27679d;--gold:#c67b00;--text:#24364a;--muted:#6c7b8d;--border:#d7e1eb;--green:#18794e;--green-bg:#eaf8f1;--amber:#9a6700;--amber-bg:#fff7db;--red:#b42318;--red-bg:#fff0ee}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;padding:20px;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(145deg,#102a46,#214d79)}
+    .shell{max-width:1450px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 22px 65px rgba(0,0,0,.22)}
+    header{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:20px 26px;border-bottom:1px solid var(--border)}
+    .brand{display:flex;gap:13px;align-items:center}.mark{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--navy);color:#fff;font-size:21px;font-weight:800}.brand h1{margin:0;color:var(--navy);font-size:23px}.brand p{margin:4px 0 0;color:var(--gold);font-size:12px;font-weight:700}
+    .viewer{font-size:12px;color:var(--muted);text-align:right}.viewer strong{display:block;color:var(--navy);font-size:13px}
+    main{padding:26px}.headrow{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;flex-wrap:wrap}.headrow h2{margin:0 0 6px;color:var(--navy);font-size:27px}.sub{font-size:13px;color:var(--muted);line-height:1.5}.controls{display:flex;align-items:flex-end;gap:10px}.controls label{display:block;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:5px}.controls select,.controls button{height:40px;border:1px solid var(--border);border-radius:9px;background:#fff;padding:0 11px;font:inherit}.controls button{font-weight:700;color:var(--navy);cursor:pointer}
+    .scope{margin:16px 0 18px;color:var(--muted);font-size:12px}.cards{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:13px;margin-bottom:20px}.card{border:1px solid var(--border);border-radius:14px;padding:16px;background:#fbfdff}.card .k{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px}.card .v{font-size:29px;font-weight:800;color:var(--navy)}.green{background:var(--green-bg)}.green .v{color:var(--green)}.amber{background:var(--amber-bg)}.amber .v{color:var(--amber)}.red{background:var(--red-bg)}.red .v{color:var(--red)}
+    .panel{border:1px solid var(--border);border-radius:15px;padding:18px;margin-bottom:16px;background:#fbfdff}.panel h3{margin:0 0 5px;color:var(--navy);font-size:18px}.panel .note{font-size:12px;color:var(--muted);margin-bottom:12px}.tablewrap{overflow:auto;border:1px solid var(--border);border-radius:10px;background:#fff}table{width:100%;min-width:760px;border-collapse:collapse}th,td{padding:10px 11px;border-bottom:1px solid #e8eef4;text-align:left;font-size:12px}th{font-size:10px;color:#52697f;text-transform:uppercase;background:#f6f9fc}tr:last-child td{border-bottom:0}.pill{display:inline-block;padding:4px 7px;border-radius:999px;font-size:10px;font-weight:800}.pill.partial{background:var(--amber-bg);color:var(--amber)}.pill.zero{background:var(--red-bg);color:var(--red)}.empty,.loading,.error{padding:24px;text-align:center;color:var(--muted);font-size:13px}.error{color:var(--red)}
+    footer{padding:15px 26px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
+    @media(max-width:760px){body{padding:8px}.cards{grid-template-columns:1fr 1fr}main{padding:18px}header{padding:16px 18px}.viewer{display:none}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="brand"><div class="mark">A</div><div><h1>ASCENT</h1><p>FIIB Weekly Completion</p></div></div>
+    <div id="viewer" class="viewer"></div>
+  </header>
+  <main>
+    <div class="headrow">
+      <div><h2>Weekly Completion</h2><div class="sub">Latest completed week only. Read-only institutional view.</div></div>
+      <div class="controls"><div><label for="batch">Batch</label><select id="batch"><option value="2026-28">2026–28</option><option value="2025-27">2025–27</option></select></div><button id="refresh" type="button">Refresh</button></div>
+    </div>
+    <div id="loading" class="loading">Loading weekly completion data…</div>
+    <div id="error" class="error" hidden></div>
+    <div id="content" hidden>
+      <div id="scope" class="scope"></div>
+      <section class="cards"><div class="card green"><div class="k">Complete</div><div id="complete" class="v">—</div></div><div class="card amber"><div class="k">Partial</div><div id="partial" class="v">—</div></div><div class="card red"><div class="k">Zero</div><div id="zero" class="v">—</div></div><div class="card"><div class="k">Cohort Score</div><div id="score" class="v">—</div></div></section>
+      <section class="panel"><h3>Amber — Partial Completion</h3><div class="note">Students who completed some, but not all, weekly work. High Diagnostic performers are moved to the third list.</div><div id="amberTable"></div></section>
+      <section class="panel"><h3>Red — Zero Completion</h3><div class="note">Students who completed none of the weekly work. High Diagnostic performers are moved to the third list.</div><div id="redTable"></div></section>
+      <section class="panel"><h3>Strong Diagnostic Score, but Incomplete Weekly Work</h3><div class="note">Students from either Amber or Red with an overall Diagnostic score of 8.25/10 or above.</div><div id="strongTable"></div></section>
+    </div>
+  </main>
+  <footer>This private link is for authorised FIIB staff only. Please do not forward it.</footer>
+</div>
+<script>
+(()=>{
+  "use strict";
+  const SUPABASE_URL="https://vtqatrhwfvzyodiftvkc.supabase.co";
+  const KEY="sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
+  const TOKEN_KEY="ascent_weekly_share_token";
+  const byId=id=>document.getElementById(id);
+  const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  function getToken(){
+    const url=new URL(window.location.href); const q=url.searchParams.get("access");
+    if(q){sessionStorage.setItem(TOKEN_KEY,q);url.searchParams.delete("access");history.replaceState({},"",url.pathname+url.search+url.hash);return q;}
+    return sessionStorage.getItem(TOKEN_KEY)||"";
+  }
+  const token=getToken();
+  function table(rows){if(!rows.length)return '<div class="empty">No students in this group.</div>';return `<div class="tablewrap"><table><thead><tr><th>Student</th><th>Roll No.</th><th>Progress</th><th>Weekly Score</th><th>Email</th><th>Status</th></tr></thead><tbody>${rows.map(r=>`<tr><td><strong>${esc(r.fullName)}</strong></td><td>${esc(r.studentId||"—")}</td><td>${Number(r.answered||0)} / ${Number(r.released||0)}</td><td>${r.weeklyScore==null?"—":Number(r.weeklyScore).toFixed(2)}</td><td>${esc(r.email||"—")}</td><td><span class="pill ${String(r.weeklyStatus).toLowerCase()}">${esc(r.weeklyStatus)}</span></td></tr>`).join("")}</tbody></table></div>`}
+  function strongTable(rows){if(!rows.length)return '<div class="empty">No incomplete students currently meet the 8.25 Diagnostic threshold.</div>';return `<div class="tablewrap"><table><thead><tr><th>Student</th><th>Roll No.</th><th>Diagnostic Score</th><th>Progress</th><th>Weekly Score</th><th>Email</th><th>Status</th></tr></thead><tbody>${rows.map(r=>`<tr><td><strong>${esc(r.fullName)}</strong></td><td>${esc(r.studentId||"—")}</td><td><strong>${Number(r.diagnosticScore).toFixed(2)}/10</strong></td><td>${Number(r.answered||0)} / ${Number(r.released||0)}</td><td>${r.weeklyScore==null?"—":Number(r.weeklyScore).toFixed(2)}</td><td>${esc(r.email||"—")}</td><td><span class="pill ${String(r.weeklyStatus).toLowerCase()}">${esc(r.weeklyStatus)}</span></td></tr>`).join("")}</tbody></table></div>`}
+  async function load(){
+    byId("loading").hidden=false;byId("error").hidden=true;byId("content").hidden=true;
+    if(!token){byId("loading").hidden=true;byId("error").textContent="This private link is not valid. Please use the link sent to you by ASCENT.";byId("error").hidden=false;return;}
+    try{
+      const response=await fetch(`${SUPABASE_URL}/rest/v1/rpc/ascent_weekly_completion_shared_view`,{method:"POST",headers:{"Content-Type":"application/json","apikey":KEY,"Authorization":`Bearer ${KEY}`},body:JSON.stringify({p_token:token,p_batch:byId("batch").value})});
+      const payload=await response.json();
+      if(!response.ok||!payload?.ok)throw new Error(payload?.error==="unauthorised"?"This private link is not valid or has been revoked.":"The report could not be loaded.");
+      const r=payload.report||{}, rows=Array.isArray(r.rows)?r.rows:[];
+      const strong=rows.filter(x=>x.strongDiagnosticIncomplete===true);
+      const strongIds=new Set(strong.map(x=>String(x.studentUuid||"")));
+      const amber=rows.filter(x=>x.weeklyStatus==="PARTIAL"&&!strongIds.has(String(x.studentUuid||"")));
+      const red=rows.filter(x=>x.weeklyStatus==="ZERO"&&!strongIds.has(String(x.studentUuid||"")));
+      byId("viewer").innerHTML=`<strong>${esc(payload.viewer?.label||"Authorised viewer")}</strong>${esc(payload.viewer?.email||"")}`;
+      byId("complete").textContent=Number(r.complete||0);byId("partial").textContent=Number(r.partial||0);byId("zero").textContent=Number(r.zero||0);byId("score").textContent=r.cohortScore==null?"—":Number(r.cohortScore).toFixed(2);
+      byId("scope").textContent=r.weekStart?`Week ${r.weekStart} to ${r.weekEnd} · ${r.inScope} students in scope · ${r.activeStudents} active students in batch`:`${r.activeStudents||0} active students in batch · no completed-week data yet`;
+      byId("amberTable").innerHTML=table(amber);byId("redTable").innerHTML=table(red);byId("strongTable").innerHTML=strongTable(strong);
+      byId("loading").hidden=true;byId("content").hidden=false;
+    }catch(e){byId("loading").hidden=true;byId("error").textContent=e.message||"The report could not be loaded.";byId("error").hidden=false;}
+  }
+  byId("batch").addEventListener("change",load);byId("refresh").addEventListener("click",load);load();
+})();
+</script>
+</body>
+</html>
