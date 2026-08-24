@@ -1,6 +1,7 @@
 name: Patch live trainer leaderboard
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
 
