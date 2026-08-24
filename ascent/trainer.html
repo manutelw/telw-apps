@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-ascent-build="2026-08-24.18">
+<html lang="en" data-ascent-build="2026-08-24.19">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1004,6 +1004,44 @@
       const label = QUESTION_SET_LABELS[questionSet] || "Question Set";
       byId("releaseSectionTitle").textContent = label;
       byId("releaseChartTitle").textContent = `${label} Completion`;
+
+      if (questionSet === "CUSTOM") {
+        const active = selectedDashboardAccessPoint();
+        const isPrivate = active && active.accessType === "PRIVATE_LEARNERS";
+        const selectedBatch = byId("dashboardBatchFilter").value;
+        const selectedPrivateStudent = byId("dashboardPrivateFilter").value;
+        const students = Array.isArray(reportData.students) ? reportData.students : [];
+        const studentByUuid = new Map(students.map(student => [String(student.studentUuid || ""), student]));
+        const metrics = Array.isArray(reportData.weeklyBulkMetrics) ? reportData.weeklyBulkMetrics : [];
+        const weekNos = Array.from(new Set(metrics.map(metric => Number(metric.weekNo)).filter(Number.isFinite))).sort((a,b)=>a-b);
+        const latestWeekNo = weekNos.length ? weekNos[weekNos.length - 1] : null;
+        const rows = latestWeekNo === null ? [] : metrics.filter(metric => {
+          if (Number(metric.weekNo) !== latestWeekNo) return false;
+          const student = studentByUuid.get(String(metric.studentUuid || ""));
+          if (!student) return false;
+          if (isPrivate && selectedPrivateStudent && String(student.studentUuid || "") !== selectedPrivateStudent) return false;
+          if (!isPrivate && selectedBatch && String(student.batch || "") !== selectedBatch) return false;
+          return true;
+        });
+
+        const questionsReleased = rows.length ? Math.max(...rows.map(row => Number(row.released || 0))) : 0;
+        const completed = rows.filter(row => Number(row.released || 0) > 0 && Number(row.answered || 0) >= Number(row.released || 0)).length;
+        const notCompleted = Math.max(rows.length - completed, 0);
+        const averages = rows.map(row => Number(row.average)).filter(Number.isFinite);
+        const averageScore = averages.length ? Math.round((averages.reduce((sum,score) => sum + score,0) / averages.length) * 100) / 100 : null;
+        const sample = rows[0];
+        const weekText = sample ? ` through Week ${latestWeekNo}` : "";
+
+        byId("diagnosticReleaseLabel").textContent = questionsReleased
+          ? `${questionsReleased} Bulk Question${questionsReleased === 1 ? "" : "s"} due${weekText}. Questions released in the current week do not enter these completion figures until the following week.`
+          : "No completed Bulk Question week is available yet for this selection.";
+        summaryValue("diagnosticQuestionsValue",questionsReleased);
+        summaryValue("diagnosticAttemptedValue",completed);
+        summaryValue("diagnosticNotStartedValue",notCompleted);
+        summaryValue("diagnosticAverageScoreValue",averageScore);
+        renderDiagnosticPie(completed,notCompleted);
+        return;
+      }
 
       const rows = filteredReleaseProgress();
 
