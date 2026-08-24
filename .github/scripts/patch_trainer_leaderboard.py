@@ -68,10 +68,6 @@ dashboard_replacement = r'''    function renderWeeklyLeaderboard() {
     async function loadReport'''
 text, dashboard_count = dashboard_pattern.subn(dashboard_replacement,text,count=1)
 
-# Excel leaderboard: Week 1 is the cumulative average through Week 1;
-# Week 2 is the cumulative average through Week 2; etc. No current incomplete
-# week appears. The backend weeklyBulkMetrics uses the same denominator rule as
-# Individual Student Performance.
 excel_pattern = re.compile(
     r"    function buildWeeklyLeaderboardSheets\(workbookData\) \{.*?^    \}\n\n    function workbookProgressSummary",
     re.MULTILINE | re.DOTALL,
@@ -79,6 +75,7 @@ excel_pattern = re.compile(
 excel_replacement = r'''    function buildWeeklyLeaderboardSheets(workbookData) {
       const students = Array.isArray(workbookData.students) ? workbookData.students : [];
       const weeklyMetrics = Array.isArray(workbookData.weeklyBulkMetrics) ? workbookData.weeklyBulkMetrics : [];
+      const currentBulkMetrics = Array.isArray(workbookData.bulkMetrics) ? workbookData.bulkMetrics : [];
       const completeStudents = Array.isArray(workbookData.bulkCompleteStudents) ? workbookData.bulkCompleteStudents : [];
       const studentByUuid = new Map(students.map(student => [String(student.studentUuid || ""),student]));
       const palette = ["DDEBF7","E2F0D9","FFF2CC","FCE4D6","E4DFEC","D9EAD3"];
@@ -165,20 +162,44 @@ excel_replacement = r'''    function buildWeeklyLeaderboardSheets(workbookData) 
       applyFill(completeSheet,{s:{r:0,c:0},e:{r:1,c:2}},"E2F0D9");
       output.push({batchName:"ALL RESPONSES SUBMITTED",sheet:completeSheet});
 
+      const incompleteRows=[["Students who have NOT submitted all Bulk Questions due through the latest completed week"],["Batch","Roll number","Name","Responses submitted","Responses due","Missing"]];
+      const incompleteEntries=currentBulkMetrics.map(metric=>{
+        const due=Number(metric.released||0);
+        const submitted=Number(metric.answered||0);
+        if (due<=0 || submitted>=due) return null;
+        const student=studentByUuid.get(String(metric.studentUuid||""));
+        if (!student) return null;
+        return {
+          batch:exportText(student.batch),
+          rollNo:exportText(student.rollNo||student.studentId),
+          name:exportText(student.name||student.fullName),
+          submitted,
+          due,
+          missing:Math.max(0,due-submitted)
+        };
+      }).filter(Boolean).sort((a,b)=>a.batch.localeCompare(b.batch)||a.submitted-b.submitted||a.name.localeCompare(b.name));
+      incompleteEntries.forEach(entry=>incompleteRows.push([entry.batch,entry.rollNo,entry.name,entry.submitted,entry.due,entry.missing]));
+      const incompleteSheet=XLSX.utils.aoa_to_sheet(incompleteRows);
+      incompleteSheet["!merges"]=[{s:{r:0,c:0},e:{r:0,c:5}}];
+      incompleteSheet["!cols"]=[{wch:14},{wch:18},{wch:30},{wch:21},{wch:15},{wch:12}];
+      applyFill(incompleteSheet,{s:{r:0,c:0},e:{r:1,c:5}},"FCE4D6");
+      output.push({batchName:"INCOMPLETE RESPONSES",sheet:incompleteSheet});
+
       return output;
     }
 
     function workbookProgressSummary'''
 text, excel_count = excel_pattern.subn(excel_replacement,text,count=1)
 
-text,_=re.subn(r'data-ascent-build="[^"]+"','data-ascent-build="2026-08-24.15"',text,count=1)
+text,_=re.subn(r'data-ascent-build="[^"]+"','data-ascent-build="2026-08-24.16"',text,count=1)
 
 checks={
   "dashboard":dashboard_count or "cumulative Bulk Questions Average" in text,
   "excel":excel_count or "weeklyBulkMetrics" in text,
   "format":'"Rank","Roll number","Name","Average score"' in text,
-  "single_list":"ALL RESPONSES SUBMITTED" in text,
-  "build":'data-ascent-build="2026-08-24.15"' in text,
+  "complete":"ALL RESPONSES SUBMITTED" in text,
+  "incomplete":"INCOMPLETE RESPONSES" in text and '"Responses submitted","Responses due","Missing"' in text,
+  "build":'data-ascent-build="2026-08-24.16"' in text,
 }
 failed=[name for name,ok in checks.items() if not ok]
 if failed:
@@ -186,6 +207,6 @@ if failed:
 
 if text!=original:
     path.write_text(text,encoding="utf-8")
-    print("trainer.html patched: cumulative weekly averages now match Individual Student Performance")
+    print("trainer.html patched: added incomplete response compliance sheet")
 else:
-    print("trainer.html already has cumulative weekly average leaderboard logic")
+    print("trainer.html already has incomplete response compliance sheet")
