@@ -1,0 +1,43 @@
+name: Finish PCL Module 11
+on:
+  push:
+    branches: [pcl-dev]
+    paths: ['.github/workflows/pcl-module11-fix.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pcl-dev
+      - name: Patch Module 11 wiring and review
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('ascent/professional-communication-module-11.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("API=SUPABASE_URL+'/functions/v1/ascent-pcl-dev'","API=SUPABASE_URL+'/functions/v1/ascent-pcl-dev-11'")
+          s=s.replace("p['10']={completedAt:new Date().toISOString(),score:total,priority:r.priority_improvement,title:'Escalate a Problem Without Passing It Upward'};p.currentPriority=r.priority_improvement;p.nextModule=11;","p['11']={completedAt:new Date().toISOString(),score:total,priority:r.priority_improvement,title:'Escalate a Problem Without Passing It Upward'};p.currentPriority=r.priority_improvement;p.nextModule=12;")
+          s=s.replace('<b>Message:</b> Did I frame the constraint, compare the trade-off, choose and safeguard?','<b>Message:</b> Did I flag the issue, show what I had already done, name the authority limit and ask for specific help?')
+          s=s.replace('<b>People:</b> Did I sound decisive without pretending there was no downside?','<b>People:</b> Did I escalate calmly without blame, helplessness or dumping the problem upward?')
+          s=s.replace('<b>Judgement:</b> Was my choice based on work impact rather than personal convenience?','<b>Judgement:</b> Did I escalate only the part that genuinely needed more authority, access or intervention?')
+          s=s.replace('Module 11 will build on this by helping you escalate a problem without simply passing it upward.','Module 12 will build on this by helping you close a difficult workplace conversation with clear commitments and follow-through.')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify corrected wiring
+        run: |
+          grep -q "ascent-pcl-dev-11" ascent/professional-communication-module-11.html
+          grep -q "p\['11'\]" ascent/professional-communication-module-11.html
+          grep -q 'p.nextModule=12' ascent/professional-communication-module-11.html
+          grep -q 'Did I flag the issue' ascent/professional-communication-module-11.html
+          grep -q 'Module 12 will build on this' ascent/professional-communication-module-11.html
+      - name: Commit and remove workflow
+        run: |
+          rm .github/workflows/pcl-module11-fix.yml
+          git config user.name "manutelw"
+          git config user.email "manu@telw.co.in"
+          git add ascent/professional-communication-module-11.html .github/workflows/pcl-module11-fix.yml
+          git commit -m 'Finish PCL Module 11 wiring and review'
+          git push origin pcl-dev
