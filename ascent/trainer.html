@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-ascent-build="2026-08-24.17">
+<html lang="en" data-ascent-build="2026-08-24.18">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -4095,8 +4095,12 @@ function formatCriterionFeedback(criterion) {
       applyFill(completeSheet,{s:{r:0,c:0},e:{r:1,c:2}},"E2F0D9");
       output.push({batchName:"ALL RESPONSES SUBMITTED",sheet:completeSheet});
 
+      const latestCompletedWeekNo = weekNos.length ? weekNos[weekNos.length - 1] : null;
+      const latestCompletedMetrics = latestCompletedWeekNo === null
+        ? []
+        : weeklyMetrics.filter(metric => Number(metric.weekNo) === latestCompletedWeekNo);
       const incompleteRows=[["Students who have NOT submitted all Bulk Questions due through the latest completed week"],["Batch","Roll number","Name","Responses submitted","Responses due","Missing"]];
-      const incompleteEntries=currentBulkMetrics.map(metric=>{
+      const incompleteEntries=latestCompletedMetrics.map(metric=>{
         const due=Number(metric.released||0);
         const submitted=Number(metric.answered||0);
         if (due<=0 || submitted>=due) return null;
