@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-ascent-build="2026-08-24.14">
+<html lang="en" data-ascent-build="2026-08-24.15">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2470,48 +2470,23 @@
       const active = selectedDashboardAccessPoint();
       const isPrivate = active && active.accessType === "PRIVATE_LEARNERS";
       const selectedBatch = byId("dashboardBatchFilter").value;
-      const results = Array.isArray(reportData.results) ? reportData.results : [];
-
-      function startOfMonday(value) {
-        const d = value ? new Date(value) : new Date();
-        d.setHours(0,0,0,0);
-        const day = d.getDay();
-        d.setDate(d.getDate() - ((day + 6) % 7));
-        return d;
-      }
-      function shortDate(d) {
-        return d.toLocaleDateString(undefined,{day:"numeric",month:"short"});
-      }
-
-      const currentMonday = startOfMonday();
-      const weekStart = new Date(currentMonday);
-      weekStart.setDate(weekStart.getDate()-7);
-      const weekEndExclusive = new Date(currentMonday);
-      const weekEndLabel = new Date(currentMonday);
-      weekEndLabel.setDate(weekEndLabel.getDate()-1);
-
-      byId("leaderboardWeekLabel").textContent =
-        `Top 10 by average Bulk score for the latest completed week, ${shortDate(weekStart)} – ${shortDate(weekEndLabel)}. Only students who submitted in that week are included.`;
-
       const students = Array.isArray(reportData.students) ? reportData.students : [];
       const studentByUuid = new Map(students.map(student => [String(student.studentUuid || ""),student]));
-      const grouped = new Map();
+      const metrics = Array.isArray(reportData.weeklyBulkMetrics) ? reportData.weeklyBulkMetrics : [];
+      const weekNos = Array.from(new Set(metrics.map(metric => Number(metric.weekNo)).filter(Number.isFinite))).sort((a,b)=>a-b);
+      const latestWeekNo = weekNos.length ? weekNos[weekNos.length-1] : null;
+      const latestRows = latestWeekNo === null ? [] : metrics.filter(metric => Number(metric.weekNo)===latestWeekNo);
+      const sample = latestRows[0];
 
-      results.forEach(result => {
-        if (String(result.questionType || "").toUpperCase() !== "BULK") return;
-        if (!result.latestSubmittedAt) return;
-        const submitted = new Date(result.latestSubmittedAt);
-        if (!(submitted >= weekStart && submitted < weekEndExclusive)) return;
-        const score = Number(result.latestScore);
-        if (!Number.isFinite(score)) return;
-        const student = studentByUuid.get(String(result.studentUuid || ""));
-        if (!student) return;
-        const batch = isPrivate ? "Private learners" : (student.batch || "No batch");
-        if (selectedBatch && !isPrivate && batch !== selectedBatch) return;
-        const key = `${batch}|||${String(result.studentUuid || "")}`;
-        if (!grouped.has(key)) grouped.set(key,{batch,studentUuid:String(result.studentUuid || ""),scores:[]});
-        grouped.get(key).scores.push(score);
-      });
+      function fmtDate(value) {
+        if (!value) return "";
+        const d = new Date(String(value)+"T00:00:00");
+        return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString(undefined,{day:"numeric",month:"short"});
+      }
+
+      byId("leaderboardWeekLabel").textContent = sample
+        ? `Top 10 by cumulative Bulk Questions Average through Week ${latestWeekNo} (${fmtDate(sample.weekStart)} – ${fmtDate(sample.weekEnd)}). Unanswered due Bulk Questions count as 0.`
+        : "No completed Bulk Question week is available yet.";
 
       const batchNames = isPrivate
         ? ["Private learners"]
@@ -2523,21 +2498,23 @@
       }
 
       wrap.innerHTML = batchNames.map(batchName => {
-        const ranked = Array.from(grouped.values())
-          .filter(item => item.batch === batchName)
-          .map(item => {
-            const student = studentByUuid.get(item.studentUuid);
-            return {
-              fullName: student ? (student.fullName || student.name || "") : "",
-              studentId: student ? (student.studentId || student.rollNo || "") : "",
-              average: item.scores.reduce((sum,v)=>sum+v,0)/item.scores.length
-            };
-          })
+        const ranked = latestRows.map(metric => {
+          const student = studentByUuid.get(String(metric.studentUuid || ""));
+          if (!student) return null;
+          const batch = isPrivate ? "Private learners" : (student.batch || "No batch");
+          if (batch !== batchName) return null;
+          return {
+            fullName:student.fullName || student.name || "",
+            studentId:student.studentId || student.rollNo || "",
+            average:Number(metric.average)
+          };
+        }).filter(entry => entry && Number.isFinite(entry.average))
           .sort((a,b)=>b.average-a.average || String(a.fullName).localeCompare(String(b.fullName)))
           .slice(0,10);
+
         const body = ranked.length
           ? `<table style="width:100%;min-width:0;border-collapse:collapse;font-size:13px;"><thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">Rank</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">Roll number</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">Name</th><th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">Average score</th></tr></thead><tbody>${ranked.map((entry,index)=>`<tr><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);">${index+1}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);">${escapeHtml(entry.studentId)}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);">${escapeHtml(entry.fullName)}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);text-align:right;font-weight:600;">${entry.average.toFixed(2)}</td></tr>`).join("")}</tbody></table>`
-          : `<div style="padding:24px 0;text-align:center;color:var(--muted,#94a3b8);font-size:13px;border:1px dashed var(--border,#e2e8f0);border-radius:8px;">No Bulk submissions in this completed week</div>`;
+          : `<div style="padding:24px 0;text-align:center;color:var(--muted,#94a3b8);font-size:13px;border:1px dashed var(--border,#e2e8f0);border-radius:8px;">No ranked students for this batch</div>`;
         return `<div style="margin-bottom:16px;"><div style="font-weight:600;font-size:13px;margin-bottom:6px;">${escapeHtml(batchName)}</div>${body}</div>`;
       }).join("");
     }
@@ -4097,9 +4074,6 @@ function formatCriterionFeedback(criterion) {
         output.push({batchName,sheet});
       });
 
-      // ONE cumulative compliance list: students who have submitted every Bulk
-      // Question due by the start of the current week. Today's newly released
-      // question is therefore not included until next Monday.
       const completeRows=[["Students who have submitted all Bulk Questions due through the latest completed week"],["Batch","Roll number","Name"]];
       const completeEntries=completeStudents.map(metric=>{
         const student=studentByUuid.get(String(metric.studentUuid||""));
