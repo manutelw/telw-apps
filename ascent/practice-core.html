@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-ascent-practice-build="2026-08-24.1">
 <head>
   <meta charset="UTF-8">
 
@@ -397,10 +397,15 @@
     }
 
     .selected-question-text {
-      color: #405a73;
-      font-size: 14px;
-      line-height: 1.58;
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.6;
       white-space: pre-wrap;
+      padding: 14px 16px;
+      border: 1px solid #d7e1eb;
+      border-radius: 11px;
+      background: #ffffff;
     }
 
     .practice-context-note {
@@ -3006,10 +3011,14 @@ const nextQuestionLink =
         );
 
       selectedQuestionTitle.textContent =
-        selected.title;
+        selected.mode === "assigned" &&
+        String(selected.title || "").trim().toLowerCase() === "ascent task"
+          ? "Your assigned question"
+          : selected.title;
 
       selectedQuestionText.textContent =
-        selected.question;
+        String(selected.question || "")
+          .replace(/\s+Instructions:\s*/i, "\n\nInstructions:\n");
 
       selectedQuestionBox.hidden = false;
 
@@ -3038,8 +3047,8 @@ const nextQuestionLink =
 
           option.textContent =
             String(
-              item.title ||
               item.question ||
+              item.title ||
               "Assigned Task"
             );
 
