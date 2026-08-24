@@ -13,96 +13,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch static trainer leaderboard logic
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          path = Path('ascent/trainer.html')
-          text = path.read_text(encoding='utf-8')
-          original = text
-
-          old_bounds = '''    function currentWeekBounds() {
-      const now = new Date();
-      const day = now.getDay();
-      const mondayOffset = day === 0 ? -6 : 1 - day;
-      const start = new Date(now.getFullYear(),now.getMonth(),now.getDate() + mondayOffset);
-      start.setHours(0,0,0,0);
-      const end = new Date(start);
-      end.setDate(end.getDate() + 7);
-      return {start,end};
-    }'''
-
-          new_bounds = '''    function currentWeekBounds(rows=null) {
-      const now = new Date();
-      const day = now.getDay();
-      const mondayOffset = day === 0 ? -6 : 1 - day;
-      let start = new Date(now.getFullYear(),now.getMonth(),now.getDate() + mondayOffset);
-      start.setHours(0,0,0,0);
-      let end = new Date(start);
-      end.setDate(end.getDate() + 7);
-
-      const source = Array.isArray(rows) ? rows.filter(row =>
-        row && row.latestSubmittedAt && row.latestScore !== null && row.latestScore !== undefined &&
-        !Number.isNaN(new Date(row.latestSubmittedAt).getTime())
-      ) : [];
-
-      const hasCurrentWeek = source.some(row => {
-        const submitted = new Date(row.latestSubmittedAt);
-        return submitted >= start && submitted < end;
-      });
-
-      if (!hasCurrentWeek && source.length) {
-        const latestTime = Math.max(...source.map(row => new Date(row.latestSubmittedAt).getTime()));
-        const latest = new Date(latestTime);
-        const latestDay = latest.getDay();
-        const latestMondayOffset = latestDay === 0 ? -6 : 1 - latestDay;
-        start = new Date(latest.getFullYear(),latest.getMonth(),latest.getDate() + latestMondayOffset);
-        start.setHours(0,0,0,0);
-        end = new Date(start);
-        end.setDate(end.getDate() + 7);
-      }
-      return {start,end};
-    }'''
-
-          if old_bounds in text:
-            text = text.replace(old_bounds, new_bounds, 1)
-
-          text = text.replace(
-            '      const {start,end} = currentWeekBounds();',
-            '      const {start,end} = currentWeekBounds(filteredDashboardResults());',
-            1
-          )
-
-          text = text.replace(
-            '      return Array.from(byBatch.keys()).sort().map(batchName => {',
-            '      return Array.from(byBatch.keys()).sort().reverse().map(batchName => {',
-            1
-          )
-
-          old_source = '''      const assignments = (Array.isArray(workbookData.assignments) ? workbookData.assignments : [])
-        .filter(assignment => Boolean(assignment.submissionUuid) && assignment.submittedAt);'''
-          new_source = '''      const assignments = (
-        Array.isArray(workbookData.submissions) && workbookData.submissions.length
-          ? workbookData.submissions
-          : (Array.isArray(workbookData.assignments) ? workbookData.assignments : [])
-      ).filter(assignment => Boolean(assignment.submissionUuid) && assignment.submittedAt);'''
-          if old_source in text:
-            text = text.replace(old_source, new_source, 1)
-
-          text = re.sub(r'data-ascent-build="[^"]+"', 'data-ascent-build="2026-08-24.6"', text, count=1)
-
-          if text == original:
-            print('Trainer already patched; no file change needed.')
-          else:
-            path.write_text(text, encoding='utf-8')
-          PY
-      - name: Commit static trainer fix
+        with:
+          fetch-depth: 0
+      - name: Patch trainer leaderboard
+        run: python .github/scripts/patch_trainer_leaderboard.py
+      - name: Commit trainer fix
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ascent/trainer.html
-          git diff --cached --quiet && exit 0
+          if git diff --cached --quiet; then
+            echo "No trainer changes required"
+            exit 0
+          fi
           git commit -m "Fix live dashboard and Excel leaderboard"
-          git push
+          git pull --rebase origin main
+          git push origin HEAD:main
