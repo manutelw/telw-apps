@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-ascent-build="2026-08-24.15">
+<html lang="en" data-ascent-build="2026-08-24.16">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -4004,6 +4004,7 @@ function formatCriterionFeedback(criterion) {
     function buildWeeklyLeaderboardSheets(workbookData) {
       const students = Array.isArray(workbookData.students) ? workbookData.students : [];
       const weeklyMetrics = Array.isArray(workbookData.weeklyBulkMetrics) ? workbookData.weeklyBulkMetrics : [];
+      const currentBulkMetrics = Array.isArray(workbookData.bulkMetrics) ? workbookData.bulkMetrics : [];
       const completeStudents = Array.isArray(workbookData.bulkCompleteStudents) ? workbookData.bulkCompleteStudents : [];
       const studentByUuid = new Map(students.map(student => [String(student.studentUuid || ""),student]));
       const palette = ["DDEBF7","E2F0D9","FFF2CC","FCE4D6","E4DFEC","D9EAD3"];
@@ -4089,6 +4090,29 @@ function formatCriterionFeedback(criterion) {
       completeSheet["!cols"]=[{wch:14},{wch:18},{wch:30}];
       applyFill(completeSheet,{s:{r:0,c:0},e:{r:1,c:2}},"E2F0D9");
       output.push({batchName:"ALL RESPONSES SUBMITTED",sheet:completeSheet});
+
+      const incompleteRows=[["Students who have NOT submitted all Bulk Questions due through the latest completed week"],["Batch","Roll number","Name","Responses submitted","Responses due","Missing"]];
+      const incompleteEntries=currentBulkMetrics.map(metric=>{
+        const due=Number(metric.released||0);
+        const submitted=Number(metric.answered||0);
+        if (due<=0 || submitted>=due) return null;
+        const student=studentByUuid.get(String(metric.studentUuid||""));
+        if (!student) return null;
+        return {
+          batch:exportText(student.batch),
+          rollNo:exportText(student.rollNo||student.studentId),
+          name:exportText(student.name||student.fullName),
+          submitted,
+          due,
+          missing:Math.max(0,due-submitted)
+        };
+      }).filter(Boolean).sort((a,b)=>a.batch.localeCompare(b.batch)||a.submitted-b.submitted||a.name.localeCompare(b.name));
+      incompleteEntries.forEach(entry=>incompleteRows.push([entry.batch,entry.rollNo,entry.name,entry.submitted,entry.due,entry.missing]));
+      const incompleteSheet=XLSX.utils.aoa_to_sheet(incompleteRows);
+      incompleteSheet["!merges"]=[{s:{r:0,c:0},e:{r:0,c:5}}];
+      incompleteSheet["!cols"]=[{wch:14},{wch:18},{wch:30},{wch:21},{wch:15},{wch:12}];
+      applyFill(incompleteSheet,{s:{r:0,c:0},e:{r:1,c:5}},"FCE4D6");
+      output.push({batchName:"INCOMPLETE RESPONSES",sheet:incompleteSheet});
 
       return output;
     }
