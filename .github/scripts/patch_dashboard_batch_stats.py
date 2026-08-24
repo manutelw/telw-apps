@@ -3,7 +3,6 @@ import re
 
 path = Path('ascent/trainer.html')
 text = path.read_text(encoding='utf-8')
-original = text
 
 text, n1 = re.subn(
     r'<div class="summary-card"><div class="summary-label" id="diagnosticCompletedLabel">(?:Completed|Students Completed|Median)</div><div id="diagnosticAttemptedValue" class="summary-value">—</div></div>',
@@ -28,13 +27,31 @@ if needle in text and 'id="batchStatsInsight"' not in text:
 old = '''        const questionsReleased = rows.length ? Math.max(...rows.map(row => Number(row.released || 0))) : 0;
         const completed = rows.filter(row => Number(row.released || 0) > 0 && Number(row.answered || 0) >= Number(row.released || 0)).length;
         const notCompleted = Math.max(rows.length - completed, 0);
-        const averages = rows.map(row => Number(row.average)).filter(Number.isFinite);'''
+        const averages = rows.map(row => Number(row.average)).filter(Number.isFinite);
+        const averageScore = averages.length ? Math.round((averages.reduce((sum,score) => sum + score,0) / averages.length) * 100) / 100 : null;
+        const sample = rows[0];'''
 new = '''        const questionsReleased = rows.length ? Math.max(...rows.map(row => Number(row.released || 0))) : 0;
         const completed = rows.filter(row => Number(row.released || 0) > 0 && Number(row.answered || 0) >= Number(row.released || 0)).length;
         const partlyCompleted = rows.filter(row => Number(row.answered || 0) > 0 && Number(row.answered || 0) < Number(row.released || 0)).length;
         const zeroCompleted = rows.filter(row => Number(row.answered || 0) === 0).length;
         const notCompleted = partlyCompleted + zeroCompleted;
-        const averages = rows.map(row => Number(row.average)).filter(Number.isFinite);'''
+        const averages = rows.map(row => Number(row.average)).filter(Number.isFinite).sort((a,b)=>a-b);
+        const averageScore = averages.length ? Math.round((averages.reduce((sum,score) => sum + score,0) / averages.length) * 100) / 100 : null;
+        const medianScore = averages.length
+          ? (averages.length % 2
+              ? averages[(averages.length - 1) / 2]
+              : (averages[averages.length / 2 - 1] + averages[averages.length / 2]) / 2)
+          : null;
+        const frequency = new Map();
+        averages.forEach(score => {
+          const key = Number(score).toFixed(2);
+          frequency.set(key,(frequency.get(key)||0)+1);
+        });
+        let modeScore = null, modeCount = 0;
+        Array.from(frequency.entries()).sort((a,b)=>Number(a[0])-Number(b[0])).forEach(([key,count])=>{
+          if (count > modeCount) { modeCount = count; modeScore = Number(key); }
+        });
+        const sample = rows[0];'''
 if old not in text:
     raise SystemExit('Custom metric calculation block not found')
 text = text.replace(old,new,1)
@@ -116,4 +133,4 @@ if failed:
     raise SystemExit('Patch verification failed: '+', '.join(failed))
 
 path.write_text(text,encoding='utf-8')
-print('trainer.html patched: three-way Bulk completion graph added')
+print('trainer.html patched: mean, median, mode and three-way Bulk completion graph added')
