@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-ascent-build="2026-08-24.16">
+<html lang="en" data-ascent-build="2026-08-24.17">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2501,8 +2501,12 @@
         const ranked = latestRows.map(metric => {
           const student = studentByUuid.get(String(metric.studentUuid || ""));
           if (!student) return null;
-          const batch = isPrivate ? "Private learners" : (student.batch || "No batch");
-          if (batch !== batchName) return null;
+          const canonicalBatch = value => String(value || "")
+            .replace(/\s+PGDM\s*$/i, "")
+            .trim();
+          const batch = isPrivate ? "Private learners" : canonicalBatch(student.batch || "No batch");
+          const targetBatch = isPrivate ? "Private learners" : canonicalBatch(batchName);
+          if (batch !== targetBatch) return null;
           return {
             fullName:student.fullName || student.name || "",
             studentId:student.studentId || student.rollNo || "",
