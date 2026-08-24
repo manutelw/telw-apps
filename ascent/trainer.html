@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-ascent-build="2026-08-24.19">
+<html lang="en" data-ascent-build="2026-08-24.20">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -4117,48 +4117,6 @@ function formatCriterionFeedback(criterion) {
         output.push({batchName,sheet});
       });
 
-      const completeRows=[["Students who have submitted all Bulk Questions due through the latest completed week"],["Batch","Roll number","Name"]];
-      const completeEntries=completeStudents.map(metric=>{
-        const student=studentByUuid.get(String(metric.studentUuid||""));
-        return student ? {
-          batch:exportText(student.batch),
-          rollNo:exportText(student.rollNo||student.studentId),
-          name:exportText(student.name||student.fullName)
-        } : null;
-      }).filter(Boolean).sort((a,b)=>a.batch.localeCompare(b.batch)||a.name.localeCompare(b.name));
-      completeEntries.forEach(entry=>completeRows.push([entry.batch,entry.rollNo,entry.name]));
-      const completeSheet=XLSX.utils.aoa_to_sheet(completeRows);
-      completeSheet["!merges"]=[{s:{r:0,c:0},e:{r:0,c:2}}];
-      completeSheet["!cols"]=[{wch:14},{wch:18},{wch:30}];
-      applyFill(completeSheet,{s:{r:0,c:0},e:{r:1,c:2}},"E2F0D9");
-      output.push({batchName:"ALL RESPONSES SUBMITTED",sheet:completeSheet});
-
-      const latestCompletedWeekNo = weekNos.length ? weekNos[weekNos.length - 1] : null;
-      const latestCompletedMetrics = latestCompletedWeekNo === null
-        ? []
-        : weeklyMetrics.filter(metric => Number(metric.weekNo) === latestCompletedWeekNo);
-      const incompleteRows=[["Students who have NOT submitted all Bulk Questions due through the latest completed week"],["Batch","Roll number","Name","Responses submitted","Responses due","Missing"]];
-      const incompleteEntries=latestCompletedMetrics.map(metric=>{
-        const due=Number(metric.released||0);
-        const submitted=Number(metric.answered||0);
-        if (due<=0 || submitted>=due) return null;
-        const student=studentByUuid.get(String(metric.studentUuid||""));
-        if (!student) return null;
-        return {
-          batch:exportText(student.batch),
-          rollNo:exportText(student.rollNo||student.studentId),
-          name:exportText(student.name||student.fullName),
-          submitted,
-          due,
-          missing:Math.max(0,due-submitted)
-        };
-      }).filter(Boolean).sort((a,b)=>a.batch.localeCompare(b.batch)||a.submitted-b.submitted||a.name.localeCompare(b.name));
-      incompleteEntries.forEach(entry=>incompleteRows.push([entry.batch,entry.rollNo,entry.name,entry.submitted,entry.due,entry.missing]));
-      const incompleteSheet=XLSX.utils.aoa_to_sheet(incompleteRows);
-      incompleteSheet["!merges"]=[{s:{r:0,c:0},e:{r:0,c:5}}];
-      incompleteSheet["!cols"]=[{wch:14},{wch:18},{wch:30},{wch:21},{wch:15},{wch:12}];
-      applyFill(incompleteSheet,{s:{r:0,c:0},e:{r:1,c:5}},"FCE4D6");
-      output.push({batchName:"INCOMPLETE RESPONSES",sheet:incompleteSheet});
 
       return output;
     }
