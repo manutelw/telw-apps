@@ -35,8 +35,8 @@ export async function onRequest(context) {
     html = html.replace(oldBlock, newBlock);
   }
 
-  const trainerResultsHotfix = String.raw`
-<script data-ascent-results-hotfix="2026-08-24.1">
+  const trainerResultsHotfix = `
+<script data-ascent-results-hotfix="2026-08-24.2">
 (() => {
   const PAGE_SIZE = 150;
   let assignmentPage = 1;
@@ -162,13 +162,13 @@ export async function onRequest(context) {
 })();
 </script>`;
 
-  if (!html.includes('data-ascent-results-hotfix="2026-08-24.1"')) {
+  if (!html.includes('data-ascent-results-hotfix="2026-08-24.2"')) {
     html = html.replace("</body>", trainerResultsHotfix + "\n</body>");
   }
 
   html = html.replace(
     'data-ascent-build="2026-08-04.5"',
-    'data-ascent-build="2026-08-24.1"'
+    'data-ascent-build="2026-08-24.2"'
   );
 
   const headers = new Headers(response.headers);
