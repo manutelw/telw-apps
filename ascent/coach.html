@@ -24,7 +24,7 @@
   <div class="shell">
     <header class="topbar">
       <div class="brand"><div class="mark">A</div><div><h1>ASCENT Coach</h1><p>Your practice guide</p></div></div>
-      <nav class="nav"><a href="./dashboard.html">My Performance</a><a class="primary" href="./practice.html">Practice</a><button id="logoutButton" type="button">Log Out</button></nav>
+      <nav class="nav"><a href="./dashboard.html">My Performance</a><a class="primary" href="./practice.html">Practice</a><button id="downloadButton" type="button">Download Conversation</button><button id="logoutButton" type="button">Log Out</button></nav>
     </header>
 
     <main class="card">
@@ -47,6 +47,7 @@
           </div>
         </details>
         <div class="scope-note"><strong>ASCENT Coach is not a general chatbot.</strong> Requests about coding, GitHub, duplicating apps, unrelated academic work, general knowledge or other non-ASCENT tasks are outside its scope.</div>
+        <div class="scope-note"><strong>When the Coach will refer you to a human.</strong> Payment issues, account-access problems, institute-specific placement rules, disciplinary matters, batch changes, trainer overrides and other decisions requiring human authority must be handled by ASCENT support, your trainer or your institute as applicable. This is a service-support boundary, not a legal dispute process.</div>
         <div class="misuse-warning"><strong>Important use warning</strong>Repeated out-of-scope, abusive or deliberate misuse of ASCENT Coach may result in suspension or termination of your ASCENT access. Charges already paid are non-refundable, except where applicable law or the payment platform requires otherwise.</div>
       </section>
 
@@ -55,7 +56,7 @@
 
       <form id="composer" class="composer">
         <div class="composer-row"><textarea id="messageInput" maxlength="1400" placeholder="Ask about your ASCENT practice…" aria-label="Message ASCENT Coach"></textarea><button id="sendButton" class="send" type="submit">Send</button></div>
-        <p class="note">You may also type your own ASCENT-related question. The Coach will decline requests outside ASCENT practice and interview readiness.</p>
+        <p class="note">ASCENT does not provide permanent Coach chat history. If you want to keep the visible conversation, use Download Conversation before leaving this page.</p>
       </form>
       <div class="footer"><strong>ASCENT</strong> · A Manu Vikraman Career-Readiness Product</div>
     </main>
@@ -66,7 +67,7 @@
     const SUPABASE_URL='https://vtqatrhwfvzyodiftvkc.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
     const COACH_URL=SUPABASE_URL+'/functions/v1/ascent-student-coach';
-    const chat=document.getElementById('chat'),composer=document.getElementById('composer'),input=document.getElementById('messageInput'),sendButton=document.getElementById('sendButton'),errorBox=document.getElementById('errorBox'),logoutButton=document.getElementById('logoutButton');
+    const chat=document.getElementById('chat'),composer=document.getElementById('composer'),input=document.getElementById('messageInput'),sendButton=document.getElementById('sendButton'),downloadButton=document.getElementById('downloadButton'),errorBox=document.getElementById('errorBox'),logoutButton=document.getElementById('logoutButton');
     const history=[];let busy=false;
     function loadSession(){const raw=localStorage.getItem(SESSION_STORAGE_KEY);if(!raw){location.replace('./index.html');return null}try{const s=JSON.parse(raw),expiry=new Date(s.expiresAt).getTime();if(!s.sessionToken||!Number.isFinite(expiry)||expiry<=Date.now())throw new Error('expired');return s}catch(_){localStorage.removeItem(SESSION_STORAGE_KEY);location.replace('./index.html');return null}}
     const session=loadSession();
@@ -74,7 +75,8 @@
     function addTyping(){const w=document.createElement('div');w.className='message assistant';w.id='typingMessage';const b=document.createElement('div');b.className='bubble';const l=document.createElement('span');l.className='label';l.textContent='ASCENT Coach';const d=document.createElement('span');d.className='typing';d.innerHTML='<span></span><span></span><span></span>';b.append(l,d);w.appendChild(b);chat.appendChild(w);chat.scrollTop=chat.scrollHeight}
     function removeTyping(){document.getElementById('typingMessage')?.remove()}function showError(t){errorBox.textContent=t;errorBox.hidden=!t}function setBusy(v){busy=v;sendButton.disabled=v;input.disabled=v}
     async function sendMessage(text){if(!session||busy)return;const message=String(text||'').trim();if(!message)return;showError('');addMessage('user',message);input.value='';setBusy(true);addTyping();try{const response=await fetch(COACH_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+SUPABASE_PUBLISHABLE_KEY},body:JSON.stringify({session_token:session.sessionToken,message,history:history.slice(-6)})});const result=await response.json().catch(()=>({}));if(response.status===401){localStorage.removeItem(SESSION_STORAGE_KEY);location.replace('./index.html');return}if(!response.ok||!result.ok)throw new Error(result.message||'ASCENT Coach could not reply.');removeTyping();addMessage('assistant',result.reply);history.push({role:'user',content:message},{role:'assistant',content:result.reply});if(history.length>12)history.splice(0,history.length-12)}catch(error){removeTyping();showError(error.message||'ASCENT Coach could not reply. Please try again.')}finally{setBusy(false);input.focus()}}
-    composer.addEventListener('submit',e=>{e.preventDefault();sendMessage(input.value)});input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage(input.value)}});document.querySelectorAll('.question-link').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();sendMessage(a.dataset.question)}));logoutButton.addEventListener('click',()=>{localStorage.removeItem(SESSION_STORAGE_KEY);location.replace('./index.html')});
+    function downloadConversation(){removeTyping();const messages=[...chat.querySelectorAll('.message')].map(node=>{const label=node.querySelector('.label')?.textContent?.trim()||'';const bubble=node.querySelector('.bubble')?.innerText||'';const text=bubble.replace(/^ASCENT Coach\s*/,'').replace(/^You\s*/,'').trim();return label+':\n'+text}).filter(Boolean);const header=['ASCENT Coach Conversation','Downloaded: '+new Date().toLocaleString(),session?.fullName?'Learner: '+session.fullName:''].filter(Boolean).join('\n');const content=header+'\n\n'+messages.join('\n\n');const blob=new Blob([content],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');const stamp=new Date().toISOString().slice(0,10);a.href=url;a.download='ASCENT-Coach-'+stamp+'.txt';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+    composer.addEventListener('submit',e=>{e.preventDefault();sendMessage(input.value)});input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage(input.value)}});document.querySelectorAll('.question-link').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();sendMessage(a.dataset.question)}));downloadButton.addEventListener('click',downloadConversation);logoutButton.addEventListener('click',()=>{localStorage.removeItem(SESSION_STORAGE_KEY);location.replace('./index.html')});
     const firstName=String(session?.fullName||'').trim().split(/\s+/)[0]||'there';addMessage('assistant','Hello '+firstName+'. I can help with your ASCENT practice, feedback, progress and next steps. Open “Questions you can ask” above, or type an ASCENT-related question.');
   </script>
 </body>
