@@ -58,8 +58,8 @@
     return Boolean(practiceContext && practiceContext.is_private_learner === true);
   }
 
-  function isPriority() {
-    return getContextCode() === "priority_practice_loaded";
+  function hasAssignedQuestions() {
+    return Array.isArray(activeAssignments) && activeAssignments.length > 0;
   }
 
   function isDiagnosticRequired() {
@@ -105,7 +105,7 @@
     const text = document.getElementById("customQuestionPackText");
     const link = document.getElementById("customQuestionPackLink");
 
-    if (!isPrivate() || isPriority() || isDiagnosticRequired() || isDiagnosticComplete()) {
+    if (!isPrivate() || isDiagnosticRequired() || isDiagnosticComplete()) {
       box.hidden = true;
       return;
     }
@@ -158,22 +158,15 @@
     clearElement(practiceModeSelect);
 
     const privateLearner = isPrivate();
-    const priority = isPriority();
     const diagnosticRequired = isDiagnosticRequired();
     const diagnosticComplete = isDiagnosticComplete();
+    const assignedAvailable = hasAssignedQuestions();
 
     practiceModeField.hidden = false;
     practiceContextNote.hidden = true;
     practiceContextNote.textContent = "";
 
-    if (priority) {
-      if (activeAssignments.length > 0) {
-        const option = document.createElement("option");
-        option.value = "assigned";
-        option.textContent = "Priority question — complete this first";
-        practiceModeSelect.appendChild(option);
-      }
-    } else if (diagnosticRequired) {
+    if (diagnosticRequired) {
       if (questionBank.length > 0) {
         const option = document.createElement("option");
         option.value = "question_bank";
@@ -181,12 +174,17 @@
         practiceModeSelect.appendChild(option);
       }
     } else if (!diagnosticComplete) {
+      if (assignedAvailable) {
+        const assignedOption = document.createElement("option");
+        assignedOption.value = "assigned";
+        assignedOption.textContent = "My JD Builder / assigned questions";
+        practiceModeSelect.appendChild(assignedOption);
+      }
+
       if (questionBank.length > 0) {
         const bankOption = document.createElement("option");
         bankOption.value = "question_bank";
-        bankOption.textContent = privateLearner
-          ? "Choose PI or GD practice"
-          : "Choose from PI, GD or LUM";
+        bankOption.textContent = "Choose from the ASCENT question bank";
         practiceModeSelect.appendChild(bankOption);
       }
 
@@ -233,7 +231,7 @@
       return;
     }
 
-    if (priority && activeAssignments.length > 0) {
+    if (assignedAvailable) {
       practiceModeSelect.value = "assigned";
     } else if (questionBank.length > 0) {
       practiceModeSelect.value = "question_bank";
@@ -245,11 +243,10 @@
     if (diagnosticRequired) passStatusBadge.hidden = true;
     updatePracticeMode();
 
-    if (priority) {
-      practiceContextNote.textContent = String(practiceContext.message || "Complete this priority question first. Your normal practice bank will return afterwards.");
-      practiceContextNote.hidden = false;
-    } else if (!privateLearner) {
-      practiceContextNote.textContent = "Choose the practice you need. PI, GD and LUM are open to you.";
+    if (!diagnosticRequired && !diagnosticComplete) {
+      practiceContextNote.textContent = String(practiceContext && practiceContext.message
+        ? practiceContext.message
+        : "Choose the question you want to practise.");
       practiceContextNote.hidden = false;
     }
   };
@@ -262,7 +259,9 @@
   };
 
   newResponseButton.addEventListener("click", function (event) {
-    if (practiceContext && practiceContext.is_private_learner !== true && getContextCode() === "institutional_open_bank") {
+    const code = getContextCode();
+    if (practiceContext && practiceContext.is_private_learner !== true &&
+        (code === "institutional_open_bank" || code === "institutional_open_bank_with_assigned")) {
       event.preventDefault();
       event.stopImmediatePropagation();
       window.location.reload();
