@@ -57,7 +57,7 @@
     </div>
   </section>
 
-  <iframe id="practiceFrame" src="./practice-core.html?v=20260823-live-mock" title="ASCENT Practice"></iframe>
+  <iframe id="practiceFrame" src="./practice-core.html?v=20260826-fetchfix1" title="ASCENT Practice"></iframe>
 
   <script>
     const frame=document.getElementById('practiceFrame');
@@ -68,7 +68,7 @@
         if(!childDocument.getElementById('ascentPracticeAccessV2')){
           const script=childDocument.createElement('script');
           script.id='ascentPracticeAccessV2';
-          script.src='./practice-access-v2.js?v=20260823';
+          script.src='./practice-access-v2.js?v=20260826-fetchfix1';
           childDocument.body.appendChild(script);
         }
       }catch(error){console.error('ASCENT practice controller could not load:',error);}
