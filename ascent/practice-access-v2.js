@@ -9,9 +9,43 @@
   let customCreditsRemaining = 0;
   let customCreditsLoaded = false;
 
+  function sleep(milliseconds) {
+    return new Promise(function (resolve) {
+      window.setTimeout(resolve, milliseconds);
+    });
+  }
+
+  function requestUrl(input) {
+    if (typeof input === "string") return input;
+    if (input && typeof input.url === "string") return input.url;
+    return "";
+  }
+
+  async function resilientSubmitFetch(input, init) {
+    const url = requestUrl(input);
+    const target = url === oldSubmitUrl ? newSubmitUrl : url;
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        return await nativeFetch(target, init);
+      } catch (error) {
+        lastError = error;
+        console.warn("ASCENT submission network attempt " + attempt + " failed:", error);
+
+        if (attempt < 3) {
+          await sleep(attempt === 1 ? 900 : 1800);
+        }
+      }
+    }
+
+    throw lastError || new TypeError("ASCENT could not reach the submission service.");
+  }
+
   window.fetch = function (input, init) {
-    if (typeof input === "string" && input === oldSubmitUrl) {
-      return nativeFetch(newSubmitUrl, init);
+    const url = requestUrl(input);
+    if (url === oldSubmitUrl || url === newSubmitUrl) {
+      return resilientSubmitFetch(input, init);
     }
     return nativeFetch(input, init);
   };
