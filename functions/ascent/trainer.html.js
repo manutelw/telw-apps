@@ -4,23 +4,15 @@ export async function onRequest(context) {
 
   let html = await response.text();
 
-  const oldBlock = `        XLSX.writeFile(
+  // Keep the safer Excel download path.
+  const oldExcel = `        XLSX.writeFile(
           workbook,
           \`ASCENT_\${institutionName}_Trainer_Report_\${new Date().toISOString().slice(0,10)}.xlsx\`,
           {cellStyles:true,cellDates:true}
         );`;
-
-  const newBlock = `        const fileName = \`ASCENT_\${institutionName}_Trainer_Report_\${new Date().toISOString().slice(0,10)}.xlsx\`;
-        const workbookBytes = XLSX.write(workbook,{
-          bookType:"xlsx",
-          type:"array",
-          cellStyles:true,
-          cellDates:true
-        });
-        const workbookBlob = new Blob(
-          [workbookBytes],
-          {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
-        );
+  const newExcel = `        const fileName = \`ASCENT_\${institutionName}_Trainer_Report_\${new Date().toISOString().slice(0,10)}.xlsx\`;
+        const workbookBytes = XLSX.write(workbook,{bookType:"xlsx",type:"array",cellStyles:true,cellDates:true});
+        const workbookBlob = new Blob([workbookBytes],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
         const downloadUrl = URL.createObjectURL(workbookBlob);
         const downloadLink = document.createElement("a");
         downloadLink.href = downloadUrl;
@@ -30,105 +22,141 @@ export async function onRequest(context) {
         downloadLink.click();
         document.body.removeChild(downloadLink);
         window.setTimeout(() => URL.revokeObjectURL(downloadUrl),30000);`;
+  if (html.includes(oldExcel)) html = html.replace(oldExcel,newExcel);
 
-  if (html.includes(oldBlock)) html = html.replace(oldBlock, newBlock);
-
+  // Preserve the dashboard/result rendering caps added during stabilisation.
   html = html.replace('visibleAssignmentRows.map(row =>','visibleAssignmentRows.slice(0,150).map(row =>');
-  html = html.replace('visibleResultRows = resultFilter(reportData.results || [],"result");','visibleResultRows = resultFilter(reportData.results || [],"result").filter(row => Number(row.attemptCount || 0) > 0 || (row.latestScore !== null && row.latestScore !== undefined));');
+  html = html.replace(
+    'visibleResultRows = resultFilter(reportData.results || [],"result");',
+    'visibleResultRows = resultFilter(reportData.results || [],"result").filter(row => Number(row.attemptCount || 0) > 0 || (row.latestScore !== null && row.latestScore !== undefined));'
+  );
   html = html.replace('visibleResultRows.map(row =>','visibleResultRows.slice(0,300).map(row =>');
 
-  html = html.replace(
-    '["assignmentTaskFilter","resultTaskFilter"].forEach(id => fillSelect(id,reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks"));',
-    'fillSelect("assignmentTaskFilter",reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks");\n      fillSelect("resultTaskFilter",[{value:"PI",label:"PI"},{value:"GD",label:"GD"},{value:"LUM",label:"LUM"},{value:"JD",label:"JD"},{value:"ASCENT_TASK",label:"Ascent Task"}],"value",item => item.label,"All tasks");'
-  );
+  // User-facing naming only. Internal CUSTOM values remain unchanged.
+  html = html.replace('CUSTOM:"Custom"','CUSTOM:"Ascent Task"');
+  html = html.replace('Custom Questions (ASCENT Task)','Ascent Task');
 
-  html = html.replace(
-    'function resultFilter(rows,prefix) {',
-    'function resultTaskCategory(row) {\n      const questionType = String(row && row.questionType || "").trim().toUpperCase();\n      const rubricType = String(row && row.rubricType || "").trim().toUpperCase();\n      const taskTitle = String(row && row.taskTitle || "").trim().toUpperCase();\n      if (taskTitle.includes("JD INTERVIEW MAPPER") || taskTitle.startsWith("JD ") || taskTitle.includes("· JD")) return "JD";\n      if (questionType === "PI" || rubricType === "PI") return "PI";\n      if (questionType === "GD" || rubricType === "GD") return "GD";\n      if (questionType === "LUM") return "LUM";\n      if (rubricType === "MANAGERIAL_COMMUNICATION" && taskTitle.startsWith("LUM ")) return "LUM";\n      return "ASCENT_TASK";\n    }\n\n    function resultFilter(rows,prefix) {'
-  );
-
-  html = html.replace(
-    'if (task && row.taskUuid !== task) return false;',
-    'if (task) {\n          if (prefix === "result") { if (resultTaskCategory(row) !== task) return false; }\n          else if (row.taskUuid !== task) return false;\n        }'
-  );
-
-  const leaderboardFix = `
-<script data-ascent-leaderboard-fix="2026-08-27.2">
+  const resultsFilterGuard = `
+<script data-ascent-results-filter-guard="2026-08-27.3">
 (function () {
-  var realtimeLeaderboardBusy = false;
+  const RESULT_OPTIONS = [
+    ["","All tasks"],
+    ["PI","PI"],
+    ["GD","GD"],
+    ["LUM","LUM"],
+    ["JD","JD"],
+    ["ASCENT_TASK","Ascent Task"]
+  ];
+  let enforcing = false;
 
-  function weekBoundsForDate(value) {
-    var d = value instanceof Date ? new Date(value) : new Date(value || Date.now());
-    var day = d.getDay();
-    var mondayOffset = day === 0 ? -6 : 1 - day;
-    var start = new Date(d.getFullYear(), d.getMonth(), d.getDate() + mondayOffset);
-    start.setHours(0,0,0,0);
-    var end = new Date(start);
-    end.setDate(end.getDate() + 7);
-    return {start:start,end:end};
+  function categoryOf(row) {
+    const questionType = String(row && row.questionType || "").trim().toUpperCase();
+    const rubricType = String(row && row.rubricType || "").trim().toUpperCase();
+    const taskTitle = String(row && row.taskTitle || "").trim().toUpperCase();
+
+    if (taskTitle.includes("JD INTERVIEW MAPPER") || taskTitle.startsWith("JD ") || taskTitle.includes("· JD")) return "JD";
+    if (questionType === "GD" || rubricType === "GD") return "GD";
+    if (questionType === "LUM") return "LUM";
+    if (rubricType === "MANAGERIAL_COMMUNICATION" && (taskTitle.startsWith("LUM ") || taskTitle.includes(" LUM "))) return "LUM";
+    if (questionType === "PI" || rubricType === "PI") return "PI";
+    return "ASCENT_TASK";
   }
 
-  renderWeeklyLeaderboard = function () {
-    var current = weekBoundsForDate(new Date());
-    var start = current.start;
-    var end = current.end;
-    var active = selectedDashboardAccessPoint();
-    var isPrivate = active && active.accessType === "PRIVATE_LEARNERS";
-    var batchFilter = byId("dashboardBatchFilter");
-    var selectedBatch = batchFilter ? batchFilter.value : "";
-    var batchNames = isPrivate
-      ? ["Private learners"]
-      : (selectedBatch ? [selectedBatch] : (reportData.institutionBatches || reportData.batches || []).slice().sort());
-    var wrap = byId("weeklyLeaderboard");
-    if (!wrap) return;
+  function enforceResultTaskDropdown() {
+    if (enforcing) return;
+    const select = document.getElementById("resultTaskFilter");
+    if (!select) return;
 
-    if (!batchNames.length) {
-      wrap.innerHTML = '<div class="line-empty">No batches set up yet for this selection.</div>';
+    const current = select.value;
+    const wanted = RESULT_OPTIONS.map(item => item[0] + "|" + item[1]).join(";;");
+    const actual = Array.from(select.options).map(option => option.value + "|" + option.textContent).join(";;");
+    if (actual === wanted) return;
+
+    enforcing = true;
+    select.innerHTML = RESULT_OPTIONS.map(item => {
+      const option = document.createElement("option");
+      option.value = item[0];
+      option.textContent = item[1];
+      return option.outerHTML;
+    }).join("");
+    if (RESULT_OPTIONS.some(item => item[0] === current)) select.value = current;
+    enforcing = false;
+  }
+
+  const originalPopulateControls = typeof populateControls === "function" ? populateControls : null;
+  if (originalPopulateControls) {
+    populateControls = function () {
+      const result = originalPopulateControls.apply(this,arguments);
+      enforceResultTaskDropdown();
+      return result;
+    };
+  }
+
+  const originalResultFilter = typeof resultFilter === "function" ? resultFilter : null;
+  if (originalResultFilter) {
+    resultFilter = function (rows,prefix) {
+      if (prefix !== "result") return originalResultFilter.apply(this,arguments);
+
+      const batch = byId("resultBatchFilter").value;
+      const student = byId("resultStudentFilter").value;
+      const task = byId("resultTaskFilter").value;
+      const status = byId("resultStatusFilter").value;
+      const from = byId("resultDateFrom").value;
+      const to = byId("resultDateTo").value;
+
+      return rows.filter(row => {
+        if (batch && String(row.batch || "") !== batch) return false;
+        if (student && row.studentUuid !== student) return false;
+        if (task && categoryOf(row) !== task) return false;
+        if (status && row.status !== status) return false;
+        const dateValue = row.latestSubmittedAt || row.availableAt;
+        if (from && dateValue && new Date(dateValue) < new Date(from + "T00:00:00")) return false;
+        if (to && dateValue && new Date(dateValue) > new Date(to + "T23:59:59")) return false;
+        return true;
+      });
+    };
+  }
+
+  function installObserver() {
+    const select = document.getElementById("resultTaskFilter");
+    if (!select) {
+      window.setTimeout(installObserver,250);
       return;
     }
+    enforceResultTaskDropdown();
+    const observer = new MutationObserver(enforceResultTaskDropdown);
+    observer.observe(select,{childList:true,subtree:true});
+  }
 
-    var rows = filteredDashboardResults().filter(function (row) {
-      if (!row || row.latestScore === null || row.latestScore === undefined || !row.latestSubmittedAt) return false;
-      var submitted = new Date(row.latestSubmittedAt);
-      return !Number.isNaN(submitted.getTime()) && submitted >= start && submitted < end;
-    });
+  installObserver();
+  window.setTimeout(enforceResultTaskDropdown,500);
+  window.setTimeout(enforceResultTaskDropdown,1500);
+  window.setTimeout(enforceResultTaskDropdown,3500);
+})();
+</script>`;
 
-    var endLabelDate = new Date(end.getTime() - 86400000);
-    var label = byId("leaderboardWeekLabel");
-    if (label) {
-      label.textContent = "Live · current week · " + start.toLocaleDateString(undefined,{month:"short",day:"numeric"}) + " – " + endLabelDate.toLocaleDateString(undefined,{month:"short",day:"numeric"}) + " · updates automatically";
-    }
+  const leaderboardGuard = `
+<script data-ascent-leaderboard-fix="2026-08-27.3">
+(function () {
+  let busy = false;
 
-    var byBatch = new Map();
-    rows.forEach(function (row) {
-      var batchKey = isPrivate ? "Private learners" : (row.batch || "No batch");
-      if (!byBatch.has(batchKey)) byBatch.set(batchKey,new Map());
-      var byStudent = byBatch.get(batchKey);
-      var key = row.studentUuid || row.studentId || row.email;
-      if (!byStudent.has(key)) byStudent.set(key,{fullName:row.fullName,studentId:row.studentId,scores:[]});
-      byStudent.get(key).scores.push(Number(row.latestScore));
-    });
+  function weekBounds(value) {
+    const d = value instanceof Date ? new Date(value) : new Date(value || Date.now());
+    const offset = d.getDay() === 0 ? -6 : 1 - d.getDay();
+    const start = new Date(d.getFullYear(),d.getMonth(),d.getDate()+offset);
+    start.setHours(0,0,0,0);
+    const end = new Date(start);
+    end.setDate(end.getDate()+7);
+    return {start,end};
+  }
 
-    wrap.innerHTML = batchNames.map(function (batchName) {
-      var studentMap = byBatch.get(batchName);
-      var ranked = studentMap ? Array.from(studentMap.values()).map(function (entry) {
-        return {fullName:entry.fullName,studentId:entry.studentId,average:entry.scores.reduce(function(a,b){return a+b;},0)/entry.scores.length};
-      }).sort(function(a,b){return b.average-a.average;}).slice(0,10) : [];
-      var body = ranked.length
-        ? '<table style="width:100%;min-width:0;border-collapse:collapse;font-size:13px;"><thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">#</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">Student</th><th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">Avg Score</th></tr></thead><tbody>' + ranked.map(function(entry,index){return '<tr><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);">'+(index+1)+'</td><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);">'+escapeHtml(entry.fullName)+'<br><span class="form-note">'+escapeHtml(entry.studentId)+'</span></td><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);text-align:right;font-weight:600;">'+entry.average.toFixed(2)+'</td></tr>';}).join('') + '</tbody></table>'
-        : '<div style="padding:24px 0;text-align:center;color:var(--muted,#94a3b8);font-size:13px;border:1px dashed var(--border,#e2e8f0);border-radius:8px;">No scored submissions yet in the current week</div>';
-      return '<div style="margin-bottom:16px;"><div style="font-weight:600;font-size:13px;margin-bottom:6px;">'+escapeHtml(batchName)+'</div>'+body+'</div>';
-    }).join('');
-  };
-
-  async function refreshLeaderboardRealtime() {
-    if (realtimeLeaderboardBusy || document.hidden) return;
+  async function refreshLiveLeaderboard() {
+    if (busy || document.hidden) return;
     if (typeof currentSession === "undefined" || !currentSession || !currentSession.sessionToken) return;
     if (typeof RPC === "undefined" || !RPC || !RPC.report || typeof callRpc !== "function") return;
-
-    realtimeLeaderboardBusy = true;
+    busy = true;
     try {
-      var data = await callRpc(RPC.report,{
+      const data = await callRpc(RPC.report,{
         p_session_token:currentSession.sessionToken,
         p_batch:null,
         p_student_uuid:null,
@@ -140,87 +168,89 @@ export async function onRequest(context) {
           accessPoints:Array.isArray(data.accessPoints) ? data.accessPoints : ((reportData && reportData.accessPoints) || []),
           institutionBatches:Array.isArray(data.batches) ? data.batches : ((reportData && reportData.institutionBatches) || [])
         });
-        renderWeeklyLeaderboard();
+        if (typeof renderWeeklyLeaderboard === "function") renderWeeklyLeaderboard();
       }
     } catch (error) {
       console.warn("ASCENT live leaderboard refresh skipped",error);
     } finally {
-      realtimeLeaderboardBusy = false;
+      busy = false;
     }
   }
 
-  window.setInterval(refreshLeaderboardRealtime,10000);
-  window.addEventListener("focus",function(){ window.setTimeout(refreshLeaderboardRealtime,250); });
-  document.addEventListener("visibilitychange",function(){ if (!document.hidden) window.setTimeout(refreshLeaderboardRealtime,250); });
+  // The backend now includes the current week. Keep the board fresh without a manual refresh.
+  window.setInterval(refreshLiveLeaderboard,10000);
+  window.addEventListener("focus",() => window.setTimeout(refreshLiveLeaderboard,250));
+  document.addEventListener("visibilitychange",() => { if (!document.hidden) window.setTimeout(refreshLiveLeaderboard,250); });
 
+  // Ensure freshly downloaded workbooks include all scored weeks, including the current one.
   buildWeeklyLeaderboardSheets = function (workbookData) {
-    var submissions = Array.isArray(workbookData.submissions) && workbookData.submissions.length ? workbookData.submissions : (Array.isArray(workbookData.assignments) ? workbookData.assignments : []);
-    submissions = submissions.filter(function (row) {
-      var score = exportNumber(row.finalScore !== undefined ? row.finalScore : (row.totalScore !== undefined ? row.totalScore : row.score));
+    const submissions = Array.isArray(workbookData.submissions) && workbookData.submissions.length
+      ? workbookData.submissions
+      : (Array.isArray(workbookData.assignments) ? workbookData.assignments : []);
+    const scored = submissions.filter(row => {
+      const score = exportNumber(row.finalScore !== undefined ? row.finalScore : (row.totalScore !== undefined ? row.totalScore : row.score));
       return Boolean(row.submissionUuid) && row.submittedAt && score !== null && !Number.isNaN(new Date(row.submittedAt).getTime());
     });
-    if (!submissions.length) return [];
+    if (!scored.length) return [];
 
     function rankedFor(rows) {
-      var students = new Map();
-      rows.forEach(function (row) {
-        var score = exportNumber(row.finalScore !== undefined ? row.finalScore : (row.totalScore !== undefined ? row.totalScore : row.score));
+      const students = new Map();
+      rows.forEach(row => {
+        const score = exportNumber(row.finalScore !== undefined ? row.finalScore : (row.totalScore !== undefined ? row.totalScore : row.score));
         if (score === null) return;
-        var key = String(row.studentUuid || row.rollNo || row.emailId || row.name || '');
+        const key = String(row.studentUuid || row.rollNo || row.emailId || row.name || "");
         if (!students.has(key)) students.set(key,{name:exportText(row.name),rollNo:exportText(row.rollNo),scores:[]});
         students.get(key).scores.push(Number(score));
       });
-      return Array.from(students.values()).map(function (student) {
-        return {name:student.name + (student.rollNo ? ' (' + student.rollNo + ')' : ''),average:student.scores.reduce(function(a,b){return a+b;},0)/student.scores.length};
-      }).sort(function(a,b){return b.average-a.average;}).slice(0,10);
+      return Array.from(students.values()).map(student => ({
+        name:student.name + (student.rollNo ? " (" + student.rollNo + ")" : ""),
+        average:student.scores.reduce((a,b)=>a+b,0)/student.scores.length
+      })).sort((a,b)=>b.average-a.average).slice(0,10);
     }
 
-    var current = weekBoundsForDate(new Date());
-    var currentRows = submissions.filter(function (row) { var d=new Date(row.submittedAt); return d>=current.start && d<current.end; });
-    var currentBatchNames = Array.from(new Set(currentRows.map(function(row){return exportText(row.batch)||'No batch';}))).sort().reverse();
-    var currentDateLabel = current.start.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' – ' + new Date(current.end.getTime()-86400000).toLocaleDateString(undefined,{month:'short',day:'numeric'});
-    var combinedRows = [['Rank']];
-    currentBatchNames.forEach(function(batch){combinedRows[0].push(batch+' · '+currentDateLabel,'');});
-    var subheads=['']; currentBatchNames.forEach(function(){subheads.push('Name','Score');}); combinedRows.push(subheads);
-    var currentRanked=currentBatchNames.map(function(batch){return rankedFor(currentRows.filter(function(row){return (exportText(row.batch)||'No batch')===batch;}));});
-    for(var rank=0;rank<10;rank+=1){var cr=[rank+1];currentRanked.forEach(function(list){var entry=list[rank];cr.push(entry?entry.name:'',entry?Number(entry.average.toFixed(2)):'');});combinedRows.push(cr);}
-    var combinedSheet=XLSX.utils.aoa_to_sheet(combinedRows);
-    combinedSheet['!merges']=currentBatchNames.map(function(batch,index){return {s:{r:0,c:1+index*2},e:{r:0,c:2+index*2}};});
-    combinedSheet['!cols']=[{wch:8}].concat(currentBatchNames.flatMap(function(){return [{wch:30},{wch:10}];}));
-    var output=[{batchName:'CURRENT WEEK',sheet:combinedSheet}];
-
-    var grouped=new Map();
-    submissions.forEach(function(row){
-      var batch=exportText(row.batch)||'No batch';
-      var bounds=weekBoundsForDate(new Date(row.submittedAt));
-      var key=bounds.start.getFullYear()+'-'+String(bounds.start.getMonth()+1).padStart(2,'0')+'-'+String(bounds.start.getDate()).padStart(2,'0');
-      if(!grouped.has(batch)) grouped.set(batch,new Map());
-      if(!grouped.get(batch).has(key)) grouped.get(batch).set(key,{weekStart:bounds.start,rows:[]});
+    const grouped = new Map();
+    scored.forEach(row => {
+      const batch = exportText(row.batch) || "No batch";
+      const bounds = weekBounds(new Date(row.submittedAt));
+      const key = bounds.start.getFullYear()+"-"+String(bounds.start.getMonth()+1).padStart(2,"0")+"-"+String(bounds.start.getDate()).padStart(2,"0");
+      if (!grouped.has(batch)) grouped.set(batch,new Map());
+      if (!grouped.get(batch).has(key)) grouped.get(batch).set(key,{weekStart:bounds.start,rows:[]});
       grouped.get(batch).get(key).rows.push(row);
     });
 
-    Array.from(grouped.keys()).sort().reverse().forEach(function(batch){
-      var weeks=Array.from(grouped.get(batch).values()).sort(function(a,b){return b.weekStart-a.weekStart;});
-      var header=['Rank']; var second=[''];
-      weeks.forEach(function(week){var e=new Date(week.weekStart);e.setDate(e.getDate()+6);header.push(week.weekStart.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' – '+e.toLocaleDateString(undefined,{month:'short',day:'numeric'}),'');second.push('Name','Score');});
-      var rows=[header,second]; var rankings=weeks.map(function(week){return rankedFor(week.rows);});
-      for(var r=0;r<10;r+=1){var rr=[r+1];rankings.forEach(function(list){var entry=list[r];rr.push(entry?entry.name:'',entry?Number(entry.average.toFixed(2)):'');});rows.push(rr);}
-      var sheet=XLSX.utils.aoa_to_sheet(rows);
-      sheet['!merges']=weeks.map(function(week,index){return {s:{r:0,c:1+index*2},e:{r:0,c:2+index*2}};});
-      sheet['!cols']=[{wch:8}].concat(weeks.flatMap(function(){return [{wch:30},{wch:10}];}));
-      output.push({batchName:batch,sheet:sheet});
+    const output = [];
+    Array.from(grouped.keys()).sort().reverse().forEach(batch => {
+      const weeks = Array.from(grouped.get(batch).values()).sort((a,b)=>a.weekStart-b.weekStart);
+      const header=["Rank"], second=[""];
+      weeks.forEach(week => {
+        const end = new Date(week.weekStart); end.setDate(end.getDate()+6);
+        header.push(week.weekStart.toLocaleDateString(undefined,{month:"short",day:"numeric"})+" – "+end.toLocaleDateString(undefined,{month:"short",day:"numeric"}),"");
+        second.push("Name","Score");
+      });
+      const rows=[header,second];
+      const rankings=weeks.map(week=>rankedFor(week.rows));
+      for(let rank=0;rank<10;rank+=1){
+        const row=[rank+1];
+        rankings.forEach(list=>{const entry=list[rank];row.push(entry?entry.name:"",entry?Number(entry.average.toFixed(2)):"");});
+        rows.push(row);
+      }
+      const sheet=XLSX.utils.aoa_to_sheet(rows);
+      sheet["!merges"]=weeks.map((week,index)=>({s:{r:0,c:1+index*2},e:{r:0,c:2+index*2}}));
+      sheet["!cols"]=[{wch:8}].concat(weeks.flatMap(()=>[{wch:30},{wch:10}]));
+      output.push({batchName:batch,sheet});
     });
     return output;
   };
 })();
 </script>`;
 
-  html = html.replace(/<script data-ascent-leaderboard-fix="[^"]+">[\s\S]*?<\/script>/,"");
-  html = html.replace('</body>', leaderboardFix + '\n</body>');
+  html = html.replace(/<script data-ascent-results-filter-guard="[^"]+">[\s\S]*?<\/script>/g,"");
+  html = html.replace(/<script data-ascent-leaderboard-fix="[^"]+">[\s\S]*?<\/script>/g,"");
+  html = html.replace('</body>', resultsFilterGuard + '\n' + leaderboardGuard + '\n</body>');
 
   const headers = new Headers(response.headers);
-  headers.set("content-type", "text/html; charset=UTF-8");
-  headers.set("cache-control", "no-store, max-age=0");
+  headers.set("content-type","text/html; charset=UTF-8");
+  headers.set("cache-control","no-store, max-age=0");
 
-  return new Response(html, {status:response.status,statusText:response.statusText,headers});
+  return new Response(html,{status:response.status,statusText:response.statusText,headers});
 }
