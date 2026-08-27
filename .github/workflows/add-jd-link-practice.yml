@@ -1,48 +1,14 @@
-name: Add JD Interview link to Practice
+name: Legacy JD Practice Patch (retired)
 
 on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  patch-practice:
+  retired:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Add JD Interview link if missing
-        shell: python
-        run: |
-          from pathlib import Path
-          p = Path('ascent/practice.html')
-          s = p.read_text(encoding='utf-8')
-          needle = '''        <a
-          class="performance-button"
-          href="./dashboard.html"
-          aria-label="Open My ASCENT Performance"
-        >
-          My Performance
-        </a>
-'''
-          insert = needle + '''
-        <a
-          class="performance-button"
-          href="./jd-interview-mapper.html"
-          aria-label="Open JD Interview Mapper"
-        >
-          JD Interview
-        </a>
-'''
-          if 'href="./jd-interview-mapper.html"' not in s:
-              if needle not in s:
-                  raise SystemExit('Expected Practice topbar block not found')
-              p.write_text(s.replace(needle, insert, 1), encoding='utf-8')
-      - name: Commit patch
-        run: |
-          if git diff --quiet; then exit 0; fi
-          git config user.name "ASCENT Build Bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add ascent/practice.html
-          git commit -m "Add JD Interview link to Practice"
-          git push
+      - name: Legacy patch is intentionally disabled
+        run: echo "ASCENT core is protected. This legacy self-modifying workflow no longer edits production files."
