@@ -1,10 +1,7 @@
 name: Patch live trainer leaderboard
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/patch-trainer-export.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write
