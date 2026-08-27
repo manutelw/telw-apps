@@ -1,9 +1,7 @@
 name: Add JD Interview link to Practice
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
