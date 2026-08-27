@@ -58,15 +58,27 @@ for control_id in [
     require(practice_core.count(f'id="{control_id}"') == 1,
             f'Critical Practice control must exist exactly once: {control_id}')
 
-# 4. Submission path must retain the proven v2 route plus controlled fallback/retry protection.
-require('ascent-submit-response-v2' in practice_access,
-        'practice-access-v2.js must retain the proven ascent-submit-response-v2 path.')
-require('ascent-submit-response"' in practice_access,
-        'practice-access-v2.js must retain the controlled fallback submission path.')
+# 4. Submission path must retain the protected idempotent primary/fallback routes
+#    while preserving compatibility with the proven v2/original endpoints underneath.
+for marker, message in [
+    ('ascent-submit-safe', 'Protected primary submission route is missing.'),
+    ('ascent-submit-safe-fallback', 'Protected fallback submission route is missing.'),
+    ('ascent-submit-response-v2', 'Proven v2 submission route compatibility is missing.'),
+    ('ascent-submit-response"', 'Original submission route compatibility is missing.'),
+    ('client_submission_id', 'Protected client submission id is missing.'),
+    ('CLIENT_SUBMISSION_KEY_PREFIX', 'Persistent submission id storage is missing.'),
+    ('ensureClientSubmissionId', 'Protected submission id creation is missing.'),
+    ('clearSubmissionReferenceWhenConfirmed', 'Protected submission acknowledgement handling is missing.'),
+]:
+    require(marker in practice_access, message)
 require('/ascent/submit-response' not in practice_access,
         'Basic ASCENT must not route submissions through an unverified same-origin proxy.')
-require('trySubmitEndpoint' in practice_access and 'fallback submission service' in practice_access,
+require('trySubmitEndpoint' in practice_access and 'protected fallback submission service' in practice_access,
         'Submission retry/fallback protection is missing.')
+require('20260827-idempotency1' in practice,
+        'Website Practice must load the protected idempotent submission controller version.')
+require('20260827-idempotency1' in play_practice,
+        'Play core must load the protected idempotent submission controller version.')
 
 # 5. Core context states must remain represented.
 for context_code in [
@@ -80,7 +92,8 @@ for context_code in [
     require(context_code in practice_access,
             f'Practice access contract missing state: {context_code}')
 
-# 6. Prevent workflows from silently rewriting production pages on every push.
+# 6. Legacy patch workflows are retired. They may remain as manual no-ops only;
+#    they must not write or push production files.
 workflow_files = [
     '.github/workflows/add-jd-link-practice.yml',
     '.github/workflows/patch-practice-bulk-question.yml',
@@ -95,7 +108,12 @@ for workflow in workflow_files:
         require('workflow_dispatch:' in text,
                 f'{workflow} must remain manually triggered.')
         require('\n  push:' not in text and '\npush:' not in text,
-                f'{workflow} must not auto-write to main on push.')
+                f'{workflow} must not auto-run on push.')
+        require('contents: read' in text,
+                f'{workflow} must remain read-only.')
+        for forbidden in ['git push', 'git commit', 'contents: write']:
+            require(forbidden not in text,
+                    f'{workflow} must remain a retired no-op and may not contain: {forbidden}')
 
 # 7. Access controller may not replace recorder/evaluation functions.
 for forbidden_override in [
