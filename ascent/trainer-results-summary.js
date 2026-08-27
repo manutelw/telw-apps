@@ -119,6 +119,52 @@
     renderStudentSummaryResults();
   }
 
+  function ensureVisibleSortControls(){
+    if(typeof byId!=="function") return;
+    const wrap=byId("resultsTableWrap");
+    if(!wrap||!wrap.parentNode) return;
+
+    let controls=document.getElementById("resultVisibleSortControls");
+    if(!controls){
+      controls=document.createElement("div");
+      controls.id="resultVisibleSortControls";
+      controls.style.display="flex";
+      controls.style.alignItems="center";
+      controls.style.gap="10px";
+      controls.style.flexWrap="wrap";
+      controls.style.margin="12px 0";
+      controls.innerHTML='\
+        <label for="resultVisibleSortSelect" style="font-weight:700;color:#143a60;">Sort by</label>\
+        <select id="resultVisibleSortSelect" style="min-width:180px;padding:10px 12px;border:1px solid #d7e1eb;border-radius:10px;background:#fff;color:#24364a;font:inherit;">\
+          <option value="latest">Latest Submission</option>\
+          <option value="batch">Batch</option>\
+          <option value="status">Status</option>\
+        </select>\
+        <button type="button" id="resultVisibleSortDirection" style="padding:10px 14px;border:0;border-radius:10px;background:#1f5b89;color:#fff;font:inherit;font-weight:700;cursor:pointer;">Newest first</button>';
+      wrap.parentNode.insertBefore(controls,wrap);
+
+      const select=document.getElementById("resultVisibleSortSelect");
+      const directionButton=document.getElementById("resultVisibleSortDirection");
+      select.addEventListener("change",function(){
+        resultSortKey=select.value;
+        resultSortDirection=resultSortKey==="latest"?"desc":"asc";
+        renderStudentSummaryResults();
+      });
+      directionButton.addEventListener("click",function(){
+        resultSortDirection=resultSortDirection==="asc"?"desc":"asc";
+        renderStudentSummaryResults();
+      });
+    }
+
+    const select=document.getElementById("resultVisibleSortSelect");
+    const directionButton=document.getElementById("resultVisibleSortDirection");
+    if(select) select.value=resultSortKey;
+    if(directionButton){
+      if(resultSortKey==="latest") directionButton.textContent=resultSortDirection==="desc"?"Newest first":"Oldest first";
+      else directionButton.textContent=resultSortDirection==="asc"?"A → Z":"Z → A";
+    }
+  }
+
   function enforceSandeepResultsUi(){
     if(!isSandeepTrainer()||typeof byId!=="function") return;
     const taskSelect=byId("resultTaskFilter");
@@ -132,6 +178,7 @@
   function renderStudentSummaryResults(){
     if(typeof resultFilter!=="function"||typeof byId!=="function"||typeof escapeHtml!=="function") return;
     enforceSandeepResultsUi();
+    ensureVisibleSortControls();
 
     let rows=resultFilter((reportData&&reportData.results)||[],"result").filter(function(row){
       return Number(row&&row.attemptCount||0)>0 || numericScore(row)!==null;
@@ -150,6 +197,7 @@
     if(!wrap) return;
     if(!summaries.length){
       wrap.innerHTML='<div class="empty-state">No results match these filters.</div>';
+      ensureVisibleSortControls();
       return;
     }
 
@@ -164,6 +212,7 @@
     wrap.querySelectorAll('[data-result-sort]').forEach(function(button){
       button.addEventListener('click',function(){changeSort(button.getAttribute('data-result-sort'));});
     });
+    ensureVisibleSortControls();
   }
 
   window.renderResultsTable=renderStudentSummaryResults;
@@ -171,6 +220,7 @@
   document.addEventListener("DOMContentLoaded",function(){
     window.setTimeout(function(){
       enforceSandeepResultsUi();
+      ensureVisibleSortControls();
       renderStudentSummaryResults();
     },0);
   });
