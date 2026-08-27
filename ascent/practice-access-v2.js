@@ -77,6 +77,14 @@
     return getContextCode() === "diagnostic_complete";
   }
 
+  function isBulkQuestionOnly() {
+    return getContextCode() === "bulk_question_only";
+  }
+
+  function isBulkQuestionComplete() {
+    return getContextCode() === "bulk_question_complete";
+  }
+
   function ensureCustomPackBox() {
     let box = document.getElementById("customQuestionPackBox");
     if (box) return box;
@@ -167,6 +175,8 @@
     const privateLearner = isPrivate();
     const diagnosticRequired = isDiagnosticRequired();
     const diagnosticComplete = isDiagnosticComplete();
+    const bulkOnly = isBulkQuestionOnly();
+    const bulkComplete = isBulkQuestionComplete();
     const assignedAvailable = hasAssignedQuestions();
 
     practiceModeField.hidden = false;
@@ -180,7 +190,14 @@
         option.textContent = "ASCENT Diagnostic";
         practiceModeSelect.appendChild(option);
       }
-    } else if (!diagnosticComplete) {
+    } else if (bulkOnly) {
+      if (assignedAvailable) {
+        const assignedOption = document.createElement("option");
+        assignedOption.value = "assigned";
+        assignedOption.textContent = "Released question";
+        practiceModeSelect.appendChild(assignedOption);
+      }
+    } else if (!diagnosticComplete && !bulkComplete) {
       if (assignedAvailable) {
         const assignedOption = document.createElement("option");
         assignedOption.value = "assigned";
@@ -232,6 +249,9 @@
       practiceContextNote.hidden = false;
       practiceContextControls.hidden = false;
       practiceModeField.hidden = true;
+      assignedTaskField.hidden = true;
+      questionBankField.hidden = true;
+      customQuestionField.hidden = true;
       selectedQuestionBox.hidden = true;
       startButton.disabled = true;
       updateCustomPackBox();
@@ -268,7 +288,7 @@
   newResponseButton.addEventListener("click", function (event) {
     const code = getContextCode();
     if (practiceContext && practiceContext.is_private_learner !== true &&
-        (code === "institutional_open_bank" || code === "institutional_open_bank_with_assigned")) {
+        (code === "institutional_open_bank" || code === "institutional_open_bank_with_assigned" || code === "bulk_question_only")) {
       event.preventDefault();
       event.stopImmediatePropagation();
       window.location.reload();
