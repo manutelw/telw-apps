@@ -2,11 +2,6 @@ name: Patch trainer cache bust
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - '.github/scripts/patch_trainer_cache_bust.py'
-      - '.github/workflows/patch-trainer-cache-bust.yml'
 
 permissions:
   contents: write
