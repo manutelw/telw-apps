@@ -1,0 +1,14 @@
+# ASCENT CORE ownership. These paths are protected and require explicit review.
+# Repository owner is the default reviewer for ASCENT CORE.
+
+/ascent/practice.html @manutelw
+/ascent/practice-core.html @manutelw
+/ascent/practice-access-v2.js @manutelw
+/ascent/trainer.html @manutelw
+/ascent/trainer-results-summary.js @manutelw
+/ascent-play/ @manutelw
+/android-ascent-play/ @manutelw
+/functions/ascent/ @manutelw
+/.github/scripts/ascent_integrity_check.py @manutelw
+/.github/scripts/ascent_trainer_integrity_check.py @manutelw
+/.github/workflows/ascent-integrity.yml @manutelw
