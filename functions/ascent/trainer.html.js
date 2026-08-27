@@ -31,27 +31,14 @@ export async function onRequest(context) {
         document.body.removeChild(downloadLink);
         window.setTimeout(() => URL.revokeObjectURL(downloadUrl),30000);`;
 
-  if (html.includes(oldBlock)) {
-    html = html.replace(oldBlock, newBlock);
-  }
+  if (html.includes(oldBlock)) html = html.replace(oldBlock, newBlock);
 
-  html = html.replace(
-    'visibleAssignmentRows.map(row =>',
-    'visibleAssignmentRows.slice(0,150).map(row =>'
-  );
-
-  html = html.replace(
-    'visibleResultRows = resultFilter(reportData.results || [],"result");',
-    'visibleResultRows = resultFilter(reportData.results || [],"result").filter(row => Number(row.attemptCount || 0) > 0 || (row.latestScore !== null && row.latestScore !== undefined));'
-  );
-
-  html = html.replace(
-    'visibleResultRows.map(row =>',
-    'visibleResultRows.slice(0,300).map(row =>'
-  );
+  html = html.replace('visibleAssignmentRows.map(row =>','visibleAssignmentRows.slice(0,150).map(row =>');
+  html = html.replace('visibleResultRows = resultFilter(reportData.results || [],"result");','visibleResultRows = resultFilter(reportData.results || [],"result").filter(row => Number(row.attemptCount || 0) > 0 || (row.latestScore !== null && row.latestScore !== undefined));');
+  html = html.replace('visibleResultRows.map(row =>','visibleResultRows.slice(0,300).map(row =>');
 
   const leaderboardFix = `
-<script data-ascent-leaderboard-fix="2026-08-27.1">
+<script data-ascent-leaderboard-fix="2026-08-27.2">
 (function () {
   var realtimeLeaderboardBusy = false;
 
@@ -94,10 +81,7 @@ export async function onRequest(context) {
     var endLabelDate = new Date(end.getTime() - 86400000);
     var label = byId("leaderboardWeekLabel");
     if (label) {
-      label.textContent = "Live · current week · " +
-        start.toLocaleDateString(undefined,{month:"short",day:"numeric"}) + " – " +
-        endLabelDate.toLocaleDateString(undefined,{month:"short",day:"numeric"}) +
-        " · updates automatically";
+      label.textContent = "Live · current week · " + start.toLocaleDateString(undefined,{month:"short",day:"numeric"}) + " – " + endLabelDate.toLocaleDateString(undefined,{month:"short",day:"numeric"}) + " · updates automatically";
     }
 
     var byBatch = new Map();
@@ -106,42 +90,26 @@ export async function onRequest(context) {
       if (!byBatch.has(batchKey)) byBatch.set(batchKey,new Map());
       var byStudent = byBatch.get(batchKey);
       var key = row.studentUuid || row.studentId || row.email;
-      if (!byStudent.has(key)) {
-        byStudent.set(key,{
-          fullName:row.fullName,
-          studentId:row.studentId,
-          scores:[]
-        });
-      }
+      if (!byStudent.has(key)) byStudent.set(key,{fullName:row.fullName,studentId:row.studentId,scores:[]});
       byStudent.get(key).scores.push(Number(row.latestScore));
     });
 
     wrap.innerHTML = batchNames.map(function (batchName) {
       var studentMap = byBatch.get(batchName);
-      var ranked = studentMap
-        ? Array.from(studentMap.values()).map(function (entry) {
-            return {
-              fullName:entry.fullName,
-              studentId:entry.studentId,
-              average:entry.scores.reduce(function(a,b){return a+b;},0) / entry.scores.length
-            };
-          }).sort(function(a,b){return b.average-a.average;}).slice(0,10)
-        : [];
-
+      var ranked = studentMap ? Array.from(studentMap.values()).map(function (entry) {
+        return {fullName:entry.fullName,studentId:entry.studentId,average:entry.scores.reduce(function(a,b){return a+b;},0)/entry.scores.length};
+      }).sort(function(a,b){return b.average-a.average;}).slice(0,10) : [];
       var body = ranked.length
-        ? '<table style="width:100%;min-width:0;border-collapse:collapse;font-size:13px;"><thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">#</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">Student</th><th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">Avg Score</th></tr></thead><tbody>' +
-          ranked.map(function(entry,index){
-            return '<tr><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);">'+(index+1)+'</td><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);">'+escapeHtml(entry.fullName)+'<br><span class="form-note">'+escapeHtml(entry.studentId)+'</span></td><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);text-align:right;font-weight:600;">'+entry.average.toFixed(2)+'</td></tr>';
-          }).join('') + '</tbody></table>'
+        ? '<table style="width:100%;min-width:0;border-collapse:collapse;font-size:13px;"><thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">#</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">Student</th><th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border,#e2e8f0);">Avg Score</th></tr></thead><tbody>' + ranked.map(function(entry,index){return '<tr><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);">'+(index+1)+'</td><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);">'+escapeHtml(entry.fullName)+'<br><span class="form-note">'+escapeHtml(entry.studentId)+'</span></td><td style="padding:6px 8px;border-bottom:1px solid var(--border,#f1f5f9);text-align:right;font-weight:600;">'+entry.average.toFixed(2)+'</td></tr>';}).join('') + '</tbody></table>'
         : '<div style="padding:24px 0;text-align:center;color:var(--muted,#94a3b8);font-size:13px;border:1px dashed var(--border,#e2e8f0);border-radius:8px;">No scored submissions yet in the current week</div>';
-
       return '<div style="margin-bottom:16px;"><div style="font-weight:600;font-size:13px;margin-bottom:6px;">'+escapeHtml(batchName)+'</div>'+body+'</div>';
     }).join('');
   };
 
   async function refreshLeaderboardRealtime() {
     if (realtimeLeaderboardBusy || document.hidden) return;
-    if (!window.currentSession || !currentSession.sessionToken || !window.RPC || !RPC.report) return;
+    if (typeof currentSession === "undefined" || !currentSession || !currentSession.sessionToken) return;
+    if (typeof RPC === "undefined" || !RPC || !RPC.report || typeof callRpc !== "function") return;
 
     realtimeLeaderboardBusy = true;
     try {
@@ -150,9 +118,8 @@ export async function onRequest(context) {
         p_batch:null,
         p_student_uuid:null,
         p_task_uuid:null,
-        p_access_point_uuid:currentAccessPointUuid || null
+        p_access_point_uuid:(typeof currentAccessPointUuid !== "undefined" ? currentAccessPointUuid : null)
       });
-
       if (data && data.ok === true) {
         reportData = Object.assign({},reportData || {},data,{
           accessPoints:Array.isArray(data.accessPoints) ? data.accessPoints : ((reportData && reportData.accessPoints) || []),
@@ -169,20 +136,14 @@ export async function onRequest(context) {
 
   window.setInterval(refreshLeaderboardRealtime,10000);
   window.addEventListener("focus",function(){ window.setTimeout(refreshLeaderboardRealtime,250); });
-  document.addEventListener("visibilitychange",function(){
-    if (!document.hidden) window.setTimeout(refreshLeaderboardRealtime,250);
-  });
+  document.addEventListener("visibilitychange",function(){ if (!document.hidden) window.setTimeout(refreshLeaderboardRealtime,250); });
 
   buildWeeklyLeaderboardSheets = function (workbookData) {
-    var submissions = Array.isArray(workbookData.submissions) && workbookData.submissions.length
-      ? workbookData.submissions
-      : (Array.isArray(workbookData.assignments) ? workbookData.assignments : []);
-
+    var submissions = Array.isArray(workbookData.submissions) && workbookData.submissions.length ? workbookData.submissions : (Array.isArray(workbookData.assignments) ? workbookData.assignments : []);
     submissions = submissions.filter(function (row) {
       var score = exportNumber(row.finalScore !== undefined ? row.finalScore : (row.totalScore !== undefined ? row.totalScore : row.score));
       return Boolean(row.submissionUuid) && row.submittedAt && score !== null && !Number.isNaN(new Date(row.submittedAt).getTime());
     });
-
     if (!submissions.length) return [];
 
     function rankedFor(rows) {
@@ -195,67 +156,45 @@ export async function onRequest(context) {
         students.get(key).scores.push(Number(score));
       });
       return Array.from(students.values()).map(function (student) {
-        return {
-          name:student.name + (student.rollNo ? ' (' + student.rollNo + ')' : ''),
-          average:student.scores.reduce(function(a,b){return a+b;},0) / student.scores.length
-        };
+        return {name:student.name + (student.rollNo ? ' (' + student.rollNo + ')' : ''),average:student.scores.reduce(function(a,b){return a+b;},0)/student.scores.length};
       }).sort(function(a,b){return b.average-a.average;}).slice(0,10);
     }
 
     var current = weekBoundsForDate(new Date());
-    var currentRows = submissions.filter(function (row) {
-      var d = new Date(row.submittedAt);
-      return d >= current.start && d < current.end;
-    });
-
+    var currentRows = submissions.filter(function (row) { var d=new Date(row.submittedAt); return d>=current.start && d<current.end; });
     var currentBatchNames = Array.from(new Set(currentRows.map(function(row){return exportText(row.batch)||'No batch';}))).sort().reverse();
     var currentDateLabel = current.start.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' – ' + new Date(current.end.getTime()-86400000).toLocaleDateString(undefined,{month:'short',day:'numeric'});
     var combinedRows = [['Rank']];
-    currentBatchNames.forEach(function(batch){ combinedRows[0].push(batch + ' · ' + currentDateLabel,''); });
-    var subheads = ['']; currentBatchNames.forEach(function(){subheads.push('Name','Score');}); combinedRows.push(subheads);
-    var currentRanked = currentBatchNames.map(function(batch){return rankedFor(currentRows.filter(function(row){return (exportText(row.batch)||'No batch')===batch;}));});
-    for (var rank=0; rank<10; rank+=1) {
-      var currentRow = [rank+1];
-      currentRanked.forEach(function(list){var entry=list[rank]; currentRow.push(entry?entry.name:'', entry?Number(entry.average.toFixed(2)):'');});
-      combinedRows.push(currentRow);
-    }
-    var combinedSheet = XLSX.utils.aoa_to_sheet(combinedRows);
-    combinedSheet['!merges'] = currentBatchNames.map(function(batch,index){return {s:{r:0,c:1+index*2},e:{r:0,c:2+index*2}};});
-    combinedSheet['!cols'] = [{wch:8}].concat(currentBatchNames.flatMap(function(){return [{wch:30},{wch:10}];}));
-    var output = [{batchName:'CURRENT WEEK',sheet:combinedSheet}];
+    currentBatchNames.forEach(function(batch){combinedRows[0].push(batch+' · '+currentDateLabel,'');});
+    var subheads=['']; currentBatchNames.forEach(function(){subheads.push('Name','Score');}); combinedRows.push(subheads);
+    var currentRanked=currentBatchNames.map(function(batch){return rankedFor(currentRows.filter(function(row){return (exportText(row.batch)||'No batch')===batch;}));});
+    for(var rank=0;rank<10;rank+=1){var cr=[rank+1];currentRanked.forEach(function(list){var entry=list[rank];cr.push(entry?entry.name:'',entry?Number(entry.average.toFixed(2)):'');});combinedRows.push(cr);}
+    var combinedSheet=XLSX.utils.aoa_to_sheet(combinedRows);
+    combinedSheet['!merges']=currentBatchNames.map(function(batch,index){return {s:{r:0,c:1+index*2},e:{r:0,c:2+index*2}};});
+    combinedSheet['!cols']=[{wch:8}].concat(currentBatchNames.flatMap(function(){return [{wch:30},{wch:10}];}));
+    var output=[{batchName:'CURRENT WEEK',sheet:combinedSheet}];
 
-    var grouped = new Map();
-    submissions.forEach(function (row) {
-      var batch = exportText(row.batch)||'No batch';
-      var bounds = weekBoundsForDate(new Date(row.submittedAt));
-      var key = bounds.start.getFullYear() + '-' + String(bounds.start.getMonth()+1).padStart(2,'0') + '-' + String(bounds.start.getDate()).padStart(2,'0');
-      if (!grouped.has(batch)) grouped.set(batch,new Map());
-      if (!grouped.get(batch).has(key)) grouped.get(batch).set(key,{weekStart:bounds.start,rows:[]});
+    var grouped=new Map();
+    submissions.forEach(function(row){
+      var batch=exportText(row.batch)||'No batch';
+      var bounds=weekBoundsForDate(new Date(row.submittedAt));
+      var key=bounds.start.getFullYear()+'-'+String(bounds.start.getMonth()+1).padStart(2,'0')+'-'+String(bounds.start.getDate()).padStart(2,'0');
+      if(!grouped.has(batch)) grouped.set(batch,new Map());
+      if(!grouped.get(batch).has(key)) grouped.get(batch).set(key,{weekStart:bounds.start,rows:[]});
       grouped.get(batch).get(key).rows.push(row);
     });
 
-    Array.from(grouped.keys()).sort().reverse().forEach(function (batch) {
-      var weeks = Array.from(grouped.get(batch).values()).sort(function(a,b){return b.weekStart-a.weekStart;});
-      var header = ['Rank'];
-      var second = [''];
-      weeks.forEach(function(week){
-        var e=new Date(week.weekStart); e.setDate(e.getDate()+6);
-        header.push(week.weekStart.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' – '+e.toLocaleDateString(undefined,{month:'short',day:'numeric'}),'');
-        second.push('Name','Score');
-      });
-      var rows = [header,second];
-      var rankings = weeks.map(function(week){return rankedFor(week.rows);});
-      for (var r=0;r<10;r+=1){
-        var rr=[r+1];
-        rankings.forEach(function(list){var entry=list[r];rr.push(entry?entry.name:'',entry?Number(entry.average.toFixed(2)):'');});
-        rows.push(rr);
-      }
-      var sheet = XLSX.utils.aoa_to_sheet(rows);
-      sheet['!merges'] = weeks.map(function(week,index){return {s:{r:0,c:1+index*2},e:{r:0,c:2+index*2}};});
-      sheet['!cols'] = [{wch:8}].concat(weeks.flatMap(function(){return [{wch:30},{wch:10}];}));
+    Array.from(grouped.keys()).sort().reverse().forEach(function(batch){
+      var weeks=Array.from(grouped.get(batch).values()).sort(function(a,b){return b.weekStart-a.weekStart;});
+      var header=['Rank']; var second=[''];
+      weeks.forEach(function(week){var e=new Date(week.weekStart);e.setDate(e.getDate()+6);header.push(week.weekStart.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' – '+e.toLocaleDateString(undefined,{month:'short',day:'numeric'}),'');second.push('Name','Score');});
+      var rows=[header,second]; var rankings=weeks.map(function(week){return rankedFor(week.rows);});
+      for(var r=0;r<10;r+=1){var rr=[r+1];rankings.forEach(function(list){var entry=list[r];rr.push(entry?entry.name:'',entry?Number(entry.average.toFixed(2)):'');});rows.push(rr);}
+      var sheet=XLSX.utils.aoa_to_sheet(rows);
+      sheet['!merges']=weeks.map(function(week,index){return {s:{r:0,c:1+index*2},e:{r:0,c:2+index*2}};});
+      sheet['!cols']=[{wch:8}].concat(weeks.flatMap(function(){return [{wch:30},{wch:10}];}));
       output.push({batchName:batch,sheet:sheet});
     });
-
     return output;
   };
 })();
@@ -268,9 +207,5 @@ export async function onRequest(context) {
   headers.set("content-type", "text/html; charset=UTF-8");
   headers.set("cache-control", "no-store, max-age=0");
 
-  return new Response(html, {
-    status: response.status,
-    statusText: response.statusText,
-    headers
-  });
+  return new Response(html, {status:response.status,statusText:response.statusText,headers});
 }
