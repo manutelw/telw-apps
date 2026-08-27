@@ -1,6 +1,16 @@
 (function(){
   "use strict";
 
+  const SANDEEP_TRAINER_UUID="11a461af-dde2-4f3c-a617-3ad7675f34d8";
+  const SANDEEP_EMAIL="sandeep.kumar@fiib.edu.in";
+
+  function isSandeepTrainer(){
+    if(typeof currentSession==="undefined"||!currentSession) return false;
+    const trainerUuid=String(currentSession.trainerUuid||currentSession.trainer_uuid||"").trim().toLowerCase();
+    const email=String(currentSession.email||"").trim().toLowerCase();
+    return trainerUuid===SANDEEP_TRAINER_UUID || email===SANDEEP_EMAIL;
+  }
+
   function resultCategory(row){
     if (typeof resultTaskCategory === "function") return resultTaskCategory(row);
     const questionType=String(row&&row.questionType||"").trim().toUpperCase();
@@ -66,11 +76,28 @@
     });
   }
 
+  function enforceSandeepResultsUi(){
+    if(!isSandeepTrainer()||typeof byId!=="function") return;
+    const taskSelect=byId("resultTaskFilter");
+    if(taskSelect){
+      taskSelect.innerHTML='<option value="ASCENT_TASK">Ascent Task</option>';
+      taskSelect.value="ASCENT_TASK";
+      taskSelect.disabled=true;
+    }
+  }
+
   function renderStudentSummaryResults(){
     if(typeof resultFilter!=="function"||typeof byId!=="function"||typeof escapeHtml!=="function") return;
-    const rows=resultFilter((reportData&&reportData.results)||[],"result").filter(function(row){
+    enforceSandeepResultsUi();
+
+    let rows=resultFilter((reportData&&reportData.results)||[],"result").filter(function(row){
       return Number(row&&row.attemptCount||0)>0 || numericScore(row)!==null;
     });
+
+    if(isSandeepTrainer()){
+      rows=rows.filter(function(row){return resultCategory(row)==="ASCENT_TASK";});
+    }
+
     const summaries=aggregateResults(rows);
     visibleResultRows=rows;
 
@@ -94,6 +121,9 @@
   window.renderResultsTable=renderStudentSummaryResults;
 
   document.addEventListener("DOMContentLoaded",function(){
-    window.setTimeout(renderStudentSummaryResults,0);
+    window.setTimeout(function(){
+      enforceSandeepResultsUi();
+      renderStudentSummaryResults();
+    },0);
   });
 })();
