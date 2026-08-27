@@ -8,7 +8,7 @@ on:
       - '.github/scripts/ascent_integrity_check.py'
       - '.github/workflows/**'
   push:
-    branches: [main]
+    branches: [main, ascent-staging]
     paths:
       - 'ascent/**'
       - 'functions/ascent/**'
