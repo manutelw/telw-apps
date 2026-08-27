@@ -20,12 +20,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class MainActivity extends Activity {
     private static final String START_URL = "https://clarionprep.com/ascent-play/";
-    private static final int MEDIA_PERMISSION_REQUEST = 2001;
+    private static final int AUDIO_PERMISSION_REQUEST = 2001;
 
     private WebView webView;
     private PermissionRequest pendingWebPermissionRequest;
@@ -33,18 +30,12 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         webView = new WebView(this);
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
         setContentView(webView);
-
         configureWebView();
-
-        if (savedInstanceState == null) {
-            webView.loadUrl(START_URL);
-        } else {
-            webView.restoreState(savedInstanceState);
-        }
+        if (savedInstanceState == null) webView.loadUrl(START_URL);
+        else webView.restoreState(savedInstanceState);
     }
 
     private void configureWebView() {
@@ -59,7 +50,7 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setUserAgentString(settings.getUserAgentString() + " ASCENT-Play/1.0");
+        settings.setUserAgentString(settings.getUserAgentString() + " ASCENT-Play-Core/1.0");
 
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
@@ -69,26 +60,14 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
-                if (isAllowedInAppUrl(uri)) {
-                    return false;
-                }
+                if (isAllowedInAppUrl(uri)) return false;
 
-                if ("mailto".equalsIgnoreCase(uri.getScheme()) ||
-                    "tel".equalsIgnoreCase(uri.getScheme())) {
-                    try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, uri));
-                    } catch (Exception ignored) {
-                    }
+                if ("mailto".equalsIgnoreCase(uri.getScheme()) || "tel".equalsIgnoreCase(uri.getScheme())) {
+                    try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); } catch (Exception ignored) {}
                     return true;
                 }
 
-                // Do not turn the Play app into an external-purchase steering surface.
-                // Any other external URL stays outside this WebView.
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, uri));
-                } catch (Exception ignored) {
-                    Toast.makeText(MainActivity.this, "This link cannot be opened.", Toast.LENGTH_SHORT).show();
-                }
+                Toast.makeText(MainActivity.this, "This feature is outside the ASCENT core app.", Toast.LENGTH_SHORT).show();
                 return true;
             }
         });
@@ -101,9 +80,7 @@ public class MainActivity extends Activity {
 
             @Override
             public void onPermissionRequestCanceled(PermissionRequest request) {
-                if (pendingWebPermissionRequest == request) {
-                    pendingWebPermissionRequest = null;
-                }
+                if (pendingWebPermissionRequest == request) pendingWebPermissionRequest = null;
             }
         });
 
@@ -112,17 +89,14 @@ public class MainActivity extends Activity {
             public void onDownloadStart(String url, String userAgent, String contentDisposition,
                                         String mimeType, long contentLength) {
                 if (!isAllowedInAppUrl(Uri.parse(url))) {
-                    Toast.makeText(MainActivity.this, "Download blocked outside ASCENT.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Download blocked outside ASCENT core.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
                 try {
                     DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
                     request.setMimeType(mimeType);
                     request.addRequestHeader("User-Agent", userAgent);
-                    request.setNotificationVisibility(
-                        DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
-                    );
+                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
                     String fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
                     request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
                     DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
@@ -136,12 +110,20 @@ public class MainActivity extends Activity {
     }
 
     private boolean isAllowedInAppUrl(Uri uri) {
-        if (uri == null || !"https".equalsIgnoreCase(uri.getScheme())) {
-            return false;
-        }
+        if (uri == null || !"https".equalsIgnoreCase(uri.getScheme())) return false;
         String host = uri.getHost();
-        return "clarionprep.com".equalsIgnoreCase(host) ||
-               "www.clarionprep.com".equalsIgnoreCase(host);
+        if (!("clarionprep.com".equalsIgnoreCase(host) || "www.clarionprep.com".equalsIgnoreCase(host))) return false;
+        String path = uri.getPath() == null ? "/" : uri.getPath();
+        if (path.startsWith("/ascent-play/")) return true;
+        return path.equals("/ascent/practice-core.html") ||
+               path.equals("/ascent/practice-access-v2.js") ||
+               path.equals("/ascent/dashboard.html") ||
+               path.equals("/ascent/forgot-password.html") ||
+               path.equals("/ascent/terms.html") ||
+               path.equals("/ascent/privacy.html") ||
+               path.equals("/ascent/refund.html") ||
+               path.equals("/ascent/delete-account.html") ||
+               path.equals("/ascent/index.html");
     }
 
     private void handleWebPermissionRequest(PermissionRequest request) {
@@ -150,79 +132,56 @@ public class MainActivity extends Activity {
             return;
         }
 
-        List<String> androidPermissions = new ArrayList<>();
+        boolean asksForAudio = false;
         for (String resource : request.getResources()) {
-            if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource) &&
-                checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                androidPermissions.add(Manifest.permission.RECORD_AUDIO);
-            }
-            if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource) &&
-                checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                androidPermissions.add(Manifest.permission.CAMERA);
+            if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource)) asksForAudio = true;
+            if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource)) {
+                request.deny();
+                return;
             }
         }
 
-        if (androidPermissions.isEmpty()) {
-            grantRecognisedWebResources(request);
+        if (!asksForAudio) {
+            request.deny();
+            return;
+        }
+
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            request.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
             return;
         }
 
         pendingWebPermissionRequest = request;
-        requestPermissions(androidPermissions.toArray(new String[0]), MEDIA_PERMISSION_REQUEST);
-    }
-
-    private void grantRecognisedWebResources(PermissionRequest request) {
-        List<String> allowedResources = new ArrayList<>();
-        for (String resource : request.getResources()) {
-            if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource) &&
-                checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                allowedResources.add(resource);
-            }
-            if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource) &&
-                checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                allowedResources.add(resource);
-            }
-        }
-
-        if (allowedResources.isEmpty()) {
-            request.deny();
-        } else {
-            request.grant(allowedResources.toArray(new String[0]));
-        }
+        requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, AUDIO_PERMISSION_REQUEST);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == MEDIA_PERMISSION_REQUEST && pendingWebPermissionRequest != null) {
+        if (requestCode == AUDIO_PERMISSION_REQUEST && pendingWebPermissionRequest != null) {
             PermissionRequest request = pendingWebPermissionRequest;
             pendingWebPermissionRequest = null;
-            grantRecognisedWebResources(request);
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                request.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
+            } else request.deny();
         }
     }
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
+        if (webView != null && webView.canGoBack()) webView.goBack();
+        else super.onBackPressed();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        if (webView != null) {
-            webView.saveState(outState);
-        }
+        if (webView != null) webView.saveState(outState);
         super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onDestroy() {
-        if (webView != null) {
-            webView.destroy();
-        }
+        if (webView != null) webView.destroy();
         super.onDestroy();
     }
 }
