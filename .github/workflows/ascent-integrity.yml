@@ -1,0 +1,32 @@
+name: ASCENT Integrity Guard
+
+on:
+  pull_request:
+    paths:
+      - 'ascent/**'
+      - 'functions/ascent/**'
+      - '.github/scripts/ascent_integrity_check.py'
+      - '.github/workflows/**'
+  push:
+    branches: [main]
+    paths:
+      - 'ascent/**'
+      - 'functions/ascent/**'
+      - '.github/scripts/ascent_integrity_check.py'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ASCENT integrity checks
+        run: python .github/scripts/ascent_integrity_check.py
+      - name: Check JavaScript syntax
+        run: |
+          node --check ascent/practice-access-v2.js
+          node --check functions/ascent/submit-response.js
