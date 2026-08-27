@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#143a60">
+  <title>ASCENT · Core Practice</title>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#102a46;font-family:Arial,Helvetica,sans-serif}
+    #practiceFrame{display:block;width:100%;height:100%;border:0;background:#fff}
+  </style>
+</head>
+<body>
+  <iframe id="practiceFrame" src="../ascent/practice-core.html?v=20260827-playcore1" title="ASCENT Core Practice"></iframe>
+  <script>
+    const frame=document.getElementById('practiceFrame');
+    frame.addEventListener('load',function(){
+      try{
+        const childDocument=frame.contentDocument;
+        if(!childDocument)return;
+        const accessScript=childDocument.createElement('script');
+        accessScript.id='ascentPracticeAccessV2';
+        accessScript.src='../ascent/practice-access-v2.js?v=20260827-playcore1';
+        accessScript.onload=function(){
+          const guardScript=childDocument.createElement('script');
+          guardScript.id='ascentPlayCoreGuard';
+          guardScript.src='../ascent-play/play-core-guard.js?v=20260827-playcore1';
+          childDocument.body.appendChild(guardScript);
+        };
+        childDocument.body.appendChild(accessScript);
+      }catch(error){
+        console.error('ASCENT Play core could not load:',error);
+      }
+    });
+  </script>
+</body>
+</html>
