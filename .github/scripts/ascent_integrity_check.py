@@ -143,6 +143,36 @@ require("cache:'no-store'" in play_sw,
 require("request.mode==='navigate'" in play_sw,
         'Offline fallback must be limited to navigations, not arbitrary JS/resources.')
 
+# 11. Governance files are part of the protection mechanism and may not disappear.
+codeowners_path = root / '.github' / 'CODEOWNERS'
+protection_contract_path = root / 'ASCENT_CORE_PROTECTION.md'
+require(codeowners_path.exists(), 'ASCENT CODEOWNERS protection file is missing.')
+require(protection_contract_path.exists(), 'ASCENT core protection contract is missing.')
+if codeowners_path.exists():
+    codeowners = codeowners_path.read_text(encoding='utf-8')
+    for protected_path in [
+        '/ascent/practice-core.html',
+        '/ascent/practice-access-v2.js',
+        '/ascent/trainer.html',
+        '/ascent/trainer-results-summary.js',
+        '/ascent-play/',
+        '/android-ascent-play/',
+        '/functions/ascent/',
+        '/.github/workflows/ascent-integrity.yml',
+    ]:
+        require(protected_path in codeowners,
+                f'CODEOWNERS must retain ownership for protected core path: {protected_path}')
+if protection_contract_path.exists():
+    protection_contract = protection_contract_path.read_text(encoding='utf-8')
+    for marker in [
+        'Protected learner core',
+        'Protected trainer core',
+        'Add-ons are outside core',
+        'ascent-core-stable-20260827-v1',
+    ]:
+        require(marker in protection_contract,
+                f'ASCENT protection contract is missing required marker: {marker}')
+
 if errors:
     print('ASCENT integrity check FAILED:')
     for error in errors:
