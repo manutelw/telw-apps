@@ -37,5 +37,6 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check ascent/practice-access-v2.js
+          node --check ascent/recording-vault.js
           node --check ascent/trainer-results-summary.js
           if [ -f functions/ascent/submit-response.js ]; then node --check functions/ascent/submit-response.js; fi
