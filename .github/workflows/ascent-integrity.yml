@@ -4,15 +4,21 @@ on:
   pull_request:
     paths:
       - 'ascent/**'
+      - 'ascent-play/**'
+      - 'android-ascent-play/**'
       - 'functions/ascent/**'
       - '.github/scripts/ascent_integrity_check.py'
+      - '.github/scripts/ascent_trainer_integrity_check.py'
       - '.github/workflows/**'
   push:
     branches: [main, ascent-staging]
     paths:
       - 'ascent/**'
+      - 'ascent-play/**'
+      - 'android-ascent-play/**'
       - 'functions/ascent/**'
       - '.github/scripts/ascent_integrity_check.py'
+      - '.github/scripts/ascent_trainer_integrity_check.py'
       - '.github/workflows/**'
   workflow_dispatch:
 
@@ -24,9 +30,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run ASCENT integrity checks
+      - name: Run ASCENT core integrity checks
         run: python .github/scripts/ascent_integrity_check.py
+      - name: Run ASCENT trainer integrity checks
+        run: python .github/scripts/ascent_trainer_integrity_check.py
       - name: Check JavaScript syntax
         run: |
           node --check ascent/practice-access-v2.js
-          node --check functions/ascent/submit-response.js
+          node --check ascent/trainer-results-summary.js
+          if [ -f functions/ascent/submit-response.js ]; then node --check functions/ascent/submit-response.js; fi
