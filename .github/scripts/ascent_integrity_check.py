@@ -154,6 +154,7 @@ if codeowners_path.exists():
     for protected_path in [
         '/ascent/practice-core.html',
         '/ascent/practice-access-v2.js',
+        '/ascent/recording-vault.js',
         '/ascent/trainer.html',
         '/ascent/trainer-results-summary.js',
         '/ascent-play/',
