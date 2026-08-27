@@ -65,11 +65,21 @@
       try{
         const childDocument=frame.contentDocument;
         if(!childDocument)return;
+        const loadVault=function(){
+          if(childDocument.getElementById('ascentRecordingVault'))return;
+          const vault=childDocument.createElement('script');
+          vault.id='ascentRecordingVault';
+          vault.src='./recording-vault.js?v=20260827-vault1';
+          childDocument.body.appendChild(vault);
+        };
         if(!childDocument.getElementById('ascentPracticeAccessV2')){
           const script=childDocument.createElement('script');
           script.id='ascentPracticeAccessV2';
           script.src='./practice-access-v2.js?v=20260827-submitfortify2';
+          script.onload=loadVault;
           childDocument.body.appendChild(script);
+        }else{
+          loadVault();
         }
       }catch(error){console.error('ASCENT practice controller could not load:',error);}
     });
