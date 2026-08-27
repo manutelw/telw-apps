@@ -3,6 +3,8 @@
 
   const SANDEEP_TRAINER_UUID="11a461af-dde2-4f3c-a617-3ad7675f34d8";
   const SANDEEP_EMAIL="sandeep.kumar@fiib.edu.in";
+  let resultSortKey="latest";
+  let resultSortDirection="desc";
 
   function isSandeepTrainer(){
     if(typeof currentSession==="undefined"||!currentSession) return false;
@@ -12,7 +14,7 @@
   }
 
   function resultCategory(row){
-    if (typeof resultTaskCategory === "function") return resultTaskCategory(row);
+    if(typeof resultTaskCategory==="function") return resultTaskCategory(row);
     const questionType=String(row&&row.questionType||"").trim().toUpperCase();
     const rubricType=String(row&&row.rubricType||"").trim().toUpperCase();
     const taskTitle=String(row&&row.taskTitle||"").trim().toUpperCase();
@@ -45,6 +47,12 @@
     return newest;
   }
 
+  function summaryStatus(rows,scores){
+    if(scores.length>0) return "COMPLETED";
+    const attempted=rows.some(function(row){return Number(row&&row.attemptCount||0)>0 || Boolean(row&&row.latestSubmittedAt);});
+    return attempted?"SUBMITTED":"PENDING";
+  }
+
   function aggregateResults(rows){
     const groups=new Map();
     rows.forEach(function(row){
@@ -67,13 +75,48 @@
         category:group.category,
         average:average,
         submittedAt:latest,
-        responseCount:group.scores.length
+        responseCount:group.scores.length,
+        status:summaryStatus(group.rows,group.scores)
       };
-    }).sort(function(a,b){
-      const at=a.submittedAt?a.submittedAt.getTime():0;
-      const bt=b.submittedAt?b.submittedAt.getTime():0;
-      return bt-at;
     });
+  }
+
+  function sortSummaries(summaries){
+    const direction=resultSortDirection==="asc"?1:-1;
+    return summaries.slice().sort(function(a,b){
+      let av="";
+      let bv="";
+      if(resultSortKey==="batch"){
+        av=String(a.sample&&a.sample.batch||"").toLowerCase();
+        bv=String(b.sample&&b.sample.batch||"").toLowerCase();
+      }else if(resultSortKey==="status"){
+        av=String(a.status||"").toLowerCase();
+        bv=String(b.status||"").toLowerCase();
+      }else{
+        av=a.submittedAt?a.submittedAt.getTime():0;
+        bv=b.submittedAt?b.submittedAt.getTime():0;
+      }
+      if(av<bv) return -1*direction;
+      if(av>bv) return 1*direction;
+      const an=String(a.sample&&a.sample.fullName||"").toLowerCase();
+      const bn=String(b.sample&&b.sample.fullName||"").toLowerCase();
+      return an.localeCompare(bn);
+    });
+  }
+
+  function sortIndicator(key){
+    if(resultSortKey!==key) return "↕";
+    return resultSortDirection==="asc"?"↑":"↓";
+  }
+
+  function changeSort(key){
+    if(resultSortKey===key){
+      resultSortDirection=resultSortDirection==="asc"?"desc":"asc";
+    }else{
+      resultSortKey=key;
+      resultSortDirection="asc";
+    }
+    renderStudentSummaryResults();
   }
 
   function enforceSandeepResultsUi(){
@@ -98,7 +141,7 @@
       rows=rows.filter(function(row){return resultCategory(row)==="ASCENT_TASK";});
     }
 
-    const summaries=aggregateResults(rows);
+    const summaries=sortSummaries(aggregateResults(rows));
     visibleResultRows=rows;
 
     const countLabel=byId("resultCountLabel");
@@ -110,12 +153,17 @@
       return;
     }
 
-    wrap.innerHTML='<table><thead><tr><th>Student</th><th>Batch</th><th>Task</th><th>Status</th><th>Average Score</th><th>Responses</th><th>Latest Submission</th></tr></thead><tbody>'+summaries.map(function(item){
+    wrap.innerHTML='<table><thead><tr><th>Student</th><th><button type="button" data-result-sort="batch" style="all:unset;cursor:pointer;font:inherit;font-weight:inherit;color:inherit;">Batch '+sortIndicator("batch")+'</button></th><th>Task</th><th><button type="button" data-result-sort="status" style="all:unset;cursor:pointer;font:inherit;font-weight:inherit;color:inherit;">Status '+sortIndicator("status")+'</button></th><th>Average Score</th><th>Responses</th><th><button type="button" data-result-sort="latest" style="all:unset;cursor:pointer;font:inherit;font-weight:inherit;color:inherit;">Latest Submission '+sortIndicator("latest")+'</button></th></tr></thead><tbody>'+summaries.map(function(item){
       const row=item.sample;
       const score=item.average===null?"—":item.average.toFixed(2).replace(/\.00$/,"");
       const submitted=item.submittedAt?(typeof formatDate==="function"?formatDate(item.submittedAt):item.submittedAt.toLocaleString()):"—";
-      return '<tr><td><strong>'+escapeHtml(row.fullName||"")+'</strong><br>'+escapeHtml(row.studentId||"")+'<br>'+escapeHtml(row.email||"")+'</td><td>'+escapeHtml(row.batch||"—")+'</td><td><strong>'+escapeHtml(categoryLabel(item.category))+'</strong></td><td><span class="status-badge completed">COMPLETED</span></td><td>'+escapeHtml(score)+'</td><td>'+escapeHtml(String(item.responseCount))+'</td><td>'+escapeHtml(submitted)+'</td></tr>';
+      const statusClass=item.status==="COMPLETED"?"completed":"";
+      return '<tr><td><strong>'+escapeHtml(row.fullName||"")+'</strong><br>'+escapeHtml(row.studentId||"")+'<br>'+escapeHtml(row.email||"")+'</td><td>'+escapeHtml(row.batch||"—")+'</td><td><strong>'+escapeHtml(categoryLabel(item.category))+'</strong></td><td><span class="status-badge '+statusClass+'">'+escapeHtml(item.status)+'</span></td><td>'+escapeHtml(score)+'</td><td>'+escapeHtml(String(item.responseCount))+'</td><td>'+escapeHtml(submitted)+'</td></tr>';
     }).join('')+'</tbody></table>';
+
+    wrap.querySelectorAll('[data-result-sort]').forEach(function(button){
+      button.addEventListener('click',function(){changeSort(button.getAttribute('data-result-sort'));});
+    });
   }
 
   window.renderResultsTable=renderStudentSummaryResults;
