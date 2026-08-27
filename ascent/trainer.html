@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-ascent-build="2026-08-24.24">
+<html lang="en" data-ascent-build="2026-08-27.results-filter-1">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -379,7 +379,7 @@
           <form id="bulkTaskForm" class="panel" novalidate>
             <div class="form-grid">
               <div class="form-group two-wide"><label for="titlePrefix">Task title prefix</label><input id="titlePrefix" type="text" value="ASCENT Task" maxlength="100"><div class="form-note">ASCENT adds 01, 02, 03… when the batch contains several questions.</div></div>
-              <div class="form-group"><label for="rubricType">Rubric</label><select id="rubricType"><option value="MANAGERIAL_COMMUNICATION">Custom Questions (ASCENT Task)</option><option value="PI">Personal Interview</option><option value="GD">Group Discussion</option></select></div>
+              <div class="form-group"><label for="rubricType">Rubric</label><select id="rubricType"><option value="MANAGERIAL_COMMUNICATION">Ascent Task</option><option value="PI">Personal Interview</option><option value="GD">Group Discussion</option></select></div>
               <div class="form-group"><label for="responseSeconds">Main response time</label><select id="responseSeconds"><option value="45">45 seconds</option><option value="60" selected>60 seconds</option><option value="90">90 seconds</option><option value="120">120 seconds</option></select></div>
               <div class="form-group full-width"><div class="inline-row" style="justify-content:space-between"><label for="questionsText" style="margin:0">Questions — one per line</label><span id="questionCount" class="question-count">0 questions</span></div><textarea id="questionsText" placeholder="Paste all questions here. Put each new question on a separate line."></textarea><div class="form-note">Blank lines are ignored. Leading numbers such as “1.” or “2)” are removed automatically.</div></div>
               <div class="form-group"><label for="targetType">Assign to</label><select id="targetType"><option value="" selected disabled>Choose batch</option></select></div>
@@ -963,7 +963,14 @@
       const batches = (reportData.institutionBatches || []).map(name => ({value:name,label:name}));
       ["targetBatch","bankTargetBatch","assignmentBatchFilter","resultBatchFilter"].forEach(id => fillSelect(id,batches,"value",item => item.label,["targetBatch","bankTargetBatch"].includes(id) ? "Choose batch" : "All batches"));
       ["assignmentStudentFilter","resultStudentFilter"].forEach(id => fillSelect(id,reportData.students,"studentUuid",student => `${student.fullName} (${student.studentId})`,"All students"));
-      ["assignmentTaskFilter","resultTaskFilter"].forEach(id => fillSelect(id,reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks"));
+      fillSelect("assignmentTaskFilter",reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks");
+      fillSelect("resultTaskFilter",[
+        {value:"PI",label:"PI"},
+        {value:"GD",label:"GD"},
+        {value:"LUM",label:"LUM"},
+        {value:"JD",label:"JD"},
+        {value:"ASCENT_TASK",label:"Ascent Task"}
+      ],"value",item => item.label,"All tasks");
       const testStudents = reportData.students.filter(student => String(student.studentId || "").trim().toUpperCase().startsWith("ASCENTTEST"));
       fillSelect("testStudentClearSelect",testStudents,"studentUuid",student => `${student.fullName} (${student.studentId})`,"Choose a test student");
       byId("clearTestRegisterButton").disabled = !testStudents.length;
@@ -986,7 +993,7 @@
       });
     }
 
-    const QUESTION_SET_LABELS = { DIAGNOSTIC:"Diagnostic", LUM:"LUM", PI:"PI", GD:"GD", CUSTOM:"Custom", OTHER:"Other" };
+    const QUESTION_SET_LABELS = { DIAGNOSTIC:"Diagnostic", LUM:"LUM", PI:"PI", GD:"GD", CUSTOM:"Ascent Task", OTHER:"Other" };
     const QUESTION_SET_ORDER = ["DIAGNOSTIC","LUM","PI","GD","CUSTOM","OTHER"];
 
     const QUESTION_SET_ALWAYS_SHOWN = ["DIAGNOSTIC","LUM","PI","GD","CUSTOM"];
@@ -1219,13 +1226,29 @@
       )));
     }
 
+    function resultTaskCategory(row) {
+      const questionType = String(row && row.questionType || "").trim().toUpperCase();
+      const rubricType = String(row && row.rubricType || "").trim().toUpperCase();
+      const taskTitle = String(row && row.taskTitle || "").trim().toUpperCase();
+      if (taskTitle.includes("JD INTERVIEW MAPPER") || taskTitle.startsWith("JD ") || taskTitle.includes("· JD")) return "JD";
+      if (questionType === "PI" || rubricType === "PI") return "PI";
+      if (questionType === "GD" || rubricType === "GD") return "GD";
+      if (questionType === "LUM") return "LUM";
+      if (rubricType === "MANAGERIAL_COMMUNICATION" && taskTitle.startsWith("LUM ")) return "LUM";
+      return "ASCENT_TASK";
+    }
+
     function resultFilter(rows,prefix) {
       const batch = byId(prefix+"BatchFilter").value; const student = byId(prefix+"StudentFilter").value; const task = byId(prefix+"TaskFilter").value; const status = byId(prefix+"StatusFilter").value;
       const from = prefix === "result" ? byId("resultDateFrom").value : ""; const to = prefix === "result" ? byId("resultDateTo").value : "";
       return rows.filter(row => {
         if (batch && String(row.batch || "") !== batch) return false;
         if (student && row.studentUuid !== student) return false;
-        if (task && row.taskUuid !== task) return false;
+        if (task) {
+          if (prefix === "result") {
+            if (resultTaskCategory(row) !== task) return false;
+          } else if (row.taskUuid !== task) return false;
+        }
         if (status && row.status !== status) return false;
         const dateValue = row.latestSubmittedAt || row.availableAt;
         if (from && dateValue && new Date(dateValue) < new Date(from+"T00:00:00")) return false;
