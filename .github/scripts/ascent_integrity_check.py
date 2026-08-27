@@ -13,6 +13,7 @@ root = Path('.')
 practice = (root / 'ascent' / 'practice.html').read_text(encoding='utf-8')
 practice_core = (root / 'ascent' / 'practice-core.html').read_text(encoding='utf-8')
 practice_access = (root / 'ascent' / 'practice-access-v2.js').read_text(encoding='utf-8')
+recording_vault = (root / 'ascent' / 'recording-vault.js').read_text(encoding='utf-8')
 play_home = (root / 'ascent-play' / 'home.html').read_text(encoding='utf-8')
 play_practice = (root / 'ascent-play' / 'practice.html').read_text(encoding='utf-8')
 play_guard = (root / 'ascent-play' / 'play-core-guard.js').read_text(encoding='utf-8')
@@ -172,6 +173,25 @@ if protection_contract_path.exists():
     ]:
         require(marker in protection_contract,
                 f'ASCENT protection contract is missing required marker: {marker}')
+
+# 12. Completed recordings must survive an unconfirmed submission or page interruption.
+require('recording-vault.js' in practice,
+        'Website Practice must load the protected recording recovery vault.')
+require('recording-vault.js' in play_practice,
+        'Google Play core must load the protected recording recovery vault.')
+for marker, message in [
+    ('indexedDB.open', 'Recording vault must use persistent IndexedDB storage.'),
+    ('audioBlob instanceof Blob', 'Recording vault must capture completed audio blobs.'),
+    ('Submission was not confirmed. Your recording remains protected',
+     'Recording vault must retain audio after an unconfirmed submission.'),
+    ('Your unsent recording was recovered',
+     'Recording vault must restore a recoverable recording after interruption.'),
+    ('payload.ok === true',
+     'Recording vault must clear only after a confirmed successful server response.'),
+    ('question_already_answered',
+     'Recording vault must recognise a server-confirmed already-saved institutional response.'),
+]:
+    require(marker in recording_vault, message)
 
 if errors:
     print('ASCENT integrity check FAILED:')
