@@ -37,6 +37,21 @@ export async function onRequest(context) {
   html = html.replace('visibleResultRows = resultFilter(reportData.results || [],"result");','visibleResultRows = resultFilter(reportData.results || [],"result").filter(row => Number(row.attemptCount || 0) > 0 || (row.latestScore !== null && row.latestScore !== undefined));');
   html = html.replace('visibleResultRows.map(row =>','visibleResultRows.slice(0,300).map(row =>');
 
+  html = html.replace(
+    '["assignmentTaskFilter","resultTaskFilter"].forEach(id => fillSelect(id,reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks"));',
+    'fillSelect("assignmentTaskFilter",reportData.tasks,"taskUuid",task => task.title || task.question,"All tasks");\n      fillSelect("resultTaskFilter",[{value:"PI",label:"PI"},{value:"GD",label:"GD"},{value:"LUM",label:"LUM"},{value:"JD",label:"JD"},{value:"ASCENT_TASK",label:"Ascent Task"}],"value",item => item.label,"All tasks");'
+  );
+
+  html = html.replace(
+    'function resultFilter(rows,prefix) {',
+    'function resultTaskCategory(row) {\n      const questionType = String(row && row.questionType || "").trim().toUpperCase();\n      const rubricType = String(row && row.rubricType || "").trim().toUpperCase();\n      const taskTitle = String(row && row.taskTitle || "").trim().toUpperCase();\n      if (taskTitle.includes("JD INTERVIEW MAPPER") || taskTitle.startsWith("JD ") || taskTitle.includes("· JD")) return "JD";\n      if (questionType === "PI" || rubricType === "PI") return "PI";\n      if (questionType === "GD" || rubricType === "GD") return "GD";\n      if (questionType === "LUM") return "LUM";\n      if (rubricType === "MANAGERIAL_COMMUNICATION" && taskTitle.startsWith("LUM ")) return "LUM";\n      return "ASCENT_TASK";\n    }\n\n    function resultFilter(rows,prefix) {'
+  );
+
+  html = html.replace(
+    'if (task && row.taskUuid !== task) return false;',
+    'if (task) {\n          if (prefix === "result") { if (resultTaskCategory(row) !== task) return false; }\n          else if (row.taskUuid !== task) return false;\n        }'
+  );
+
   const leaderboardFix = `
 <script data-ascent-leaderboard-fix="2026-08-27.2">
 (function () {
