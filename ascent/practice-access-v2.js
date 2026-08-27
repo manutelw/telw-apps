@@ -21,15 +21,15 @@
     return "";
   }
 
-  async function resilientSubmitFetch(input, init) {
+  async function trySubmitEndpoint(url, init, label, attempts) {
     let lastError = null;
 
-    for (let attempt = 1; attempt <= 3; attempt += 1) {
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
       try {
-        const response = await nativeFetch(newSubmitUrl, init);
+        const response = await nativeFetch(url, init);
 
-        if ([502, 503, 504].includes(response.status) && attempt < 3) {
-          console.warn("ASCENT submission service attempt " + attempt + " returned " + response.status + ". Retrying.");
+        if ([502, 503, 504].includes(response.status) && attempt < attempts) {
+          console.warn("ASCENT " + label + " attempt " + attempt + " returned " + response.status + ". Retrying.");
           await sleep(attempt === 1 ? 900 : 1800);
           continue;
         }
@@ -37,15 +37,35 @@
         return response;
       } catch (error) {
         lastError = error;
-        console.warn("ASCENT submission network attempt " + attempt + " failed:", error);
+        console.warn("ASCENT " + label + " network attempt " + attempt + " failed:", error);
 
-        if (attempt < 3) {
+        if (attempt < attempts) {
           await sleep(attempt === 1 ? 900 : 1800);
         }
       }
     }
 
-    throw lastError || new TypeError("ASCENT could not reach the submission service.");
+    throw lastError || new TypeError("ASCENT could not reach " + label + ".");
+  }
+
+  async function resilientSubmitFetch(input, init) {
+    let primaryError = null;
+
+    try {
+      return await trySubmitEndpoint(newSubmitUrl, init, "primary submission service", 2);
+    } catch (error) {
+      primaryError = error;
+      console.warn("ASCENT primary submission route failed. Trying the fallback route.", error);
+    }
+
+    await sleep(700);
+
+    try {
+      return await trySubmitEndpoint(oldSubmitUrl, init, "fallback submission service", 2);
+    } catch (fallbackError) {
+      console.error("ASCENT fallback submission route also failed.", fallbackError);
+      throw primaryError || fallbackError || new TypeError("ASCENT could not reach the submission service.");
+    }
   }
 
   window.fetch = function (input, init) {
