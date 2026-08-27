@@ -4,6 +4,7 @@
   const nativeFetch = window.fetch.bind(window);
   const oldSubmitUrl = SUPABASE_URL + "/functions/v1/ascent-submit-response";
   const newSubmitUrl = SUPABASE_URL + "/functions/v1/ascent-submit-response-v2";
+  const sameOriginSubmitUrl = window.location.origin + "/ascent/submit-response";
   const customCreditsUrl = SUPABASE_URL + "/rest/v1/rpc/ascent_get_custom_question_credits";
 
   let customCreditsRemaining = 0;
@@ -22,13 +23,19 @@
   }
 
   async function resilientSubmitFetch(input, init) {
-    const url = requestUrl(input);
-    const target = url === oldSubmitUrl ? newSubmitUrl : url;
     let lastError = null;
 
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       try {
-        return await nativeFetch(target, init);
+        const response = await nativeFetch(sameOriginSubmitUrl, init);
+
+        if ([502, 503, 504].includes(response.status) && attempt < 3) {
+          console.warn("ASCENT submission service attempt " + attempt + " returned " + response.status + ". Retrying.");
+          await sleep(attempt === 1 ? 900 : 1800);
+          continue;
+        }
+
+        return response;
       } catch (error) {
         lastError = error;
         console.warn("ASCENT submission network attempt " + attempt + " failed:", error);
@@ -44,7 +51,7 @@
 
   window.fetch = function (input, init) {
     const url = requestUrl(input);
-    if (url === oldSubmitUrl || url === newSubmitUrl) {
+    if (url === oldSubmitUrl || url === newSubmitUrl || url === sameOriginSubmitUrl) {
       return resilientSubmitFetch(input, init);
     }
     return nativeFetch(input, init);
