@@ -25,6 +25,12 @@
           const guardScript=childDocument.createElement('script');
           guardScript.id='ascentPlayCoreGuard';
           guardScript.src='../ascent-play/play-core-guard.js?v=20260827-playcore1';
+          guardScript.onload=function(){
+            const vaultScript=childDocument.createElement('script');
+            vaultScript.id='ascentRecordingVault';
+            vaultScript.src='../ascent/recording-vault.js?v=20260827-vault1';
+            childDocument.body.appendChild(vaultScript);
+          };
           childDocument.body.appendChild(guardScript);
         };
         childDocument.body.appendChild(accessScript);
