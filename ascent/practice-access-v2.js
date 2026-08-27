@@ -3,8 +3,12 @@
 
   const nativeFetch = window.fetch.bind(window);
   const oldSubmitUrl = SUPABASE_URL + "/functions/v1/ascent-submit-response";
-  const newSubmitUrl = SUPABASE_URL + "/functions/v1/ascent-submit-response-v2";
+  const legacyV2SubmitUrl = SUPABASE_URL + "/functions/v1/ascent-submit-response-v2";
+  const safeSubmitUrl = SUPABASE_URL + "/functions/v1/ascent-submit-safe";
+  const safeFallbackSubmitUrl = SUPABASE_URL + "/functions/v1/ascent-submit-safe-fallback";
   const customCreditsUrl = SUPABASE_URL + "/rest/v1/rpc/ascent_get_custom_question_credits";
+  const CLIENT_SUBMISSION_KEY_PREFIX = "ascent_protected_submission_v1|";
+  const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
   let customCreditsRemaining = 0;
   let customCreditsLoaded = false;
@@ -19,6 +23,95 @@
     if (typeof input === "string") return input;
     if (input && typeof input.url === "string") return input.url;
     return "";
+  }
+
+  function hashText(value) {
+    const text = String(value || "");
+    let hash = 2166136261;
+    for (let index = 0; index < text.length; index += 1) {
+      hash ^= text.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16);
+  }
+
+  function submissionStorageKey(formData) {
+    const phase = String(formData.get("response_phase") || "main").toLowerCase();
+    const student = String(currentSession && currentSession.studentUuid || "student");
+    let identity = "";
+
+    if (phase === "pressure") {
+      identity = "pressure|" + String(formData.get("submission_id") || "unknown");
+    } else if (formData.get("assignment_uuid")) {
+      identity = "assigned|" + String(formData.get("assignment_uuid"));
+    } else if (formData.get("question_bank_uuid")) {
+      identity = "bank|" + String(formData.get("question_bank_uuid"));
+    } else if (formData.get("custom_question")) {
+      identity = "custom|" + hashText(String(formData.get("custom_question"))) + "|" + String(formData.get("custom_rubric_type") || "");
+    } else {
+      identity = phase + "|unknown";
+    }
+
+    return CLIENT_SUBMISSION_KEY_PREFIX + student + "|" + identity;
+  }
+
+  function ensureClientSubmissionId(init) {
+    if (!init || !(init.body instanceof FormData)) return "";
+
+    const formData = init.body;
+    const existing = String(formData.get("client_submission_id") || "").trim();
+    if (UUID_PATTERN.test(existing)) {
+      return submissionStorageKey(formData);
+    }
+
+    const storageKey = submissionStorageKey(formData);
+    let clientSubmissionId = "";
+
+    try {
+      clientSubmissionId = String(localStorage.getItem(storageKey) || "").trim();
+    } catch (_error) {
+      clientSubmissionId = "";
+    }
+
+    if (!UUID_PATTERN.test(clientSubmissionId)) {
+      clientSubmissionId = crypto.randomUUID();
+      try {
+        localStorage.setItem(storageKey, clientSubmissionId);
+      } catch (error) {
+        console.warn("ASCENT could not persist the protected submission reference:", error);
+      }
+    }
+
+    formData.set("client_submission_id", clientSubmissionId);
+    return storageKey;
+  }
+
+  async function clearSubmissionReferenceWhenConfirmed(response, storageKey) {
+    if (!storageKey || !response) return response;
+
+    try {
+      const clone = response.clone();
+      const text = await clone.text();
+      let payload = null;
+      try {
+        payload = text ? JSON.parse(text) : null;
+      } catch (_error) {
+        payload = null;
+      }
+
+      if (
+        (response.ok && payload && payload.ok === true) ||
+        (payload && payload.error === "question_already_answered")
+      ) {
+        try {
+          localStorage.removeItem(storageKey);
+        } catch (_error) {}
+      }
+    } catch (error) {
+      console.warn("ASCENT could not inspect the protected submission acknowledgement:", error);
+    }
+
+    return response;
   }
 
   async function trySubmitEndpoint(url, init, label, attempts) {
@@ -49,28 +142,40 @@
   }
 
   async function resilientSubmitFetch(input, init) {
+    const storageKey = ensureClientSubmissionId(init);
     let primaryError = null;
 
     try {
-      return await trySubmitEndpoint(newSubmitUrl, init, "primary submission service", 2);
+      const primaryResponse = await trySubmitEndpoint(safeSubmitUrl, init, "protected primary submission service", 2);
+      if (![502, 503, 504].includes(primaryResponse.status)) {
+        return await clearSubmissionReferenceWhenConfirmed(primaryResponse, storageKey);
+      }
+      primaryError = new Error("Protected primary submission service returned " + primaryResponse.status + ".");
+      console.warn("ASCENT protected primary route returned a transient failure. Trying protected fallback.");
     } catch (error) {
       primaryError = error;
-      console.warn("ASCENT primary submission route failed. Trying the fallback route.", error);
+      console.warn("ASCENT protected primary submission route failed. Trying the protected fallback route.", error);
     }
 
     await sleep(700);
 
     try {
-      return await trySubmitEndpoint(oldSubmitUrl, init, "fallback submission service", 2);
+      const fallbackResponse = await trySubmitEndpoint(safeFallbackSubmitUrl, init, "protected fallback submission service", 2);
+      return await clearSubmissionReferenceWhenConfirmed(fallbackResponse, storageKey);
     } catch (fallbackError) {
-      console.error("ASCENT fallback submission route also failed.", fallbackError);
-      throw primaryError || fallbackError || new TypeError("ASCENT could not reach the submission service.");
+      console.error("ASCENT protected fallback submission route also failed.", fallbackError);
+      throw primaryError || fallbackError || new TypeError("ASCENT could not reach the protected submission service.");
     }
   }
 
   window.fetch = function (input, init) {
     const url = requestUrl(input);
-    if (url === oldSubmitUrl || url === newSubmitUrl) {
+    if (
+      url === oldSubmitUrl ||
+      url === legacyV2SubmitUrl ||
+      url === safeSubmitUrl ||
+      url === safeFallbackSubmitUrl
+    ) {
       return resilientSubmitFetch(input, init);
     }
     return nativeFetch(input, init);
