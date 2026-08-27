@@ -75,7 +75,7 @@
         if(!childDocument.getElementById('ascentPracticeAccessV2')){
           const script=childDocument.createElement('script');
           script.id='ascentPracticeAccessV2';
-          script.src='./practice-access-v2.js?v=20260827-submitfortify2';
+          script.src='./practice-access-v2.js?v=20260827-idempotency1';
           script.onload=loadVault;
           childDocument.body.appendChild(script);
         }else{
