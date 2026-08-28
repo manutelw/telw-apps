@@ -129,6 +129,19 @@
     .portal-switch-row span { color:#586b7d; font-size:.9rem; }
     .portal-check { display:flex; align-items:center; gap:8px; font-weight:700; color:#173b61; }
     .portal-check input { width:20px; height:20px; }
+    .apps-panel { margin-top:18px; }
+    .app-grid { display:grid; grid-template-columns:repeat(5,minmax(150px,1fr)); gap:12px; }
+    .app-card { min-height:118px; padding:17px; border:0; border-radius:15px; color:#fff; display:flex; flex-direction:column; justify-content:space-between; text-align:left; font:inherit; cursor:pointer; box-shadow:0 9px 22px rgba(18,43,67,.14); }
+    .app-card strong { font-size:17px; line-height:1.2; }
+    .app-card span { margin-top:12px; font-size:11px; font-weight:700; line-height:1.35; opacity:.93; }
+    .app-card.ascent { background:linear-gradient(135deg,#143a60,#27679d); }
+    .app-card.mapper { background:linear-gradient(135deg,#176b4a,#2f9670); }
+    .app-card.builder { background:linear-gradient(135deg,#a95600,#d9841e); }
+    .app-card.pcl { background:linear-gradient(135deg,#5b3b8f,#8162b5); }
+    .app-card.live { background:linear-gradient(135deg,#8d2638,#c24a5c); }
+    .app-card:hover,.app-card:focus-visible { transform:translateY(-1px); filter:brightness(1.04); }
+    @media (max-width:980px) { .app-grid { grid-template-columns:repeat(2,minmax(180px,1fr)); } }
+    @media (max-width:560px) { .app-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 
@@ -147,8 +160,20 @@
 
     <section class="intro">
       <div class="intro-label">Admin access</div>
-      <h2>Razorpay and ASCENT pages</h2>
-      <p>Check the current private pass and open any ASCENT page from one place. Your admin session stays active when you move to the trainer portal.</p>
+      <h2>ClarionPrep Admin Hub</h2>
+      <p>Sign in once here and open every communication app from the same administrator workspace.</p>
+    </section>
+
+    <section class="panel apps-panel">
+      <div class="panel-heading"><h2>Your apps</h2><p>Each app remains separate. The links below open its administrator or management view using your current ASCENT administrator session where required.</p></div>
+      <div class="app-grid">
+        <button id="ascentAppButton" class="app-card ascent" type="button"><strong>ASCENT</strong><span>Core ASCENT trainer and administrator workspace</span></button>
+        <a class="app-card mapper" href="./jd-interview-trainer.html" target="_blank" rel="noopener noreferrer"><strong>JD Mapper</strong><span>Open the JD-to-CV interview mapping workspace</span></a>
+        <a class="app-card builder" href="../jd-briefing/" target="_blank" rel="noopener noreferrer"><strong>JD Builder</strong><span>Open the Job Description briefing builder</span></a>
+        <a class="app-card pcl" href="./professional-communication-trainer-preview.html" target="_blank" rel="noopener noreferrer"><strong>PCL</strong><span>Open the Professional Communication Learning modules</span></a>
+        <button id="liveMockAppButton" class="app-card live" type="button"><strong>Live Mock Interview</strong><span>Open Live Mock with administrator access</span></button>
+      </div>
+      <div id="appHubStatus" class="admin-status" role="status" aria-live="polite"></div>
     </section>
 
     <div class="section-grid">
@@ -241,6 +266,7 @@
     const SESSION_STORAGE_KEY = "ascent_trainer_session";
     const STUDENT_SESSION_STORAGE_KEY = "ascent_student_session";
     const ADMIN_MASTER_SESSION_KEY = "ascent_admin_master_session";
+    const LIVE_MOCK_SESSION_KEY = "live_mock_student_session";
     const SUPABASE_URL = "https://vtqatrhwfvzyodiftvkc.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
     const TRAINER_ENTRY_LIST_URL = SUPABASE_URL + "/rest/v1/rpc/ascent_admin_trainer_entry_list";
@@ -252,6 +278,7 @@
     const PORTAL_MANAGER_LIST_URL = SUPABASE_URL + "/rest/v1/rpc/ascent_admin_institution_portal_manager";
     const PORTAL_MANAGER_UPDATE_URL = SUPABASE_URL + "/rest/v1/rpc/ascent_admin_update_institution_portal";
     const PORTAL_MANAGER_GLOBAL_URL = SUPABASE_URL + "/rest/v1/rpc/ascent_admin_set_institutional_portals_enabled";
+    const LIVE_MOCK_ADMIN_HANDOFF_URL = SUPABASE_URL + "/functions/v1/live-mock-admin-handoff";
     let portalManagerRecords = [];
     let allPaymentRecords = [];
     let displayedPaymentRecords = [];
@@ -282,6 +309,12 @@
       element.textContent = message || "";
     }
 
+    function setAppHubStatus(message,type="") {
+      const element = document.getElementById("appHubStatus");
+      element.className = "admin-status" + (type ? " " + type : "");
+      element.textContent = message || "";
+    }
+
     function escapeHtml(value) {
       return String(value ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
     }
@@ -292,6 +325,24 @@
       const result = Array.isArray(payload) ? payload[0] : payload;
       if (!response.ok || !result || result.ok !== true) throw new Error(result && result.message ? result.message : "The administrator request failed.");
       return result;
+    }
+
+    async function openLiveMockAdmin() {
+      const button = document.getElementById("liveMockAppButton");
+      button.disabled = true;
+      setAppHubStatus("Opening Live Mock administrator access…");
+      try {
+        const response = await fetch(LIVE_MOCK_ADMIN_HANDOFF_URL,{method:"POST",headers:{"apikey":SUPABASE_PUBLISHABLE_KEY,"Authorization":"Bearer "+SUPABASE_PUBLISHABLE_KEY,"Content-Type":"application/json"},body:JSON.stringify({ascent_session_token:session.sessionToken})});
+        const result = await response.json().catch(()=>({}));
+        if(!response.ok || result.ok!==true) throw new Error(result.message||"Live Mock administrator access could not be opened.");
+        localStorage.setItem(LIVE_MOCK_SESSION_KEY,JSON.stringify({sessionToken:result.session_token,user:result.user,expiresAt:result.expires_at}));
+        setAppHubStatus("Live Mock administrator access ready.","success");
+        window.open("../live-mock/interview.html","_blank","noopener,noreferrer");
+      } catch(error) {
+        setAppHubStatus(error.message||"Live Mock administrator access could not be opened.","error");
+      } finally {
+        button.disabled = false;
+      }
     }
 
     async function enterDemoStudent(demoMode) {
@@ -463,7 +514,9 @@
     if(session){
       document.getElementById("adminShell").hidden=false;
       document.getElementById("adminName").textContent=session.fullName||session.email||"ASCENT Administrator";
-      document.getElementById("logoutButton").addEventListener("click",()=>{localStorage.removeItem(SESSION_STORAGE_KEY);localStorage.removeItem(ADMIN_MASTER_SESSION_KEY);window.location.replace("./");});
+      document.getElementById("logoutButton").addEventListener("click",()=>{localStorage.removeItem(SESSION_STORAGE_KEY);localStorage.removeItem(ADMIN_MASTER_SESSION_KEY);localStorage.removeItem(LIVE_MOCK_SESSION_KEY);window.location.replace("./");});
+      document.getElementById("ascentAppButton").addEventListener("click",()=>{void enterAdminWorkspace("./trainer.html");});
+      document.getElementById("liveMockAppButton").addEventListener("click",()=>{void openLiveMockAdmin();});
       document.getElementById("adminPrivateDemoButton").addEventListener("click",()=>{void enterDemoStudent("PRIVATE");});
       document.getElementById("adminInstitutionalDemoButton").addEventListener("click",()=>{void enterDemoStudent("INSTITUTIONAL");});
       document.getElementById("adminTrainerPortalLink").addEventListener("click",event=>{event.preventDefault();void enterAdminWorkspace("./trainer.html");});
