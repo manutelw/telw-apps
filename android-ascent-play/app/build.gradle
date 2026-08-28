@@ -2,6 +2,11 @@ plugins {
     id 'com.android.application'
 }
 
+def uploadKeystorePath = System.getenv('ASCENT_KEYSTORE_PATH')
+def uploadStorePassword = System.getenv('ASCENT_KEYSTORE_PASSWORD')
+def uploadKeyAlias = System.getenv('ASCENT_KEY_ALIAS')
+def uploadKeyPassword = System.getenv('ASCENT_KEY_PASSWORD')
+
 android {
     namespace 'com.telw.ascent'
     compileSdk 36
@@ -14,8 +19,20 @@ android {
         versionName '1.0.0-play'
     }
 
+    signingConfigs {
+        release {
+            if (uploadKeystorePath && uploadStorePassword && uploadKeyAlias && uploadKeyPassword) {
+                storeFile file(uploadKeystorePath)
+                storePassword uploadStorePassword
+                keyAlias uploadKeyAlias
+                keyPassword uploadKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
