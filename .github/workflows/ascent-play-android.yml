@@ -35,8 +35,23 @@ jobs:
         with:
           gradle-version: '8.13'
 
-      - name: Build release app bundle
+      - name: Restore upload keystore
+        env:
+          ASCENT_UPLOAD_KEYSTORE_B64: ${{ secrets.ASCENT_UPLOAD_KEYSTORE_B64 }}
+        run: |
+          test -n "$ASCENT_UPLOAD_KEYSTORE_B64"
+          printf '%s' "$ASCENT_UPLOAD_KEYSTORE_B64" | base64 --decode > app/ascent-upload-key.jks
+
+      - name: Build signed release app bundle
+        env:
+          ASCENT_KEYSTORE_PATH: ascent-upload-key.jks
+          ASCENT_KEYSTORE_PASSWORD: ${{ secrets.ASCENT_UPLOAD_STORE_PASSWORD }}
+          ASCENT_KEY_ALIAS: ${{ secrets.ASCENT_UPLOAD_KEY_ALIAS }}
+          ASCENT_KEY_PASSWORD: ${{ secrets.ASCENT_UPLOAD_KEY_PASSWORD }}
         run: gradle :app:bundleRelease --stacktrace
+
+      - name: Verify AAB signature
+        run: jarsigner -verify -verbose -certs app/build/outputs/bundle/release/app-release.aab
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
