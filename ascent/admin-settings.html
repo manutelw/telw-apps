@@ -321,8 +321,16 @@
 
     async function enterAdminWorkspace(destination) {
       const status = document.getElementById("adminWorkspaceStatus");
-      const accessPointUuid = document.getElementById("adminInstitutionSelect").value;
-      if (!accessPointUuid) { status.className="admin-status error"; status.textContent="Choose an institution before opening the administrator workspace."; return; }
+      const select = document.getElementById("adminInstitutionSelect");
+      let accessPointUuid = select.value;
+      if (!accessPointUuid) {
+        const fallbackOption = Array.from(select.options).find(option => option.value);
+        if (fallbackOption) {
+          accessPointUuid = fallbackOption.value;
+          select.value = accessPointUuid;
+        }
+      }
+      if (!accessPointUuid) { status.className="admin-status error"; status.textContent="No administrator institution workspace is available."; return; }
       status.className = "admin-status";
       status.textContent = "Opening administrator workspace…";
       try {
@@ -340,7 +348,12 @@
         const institutions = Array.isArray(result.institutions) ? result.institutions : [];
         select.innerHTML = '<option value="">Choose institution</option>' + institutions.map(institution => '<option value="'+escapeHtml(institution.accessPointUuid)+'">'+escapeHtml(institution.displayName || institution.urlSlug || "Institution")+'</option>').join("");
         select.disabled = institutions.length === 0;
-        if (institutions.length === 1) select.value = institutions[0].accessPointUuid;
+        const preferredInstitution = institutions.find(institution => {
+          const label = String(institution.displayName || "").toLowerCase();
+          const slug = String(institution.urlSlug || "").toLowerCase();
+          return slug === "fiib" || label.includes("fortune institute of international business") || label.includes("fiib");
+        }) || institutions[0];
+        if (preferredInstitution) select.value = preferredInstitution.accessPointUuid;
       } catch (error) {
         select.innerHTML = '<option value="">Institutions unavailable</option>';
         select.disabled = true;
