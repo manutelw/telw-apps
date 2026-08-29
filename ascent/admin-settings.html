@@ -130,13 +130,14 @@
     .portal-check { display:flex; align-items:center; gap:8px; font-weight:700; color:#173b61; }
     .portal-check input { width:20px; height:20px; }
     .apps-panel { margin-top:18px; }
-    .app-grid { display:grid; grid-template-columns:repeat(5,minmax(150px,1fr)); gap:12px; }
+    .app-grid { display:grid; grid-template-columns:repeat(3,minmax(180px,1fr)); gap:12px; }
     .app-card { min-height:118px; padding:17px; border:0; border-radius:15px; color:#fff; display:flex; flex-direction:column; justify-content:space-between; text-align:left; font:inherit; cursor:pointer; box-shadow:0 9px 22px rgba(18,43,67,.14); }
     .app-card strong { font-size:17px; line-height:1.2; }
     .app-card span { margin-top:12px; font-size:11px; font-weight:700; line-height:1.35; opacity:.93; }
     .app-card.ascent { background:linear-gradient(135deg,#143a60,#27679d); }
     .app-card.mapper { background:linear-gradient(135deg,#176b4a,#2f9670); }
     .app-card.builder { background:linear-gradient(135deg,#a95600,#d9841e); }
+    .app-card.cv { background:linear-gradient(135deg,#0f6474,#278ca0); }
     .app-card.pcl { background:linear-gradient(135deg,#5b3b8f,#8162b5); }
     .app-card.live { background:linear-gradient(135deg,#8d2638,#c24a5c); }
     .app-card:hover,.app-card:focus-visible { transform:translateY(-1px); filter:brightness(1.04); }
@@ -170,6 +171,7 @@
         <button id="ascentAppButton" class="app-card ascent" type="button"><strong>ASCENT</strong><span>Core ASCENT trainer and administrator workspace</span></button>
         <a class="app-card mapper" href="./jd-interview-trainer.html" target="_blank" rel="noopener noreferrer"><strong>JD Mapper</strong><span>Open the JD-to-CV interview mapping workspace</span></a>
         <a class="app-card builder" href="../jd-briefing/" target="_blank" rel="noopener noreferrer"><strong>JD Builder</strong><span>Open the Job Description briefing builder</span></a>
+        <a class="app-card cv" href="https://profile-review.manutelw.workers.dev" target="_blank" rel="noopener noreferrer"><strong>CV Builder &amp; Evaluator</strong><span>Build, assess and strengthen a CV for a target role</span></a>
         <a class="app-card pcl" href="./professional-communication-trainer-preview.html" target="_blank" rel="noopener noreferrer"><strong>PCL</strong><span>Open the Professional Communication Learning modules</span></a>
         <button id="liveMockAppButton" class="app-card live" type="button"><strong>Live Mock Interview</strong><span>Open Live Mock with administrator access</span></button>
       </div>
