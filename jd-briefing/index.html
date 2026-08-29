@@ -11,21 +11,58 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <style>
-    .workflow-grid article.workflow-link {
-      cursor: pointer;
-      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    .workflow-grid a.workflow-link {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-height:78px;
+      padding:14px 16px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:rgba(255,255,255,.72);
+      color:inherit;
+      text-decoration:none;
+      cursor:pointer;
+      transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease;
     }
-    .workflow-grid article.workflow-link:hover,
-    .workflow-grid article.workflow-link:focus-visible {
-      transform: translateY(-2px);
-      border-color: var(--gold);
-      background: #fffdf6;
-      box-shadow: 0 10px 24px rgba(20, 32, 69, 0.10);
-      outline: none;
+    .workflow-grid a.workflow-link:hover,
+    .workflow-grid a.workflow-link:focus-visible {
+      transform:translateY(-2px);
+      border-color:var(--gold);
+      background:#fffdf6;
+      box-shadow:0 10px 24px rgba(20,32,69,.10);
+      outline:none;
     }
-    .workflow-grid article.workflow-link:focus-visible {
-      box-shadow: 0 0 0 3px rgba(211,169,58,.28), 0 10px 24px rgba(20, 32, 69, 0.10);
+    .workflow-grid a.workflow-link:focus-visible {
+      box-shadow:0 0 0 3px rgba(211,169,58,.28),0 10px 24px rgba(20,32,69,.10);
     }
+    .workflow-grid a.workflow-link > span {
+      flex:0 0 36px;
+      width:36px;
+      height:36px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      color:var(--navy);
+      background:var(--gold-soft);
+      font-weight:800;
+    }
+    .workflow-grid a.workflow-link strong,
+    .workflow-grid a.workflow-link small { display:block; }
+    .workflow-grid a.workflow-link small { color:var(--ink-soft);font-size:12px; }
+    .stage-preview {
+      display:none;
+      margin-bottom:22px;
+      padding:28px 30px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+      box-shadow:var(--shadow);
+    }
+    .stage-preview:target { display:block; }
+    .stage-preview h2 { margin-bottom:8px; }
+    .stage-preview p { margin:0 0 16px;color:var(--ink-soft); }
+    .stage-preview a { color:var(--navy);font-weight:800; }
   </style>
 </head>
 <body>
@@ -53,10 +90,31 @@
     </section>
 
     <section class="workflow-grid" aria-label="Automated workflow">
-      <article class="workflow-link" role="button" tabindex="0" data-workflow-target="capture" aria-label="Go to Capture"><span>1</span><div><strong>Capture</strong><small>Recruitment information</small></div></article>
-      <article class="workflow-link" role="button" tabindex="0" data-workflow-target="analysis" aria-label="Go to Analyse"><span>2</span><div><strong>Analyse</strong><small>JD requirements and evidence</small></div></article>
-      <article class="workflow-link" role="button" tabindex="0" data-workflow-target="research" aria-label="Go to Research"><span>3</span><div><strong>Research</strong><small>Company and current context</small></div></article>
-      <article class="workflow-link" role="button" tabindex="0" data-workflow-target="briefing" aria-label="Go to Brief"><span>4</span><div><strong>Brief</strong><small>Student-facing pre-reading</small></div></article>
+      <a class="workflow-link" href="#uploadPanel" aria-label="Go to Capture"><span>1</span><div><strong>Capture</strong><small>Recruitment information</small></div></a>
+      <a class="workflow-link" href="#analysisStage" aria-label="Go to Analyse"><span>2</span><div><strong>Analyse</strong><small>JD requirements and evidence</small></div></a>
+      <a class="workflow-link" href="#researchStage" aria-label="Go to Research"><span>3</span><div><strong>Research</strong><small>Company and current context</small></div></a>
+      <a class="workflow-link" href="#briefingStage" aria-label="Go to Brief"><span>4</span><div><strong>Brief</strong><small>Student-facing pre-reading</small></div></a>
+    </section>
+
+    <section id="analysisStage" class="stage-preview" aria-label="Analyse stage">
+      <p class="section-label">STAGE 2</p>
+      <h2>JD Analysis</h2>
+      <p>This page is populated after a JD has been generated. It contains the role purpose, deliverables, responsibilities, skills, keywords, likely interview areas and the requirement-to-evidence map.</p>
+      <a href="#uploadPanel">Go to Capture and generate the JD briefing</a>
+    </section>
+
+    <section id="researchStage" class="stage-preview" aria-label="Research stage">
+      <p class="section-label">STAGE 3</p>
+      <h2>Company Research</h2>
+      <p>This page is populated after a JD has been generated. It contains the company, business model, industry, products, customers, competitors, current developments and hiring context.</p>
+      <a href="#uploadPanel">Go to Capture and generate the JD briefing</a>
+    </section>
+
+    <section id="briefingStage" class="stage-preview" aria-label="Brief stage">
+      <p class="section-label">STAGE 4</p>
+      <h2>Student Briefing</h2>
+      <p>This page is populated after a JD has been generated. It contains the student-facing pre-reading pack for the JD Dugout.</p>
+      <a href="#uploadPanel">Go to Capture and generate the JD briefing</a>
     </section>
 
     <section class="panel upload-panel" id="uploadPanel">
@@ -143,35 +201,23 @@
   <script src="app.js"></script>
   <script>
     (() => {
-      const cards = Array.from(document.querySelectorAll('[data-workflow-target]'));
-      const uploadPanel = document.getElementById('uploadPanel');
-      const resultsSection = document.getElementById('resultsSection');
-
-      function openWorkflowStage(card) {
-        const target = card.dataset.workflowTarget;
-        if (target === 'capture') {
-          uploadPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          return;
-        }
-
-        if (!resultsSection || resultsSection.classList.contains('hidden')) {
-          uploadPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          return;
-        }
-
-        document.querySelector(`.tab[data-tab="${target}"]`)?.click();
-        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const hashToTab = {
+        '#analysisStage': 'analysis',
+        '#researchStage': 'research',
+        '#briefingStage': 'briefing'
+      };
+      function openGeneratedStage() {
+        const tabName = hashToTab[location.hash];
+        if (!tabName) return;
+        const results = document.getElementById('resultsSection');
+        if (!results || results.classList.contains('hidden')) return;
+        const tab = document.querySelector(`.tab[data-tab="${tabName}"]`);
+        if (!tab) return;
+        tab.click();
+        results.scrollIntoView({behavior:'smooth',block:'start'});
       }
-
-      cards.forEach((card) => {
-        card.addEventListener('click', () => openWorkflowStage(card));
-        card.addEventListener('keydown', (event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            openWorkflowStage(card);
-          }
-        });
-      });
+      window.addEventListener('hashchange', openGeneratedStage);
+      window.addEventListener('load', openGeneratedStage);
     })();
   </script>
 </body>
