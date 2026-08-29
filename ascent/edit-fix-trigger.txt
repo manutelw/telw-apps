@@ -1,0 +1,1 @@
+E-Portfolio click-to-edit robustness patch.
