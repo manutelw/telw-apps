@@ -15,58 +15,13 @@
 </head>
 <body>
 <div class="shell">
-  <header class="topbar">
-    <div class="brand"><div class="mark">A</div><div><h1>ASCENT</h1><p>JD Fit &amp; Interview Practice</p></div></div>
-    <div class="actions"><a class="btn" href="./dashboard.html">My Performance</a><a class="btn" href="./practice.html">Practice</a><button id="logout" class="btn" type="button">Log Out</button></div>
-  </header>
-
-  <section class="card hero">
-    <h2>Turn a JD into your interview practice</h2>
-    <p>Paste the full JD and your CV. ASCENT will list the employer's requirements and suggest where your CV gives strong evidence, transferable evidence, or no evidence. Review every suggestion before your interview questions are built.</p>
-    <div class="status error" style="margin:16px 0 0"><strong>IMPORTANT — THIS JD–CV MAP IS TEMPORARY.</strong> ASCENT does not keep your pasted JD, CV, evidence map or fit analysis as a permanent learner record. Temporary working data is deleted when you create speaking practice, or automatically within 6 hours. <strong>If you want to keep this analysis, download your report before you leave.</strong></div>
-    <div class="steps"><div class="step"><strong>1 · Paste</strong>Full JD + your CV</div><div class="step"><strong>2 · Review</strong>Check ASCENT’s S / T / N suggestions</div><div class="step"><strong>3 · Build</strong>Get questions based on your final map</div><div class="step"><strong>4 · Speak</strong>Practise 45–60 second answers</div></div>
-  </section>
-
-  <section class="card">
-    <div class="prep-callout">
-      <div class="prep-callout-copy">
-        <span class="prep-callout-kicker">Recommended before you start</span>
-        <span class="prep-callout-title">Not sure how to structure a strong interview answer?</span>
-        <span class="prep-callout-note">Watch the interview guide first. It will help you use the questions from this Mapper more effectively. Learn the method; do not memorise model answers.</span>
-      </div>
-      <a class="prep-callout-button" href="https://youtu.be/rBolO9M02iE" target="_blank" rel="noopener noreferrer">▶ WATCH THE INTERVIEW GUIDE</a>
-    </div>
-  </section>
-
-  <section class="card">
-    <div class="heading-row"><div><h3>Step 1 · Paste the JD and your CV</h3><p>Use the complete text. Do not shorten the JD to only the points you like.</p></div></div>
-    <div class="grid">
-      <div class="field"><label for="jdText">Full Job Description</label><textarea id="jdText" placeholder="Paste the complete Job Description here."></textarea><div class="hint">ASCENT keeps distinct requirements separate. A long JD may correctly produce 20–25 or more items.</div></div>
-      <div class="field"><label for="cvText">Your CV text</label><textarea id="cvText" placeholder="Paste the text of your current CV here."></textarea><div class="hint">Use your real current CV. Do not add experience that is not already true.</div></div>
-    </div>
-    <div style="margin-top:14px"><button id="extractBtn" class="btn primary" type="button">Find the JD requirements</button></div>
-    <div id="extractStatus" class="status" role="status" aria-live="polite"></div>
-  </section>
-
-  <section id="mappingCard" class="card" hidden>
-    <div class="heading-row"><div><h3>Step 2 · Review ASCENT’s JD-to-CV map</h3><p>ASCENT has suggested S, T or N from your pasted CV. Check every item. Change any rating or evidence that does not match your real experience. <strong>S is Strong:</strong> your CV has direct proof. <strong>T is Transferable:</strong> your CV has related evidence that can transfer to this role. <strong>N is None:</strong> there is no clear proof in your CV.</p></div><div id="mappingSummary" class="summary"></div></div>
-    <div class="status info" style="margin:0 0 14px"><strong>How Evidence Fit is calculated:</strong> CORE S = 3, T = 2, N = 0. SECONDARY S = 1, T = 0.5, N = 0. The result is converted to 0–100. Strong requires at least 75/100 and no more than 1 CORE N gap; 2 or more CORE N gaps cap the band at Moderate. It is a preparation indicator, not a selection probability.</div><div id="requirements" class="req-list"></div>
-    <div class="actions" style="margin-top:16px"><button id="saveBtn" class="btn primary" type="button">Build My Questions</button><button id="mapDownloadBtn" class="btn" type="button">Download Map PDF</button></div>
-    <div id="mapStatus" class="status" role="status" aria-live="polite"></div>
-  </section>
-
-  <section id="questionsCard" class="card" hidden>
-    <div class="heading-row"><div><h3>Step 3 · Your interview set</h3><p>Your set includes Introduction, Behavioural, Industry, Situational and Curveball questions. ASCENT adds Role/Technical, Values &amp; Culture, Commercial Judgement or Data/Tools questions only when this JD calls for them.</p></div></div>
-    <ol id="questions" class="questions"></ol>
-    <div class="status error" style="margin:14px 0"><strong>KEEP THIS ANALYSIS?</strong> Download your report now. Creating speaking practice deletes this temporary JD–CV map from ASCENT.</div>
-    <div class="actions"><button id="downloadBtn" class="btn" type="button">Download Preparation Report (PDF)</button><button id="practiceBtn" class="btn primary" type="button">Create my speaking practice</button></div>
-    <div id="practiceStatus" class="status" role="status" aria-live="polite"></div>
-  </section>
-
-  <section class="card">
-    <div class="heading-row"><div><h3>Your temporary JD maps</h3><p>These are working records only. They are deleted after speaking practice is created or automatically within 6 hours.</p></div><button id="refreshHistory" class="btn" type="button">Refresh</button></div>
-    <div id="history"><div class="hint">Loading…</div></div>
-  </section>
+  <header class="topbar"><div class="brand"><div class="mark">A</div><div><h1>ASCENT</h1><p>JD Fit &amp; Interview Practice</p></div></div><div class="actions"><a class="btn" href="./dashboard.html">My Performance</a><a class="btn" href="./practice.html">Practice</a><button id="logout" class="btn" type="button">Log Out</button></div></header>
+  <section class="card hero"><h2>Turn a JD into your interview practice</h2><p>Paste the full JD and your CV. ASCENT will list the employer's requirements and suggest where your CV gives strong evidence, transferable evidence, or no evidence. Review every suggestion before your interview questions are built.</p><div class="status error" style="margin:16px 0 0"><strong>IMPORTANT — THIS JD–CV MAP IS TEMPORARY.</strong> ASCENT does not keep your pasted JD, CV, evidence map or fit analysis as a permanent learner record. Temporary working data is deleted when you create speaking practice, or automatically within 6 hours. <strong>If you want to keep this analysis, download your report before you leave.</strong></div><div class="steps"><div class="step"><strong>1 · Paste</strong>Full JD + your CV</div><div class="step"><strong>2 · Review</strong>Check ASCENT’s S / T / N suggestions</div><div class="step"><strong>3 · Build</strong>Get questions based on your final map</div><div class="step"><strong>4 · Speak</strong>Practise 45–60 second answers</div></div></section>
+  <section class="card"><div class="prep-callout"><div class="prep-callout-copy"><span class="prep-callout-kicker">Recommended before you start</span><span class="prep-callout-title">Not sure how to structure a strong interview answer?</span><span class="prep-callout-note">Watch the interview guide first. It will help you use the questions from this Mapper more effectively. Learn the method; do not memorise model answers.</span></div><a class="prep-callout-button" href="https://youtu.be/rBolO9M02iE" target="_blank" rel="noopener noreferrer">▶ WATCH THE INTERVIEW GUIDE</a></div></section>
+  <section class="card"><div class="heading-row"><div><h3>Step 1 · Paste the JD and your CV</h3><p>Use the complete text. Do not shorten the JD to only the points you like.</p></div></div><div class="grid"><div class="field"><label for="jdText">Full Job Description</label><textarea id="jdText" placeholder="Paste the complete Job Description here."></textarea><div class="hint">ASCENT keeps distinct requirements separate. A long JD may correctly produce 20–25 or more items.</div></div><div class="field"><label for="cvText">Your CV text</label><textarea id="cvText" placeholder="Paste the text of your current CV here."></textarea><div class="hint">Use your real current CV. Do not add experience that is not already true.</div></div></div><div style="margin-top:14px"><button id="extractBtn" class="btn primary" type="button">Find the JD requirements</button></div><div id="extractStatus" class="status" role="status" aria-live="polite"></div></section>
+  <section id="mappingCard" class="card" hidden><div class="heading-row"><div><h3>Step 2 · Review ASCENT’s JD-to-CV map</h3><p>ASCENT has suggested S, T or N from your pasted CV. Check every item. Change any rating or evidence that does not match your real experience. <strong>S is Strong:</strong> your CV has direct proof. <strong>T is Transferable:</strong> your CV has related evidence that can transfer to this role. <strong>N is None:</strong> there is no clear proof in your CV.</p></div><div id="mappingSummary" class="summary"></div></div><div class="status info" style="margin:0 0 14px"><strong>How Evidence Fit is calculated:</strong> CORE S = 3, T = 2, N = 0. SECONDARY S = 1, T = 0.5, N = 0. The result is converted to 0–100. Strong requires at least 75/100 and no more than 1 CORE N gap; 2 or more CORE N gaps cap the band at Moderate. It is a preparation indicator, not a selection probability.</div><div id="requirements" class="req-list"></div><div class="actions" style="margin-top:16px"><button id="saveBtn" class="btn primary" type="button">Build My Questions</button><button id="mapDownloadBtn" class="btn" type="button">Download Map PDF</button></div><div id="mapStatus" class="status" role="status" aria-live="polite"></div></section>
+  <section id="questionsCard" class="card" hidden><div class="heading-row"><div><h3>Step 3 · Your interview set</h3><p>Your set includes Introduction, Behavioural, Industry, Situational and Curveball questions. ASCENT adds Role/Technical, Values &amp; Culture, Commercial Judgement or Data/Tools questions only when this JD calls for them.</p></div></div><ol id="questions" class="questions"></ol><div class="status error" style="margin:14px 0"><strong>KEEP THIS ANALYSIS?</strong> Download your report now. Creating speaking practice deletes this temporary JD–CV map from ASCENT.</div><div class="actions"><button id="downloadBtn" class="btn" type="button">Download Preparation Report (PDF)</button><button id="practiceBtn" class="btn primary" type="button">Create my speaking practice</button></div><div id="practiceStatus" class="status" role="status" aria-live="polite"></div></section>
+  <section class="card"><div class="heading-row"><div><h3>Your temporary JD maps</h3><p>These are working records only. They are deleted after speaking practice is created or automatically within 6 hours.</p></div><button id="refreshHistory" class="btn" type="button">Refresh</button></div><div id="history"><div class="hint">Loading…</div></div></section>
   <div class="footer"><strong>A Manu Vikraman Career-Readiness Product</strong><br>manuvikraman.com | clarionprep.com</div>
 </div>
 <script>
@@ -96,5 +51,6 @@ async function loadHistory(){try{const d=await call('MY_CASES');const rows=d.cas
 $('refreshHistory').onclick=loadHistory;$('logout').onclick=()=>{localStorage.removeItem(STORAGE);location.href='./index.html'};
 if(loadSession())loadHistory();
 </script>
+<script src="./jd-mapper-ux.js?v=20260829-ux1"></script>
 </body>
 </html>
