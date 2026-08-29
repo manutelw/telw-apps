@@ -10,6 +10,23 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    .workflow-grid article.workflow-link {
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+    .workflow-grid article.workflow-link:hover,
+    .workflow-grid article.workflow-link:focus-visible {
+      transform: translateY(-2px);
+      border-color: var(--gold);
+      background: #fffdf6;
+      box-shadow: 0 10px 24px rgba(20, 32, 69, 0.10);
+      outline: none;
+    }
+    .workflow-grid article.workflow-link:focus-visible {
+      box-shadow: 0 0 0 3px rgba(211,169,58,.28), 0 10px 24px rgba(20, 32, 69, 0.10);
+    }
+  </style>
 </head>
 <body>
   <header class="topbar">
@@ -36,10 +53,10 @@
     </section>
 
     <section class="workflow-grid" aria-label="Automated workflow">
-      <article><span>1</span><div><strong>Capture</strong><small>Recruitment information</small></div></article>
-      <article><span>2</span><div><strong>Analyse</strong><small>JD requirements and evidence</small></div></article>
-      <article><span>3</span><div><strong>Research</strong><small>Company and current context</small></div></article>
-      <article><span>4</span><div><strong>Brief</strong><small>Student-facing pre-reading</small></div></article>
+      <article class="workflow-link" role="button" tabindex="0" data-workflow-target="capture" aria-label="Go to Capture"><span>1</span><div><strong>Capture</strong><small>Recruitment information</small></div></article>
+      <article class="workflow-link" role="button" tabindex="0" data-workflow-target="analysis" aria-label="Go to Analyse"><span>2</span><div><strong>Analyse</strong><small>JD requirements and evidence</small></div></article>
+      <article class="workflow-link" role="button" tabindex="0" data-workflow-target="research" aria-label="Go to Research"><span>3</span><div><strong>Research</strong><small>Company and current context</small></div></article>
+      <article class="workflow-link" role="button" tabindex="0" data-workflow-target="briefing" aria-label="Go to Brief"><span>4</span><div><strong>Brief</strong><small>Student-facing pre-reading</small></div></article>
     </section>
 
     <section class="panel upload-panel" id="uploadPanel">
@@ -124,5 +141,38 @@
 
   <script src="config.js"></script>
   <script src="app.js"></script>
+  <script>
+    (() => {
+      const cards = Array.from(document.querySelectorAll('[data-workflow-target]'));
+      const uploadPanel = document.getElementById('uploadPanel');
+      const resultsSection = document.getElementById('resultsSection');
+
+      function openWorkflowStage(card) {
+        const target = card.dataset.workflowTarget;
+        if (target === 'capture') {
+          uploadPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+
+        if (!resultsSection || resultsSection.classList.contains('hidden')) {
+          uploadPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+
+        document.querySelector(`.tab[data-tab="${target}"]`)?.click();
+        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      cards.forEach((card) => {
+        card.addEventListener('click', () => openWorkflowStage(card));
+        card.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openWorkflowStage(card);
+          }
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
