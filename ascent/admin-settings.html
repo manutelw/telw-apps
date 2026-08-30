@@ -175,7 +175,7 @@
         <a class="app-card cv" href="https://profile-review.manutelw.workers.dev" target="_blank" rel="noopener noreferrer"><strong>CV Builder &amp; Evaluator</strong><span>Build, assess and strengthen a CV for a target role</span></a>
         <a class="app-card pcl" href="./professional-communication-trainer-preview.html" target="_blank" rel="noopener noreferrer"><strong>PCL</strong><span>Open the Professional Communication Learning modules</span></a>
         <button id="liveMockAppButton" class="app-card live" type="button"><strong>Live Mock Interview</strong><span>Open Live Mock with administrator access</span></button>
-        <a id="dialogueLabAppLink" class="app-card dialogue" href="https://deploy-preview-43--telw-clarion-app.netlify.app/dialogue-lab/" target="_blank" rel="noopener noreferrer"><strong>Dialogue Lab – Test</strong><span>Open the separate Below-5 video and speaking-practice site</span></a>
+        <button id="dialogueLabAppLink" class="app-card dialogue" type="button"><strong>Dialogue Lab – Test</strong><span>Open the separate Below-5 video and speaking-practice site with free admin access</span></button>
       </div>
       <div id="appHubStatus" class="admin-status" role="status" aria-live="polite"></div>
     </section>
@@ -344,6 +344,23 @@
         window.open("../live-mock/interview.html","_blank","noopener,noreferrer");
       } catch(error) {
         setAppHubStatus(error.message||"Live Mock administrator access could not be opened.","error");
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function openDialogueLabAdmin() {
+      const button = document.getElementById("dialogueLabAppLink");
+      button.disabled = true;
+      setAppHubStatus("Opening Dialogue Lab with free administrator access…");
+      try {
+        const result = await callAdminRpc(ADMIN_DEMO_STUDENT_URL,{p_session_token:session.sessionToken,p_demo_mode:"PRIVATE"});
+        const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(result)))));
+        const url = "https://deploy-preview-43--telw-clarion-app.netlify.app/dialogue-lab/admin-entry.html#handoff=" + encoded;
+        setAppHubStatus("Dialogue Lab administrator access ready.","success");
+        window.open(url,"_blank","noopener,noreferrer");
+      } catch(error) {
+        setAppHubStatus(error.message||"Dialogue Lab administrator access could not be opened.","error");
       } finally {
         button.disabled = false;
       }
@@ -534,6 +551,7 @@
       document.getElementById("paymentStatusFilter").addEventListener("change",filterPaymentStatement);
       document.getElementById("downloadPaymentStatement").addEventListener("click",downloadPaymentStatement);
     }
+      document.getElementById("dialogueLabAppLink")?.addEventListener("click",openDialogueLabAdmin);
   </script>
 </body>
 </html>
