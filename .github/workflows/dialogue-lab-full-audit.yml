@@ -1,0 +1,43 @@
+name: Dialogue Lab Full Audit
+on:
+  push:
+    branches: [dialogue-lab-full-audit-20260830]
+    paths: ['.github/workflows/dialogue-lab-full-audit.yml']
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dialogue-lab-full-audit-20260830
+      - name: Decode app and make audit report
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re,base64,gzip
+          p=Path('dialogue-lab/index.html')
+          s=p.read_text()
+          m=re.search(r'const b="([A-Za-z0-9+/=]+)"',s)
+          if not m: raise SystemExit('embedded gzip payload not found')
+          decoded=gzip.decompress(base64.b64decode(m.group(1))).decode('utf-8')
+          Path('audit').mkdir(exist_ok=True)
+          Path('audit/dialogue-lab-decoded.html').write_text(decoded)
+          needles=['localStorage','session','sessionToken','Please log in','validate','ascent_','Start Module','disabled','fetch(','FUNCTION_BASE','supabase','expires']
+          lines=decoded.splitlines()
+          out=[]
+          out.append(f'Decoded lines: {len(lines)}')
+          out.append(f'Decoded chars: {len(decoded)}')
+          for i,line in enumerate(lines,1):
+            if any(n.lower() in line.lower() for n in needles):
+              out.append(f'{i}: {line}')
+          Path('audit/dialogue-lab-access-report.txt').write_text('\n'.join(out))
+          PY
+      - name: Commit audit outputs
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/dialogue-lab-decoded.html audit/dialogue-lab-access-report.txt
+          git commit -m 'Decode Dialogue Lab for full access audit'
+          git push
