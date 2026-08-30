@@ -1,0 +1,32 @@
+name: Dialogue Lab CI
+on:
+  pull_request:
+    paths:
+      - 'dialogue-lab/**'
+      - '.github/workflows/dialogue-lab-integrity-trigger.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'dialogue-lab/**'
+      - '.github/workflows/dialogue-lab-integrity-trigger.yml'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Dialogue Lab structure
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('dialogue-lab/index.html').read_text()
+          required=['consumeAdminHandoff','validateSessionRemote',"action:'PROFILE'",'ascent_student_session','ascent-dialogue-lab']
+          missing=[x for x in required if x not in s]
+          if missing: raise SystemExit('Missing '+repr(missing))
+          if Path('dialogue-lab/admin-entry.html').exists(): raise SystemExit('Obsolete relay file must not return')
+          for n in range(1,7):
+              p=Path(f'dialogue-lab/dlm-{n}.txt')
+              if not p.exists() or p.stat().st_size<100: raise SystemExit(f'Module payload {n} missing')
+          print('Dialogue Lab structure OK')
+          PY
