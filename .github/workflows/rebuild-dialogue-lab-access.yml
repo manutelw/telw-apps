@@ -1,4 +1,4 @@
-name: Rebuild Dialogue Lab Access
+name: Clean Dialogue Lab PR Isolation
 on:
   push:
     branches: [dialogue-lab-separate-site-20260830]
@@ -6,90 +6,21 @@ on:
 permissions:
   contents: write
 jobs:
-  rebuild:
+  clean:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: dialogue-lab-separate-site-20260830
-      - name: Decode and rebuild canonical app
+          fetch-depth: 0
+      - name: Keep only the separate Dialogue Lab app in this PR
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re, base64, gzip
-          p=Path('dialogue-lab/index.html')
-          wrapper=p.read_text()
-          m=re.search(r'const b="([A-Za-z0-9+/=]+)"', wrapper)
-          if not m:
-              raise SystemExit('Compressed Dialogue Lab payload not found')
-          html=gzip.decompress(base64.b64decode(m.group(1))).decode('utf-8')
-          if "const SESSION_KEY='ascent_student_session'" not in html:
-              raise SystemExit('Expected session key not found')
-          if "function loadSession()" not in html:
-              raise SystemExit('Expected loadSession function not found')
-          if "async function init()" not in html:
-              raise SystemExit('Expected init function not found')
-
-          marker="function loadSession(){"
-          insertion=r'''function consumeAdminHandoff(){
-            const hash=location.hash.startsWith('#')?location.hash.slice(1):location.hash;
-            const params=new URLSearchParams(hash);
-            const token=(params.get('handoff')||'').trim();
-            if(!token)return false;
-            if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token)){
-              history.replaceState(null,'',location.pathname+location.search);
-              return false;
-            }
-            session={sessionToken:token,adminDemo:true};
-            localStorage.setItem(SESSION_KEY,JSON.stringify(session));
-            history.replaceState(null,'',location.pathname+location.search);
-            return true;
-          }
-          async function validateSessionRemote(){
-            if(!session?.sessionToken)return false;
-            try{
-              const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify({action:'PROFILE',session_token:session.sessionToken})});
-              const d=await r.json().catch(()=>({}));
-              if(!r.ok||d.ok!==true)throw new Error(d.message||'Session invalid');
-              return true;
-            }catch(e){
-              localStorage.removeItem(SESSION_KEY);
-              session=null;
-              $('startStatus').textContent='Your Dialogue Lab access is not active. Return to ASCENT Admin and open Dialogue Lab – Test again.';
-              $('startModule').disabled=true;
-              return false;
-            }
-          }
-          '''
-          html=html.replace(marker,insertion+marker,1)
-
-          old="async function init(){await window.ASCENT_DIALOGUE_MODULES_READY;loadSession();module=ASCENT_DIALOGUE_MODULES[0];renderModules();$('startModule').disabled=!loadSession();$('startModule').textContent='Start Module 1';} init();"
-          new="async function init(){await window.ASCENT_DIALOGUE_MODULES_READY;const handed=consumeAdminHandoff();loadSession();module=ASCENT_DIALOGUE_MODULES[0];renderModules();const valid=await validateSessionRemote();$('startModule').disabled=!valid;$('startModule').textContent='Start Module 1';if(valid&&handed){$('startStatus').className='status success';$('startStatus').textContent='Administrator test access active.';}} init();"
-          if old not in html:
-              raise SystemExit('Init block did not match exactly')
-          html=html.replace(old,new,1)
-
-          # Make the source maintainable: no compressed loader, and remove the obsolete relay file.
-          p.write_text(html)
-          relay=Path('dialogue-lab/admin-entry.html')
-          if relay.exists(): relay.unlink()
-          PY
-      - name: Validate rebuilt app
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          s=Path('dialogue-lab/index.html').read_text()
-          required=['consumeAdminHandoff','validateSessionRemote',"action:'PROFILE'",'Administrator test access active.','ascent_student_session']
-          missing=[x for x in required if x not in s]
-          if missing: raise SystemExit('Missing '+repr(missing))
-          if 'DecompressionStream("gzip")' in s: raise SystemExit('Compressed loader still present')
-          if Path('dialogue-lab/admin-entry.html').exists(): raise SystemExit('Obsolete admin relay still present')
-          print('Dialogue Lab access rebuild validated')
-          PY
-      - name: Commit rebuilt app
-        run: |
+          git fetch origin main
+          git checkout origin/main -- ascent/admin-settings.html
+          rm -f .github/workflows/add-dialogue-lab-admin-link.yml
+          rm -f .github/workflows/rebuild-dialogue-lab-access.yml
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A dialogue-lab
-          git commit -m 'Replace Dialogue Lab relay with validated token handoff'
-          git push
+          git add -A
+          git commit -m 'Keep Dialogue Lab PR isolated from ASCENT'
+          git push origin dialogue-lab-separate-site-20260830
