@@ -27,11 +27,11 @@
   <div id="micOverlay" class="mic-overlay" hidden>
     <div class="mic-card" role="dialog" aria-modal="true" aria-labelledby="micTitle">
       <h2 id="micTitle">Check your microphone first</h2>
-      <p>Say “Testing microphone, one, two, three.” ASCENT will confirm that your browser can hear you before you start recording answers.</p>
+      <p>This check is optional. You can test your microphone now, or skip it and start practising.</p>
       <div class="mic-level" aria-hidden="true"><div id="micFill" class="mic-fill"></div></div>
       <div id="micStatus" class="mic-status">Ready to test.</div>
-      <div class="mic-actions"><button id="micTestBtn" class="mic-btn primary" type="button">Test microphone</button><button id="micContinueBtn" class="mic-btn" type="button" disabled>Continue to practice</button></div>
-      <p class="mic-note">This check runs once per browser session. No test audio is saved.</p>
+      <div class="mic-actions"><button id="micTestBtn" class="mic-btn primary" type="button">Test microphone</button><button id="micContinueBtn" class="mic-btn" type="button" disabled>Continue to practice</button><button id="micSkipBtn" class="mic-btn" type="button">Skip for now</button></div>
+      <p class="mic-note">No test audio is saved. If you skip, your browser will ask for microphone permission when you start recording.</p>
     </div>
   </div>
 
@@ -41,6 +41,7 @@
     const overlay=document.getElementById('micOverlay');
     const testBtn=document.getElementById('micTestBtn');
     const continueBtn=document.getElementById('micContinueBtn');
+    const skipBtn=document.getElementById('micSkipBtn');
     const micStatus=document.getElementById('micStatus');
     const micFill=document.getElementById('micFill');
     const repair=new URLSearchParams(location.search).get('repair')||'';
@@ -64,9 +65,12 @@
         analyser.fftSize=512;source.connect(analyser);const data=new Uint8Array(analyser.fftSize);let peak=0,start=performance.now();
         micStatus.textContent='Speak now: “Testing microphone, one, two, three.”';
         const sample=()=>{analyser.getByteTimeDomainData(data);let max=0;for(const v of data){max=Math.max(max,Math.abs(v-128));}peak=Math.max(peak,max);micFill.style.width=Math.min(100,max*3.2)+'%';if(performance.now()-start<2800){micAnimation=requestAnimationFrame(sample);return;}if(peak>=4){sessionStorage.setItem(MIC_OK,'1');micStatus.textContent='Microphone detected. You are ready to record.';continueBtn.disabled=false;testBtn.textContent='Test again';}else{micStatus.textContent='No clear audio detected. Check your microphone and try again.';}testBtn.disabled=false;};sample();
-      }catch(e){micStatus.textContent='Microphone access was not available. Allow microphone permission in your browser, then try again.';testBtn.disabled=false;}
+      }catch(e){micStatus.textContent='Microphone access was not available. You can allow permission and try again, or skip this check.';testBtn.disabled=false;}
     }
-    testBtn.addEventListener('click',testMicrophone);continueBtn.addEventListener('click',closeMicCheck);
+    testBtn.addEventListener('click',testMicrophone);
+    continueBtn.addEventListener('click',closeMicCheck);
+    skipBtn.addEventListener('click',closeMicCheck);
+    overlay.addEventListener('click',event=>{if(event.target===overlay)closeMicCheck();});
     if(sessionStorage.getItem(MIC_OK)!=='1'&&navigator.mediaDevices?.getUserMedia){overlay.hidden=false;}
 
     frame.addEventListener('load',function(){
