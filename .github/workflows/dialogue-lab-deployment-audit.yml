@@ -1,0 +1,40 @@
+name: Dialogue Lab Deployment Audit
+on:
+  push:
+    branches: [dialogue-lab-full-audit-20260830]
+    paths: ['.github/workflows/dialogue-lab-deployment-audit.yml']
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dialogue-lab-full-audit-20260830
+      - name: Audit deployed endpoints
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess,hashlib
+          urls=[
+            'https://deploy-preview-43--telw-clarion-app.netlify.app/dialogue-lab/',
+            'https://deploy-preview-43--telw-clarion-app.netlify.app/dialogue-lab/admin-entry.html',
+            'https://dialogue-lab-separate-site-2.ascent-dialogue-lab-pages.pages.dev/dialogue-lab/',
+            'https://dialogue-lab-separate-site-2.ascent-dialogue-lab-pages.pages.dev/dialogue-lab/admin-entry.html',
+          ]
+          out=[]
+          for u in urls:
+            meta=subprocess.check_output(['curl','-L','-sS','-o','/tmp/body','-w','status=%{http_code}\nfinal=%{url_effective}\nctype=%{content_type}\n',u],text=True)
+            b=Path('/tmp/body').read_bytes()
+            text=b.decode('utf-8','replace')
+            out += ['URL='+u,meta.strip(),'bytes='+str(len(b)),'sha256='+hashlib.sha256(b).hexdigest(),'has_admin_phrase='+str('Opening your free administrator test session' in text),'has_dialogue_loader='+str('Loading ASCENT Dialogue Lab' in text),'has_login_phrase='+str('Please log in to ASCENT first.' in text),'---']
+          Path('audit/dialogue-lab-deployment-report.txt').write_text('\n'.join(out))
+          PY
+      - name: Commit report
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/dialogue-lab-deployment-report.txt
+          git commit -m 'Record Dialogue Lab deployment audit'
+          git push
