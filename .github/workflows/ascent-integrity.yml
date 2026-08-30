@@ -3,6 +3,7 @@ name: ASCENT Integrity Guard
 on:
   pull_request:
     paths:
+      - 'index.html'
       - 'ascent/**'
       - 'ascent-play/**'
       - 'android-ascent-play/**'
@@ -14,6 +15,7 @@ on:
   push:
     branches: [main, ascent-staging]
     paths:
+      - 'index.html'
       - 'ascent/**'
       - 'ascent-play/**'
       - 'android-ascent-play/**'
