@@ -283,6 +283,7 @@
     const PORTAL_MANAGER_UPDATE_URL = SUPABASE_URL + "/rest/v1/rpc/ascent_admin_update_institution_portal";
     const PORTAL_MANAGER_GLOBAL_URL = SUPABASE_URL + "/rest/v1/rpc/ascent_admin_set_institutional_portals_enabled";
     const LIVE_MOCK_ADMIN_HANDOFF_URL = SUPABASE_URL + "/functions/v1/live-mock-admin-handoff";
+    const DIALOGUE_LAB_ADMIN_HANDOFF_URL = SUPABASE_URL + "/functions/v1/dialogue-lab-admin-handoff";
     let portalManagerRecords = [];
     let allPaymentRecords = [];
     let displayedPaymentRecords = [];
@@ -354,9 +355,10 @@
       button.disabled = true;
       setAppHubStatus("Opening Dialogue Lab with free administrator access…");
       try {
-        const result = await callAdminRpc(ADMIN_DEMO_STUDENT_URL,{p_session_token:session.sessionToken,p_demo_mode:"PRIVATE"});
-        const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(result)))));
-        const url = "https://deploy-preview-43--telw-clarion-app.netlify.app/dialogue-lab/admin-entry.html#handoff=" + encoded;
+        const response = await fetch(DIALOGUE_LAB_ADMIN_HANDOFF_URL,{method:"POST",headers:{"apikey":SUPABASE_PUBLISHABLE_KEY,"Authorization":"Bearer "+SUPABASE_PUBLISHABLE_KEY,"Content-Type":"application/json"},body:JSON.stringify({ascent_session_token:session.sessionToken})});
+        const result = await response.json().catch(()=>({}));
+        if(!response.ok || result.ok!==true || !result.session_token) throw new Error(result.message||"Dialogue Lab administrator access could not be opened.");
+        const url = "https://ascent-dialogue-lab-pages.pages.dev/dialogue-lab/#handoff=" + encodeURIComponent(result.session_token);
         setAppHubStatus("Dialogue Lab administrator access ready.","success");
         window.open(url,"_blank","noopener,noreferrer");
       } catch(error) {
