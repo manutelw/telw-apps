@@ -1,0 +1,40 @@
+URL=https://deploy-preview-43--telw-clarion-app.netlify.app/dialogue-lab/
+status=200
+final=https://deploy-preview-43--telw-clarion-app.netlify.app/dialogue-lab/
+ctype=text/html; charset=UTF-8
+bytes=10598
+sha256=10666e56d5d6d857b97d350046a7269bd8fe0737344f8cdb3f0d779afb96ee39
+has_admin_phrase=False
+has_dialogue_loader=True
+has_login_phrase=False
+---
+URL=https://deploy-preview-43--telw-clarion-app.netlify.app/dialogue-lab/admin-entry.html
+status=200
+final=https://deploy-preview-43--telw-clarion-app.netlify.app/dialogue-lab/admin-entry.html
+ctype=text/html; charset=UTF-8
+bytes=1290
+sha256=355a1858cb46283c5ec5e7d2582ca341b22a8222ddcf173ab0ede68aca6c59f7
+has_admin_phrase=True
+has_dialogue_loader=False
+has_login_phrase=False
+---
+URL=https://dialogue-lab-separate-site-2.ascent-dialogue-lab-pages.pages.dev/dialogue-lab/
+status=200
+final=https://dialogue-lab-separate-site-2.ascent-dialogue-lab-pages.pages.dev/dialogue-lab/
+ctype=text/html; charset=utf-8
+bytes=10377
+sha256=bf3bb8576c2ec9280db8421a6b33ba4c1b8ebfb6899050a84362b77caff5892c
+has_admin_phrase=False
+has_dialogue_loader=True
+has_login_phrase=False
+---
+URL=https://dialogue-lab-separate-site-2.ascent-dialogue-lab-pages.pages.dev/dialogue-lab/admin-entry.html
+status=200
+final=https://dialogue-lab-separate-site-2.ascent-dialogue-lab-pages.pages.dev/dialogue-lab/admin-entry
+ctype=text/html; charset=utf-8
+bytes=1069
+sha256=6510e8f641c11cb16966a03a7ea0b330fdb2d21ed4b24a651e30badc87f5be13
+has_admin_phrase=True
+has_dialogue_loader=False
+has_login_phrase=False
+---
