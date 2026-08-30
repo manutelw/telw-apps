@@ -1,0 +1,47 @@
+name: Dialogue Lab Module Audit
+on:
+  push:
+    branches: [dialogue-lab-full-audit-20260830]
+    paths: ['.github/workflows/dialogue-lab-module-audit.yml']
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dialogue-lab-full-audit-20260830
+      - name: Validate all module data
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64,gzip,json
+          b=''.join(Path(f'dialogue-lab/dlm-{i}.txt').read_text().strip() for i in range(1,7))
+          mods=json.loads(gzip.decompress(base64.b64decode(b)).decode())
+          out=[f'modules={len(mods)}']
+          errors=[]; exercises=0
+          for expected,m in enumerate(mods,1):
+            slides=m.get('slides',[])
+            out.append(f"module {m.get('module')}: slides={len(slides)} title={m.get('title')}")
+            if m.get('module')!=expected: errors.append(f'module numbering mismatch at {expected}')
+            if not slides: errors.append(f'module {expected} has no slides')
+            for si,s in enumerate(slides,1):
+              if not s.get('narration'): errors.append(f'module {expected} slide {si} missing narration')
+              ex=s.get('exercise')
+              if ex:
+                exercises+=1
+                for k in ['stage','prompt','think_seconds','response_seconds']:
+                  if ex.get(k) in [None,'']: errors.append(f'module {expected} slide {si} exercise missing {k}')
+          out += [f'exercises={exercises}',f'errors={len(errors)}']+errors
+          Path('audit/dialogue-lab-module-report.txt').write_text('\n'.join(out))
+          if errors: raise SystemExit('\n'.join(errors))
+          PY
+      - name: Commit report
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/dialogue-lab-module-report.txt
+          git commit -m 'Record Dialogue Lab module audit' || true
+          git push
