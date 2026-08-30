@@ -1,0 +1,7 @@
+name: Dialogue Lab Integrity Trigger
+on: workflow_dispatch
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Dialogue Lab isolation check"
