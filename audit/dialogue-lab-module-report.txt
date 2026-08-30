@@ -1,0 +1,23 @@
+modules=20
+module 1: slides=8 title=One Idea. One Sentence.
+module 2: slides=8 title=Slow Down. Stay Clear.
+module 3: slides=8 title=Finish the Answer.
+module 4: slides=8 title=TELW: Your Basic Answer Shape
+module 5: slides=8 title=Add Detail Without Rambling
+module 6: slides=8 title=Prove What You Say
+module 7: slides=8 title=Tell Me About Yourself
+module 8: slides=8 title=Strengths and Weaknesses
+module 9: slides=8 title=Why This Role? Why This Company?
+module 10: slides=8 title=Talk About Internship and Projects
+module 11: slides=8 title=Behavioural Answers: Show the Action
+module 12: slides=8 title=Pressure, Failure and Conflict
+module 13: slides=8 title=Situational Questions: Decide First
+module 14: slides=8 title=CV Defence 1: Every Line Must Be Explainable
+module 15: slides=8 title=CV Defence 2: Numbers, Gaps and Big Claims
+module 16: slides=8 title=E-Portfolio 1: Present It in 60 Seconds
+module 17: slides=8 title=E-Portfolio 2: Use It as Proof
+module 18: slides=8 title=Connect Yourself to the JD
+module 19: slides=8 title=Pressure Interview: Recover, Don’t Panic
+module 20: slides=8 title=Full Mock: Put Everything Together
+exercises=100
+errors=0
