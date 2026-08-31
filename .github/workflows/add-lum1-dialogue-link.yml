@@ -1,0 +1,33 @@
+name: Add LUM Unit 1 Dialogue Link
+on:
+  push:
+    branches: [dialogue-lab-lum1-20260831]
+    paths: ['.github/workflows/add-lum1-dialogue-link.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dialogue-lab-lum1-20260831
+      - name: Add Level 5-6 LUM link
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('dialogue-lab/index.html')
+          s=p.read_text()
+          old='<div class="toplinks"><a href="./practice.html">Practice</a><a href="./dashboard.html">Dashboard</a></div>'
+          new='<div class="toplinks"><a href="./lum1.html">Level 5–6 · LUM Unit 1</a><a href="./practice.html">Practice</a><a href="./dashboard.html">Dashboard</a></div>'
+          if old not in s:
+              raise SystemExit('Expected Dialogue Lab top-links block not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add dialogue-lab/index.html
+          git commit -m 'Expose Level 5-6 LUM Unit 1 in Dialogue Lab'
+          git push
