@@ -1,0 +1,20 @@
+<!doctype html><meta charset="utf-8"><title>ASCENT Dialogue Lab · LUM Unit 1</title>
+<script>
+(async()=>{
+  const r=await fetch('./lum1-v5.html',{cache:'no-store'});
+  let h=await r.text();
+
+  h=h.replaceAll('(a light laugh)','');
+  h=h.replaceAll('(Chuckles)','');
+  h=h.replaceAll('(Chuckling) ','');
+  h=h.replaceAll('[light laugh]','');
+  h=h.replaceAll('[chuckles]','');
+  h=h.replaceAll('[chuckling] ','');
+
+  const oldStart=/function startTraffic\(\)\{.*?\}function stopTraffic\(\)\{.*?trafficCtx=null\}/s;
+  const park=`function startTraffic(){try{trafficCtx=new (window.AudioContext||window.webkitAudioContext)();const master=trafficCtx.createGain();master.gain.value=.16;master.connect(trafficCtx.destination);const dur=3,buf=trafficCtx.createBuffer(1,trafficCtx.sampleRate*dur,trafficCtx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*.07;const air=trafficCtx.createBufferSource();air.buffer=buf;air.loop=true;const lp=trafficCtx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;const airGain=trafficCtx.createGain();airGain.gain.value=.34;air.connect(lp).connect(airGain).connect(master);air.start();trafficNodes=[air,master];let active=true;const chirp=()=>{if(!active||!trafficCtx)return;const t=trafficCtx.currentTime+.03;const osc=trafficCtx.createOscillator(),g=trafficCtx.createGain();osc.type='sine';const base=1800+Math.random()*1500;osc.frequency.setValueAtTime(base,t);osc.frequency.exponentialRampToValueAtTime(base*(1.35+Math.random()*.35),t+.09);osc.frequency.exponentialRampToValueAtTime(base*.9,t+.18);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.11+Math.random()*.05,t+.025);g.gain.exponentialRampToValueAtTime(.001,t+.2);osc.connect(g).connect(master);osc.start(t);osc.stop(t+.22);if(Math.random()>.45){const osc2=trafficCtx.createOscillator(),g2=trafficCtx.createGain();osc2.type='sine';osc2.frequency.setValueAtTime(base*1.12,t+.24);osc2.frequency.exponentialRampToValueAtTime(base*1.5,t+.34);g2.gain.setValueAtTime(0,t+.23);g2.gain.linearRampToValueAtTime(.08,t+.26);g2.gain.exponentialRampToValueAtTime(.001,t+.42);osc2.connect(g2).connect(master);osc2.start(t+.23);osc2.stop(t+.44)}};const schedule=()=>{if(!active)return;chirp();const id=setTimeout(schedule,900+Math.random()*1900);trafficNodes.push({stop:()=>clearTimeout(id)})};setTimeout(schedule,350);trafficCtx.__stopPark=()=>{active=false}}catch{}}function stopTraffic(){try{trafficCtx?.__stopPark?.();for(const n of trafficNodes)try{n?.stop?.()}catch{}trafficCtx?.close()}catch{}trafficNodes=[];trafficCtx=null}`;
+  h=h.replace(oldStart,park);
+
+  document.open();document.write(h);document.close();
+})().catch(e=>{document.body.innerHTML='<p style="font-family:Arial;padding:24px">Unit 1 could not load. Please refresh.</p>';console.error(e)});
+</script>
