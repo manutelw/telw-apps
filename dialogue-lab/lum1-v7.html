@@ -1,36 +1,8 @@
 <!doctype html><meta charset="utf-8"><title>ASCENT Dialogue Lab · LUM Unit 1</title>
 <script>
 (async()=>{
-  const r=await fetch('./lum1-v3.html',{cache:'no-store'});
-  let h=await r.text();
-
-  // Dedicated dialogue voice endpoint + conversational delivery.
-  h=h.replace("async function speak(text,role='coach'){const r=await fetch(API,","async function speak(text,role='coach'){const VOICE_API='https://vtqatrhwfvzyodiftvkc.supabase.co/functions/v1/ascent-dialogue-voice';const r=await fetch(VOICE_API,");
-  h=h.replace("speak(turn.say,turn.r)","speak(turn.say,turn.v||turn.r)");
-  h=h.replaceAll("I’m a roadways engineer working with Critical Path Builders. It’s a road building company. I joined yesterday.'","I’m a roadways engineer working with Critical Path Builders. It’s a road-building company. I joined yesterday. I came here yesterday.'");
-  h=h.replaceAll("I am staying in a hotel.","I’m staying in a hotel.");
-
-  // Natural exclamation delivery and clean screen text.
-  h=h.replace("{r:'neeti',n:'Neeti',show:'Hi! I’ve never seen you here before. My name’s Neeti.',say:'Hi! I’ve never seen you here before. My name’s Neeti.'}","{r:'neeti',v:'neeti_exclaim',n:'Neeti',show:'Hi! I’ve never seen you here before. My name’s Neeti.',say:'Hi! I’ve never seen you here before. My name’s Neeti.'}");
-  h=h.replace("{r:'neeti',n:'Neeti',show:'Wow! That’s a fast clip!',say:'Wow! That’s a fast clip!'},{r:'neeti',n:'Neeti',show:'So, where are you originally from?',say:'So, where are you originally from?'}","{r:'neeti',v:'neeti_exclaim',n:'Neeti',show:'Wow! That’s a fast clip! So, where are you originally from?',say:'Wow! That’s a fast clip!'},{r:'neeti',n:'Neeti',show:'',say:'So, where are you originally from?'}");
-  h=h.replace("{r:'neeti',n:'Neeti',show:'Okay! Nice city! I’ve been there once. So, how long are you here for?',say:'Okay! Nice city! I’ve been there once. So, how long are you here for?'}","{r:'neeti',v:'neeti_exclaim',n:'Neeti',show:'Okay! Nice city! I’ve been there once. So, how long are you here for?',say:'Okay! Nice city! I’ve been there once. So, how long are you here for?'}");
-  h=h.replace("{r:'neeti',n:'Neeti',show:'(Chuckling) All the best for you! Maybe I’ll see you in Chandigarh!',say:'All the best for you! Maybe I’ll see you in Chandigarh!'}","{r:'neeti',v:'neeti_exclaim',n:'Neeti',show:'All the best for you! Maybe I’ll see you in Chandigarh!',say:'All the best for you! Maybe I’ll see you in Chandigarh!'}");
-  h=h.replaceAll('(a light laugh)','');
-  h=h.replaceAll('(Chuckles)','');
-  h=h.replaceAll('(Chuckling) ','');
-  h=h.replace("s.dialogue.map(x=>`<div class=\"turn ${x.r}\"><b>${esc(x.n)}:</b>${esc(x.show)}</div>`).join('')","s.dialogue.filter(x=>x.show).map(x=>`<div class=\"turn ${x.r}\"><b>${esc(x.n)}:</b>${esc(x.show)}</div>`).join('')");
-
-  // Three audible reactions. They stay out of the written dialogue.
-  h=h.replace("const S=[","dialogue[3].afterSfx='arjun_chuckle';dialogue[10].afterSfx='arjun_chuckle';dialogue[11].beforeSfx='neeti_chuckle';const S=[");
-  h=h.replace("sceneCache=null,scenePlaying=false","sceneCache=null,sfxCache={},scenePlaying=false");
-  h=h.replace("sceneCache=await Promise.all(s.dialogue.map(turn=>speak(turn.say,turn.v||turn.r)));return sceneCache","sceneCache=await Promise.all(s.dialogue.map(turn=>speak(turn.say,turn.v||turn.r)));const fx=[...new Set(s.dialogue.flatMap(t=>[t.beforeSfx,t.afterSfx]).filter(Boolean))];const pairs=await Promise.all(fx.map(async role=>[role,await speak('heh',role)]));sfxCache=Object.fromEntries(pairs);return sceneCache");
-  h=h.replace("const turn=s.dialogue[i];$('coachState').textContent=`${turn.n} is speaking…`;await playBlob(clips[i]);if(i<s.dialogue.length-1)","const turn=s.dialogue[i];if(turn.beforeSfx&&sfxCache[turn.beforeSfx])await playBlob(sfxCache[turn.beforeSfx]);$('coachState').textContent=`${turn.n} is speaking…`;await playBlob(clips[i]);if(turn.afterSfx&&sfxCache[turn.afterSfx])await playBlob(sfxCache[turn.afterSfx]);if(i<s.dialogue.length-1)");
-
-  // Park ambience: soft air + intermittent bird twittering.
-  const oldStart=/function startTraffic\(\)\{.*?\}function stopTraffic\(\)\{.*?trafficCtx=null\}/s;
-  const park=`function startTraffic(){try{trafficCtx=new (window.AudioContext||window.webkitAudioContext)();const master=trafficCtx.createGain();master.gain.value=.16;master.connect(trafficCtx.destination);const dur=3,buf=trafficCtx.createBuffer(1,trafficCtx.sampleRate*dur,trafficCtx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*.07;const air=trafficCtx.createBufferSource();air.buffer=buf;air.loop=true;const lp=trafficCtx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;const airGain=trafficCtx.createGain();airGain.gain.value=.34;air.connect(lp).connect(airGain).connect(master);air.start();trafficNodes=[air,master];let active=true;const chirp=()=>{if(!active||!trafficCtx)return;const t=trafficCtx.currentTime+.03;const osc=trafficCtx.createOscillator(),g=trafficCtx.createGain();osc.type='sine';const base=1800+Math.random()*1500;osc.frequency.setValueAtTime(base,t);osc.frequency.exponentialRampToValueAtTime(base*(1.35+Math.random()*.35),t+.09);osc.frequency.exponentialRampToValueAtTime(base*.9,t+.18);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.11+Math.random()*.05,t+.025);g.gain.exponentialRampToValueAtTime(.001,t+.2);osc.connect(g).connect(master);osc.start(t);osc.stop(t+.22)};const schedule=()=>{if(!active)return;chirp();const id=setTimeout(schedule,900+Math.random()*1900);trafficNodes.push({stop:()=>clearTimeout(id)})};setTimeout(schedule,350);trafficCtx.__stopPark=()=>{active=false}}catch{}}function stopTraffic(){try{trafficCtx?.__stopPark?.();for(const n of trafficNodes)try{n?.stop?.()}catch{}trafficCtx?.close()}catch{}trafficNodes=[];trafficCtx=null}`;
-  h=h.replace(oldStart,park);
-
+  const r=await fetch('./lum1-v6.html',{cache:'no-store'});
+  const h=await r.text();
   document.open();document.write(h);document.close();
 })().catch(e=>{document.body.innerHTML='<p style="font-family:Arial;padding:24px">Unit 1 could not load. Please refresh.</p>';console.error(e)});
 </script>
