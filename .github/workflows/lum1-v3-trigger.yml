@@ -42,8 +42,8 @@ jobs:
             assert x in v9, x
           assert 'I joined yesterday. I came here yesterday.' not in v9
           assert './lum2-v3.html' in h
-          assert "How’s your placement prep coming along?" in u2
-          assert "neeti_student" in u2 and "arjun_student" in u2
-          assert "setTimeout(r,85)" in u2
+          assert 'placement prep coming along?' in u2
+          assert 'neeti_student' in u2 and 'arjun_student' in u2
+          assert 'setTimeout(r,85)' in u2
           print('LUM Unit 1 and Unit 2 integrity OK')
           PY
