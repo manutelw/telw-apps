@@ -42,8 +42,8 @@ jobs:
           required_v5=['I came here yesterday.','I’m staying in a hotel.','neeti_exclaim','turn.v||turn.r','ascent-dialogue-voice']
           missing=[x for x in required_v5 if x not in v5]
           if missing: raise SystemExit('Missing from v5 '+repr(missing))
-          required_v6=['park ambience','chirp','(a light laugh)','(Chuckles)','(Chuckling) ']
-          if 'park ambience' not in v6 or 'chirp' not in v6: raise SystemExit('Park ambience code missing')
-          if not all(x in v6 for x in ['replaceAll(\'(a light laugh)\'','replaceAll(\'(Chuckles)\'','replaceAll(\'(Chuckling) \'']): raise SystemExit('Stage-direction removals missing')
+          if 'const park=' not in v6 or 'const chirp=' not in v6: raise SystemExit('Park ambience code missing')
+          removals=['replaceAll(\'(a light laugh)\'','replaceAll(\'(Chuckles)\'','replaceAll(\'(Chuckling) \'']
+          if not all(x in v6 for x in removals): raise SystemExit('Stage-direction removals missing')
           print('LUM Unit 1 v6 integrity OK')
           PY
