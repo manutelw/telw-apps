@@ -9,6 +9,7 @@ on:
       - 'dialogue-lab/lum1-v7.html'
       - 'dialogue-lab/lum1-v8.html'
       - 'dialogue-lab/lum1-v9.html'
+      - 'dialogue-lab/lum2-v2.html'
       - 'dialogue-lab/home.html'
       - '.github/workflows/lum1-v3-trigger.yml'
 permissions:
