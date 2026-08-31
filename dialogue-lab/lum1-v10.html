@@ -1,0 +1,19 @@
+<!doctype html><meta charset="utf-8"><title>ASCENT Dialogue Lab · LUM Unit 1</title>
+<script>
+(async()=>{
+  const r=await fetch('./lum1-v9.html',{cache:'no-store'});
+  let h=await r.text();
+  const nav=`
+  <style>#kpNav{position:sticky;top:0;z-index:9998;background:#edf5fc;border:1px solid #9bbcd7;border-radius:10px;padding:10px 12px;margin:0 0 14px;font-family:Arial;box-shadow:0 4px 14px #0002}#kpNav b{color:#143a60;margin-right:10px}#kpNav button{margin:3px 4px 3px 0;border:0;border-radius:8px;padding:8px 10px;font-weight:700;cursor:pointer;background:#143a60;color:white}</style>
+  <div id="kpNav"><b>Choose a Key Point</b><button data-kp="1">KP1</button><button data-kp="3">KP2</button><button data-kp="4">KP3</button></div>`;
+  h=h.replace('<section class="card stage">','<section class="card stage">'+nav);
+  const script=`<script>(function(){
+    const jump=(idx)=>{try{stopTraffic&&stopTraffic();audio.pause();scenePlaying=false;}catch(e){};document.getElementById('start').hidden=true;document.getElementById('lesson').hidden=false;si=idx;pi=0;attempt=1;render();window.scrollTo({top:0,behavior:'smooth'});};
+    document.querySelectorAll('#kpNav [data-kp]').forEach(b=>b.addEventListener('click',()=>jump(Number(b.dataset.kp))));
+    const p=new URLSearchParams(location.hash.replace(/^#/,''));const kp=Number(p.get('kp'));const map={1:1,2:3,3:4};
+    if(map[kp]){let tries=0;const t=setInterval(()=>{tries++;if(typeof render==='function'&&document.getElementById('lesson')){clearInterval(t);jump(map[kp])}else if(tries>40)clearInterval(t)},100)}
+  })();<\/script>`;
+  h=h.replace('</body>',script+'</body>');
+  document.open();document.write(h);document.close();
+})().catch(e=>{document.body.innerHTML='<p style="font-family:Arial;padding:24px">Unit 1 could not load. Please refresh.</p>';console.error(e)});
+</script>
