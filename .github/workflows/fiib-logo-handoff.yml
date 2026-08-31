@@ -1,4 +1,4 @@
-name: FIIB Logo Handoff
+name: Marketing Operations Audio Handoff
 on:
   pull_request:
     branches: [main]
@@ -11,32 +11,13 @@ jobs:
   handoff:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch official FIIB logo from official disclosure
+      - name: Download short-lived private narration bundle
         run: |
-          python -m pip install --quiet pymupdf pillow
-          curl --fail --location 'https://www.fiib.edu.in/compliance/Mandatory-Disclosure.pdf' --output fiib.pdf
-          python - <<'PY'
-          import fitz
-          from PIL import Image, ImageChops
-          doc=fitz.open('fiib.pdf')
-          pix=doc[0].get_pixmap(matrix=fitz.Matrix(2.5,2.5),alpha=False)
-          pix.save('first.png')
-          im=Image.open('first.png').convert('RGB')
-          w,h=im.size
-          crop=im.crop((0,0,int(w*0.45),int(h*0.16)))
-          bg=Image.new('RGB',crop.size,'white')
-          diff=ImageChops.difference(crop,bg)
-          bbox=diff.getbbox()
-          if bbox:
-              x0,y0,x1,y1=bbox; pad=18
-              crop=crop.crop((max(0,x0-pad),max(0,y0-pad),min(crop.width,x1+pad),min(crop.height,y1+pad)))
-          crop.save('fiib-logo.png')
-          print('crop',crop.size)
-          PY
-          file fiib-logo.png
-      - name: Upload logo artifact
+          curl --fail --location 'https://vtqatrhwfvzyodiftvkc.supabase.co/storage/v1/object/sign/telw-video-render/bundles/1788155199135-audio-bundle.mp3?token=eyJraWQiOiIwZDU2Mzk2NS0yYWZmLTQ0ZGItOGI1Yi0yYTU2NTU1ZmQ4MDgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0ZWx3LXZpZGVvLXJlbmRlci9idW5kbGVzLzE3ODgxNTUxOTkxMzUtYXVkaW8tYnVuZGxlLm1wMyIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODgxNTUxOTksImV4cCI6MTc4ODE1NTc5OX0.w6flOMlwn6X6003gz96cIMcIEIM2d8U2-YOWOSaq1B8' --output marketing-ops-audio.zip
+          unzip -t marketing-ops-audio.zip
+      - name: Upload narration artifact
         uses: actions/upload-artifact@v4
         with:
-          name: fiib-logo
-          path: fiib-logo.png
+          name: marketing-ops-audio
+          path: marketing-ops-audio.zip
           retention-days: 1
