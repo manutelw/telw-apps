@@ -1,0 +1,45 @@
+<!doctype html><meta charset="utf-8"><title>ASCENT Dialogue Lab · LUM Unit 1</title>
+<script>
+(async()=>{
+  const r=await fetch('./lum1-v3.html',{cache:'no-store'});
+  let h=await r.text();
+
+  // One canonical layer only: no nested Unit 1 wrappers.
+  h=h.replace("async function speak(text,role='coach'){const r=await fetch(API,","async function speak(text,role='coach'){const VOICE_API='https://vtqatrhwfvzyodiftvkc.supabase.co/functions/v1/ascent-dialogue-voice';const r=await fetch(VOICE_API,");
+  h=h.replaceAll("speak(turn.say,turn.r)","speak(turn.say,turn.v||turn.r)");
+
+  // Canonical dialogue wording.
+  h=h.replaceAll("It’s a road building company. I joined yesterday.","It’s a road-building company. I came here yesterday.");
+  h=h.replaceAll("I am staying in a hotel.","I’m staying in a hotel.");
+
+  // Remove every stage direction from both screen text and any embedded source text.
+  for(const x of ['(a light laugh)','(Chuckles)','(Chuckling) ','[light laugh]','[chuckles]','[chuckling] ']) h=h.replaceAll(x,'');
+
+  // Expressive Neeti delivery. Keep one screen paragraph where requested, but use separate audio beats.
+  h=h.replace("{r:'neeti',n:'Neeti',show:'Hi! I’ve never seen you here before. My name’s Neeti.',say:'Hi! I’ve never seen you here before. My name’s Neeti.'}","{r:'neeti',v:'neeti_exclaim',n:'Neeti',show:'Hi! I’ve never seen you here before. My name’s Neeti.',say:'Hi! I’ve never seen you here before. My name’s Neeti.'}");
+  h=h.replace("{r:'neeti',n:'Neeti',show:'Wow! That’s a fast clip!',say:'Wow! That’s a fast clip!'},{r:'neeti',n:'Neeti',show:'So, where are you originally from?',say:'So, where are you originally from?'}","{r:'neeti',v:'neeti_exclaim',n:'Neeti',show:'Wow! That’s a fast clip! So, where are you originally from?',say:'Wow! That’s a fast clip!'},{r:'neeti',n:'Neeti',show:'',say:'So, where are you originally from?'}");
+  h=h.replace("{r:'neeti',n:'Neeti',show:'Okay! Nice city! I’ve been there once. So, how long are you here for?',say:'Okay! Nice city! I’ve been there once. So, how long are you here for?'}","{r:'neeti',v:'neeti_bright',n:'Neeti',show:'Okay! Nice city! I’ve been there once. So, how long are you here for?',say:'Okay! Nice city!'},{r:'neeti',n:'Neeti',show:'',say:'I’ve been there once. So, how long are you here for?'}");
+  h=h.replace("{r:'neeti',n:'Neeti',show:'All the best for you! Maybe I’ll see you in Chandigarh!',say:'All the best for you! Maybe I’ll see you in Chandigarh!'}","{r:'neeti',v:'neeti_exclaim',n:'Neeti',show:'All the best for you! Maybe I’ll see you in Chandigarh!',say:'All the best for you! Maybe I’ll see you in Chandigarh!'}");
+  h=h.replace("s.dialogue.map(x=>`<div class=\"turn ${x.r}\"><b>${esc(x.n)}:</b>${esc(x.show)}</div>`).join('')","s.dialogue.filter(x=>x.show).map(x=>`<div class=\"turn ${x.r}\"><b>${esc(x.n)}:</b>${esc(x.show)}</div>`).join('')");
+
+  // Real park ambience layers: many birds, distant children/people, occasional laughter, soft outdoor bed.
+  const parkCode=`
+  const PARK_TRACKS=[
+    {src:'https://opengameart.org/sites/default/files/birds-isaiah658.ogg',base:.085,gap:.15},
+    {src:'https://opengameart.org/sites/default/files/children.wav',base:.018,gap:.04},
+    {src:'https://opengameart.org/sites/default/files/group_giggling.ogg',base:.0,gap:.022},
+    {src:'https://opengameart.org/sites/default/files/amb_outdoor1_loop.mp3',base:.025,gap:.04}
+  ];
+  let parkAudio=[];
+  function startTraffic(){try{parkAudio=PARK_TRACKS.map(cfg=>{const a=new Audio(cfg.src);a.loop=true;a.preload='auto';a.volume=cfg.base;a.crossOrigin='anonymous';a.dataset.base=cfg.base;a.dataset.gap=cfg.gap;a.play().catch(()=>{});return a})}catch{}}
+  function parkSpeech(){for(const a of parkAudio)a.volume=parseFloat(a.dataset.base||'0')}
+  function parkGap(){for(const a of parkAudio)a.volume=parseFloat(a.dataset.gap||a.dataset.base||'0')}
+  function stopTraffic(){for(const a of parkAudio){try{a.pause();a.src=''}catch{}}parkAudio=[]}
+  `;
+  h=h.replace(/function startTraffic\(\)\{.*?\}function stopTraffic\(\)\{.*?trafficCtx=null\}/s,parkCode);
+  h=h.replace("$('coachState').textContent=`${turn.n} is speaking…`;await playBlob(clips[i]);","parkSpeech();$('coachState').textContent=`${turn.n} is speaking…`;await playBlob(clips[i]);");
+  h=h.replace("if(i<s.dialogue.length-1)await new Promise(r=>setTimeout(r,turn.r===s.dialogue[i+1].r?70:120))","if(i<s.dialogue.length-1){parkGap();await new Promise(r=>setTimeout(r,turn.r===s.dialogue[i+1].r?180:260));parkSpeech()}");
+
+  document.open();document.write(h);document.close();
+})().catch(e=>{document.body.innerHTML='<p style="font-family:Arial;padding:24px">Unit 1 could not load. Please refresh.</p>';console.error(e)});
+</script>
