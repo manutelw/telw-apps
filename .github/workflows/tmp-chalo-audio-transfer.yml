@@ -1,0 +1,26 @@
+name: Temporary Chalo Audio Transfer
+on:
+  push:
+    branches: [tmp-chalo-audio-transfer]
+  workflow_dispatch:
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download generated narration
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p audio
+          BASE='https://vtqatrhwfvzyodiftvkc.supabase.co/functions/v1/telw-video-fetch?name='
+          KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643'
+          for n in s1 s2 s3 s4a s4b s5a s5b s6a s6b s7a s7b s7c; do
+            curl --fail --retry 3 -L -H "apikey: $KEY" -H "Authorization: Bearer $KEY" "${BASE}${n}" -o "audio/${n}.mp3"
+          done
+          ls -lh audio
+      - name: Upload narration bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: chalo-marin-narration
+          path: audio/*.mp3
+          retention-days: 1
