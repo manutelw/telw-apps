@@ -9,9 +9,11 @@ on:
       - 'dialogue-lab/lum1-v7.html'
       - 'dialogue-lab/lum1-v8.html'
       - 'dialogue-lab/lum1-v9.html'
+      - 'dialogue-lab/lum1-v10.html'
       - 'dialogue-lab/lum2-v2.html'
       - 'dialogue-lab/lum2-v3.html'
       - 'dialogue-lab/lum2-v4.html'
+      - 'dialogue-lab/lum2-v5.html'
       - 'dialogue-lab/home.html'
       - '.github/workflows/lum1-v3-trigger.yml'
 permissions:
@@ -21,16 +23,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify canonical Unit 1 dialogue and Unit 2 route
+      - name: Verify canonical Unit 1 dialogue and universal KP navigation
         run: |
           python - <<'PY'
           from pathlib import Path
           h=Path('dialogue-lab/home.html').read_text()
           v8=Path('dialogue-lab/lum1-v8.html').read_text()
           v9=Path('dialogue-lab/lum1-v9.html').read_text()
+          u1n=Path('dialogue-lab/lum1-v10.html').read_text()
           u2=Path('dialogue-lab/lum2-v3.html').read_text()
-          u2a=Path('dialogue-lab/lum2-v4.html').read_text()
-          assert './lum1-v8.html' in h
+          u2n=Path('dialogue-lab/lum2-v5.html').read_text()
           assert "fetch('./lum1-v9.html'" in v8
           assert "fetch('./lum1-v3.html'" in v9
           for x in [
@@ -40,14 +42,17 @@ jobs:
             "v:'neeti_bright'","say:'Okay! Nice city!'",
             'birds-isaiah658.ogg','children.wav','group_giggling.ogg','amb_outdoor1_loop.mp3',
             'parkSpeech','parkGap'
-          ]:
-            assert x in v9, x
+          ]: assert x in v9, x
           assert 'I joined yesterday. I came here yesterday.' not in v9
-          assert './lum2-v4.html' in h
           assert 'placement prep coming along?' in u2
           assert 'neeti_student' in u2 and 'arjun_student' in u2
           assert 'setTimeout(r,85)' in u2
-          for x in ['ADMIN · Test Navigation','data-jump="3"','data-jump="5"','adminDemo','Skip current exercise']:
-            assert x in u2a, x
-          print('LUM Unit 1 and Unit 2 integrity OK')
+          for x in ['Choose a Key Point','data-kp="1"','data-kp="3"','data-kp="4"',"p.get('kp')"]:
+            assert x in u1n, x
+          for x in ['Choose a Key Point','data-kp="1"','data-kp="3"','data-kp="5"','Admin: Skip current exercise',"p.get('kp')"]:
+            assert x in u2n, x
+          assert './lum1-v10.html' in h and './lum2-v5.html' in h
+          for x in ['Sharing Professional Experience','Aligning Experiences with Others','Highlighting Key Experiences','Talking About Recent Activity and Gaps (Checking and Updating Work Status)','Talking About Past Experience in Detail','Talking About Unfinished Time']:
+            assert x in h, x
+          print('LUM universal key point navigation integrity OK')
           PY
