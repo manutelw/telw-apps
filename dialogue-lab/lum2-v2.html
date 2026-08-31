@@ -1,0 +1,10 @@
+<!doctype html><meta charset="utf-8"><title>ASCENT Dialogue Lab · LUM Unit 2</title>
+<script>
+(async()=>{
+  const r=await fetch('./lum2.html',{cache:'no-store'});
+  let h=await r.text();
+  // Tighten only KP1 conversation turn-taking: 90 ms instead of 280 ms.
+  h=h.replace("await new Promise(r=>setTimeout(r,280))","await new Promise(r=>setTimeout(r,si===1?90:280))");
+  document.open();document.write(h);document.close();
+})().catch(e=>{document.body.innerHTML='<p style="font-family:Arial;padding:24px">Unit 2 could not load. Please refresh.</p>';console.error(e)});
+</script>
