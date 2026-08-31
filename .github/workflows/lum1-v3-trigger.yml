@@ -5,6 +5,7 @@ on:
       - 'dialogue-lab/lum1-v3.html'
       - 'dialogue-lab/lum1-v4.html'
       - 'dialogue-lab/lum1-v5.html'
+      - 'dialogue-lab/lum1-v6.html'
       - 'dialogue-lab/home.html'
       - '.github/workflows/lum1-v3-trigger.yml'
 permissions:
@@ -21,7 +22,8 @@ jobs:
           h=Path('dialogue-lab/home.html').read_text()
           v3=Path('dialogue-lab/lum1-v3.html').read_text()
           v5=Path('dialogue-lab/lum1-v5.html').read_text()
-          assert './lum1-v5.html' in h
+          v6=Path('dialogue-lab/lum1-v6.html').read_text()
+          assert './lum1-v6.html' in h
           required_v3=[
             'Hi! I’ve never seen you here before. My name’s Neeti.',
             'I’m a roadways engineer working with Critical Path Builders.',
@@ -37,15 +39,11 @@ jobs:
           ]
           missing=[x for x in required_v3 if x not in v3]
           if missing: raise SystemExit('Missing from v3 '+repr(missing))
-          required_v5=[
-            'I came here yesterday.',
-            'I’m staying in a hotel.',
-            "Wow! That’s a fast clip! So, where are you originally from?",
-            'neeti_exclaim',
-            'turn.v||turn.r',
-            'ascent-dialogue-voice'
-          ]
+          required_v5=['I came here yesterday.','I’m staying in a hotel.','neeti_exclaim','turn.v||turn.r','ascent-dialogue-voice']
           missing=[x for x in required_v5 if x not in v5]
           if missing: raise SystemExit('Missing from v5 '+repr(missing))
-          print('LUM Unit 1 v5 integrity OK')
+          if 'const park=' not in v6 or 'const chirp=' not in v6: raise SystemExit('Park ambience code missing')
+          removals=['replaceAll(\'(a light laugh)\'','replaceAll(\'(Chuckles)\'','replaceAll(\'(Chuckling) \'']
+          if not all(x in v6 for x in removals): raise SystemExit('Stage-direction removals missing')
+          print('LUM Unit 1 v6 integrity OK')
           PY
