@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ASCENT Dialogue Lab · Choose Your Level</title>
+<style>
+:root{--navy:#143a60;--blue:#27679d;--gold:#c67b00;--text:#24364a;--muted:#6c7b8d;--border:#d7e1eb;--soft:#edf4fb;--green:#18794e;--shadow:0 18px 55px rgba(13,42,70,.16)}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eaf1f7;color:var(--text)}
+.top{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff}.topin{max-width:1180px;margin:auto;padding:18px 22px}.brand{font-size:24px;font-weight:800}.brand small{display:block;color:#f0bd5c;font-size:12px;margin-top:3px}
+.wrap{max-width:1180px;margin:24px auto;padding:0 18px 44px}.hero,.level{background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow)}.hero{padding:24px 26px;margin-bottom:18px}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--gold)}h1,h2{color:var(--navy)}h1{margin:6px 0 8px;font-size:31px}.hero p{margin:0;color:var(--muted);line-height:1.55}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.level{padding:20px}.level h2{margin:5px 0 5px}.desc{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:14px}.items{display:grid;gap:8px;max-height:58vh;overflow:auto;padding-right:4px}.item{display:block;text-decoration:none;border:1px solid var(--border);border-radius:11px;padding:11px 12px;background:#fff;color:var(--navy);font-weight:700;line-height:1.35}.item:hover{background:#f6faff;border-color:#8eb6d6}.item small{display:block;color:var(--muted);font-weight:400;margin-top:3px}.item.active{background:#edf5fc;border-color:#7daed3}.item.coming{color:#8391a0;background:#f8fafc;cursor:default}.badge{float:right;font-size:10px;padding:4px 7px;border-radius:999px;background:#e9f6ef;color:var(--green)}.coming .badge{background:#eef1f4;color:#7a8794}.status{margin-top:14px;font-size:13px;color:var(--muted)}.status.ok{color:var(--green)}.status.error{color:#b42318}@media(max-width:820px){.grid{grid-template-columns:1fr}.items{max-height:none}}
+</style>
+</head>
+<body>
+<header class="top"><div class="topin"><div class="brand">ASCENT<small>Dialogue Lab · Choose your pathway</small></div></div></header>
+<main class="wrap">
+<section class="hero"><div class="eyebrow">Dialogue Lab</div><h1>Choose your level</h1><p>Each level has its own learning path. Open the level assigned to you, then choose the module or LUM unit you want to practise.</p><div id="status" class="status"></div></section>
+<div class="grid">
+<section class="level"><div class="eyebrow">Communication Recovery</div><h2>Below 5</h2><div class="desc">20 highly supported modules. Build control first, then move into interview communication.</div><div id="below5" class="items"></div></section>
+<section class="level"><div class="eyebrow">LUM pathway</div><h2>Level 5–6</h2><div class="desc">14 LUM units. Learn the communication concept, see why it matters, practise it in placement and workplace situations, then retry with feedback.</div><div id="lum" class="items"></div></section>
+</div>
+</main>
+<script>
+const SESSION_KEY='ascent_student_session',SUPABASE_URL='https://vtqatrhwfvzyodiftvkc.supabase.co',KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643',API=SUPABASE_URL+'/functions/v1/ascent-dialogue-lab';
+const below5Titles=['One Idea. One Sentence.','Slow Down. Stay Clear.','Finish the Answer.','TELW: Your Basic Answer Shape','Add Detail Without Rambling','Prove What You Say','Tell Me About Yourself','Strengths and Weaknesses','Why This Role? Why This Company?','Talk About Internship and Projects','Behavioural Answers: Show the Action','Situational Answers: Decide and Explain','Handle Follow-up Questions','Speak Under Pressure','CV Defence','E-Portfolio: Show Your Proof','Company and JD Fit','Professional Judgement','Mock Interview Practice','Final Mastery'];
+const lumTitles=['Present Perfect: Experience','LUM Unit 2','LUM Unit 3','LUM Unit 4','LUM Unit 5','LUM Unit 6','LUM Unit 7','LUM Unit 8','LUM Unit 9','LUM Unit 10','LUM Unit 11','LUM Unit 12','LUM Unit 13','LUM Unit 14'];
+function consume(){const h=location.hash.startsWith('#')?location.hash.slice(1):location.hash;const p=new URLSearchParams(h);const token=(p.get('handoff')||'').trim();if(token&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token)){localStorage.setItem(SESSION_KEY,JSON.stringify({sessionToken:token,adminDemo:true}));history.replaceState(null,'',location.pathname+location.search)}}
+async function validate(){let s=null;try{s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch{}if(!s?.sessionToken){document.getElementById('status').textContent='Please open Dialogue Lab from ASCENT Admin.';document.getElementById('status').className='status error';return false}try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify({action:'PROFILE',session_token:s.sessionToken})});const d=await r.json();if(!r.ok||d.ok!==true)throw new Error();document.getElementById('status').textContent='Administrator test access active.';document.getElementById('status').className='status ok';return true}catch{localStorage.removeItem(SESSION_KEY);document.getElementById('status').textContent='Your Dialogue Lab access is not active. Return to ASCENT Admin and open Dialogue Lab – Test again.';document.getElementById('status').className='status error';return false}}
+function render(enabled){const b=document.getElementById('below5');below5Titles.forEach((t,i)=>{const a=document.createElement(enabled?'a':'div');a.className='item active';if(enabled)a.href='./index.html#module='+(i+1);a.innerHTML=`${i+1}. ${t}<span class="badge">Available</span>`;b.appendChild(a)});const l=document.getElementById('lum');lumTitles.forEach((t,i)=>{if(i===0){const a=document.createElement(enabled?'a':'div');a.className='item active';if(enabled)a.href='./lum1.html';a.innerHTML=`1. ${t}<span class="badge">Available</span><small>Present Perfect for experience, superlatives, “before”, TELW and transfer practice</small>`;l.appendChild(a)}else{const d=document.createElement('div');d.className='item coming';d.innerHTML=`${i+1}. ${t}<span class="badge">Coming next</span>`;l.appendChild(d)}})}
+(async()=>{consume();render(await validate())})();
+</script>
+</body></html>

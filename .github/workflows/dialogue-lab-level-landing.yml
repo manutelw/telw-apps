@@ -1,0 +1,36 @@
+name: Dialogue Lab Level Landing
+on:
+  push:
+    branches: [dialogue-lab-levels-nav-20260831]
+    paths: ['.github/workflows/dialogue-lab-level-landing.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dialogue-lab-levels-nav-20260831
+      - name: Route admin launcher to Dialogue Lab home
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('ascent/admin-settings.html')
+          s=p.read_text()
+          old='https://manutelw.github.io/telw-apps/dialogue-lab/#handoff='
+          new='https://manutelw.github.io/telw-apps/dialogue-lab/home.html#handoff='
+          if new in s:
+              raise SystemExit(0)
+          if old not in s:
+              raise SystemExit('Dialogue Lab launcher URL not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add ascent/admin-settings.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Open Dialogue Lab at level landing page'
+          git push
