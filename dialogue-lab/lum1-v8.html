@@ -1,0 +1,35 @@
+<!doctype html><meta charset="utf-8"><title>ASCENT Dialogue Lab · LUM Unit 1</title>
+<script>
+(async()=>{
+  const r=await fetch('./lum1-v6.html',{cache:'no-store'});
+  let h=await r.text();
+
+  // Replace synthetic park sounds with real CC0 field recordings.
+  const parkCode=`
+  const PARK_TRACKS=[
+    {src:'https://opengameart.org/sites/default/files/birds-isaiah658.ogg',base:.10,gap:.18},
+    {src:'https://opengameart.org/sites/default/files/children.wav',base:.025,gap:.065},
+    {src:'https://opengameart.org/sites/default/files/group_giggling.ogg',base:.0,gap:.035},
+    {src:'https://opengameart.org/sites/default/files/amb_outdoor1_loop.mp3',base:.035,gap:.055}
+  ];
+  let parkAudio=[];
+  function startTraffic(){
+    try{
+      parkAudio=PARK_TRACKS.map((cfg)=>{const a=new Audio(cfg.src);a.loop=true;a.preload='auto';a.volume=cfg.base;a.crossOrigin='anonymous';a.dataset.base=cfg.base;a.dataset.gap=cfg.gap;a.play().catch(()=>{});return a});
+    }catch{}
+  }
+  function parkSpeech(){for(const a of parkAudio){a.volume=parseFloat(a.dataset.base||'0')}}
+  function parkGap(){for(const a of parkAudio){a.volume=parseFloat(a.dataset.gap||a.dataset.base||'0')}}
+  function stopTraffic(){for(const a of parkAudio){try{a.pause();a.src=''}catch{}}parkAudio=[]}
+  `;
+  h=h.replace(/function startTraffic\(\)\{.*?\}function stopTraffic\(\)\{.*?trafficCtx=null\}/s,parkCode);
+
+  // Use natural ambience ducking between turns instead of synthetic bird chirps.
+  h=h.replace(/if\(i<s\.dialogue\.length-1\)\{trafficCtx\?\.__bird\?\.\(\);await new Promise\(r=>setTimeout\(r,turn\.r===s\.dialogue\[i\+1\]\.r\?230:310\)\)\}/,
+    "if(i<s.dialogue.length-1){parkGap();await new Promise(r=>setTimeout(r,turn.r===s.dialogue[i+1].r?240:330));parkSpeech()}");
+  h=h.replace("$('coachState').textContent=`${turn.n} is speaking…`;await playBlob(clips[i]);",
+    "parkSpeech();$('coachState').textContent=`${turn.n} is speaking…`;await playBlob(clips[i]);");
+
+  document.open();document.write(h);document.close();
+})().catch(e=>{document.body.innerHTML='<p style="font-family:Arial;padding:24px">Unit 1 could not load. Please refresh.</p>';console.error(e)});
+</script>

@@ -7,6 +7,7 @@ on:
       - 'dialogue-lab/lum1-v5.html'
       - 'dialogue-lab/lum1-v6.html'
       - 'dialogue-lab/lum1-v7.html'
+      - 'dialogue-lab/lum1-v8.html'
       - 'dialogue-lab/home.html'
       - '.github/workflows/lum1-v3-trigger.yml'
 permissions:
@@ -16,21 +17,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify Unit 1 clean audio route
+      - name: Verify Unit 1 real park ambience route
         run: |
           python - <<'PY'
           from pathlib import Path
           h=Path('dialogue-lab/home.html').read_text()
           v6=Path('dialogue-lab/lum1-v6.html').read_text()
-          v7=Path('dialogue-lab/lum1-v7.html').read_text()
-          assert './lum1-v7.html' in h
-          assert "fetch('./lum1-v6.html'" in v7
-          assert 'const park=' in v6
-          assert 'trafficCtx.__bird=' in v6
-          assert 'trafficCtx?.__bird?.()' in v6
-          assert "replaceAll('(a light laugh)','')" in v6
-          assert "replaceAll('(Chuckles)','')" in v6
-          assert "replaceAll('(Chuckling) ','')" in v6
+          v8=Path('dialogue-lab/lum1-v8.html').read_text()
+          assert './lum1-v8.html' in h
+          assert "fetch('./lum1-v6.html'" in v8
+          for x in ['birds-isaiah658.ogg','children.wav','group_giggling.ogg','amb_outdoor1_loop.mp3','parkSpeech','parkGap']:
+            assert x in v8, x
           assert "replaceAll('I joined yesterday. I came here yesterday.','I came here yesterday.')" in v6
-          print('LUM Unit 1 clean audio integrity OK')
+          print('LUM Unit 1 real park ambience integrity OK')
           PY
