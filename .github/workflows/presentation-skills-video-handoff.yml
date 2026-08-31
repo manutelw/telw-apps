@@ -1,0 +1,21 @@
+name: Presentation Skills Video Handoff
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/presentation-skills-video-handoff.yml']
+permissions:
+  contents: read
+jobs:
+  handoff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download short-lived private narration bundle
+        run: |
+          curl --fail --location 'https://vtqatrhwfvzyodiftvkc.supabase.co/storage/v1/object/sign/telw-video-render/bundles/1788190709147-audio-bundle.mp3?token=eyJraWQiOiIwZDU2Mzk2NS0yYWZmLTQ0ZGItOGI1Yi0yYTU2NTU1ZmQ4MDgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0ZWx3LXZpZGVvLXJlbmRlci9idW5kbGVzLzE3ODgxOTA3MDkxNDctYXVkaW8tYnVuZGxlLm1wMyIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODgxOTA3MDksImV4cCI6MTc4ODE5MTMwOX0.iV0hn_13wUlV8sRLp_y2fEFYZsJVnu5PrnPB2pbuGfY' --output presentation-skills-audio.zip
+          unzip -t presentation-skills-audio.zip
+      - name: Upload narration artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: presentation-skills-audio
+          path: presentation-skills-audio.zip
+          retention-days: 1
