@@ -11,42 +11,30 @@ jobs:
   handoff:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch official FIIB logo
+      - name: Fetch official FIIB logo from official disclosure
         run: |
+          curl --fail --location 'https://www.fiib.edu.in/compliance/Mandatory-Disclosure.pdf' --output fiib.pdf
+          pdftoppm -f 1 -singlefile -png -r 180 fiib.pdf first
           python - <<'PY'
-          import re, requests
-          from urllib.parse import urljoin
-          page='https://www.fiib.edu.in/fiib-events'
-          html=requests.get(page,timeout=30).text
-          img=None
-          tags=re.findall(r'<img\b[^>]*>',html,flags=re.I)
-          for tag in tags:
-              low=tag.lower()
-              if 'fiib logo' in low or ('fiib' in low and 'logo' in low):
-                  m=re.search(r'(?:src|data-src)=["\']([^"\']+)',tag,flags=re.I)
-                  if m:
-                      img=urljoin(page,m.group(1)); break
-          if not img:
-              for tag in tags:
-                  m=re.search(r'(?:src|data-src)=["\']([^"\']+)',tag,flags=re.I)
-                  if m and 'logo' in m.group(1).lower():
-                      img=urljoin(page,m.group(1)); break
-          if not img:
-              open('page.html','w').write(html)
-              raise SystemExit('FIIB logo image not found')
-          print('LOGO',img)
-          r=requests.get(img,timeout=30); r.raise_for_status()
-          ct=r.headers.get('content-type','')
-          ext='.svg' if 'svg' in ct or img.lower().endswith('.svg') else '.png' if 'png' in ct or img.lower().endswith('.png') else '.jpg'
-          open('fiib-logo'+ext,'wb').write(r.content)
-          open('logo-url.txt','w').write(img+'\n')
+          from PIL import Image, ImageChops
+          im=Image.open('first.png').convert('RGB')
+          w,h=im.size
+          crop=im.crop((0,0,int(w*0.45),int(h*0.16)))
+          # trim plain white margins while preserving the official logo lockup
+          bg=Image.new('RGB',crop.size,'white')
+          diff=ImageChops.difference(crop,bg)
+          bbox=diff.getbbox()
+          if bbox:
+              x0,y0,x1,y1=bbox
+              pad=18
+              crop=crop.crop((max(0,x0-pad),max(0,y0-pad),min(crop.width,x1+pad),min(crop.height,y1+pad)))
+          crop.save('fiib-logo.png')
+          print('crop',crop.size)
           PY
-          file fiib-logo.*
+          file fiib-logo.png
       - name: Upload logo artifact
         uses: actions/upload-artifact@v4
         with:
           name: fiib-logo
-          path: |
-            fiib-logo.*
-            logo-url.txt
+          path: fiib-logo.png
           retention-days: 1
