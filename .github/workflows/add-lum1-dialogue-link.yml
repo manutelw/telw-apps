@@ -2,7 +2,7 @@ name: Add LUM Unit 1 Dialogue Link
 on:
   push:
     branches: [main]
-    paths: ['dialogue-lab/lum1.html']
+    paths: ['dialogue-lab/lum1.html','dialogue-lab/lum1-link-trigger.txt','.github/workflows/add-lum1-dialogue-link.yml']
 permissions:
   contents: write
 jobs:
