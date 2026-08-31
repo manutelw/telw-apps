@@ -6,6 +6,7 @@ on:
       - 'dialogue-lab/lum1-v4.html'
       - 'dialogue-lab/lum1-v5.html'
       - 'dialogue-lab/lum1-v6.html'
+      - 'dialogue-lab/lum1-v7.html'
       - 'dialogue-lab/home.html'
       - '.github/workflows/lum1-v3-trigger.yml'
 permissions:
@@ -15,35 +16,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify Unit 1 dialogue route and content
+      - name: Verify Unit 1 v7 route, ambience and reactions
         run: |
           python - <<'PY'
           from pathlib import Path
           h=Path('dialogue-lab/home.html').read_text()
-          v3=Path('dialogue-lab/lum1-v3.html').read_text()
-          v5=Path('dialogue-lab/lum1-v5.html').read_text()
-          v6=Path('dialogue-lab/lum1-v6.html').read_text()
-          assert './lum1-v6.html' in h
-          required_v3=[
-            'Hi! I’ve never seen you here before. My name’s Neeti.',
-            'I’m a roadways engineer working with Critical Path Builders.',
-            'So, how many roads have you built here?',
-            'I’ve built over 8 kilometers so far.',
-            'Wow! That’s a fast clip!',
-            'So, where are you originally from?',
-            'I’ve been there once.',
-            'A 250 kilometer highway stretch is waiting for me.',
-            'All the best for you! Maybe I’ll see you in Chandigarh!',
-            'Promise.all',
-            'setTimeout(r,turn.r===s.dialogue[i+1].r?70:120)'
+          v7=Path('dialogue-lab/lum1-v7.html').read_text()
+          assert './lum1-v7.html' in h
+          required=[
+            "dialogue[3].afterSfx='arjun_chuckle'",
+            "dialogue[10].afterSfx='arjun_chuckle'",
+            "dialogue[11].beforeSfx='neeti_chuckle'",
+            'sfxCache',
+            "speak('heh',role)",
+            'const park=',
+            'const chirp=',
+            "replaceAll('(a light laugh)','')",
+            "replaceAll('(Chuckles)','')",
+            "replaceAll('(Chuckling) ','')",
+            'I came here yesterday.',
+            'I’m staying in a hotel.'
           ]
-          missing=[x for x in required_v3 if x not in v3]
-          if missing: raise SystemExit('Missing from v3 '+repr(missing))
-          required_v5=['I came here yesterday.','I’m staying in a hotel.','neeti_exclaim','turn.v||turn.r','ascent-dialogue-voice']
-          missing=[x for x in required_v5 if x not in v5]
-          if missing: raise SystemExit('Missing from v5 '+repr(missing))
-          if 'const park=' not in v6 or 'const chirp=' not in v6: raise SystemExit('Park ambience code missing')
-          removals=['replaceAll(\'(a light laugh)\'','replaceAll(\'(Chuckles)\'','replaceAll(\'(Chuckling) \'']
-          if not all(x in v6 for x in removals): raise SystemExit('Stage-direction removals missing')
-          print('LUM Unit 1 v6 integrity OK')
+          missing=[x for x in required if x not in v7]
+          if missing: raise SystemExit('Missing from v7 '+repr(missing))
+          print('LUM Unit 1 v7 integrity OK')
           PY
