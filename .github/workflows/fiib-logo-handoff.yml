@@ -13,11 +13,11 @@ jobs:
     steps:
       - name: Download short-lived private narration bundle
         run: |
-          curl --fail --location 'https://vtqatrhwfvzyodiftvkc.supabase.co/storage/v1/object/sign/telw-video-render/bundles/1788155199135-audio-bundle.mp3?token=eyJraWQiOiIwZDU2Mzk2NS0yYWZmLTQ0ZGItOGI1Yi0yYTU2NTU1ZmQ4MDgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0ZWx3LXZpZGVvLXJlbmRlci9idW5kbGVzLzE3ODgxNTUxOTkxMzUtYXVkaW8tYnVuZGxlLm1wMyIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODgxNTUxOTksImV4cCI6MTc4ODE1NTc5OX0.w6flOMlwn6X6003gz96cIMcIEIM2d8U2-YOWOSaq1B8' --output marketing-ops-audio.zip
+          curl --fail --location 'https://vtqatrhwfvzyodiftvkc.supabase.co/storage/v1/object/sign/telw-video-render/bundles/1788155458754-audio-bundle.mp3?token=eyJraWQiOiIwZDU2Mzk2NS0yYWZmLTQ0ZGItOGI1Yi0yYTU2NTU1ZmQ4MDgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0ZWx3LXZpZGVvLXJlbmRlci9idW5kbGVzLzE3ODgxNTU0NTg3NTQtYXVkaW8tYnVuZGxlLm1wMyIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODgxNTU0NTksImV4cCI6MTc4ODE1NjA1OX0.sOCvqe51bJPB0G8arXqtNZYFlnwkkpINfKA0B4d2_L4' --output marketing-ops-audio.zip
           unzip -t marketing-ops-audio.zip
       - name: Upload narration artifact
         uses: actions/upload-artifact@v4
         with:
-          name: marketing-ops-audio
+          name: marketing-ops-audio-corrected
           path: marketing-ops-audio.zip
           retention-days: 1
