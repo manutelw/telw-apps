@@ -1,0 +1,18 @@
+<!doctype html><meta charset="utf-8"><title>ASCENT Dialogue Lab · LUM Unit 2</title>
+<script>
+(async()=>{
+  const r=await fetch('./lum2.html',{cache:'no-store'});
+  let h=await r.text();
+
+  // Canonical Unit 2 wording.
+  h=h.replace("Same. Anyway, how’s the placement prep going?","Same. Anyway, how’s your placement prep coming along?");
+
+  // Use the rebuilt Unit 2 student voice characters on all three dialogue scenes.
+  h=h.replace("speak(x[1],x[0])","speak(x[1],x[0]==='neeti'?'neeti_student':'arjun_student')");
+
+  // Keep all canteen exchanges tight and conversational.
+  h=h.replace("await new Promise(r=>setTimeout(r,280))","await new Promise(r=>setTimeout(r,85))");
+
+  document.open();document.write(h);document.close();
+})().catch(e=>{document.body.innerHTML='<p style="font-family:Arial;padding:24px">Unit 2 could not load. Please refresh.</p>';console.error(e)});
+</script>
