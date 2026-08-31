@@ -1,3 +1,4 @@
+# Dialogue Lab change: trigger required integrity guard
 name: ASCENT Integrity Guard
 
 on:
