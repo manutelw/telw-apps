@@ -1,0 +1,38 @@
+name: LUM Unit 1 v3 trigger
+on:
+  pull_request:
+    paths:
+      - 'dialogue-lab/lum1-v3.html'
+      - 'dialogue-lab/home.html'
+      - '.github/workflows/lum1-v3-trigger.yml'
+permissions:
+  contents: read
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify v3 dialogue route and content
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          h=Path('dialogue-lab/home.html').read_text()
+          u=Path('dialogue-lab/lum1-v3.html').read_text()
+          assert './lum1-v3.html' in h
+          required=[
+            'Hi! I’ve never seen you here before. My name’s Neeti.',
+            'I’m a roadways engineer working with Critical Path Builders.',
+            'So, how many roads have you built here?',
+            'I’ve built over 8 kilometers so far.',
+            'Wow! That’s a fast clip!',
+            'So, where are you originally from?',
+            'I’ve been there once.',
+            'A 250 kilometer highway stretch is waiting for me.',
+            'All the best for you! Maybe I’ll see you in Chandigarh!',
+            'Promise.all',
+            'setTimeout(r,turn.r===s.dialogue[i+1].r?70:120)'
+          ]
+          missing=[x for x in required if x not in u]
+          if missing: raise SystemExit('Missing '+repr(missing))
+          print('LUM Unit 1 v3 integrity OK')
+          PY
