@@ -1,0 +1,1 @@
+LUM Unit 1 v3 preloads the complete Neeti-Arjun dialogue before playback and preserves the supplied dialogue text for reading/listening.
