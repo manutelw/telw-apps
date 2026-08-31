@@ -4,6 +4,7 @@ on:
     paths:
       - 'dialogue-lab/lum1-v3.html'
       - 'dialogue-lab/lum1-v4.html'
+      - 'dialogue-lab/lum1-v5.html'
       - 'dialogue-lab/home.html'
       - '.github/workflows/lum1-v3-trigger.yml'
 permissions:
@@ -19,8 +20,8 @@ jobs:
           from pathlib import Path
           h=Path('dialogue-lab/home.html').read_text()
           v3=Path('dialogue-lab/lum1-v3.html').read_text()
-          v4=Path('dialogue-lab/lum1-v4.html').read_text()
-          assert './lum1-v4.html' in h
+          v5=Path('dialogue-lab/lum1-v5.html').read_text()
+          assert './lum1-v5.html' in h
           required_v3=[
             'Hi! I’ve never seen you here before. My name’s Neeti.',
             'I’m a roadways engineer working with Critical Path Builders.',
@@ -36,13 +37,15 @@ jobs:
           ]
           missing=[x for x in required_v3 if x not in v3]
           if missing: raise SystemExit('Missing from v3 '+repr(missing))
-          required_v4=[
+          required_v5=[
             'I came here yesterday.',
+            'I’m staying in a hotel.',
             "Wow! That’s a fast clip! So, where are you originally from?",
-            's.dialogue.filter(x=>x.show)',
+            'neeti_exclaim',
+            'turn.v||turn.r',
             'ascent-dialogue-voice'
           ]
-          missing=[x for x in required_v4 if x not in v4]
-          if missing: raise SystemExit('Missing from v4 '+repr(missing))
-          print('LUM Unit 1 dialogue integrity OK')
+          missing=[x for x in required_v5 if x not in v5]
+          if missing: raise SystemExit('Missing from v5 '+repr(missing))
+          print('LUM Unit 1 v5 integrity OK')
           PY
