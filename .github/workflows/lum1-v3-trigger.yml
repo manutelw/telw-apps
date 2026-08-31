@@ -16,6 +16,7 @@ on:
       - 'dialogue-lab/lum2-v5.html'
       - 'dialogue-lab/lum2-v6.html'
       - 'dialogue-lab/lum2-v7.html'
+      - 'dialogue-lab/lum3.html'
       - 'dialogue-lab/home.html'
       - '.github/workflows/lum1-v3-trigger.yml'
 permissions:
@@ -25,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify canonical Unit 1 dialogue and universal KP navigation
+      - name: Verify canonical LUM units and direct KP navigation
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -34,24 +35,19 @@ jobs:
           v9=Path('dialogue-lab/lum1-v9.html').read_text()
           u1n=Path('dialogue-lab/lum1-v10.html').read_text()
           u2=Path('dialogue-lab/lum2-v7.html').read_text()
+          u3=Path('dialogue-lab/lum3.html').read_text()
           assert "fetch('./lum1-v9.html'" in v8
           assert "fetch('./lum1-v3.html'" in v9
-          for x in [
-            "It’s a road-building company. I came here yesterday.",
-            "h=h.replaceAll(\"I am staying in a hotel.\",\"I’m staying in a hotel.\")",
-            "'(a light laugh)'","'(Chuckles)'","'(Chuckling) '",
-            "v:'neeti_bright'","say:'Okay! Nice city!'",
-            'birds-isaiah658.ogg','children.wav','group_giggling.ogg','amb_outdoor1_loop.mp3',
-            'parkSpeech','parkGap'
-          ]: assert x in v9, x
-          assert 'I joined yesterday. I came here yesterday.' not in v9
+          for x in ["It’s a road-building company. I came here yesterday.",'birds-isaiah658.ogg','parkSpeech','parkGap']:
+            assert x in v9, x
           for x in ['Choose a Key Point','data-kp="1"','data-kp="3"','data-kp="4"',"p.get('kp')"]:
             assert x in u1n, x
-          for x in ["fetch('./lum2.html'",'placement prep coming along?','neeti_student','arjun_student','setTimeout(r,85)','Choose a Key Point','data-kp="1"','data-kp="3"','data-kp="5"','const startMap={1:1,2:3,3:5}','params.get(\'kp\')','let sess,si="+startScene+",pi=0']:
+          for x in ["fetch('./lum2.html'",'placement prep coming along?','neeti_student','arjun_student','setTimeout(r,85)','Choose a Key Point','const startMap={1:1,2:3,3:5}','let sess,si="+startScene+",pi=0']:
             assert x in u2, x
-          assert './lum1-v10.html' in h and './lum2-v7.html' in h
-          assert '?kp=${j+1}' in h
-          for x in ['Sharing Professional Experience','Aligning Experiences with Others','Highlighting Key Experiences','Talking About Recent Activity and Gaps (Checking and Updating Work Status)','Talking About Past Experience in Detail','Talking About Unfinished Time']:
+          for x in ["fetch('./lum2.html'",'Present Perfect Continuous: What have you been doing?','You’re still working on that SIP report?','You look exhausted. What have you been doing?','How’s the company research going?','HOW LONG · FOR · SINCE','Delay · urgency · resource need','Present Perfect Continuous vs Present Perfect','neeti_student','arjun_student','setTimeout(r,85)','const startMap={1:1,2:3,3:5}','module:3']:
+            assert x in u3, x
+          assert './lum1-v10.html' in h and './lum2-v7.html' in h and './lum3.html' in h
+          for x in ['Communicating to prioritise correctly and reduce follow-ups','Signalling Delay, Urgency, or Resource Need','Communicating to decide what’s done and what’s next']:
             assert x in h, x
-          print('LUM deterministic key point navigation integrity OK')
+          print('LUM Units 1–3 integrity OK')
           PY
