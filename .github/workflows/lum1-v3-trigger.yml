@@ -8,6 +8,7 @@ on:
       - 'dialogue-lab/lum1-v6.html'
       - 'dialogue-lab/lum1-v7.html'
       - 'dialogue-lab/lum1-v8.html'
+      - 'dialogue-lab/lum1-v9.html'
       - 'dialogue-lab/home.html'
       - '.github/workflows/lum1-v3-trigger.yml'
 permissions:
@@ -17,17 +18,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify Unit 1 real park ambience route
+      - name: Verify canonical Unit 1 dialogue
         run: |
           python - <<'PY'
           from pathlib import Path
           h=Path('dialogue-lab/home.html').read_text()
-          v6=Path('dialogue-lab/lum1-v6.html').read_text()
           v8=Path('dialogue-lab/lum1-v8.html').read_text()
+          v9=Path('dialogue-lab/lum1-v9.html').read_text()
           assert './lum1-v8.html' in h
-          assert "fetch('./lum1-v6.html'" in v8
-          for x in ['birds-isaiah658.ogg','children.wav','group_giggling.ogg','amb_outdoor1_loop.mp3','parkSpeech','parkGap']:
-            assert x in v8, x
-          assert "replaceAll('I joined yesterday. I came here yesterday.','I came here yesterday.')" in v6
-          print('LUM Unit 1 real park ambience integrity OK')
+          assert "fetch('./lum1-v9.html'" in v8
+          assert "fetch('./lum1-v3.html'" in v9
+          for x in [
+            "It’s a road-building company. I came here yesterday.",
+            "h=h.replaceAll(\"I am staying in a hotel.\",\"I’m staying in a hotel.\")",
+            "'(a light laugh)'","'(Chuckles)'","'(Chuckling) '",
+            "v:'neeti_bright'","say:'Okay! Nice city!'",
+            'birds-isaiah658.ogg','children.wav','group_giggling.ogg','amb_outdoor1_loop.mp3',
+            'parkSpeech','parkGap'
+          ]:
+            assert x in v9, x
+          assert 'I joined yesterday. I came here yesterday.' not in v9
+          print('LUM Unit 1 canonical v9 integrity OK')
           PY
