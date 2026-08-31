@@ -6,6 +6,7 @@
   h=h.replaceAll("I joined yesterday.',say:'Hi! My name’s Arjun. I’m a roadways engineer working with Critical Path Builders. It’s a road building company. I joined yesterday.'","I joined yesterday. I came here yesterday.',say:'Hi! My name’s Arjun. I’m a roadways engineer working with Critical Path Builders. It’s a road building company. I joined yesterday. I came here yesterday.'");
   h=h.replace("{r:'neeti',n:'Neeti',show:'Wow! That’s a fast clip!',say:'Wow! That’s a fast clip!'},{r:'neeti',n:'Neeti',show:'So, where are you originally from?',say:'So, where are you originally from?'}","{r:'neeti',n:'Neeti',show:'Wow! That’s a fast clip! So, where are you originally from?',say:'Wow! That’s a fast clip!'},{r:'neeti',n:'Neeti',show:'',say:'So, where are you originally from?'}");
   h=h.replace("s.dialogue.map(x=>`<div class=\"turn ${x.r}\"><b>${esc(x.n)}:</b>${esc(x.show)}</div>`).join('')","s.dialogue.filter(x=>x.show).map(x=>`<div class=\"turn ${x.r}\"><b>${esc(x.n)}:</b>${esc(x.show)}</div>`).join('')");
+  h=h.replace("async function speak(text,role='coach'){const r=await fetch(API,","async function speak(text,role='coach'){const VOICE_API='https://vtqatrhwfvzyodiftvkc.supabase.co/functions/v1/ascent-dialogue-voice';const r=await fetch(VOICE_API,");
   h=h.replace('</body>','<script>window.__LUM1_V4__=true;<\\/script></body>');
   document.open();document.write(h);document.close();
 })().catch(e=>{document.body.innerHTML='<p style="font-family:Arial;padding:24px">Unit 1 could not load. Please refresh.</p>';console.error(e)});
