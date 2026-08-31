@@ -16,28 +16,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify Unit 1 v7 route, ambience and reactions
+      - name: Verify Unit 1 clean audio route
         run: |
           python - <<'PY'
           from pathlib import Path
           h=Path('dialogue-lab/home.html').read_text()
+          v6=Path('dialogue-lab/lum1-v6.html').read_text()
           v7=Path('dialogue-lab/lum1-v7.html').read_text()
           assert './lum1-v7.html' in h
-          required=[
-            "dialogue[3].afterSfx='arjun_chuckle'",
-            "dialogue[10].afterSfx='arjun_chuckle'",
-            "dialogue[11].beforeSfx='neeti_chuckle'",
-            'sfxCache',
-            "speak('heh',role)",
-            'const park=',
-            'const chirp=',
-            "replaceAll('(a light laugh)','')",
-            "replaceAll('(Chuckles)','')",
-            "replaceAll('(Chuckling) ','')",
-            'I came here yesterday.',
-            'I’m staying in a hotel.'
-          ]
-          missing=[x for x in required if x not in v7]
-          if missing: raise SystemExit('Missing from v7 '+repr(missing))
-          print('LUM Unit 1 v7 integrity OK')
+          assert "fetch('./lum1-v6.html'" in v7
+          assert 'const park=' in v6 and 'const chirp=' in v6
+          assert "replaceAll('(a light laugh)','')" in v6
+          assert "replaceAll('(Chuckles)','')" in v6
+          assert "replaceAll('(Chuckling) ','')" in v6
+          assert 'I came here yesterday.' in v6 or "fetch('./lum1-v5.html'" in v6
+          print('LUM Unit 1 clean audio integrity OK')
           PY
