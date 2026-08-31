@@ -1,0 +1,51 @@
+name: FIIB Logo Handoff
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/fiib-logo-handoff.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  handoff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch official FIIB logo
+        run: |
+          python - <<'PY'
+          import requests
+          from bs4 import BeautifulSoup
+          from urllib.parse import urljoin
+          page='https://www.fiib.edu.in/fiib-events'
+          html=requests.get(page,timeout=30).text
+          soup=BeautifulSoup(html,'html.parser')
+          img=None
+          for tag in soup.find_all('img'):
+              alt=(tag.get('alt') or '').strip().lower()
+              src=tag.get('src') or tag.get('data-src')
+              if src and ('fiib logo' in alt or ('logo' in alt and 'fiib' in alt)):
+                  img=urljoin(page,src); break
+          if not img:
+              for tag in soup.find_all('img'):
+                  src=tag.get('src') or tag.get('data-src') or ''
+                  if 'logo' in src.lower() and 'fiib' in src.lower():
+                      img=urljoin(page,src); break
+          if not img:
+              raise SystemExit('FIIB logo image not found')
+          print('LOGO',img)
+          r=requests.get(img,timeout=30); r.raise_for_status()
+          ct=r.headers.get('content-type','')
+          ext='.svg' if 'svg' in ct or img.lower().endswith('.svg') else '.png' if 'png' in ct or img.lower().endswith('.png') else '.jpg'
+          open('fiib-logo'+ext,'wb').write(r.content)
+          open('logo-url.txt','w').write(img+'\n')
+          PY
+          file fiib-logo.*
+      - name: Upload logo artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fiib-logo
+          path: |
+            fiib-logo.*
+            logo-url.txt
+          retention-days: 1
