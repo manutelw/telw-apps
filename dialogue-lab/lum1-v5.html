@@ -1,0 +1,27 @@
+<!doctype html><meta charset="utf-8"><title>ASCENT Dialogue Lab · LUM Unit 1</title>
+<script>
+(async()=>{
+  const r=await fetch('./lum1-v3.html',{cache:'no-store'});
+  let h=await r.text();
+
+  // Use the dedicated expressive dialogue voice endpoint.
+  h=h.replace("async function speak(text,role='coach'){const r=await fetch(API,","async function speak(text,role='coach'){const VOICE_API='https://vtqatrhwfvzyodiftvkc.supabase.co/functions/v1/ascent-dialogue-voice';const r=await fetch(VOICE_API,");
+  h=h.replace("speak(turn.say,turn.r)","speak(turn.say,turn.v||turn.r)");
+
+  // Natural spoken contractions + restored missing line.
+  h=h.replaceAll("I’m a roadways engineer working with Critical Path Builders. It’s a road building company. I joined yesterday.'","I’m a roadways engineer working with Critical Path Builders. It’s a road-building company. I joined yesterday. I came here yesterday.'");
+  h=h.replaceAll("I am staying in a hotel.","I’m staying in a hotel.");
+  h=h.replaceAll("That’s what my job demands.","That’s what my job demands.");
+
+  // Give genuine exclamations a separate expressive TTS role.
+  h=h.replace("{r:'neeti',n:'Neeti',show:'Hi! I’ve never seen you here before. My name’s Neeti.',say:'Hi! I’ve never seen you here before. My name’s Neeti.'}","{r:'neeti',v:'neeti_exclaim',n:'Neeti',show:'Hi! I’ve never seen you here before. My name’s Neeti.',say:'Hi! I’ve never seen you here before. My name’s Neeti.'}");
+  h=h.replace("{r:'neeti',n:'Neeti',show:'Wow! That’s a fast clip!',say:'Wow! That’s a fast clip!'},{r:'neeti',n:'Neeti',show:'So, where are you originally from?',say:'So, where are you originally from?'}","{r:'neeti',v:'neeti_exclaim',n:'Neeti',show:'Wow! That’s a fast clip! So, where are you originally from?',say:'Wow! That’s a fast clip!'},{r:'neeti',n:'Neeti',show:'',say:'So, where are you originally from?'}");
+  h=h.replace("{r:'neeti',n:'Neeti',show:'Okay! Nice city! I’ve been there once. So, how long are you here for?',say:'Okay! Nice city! I’ve been there once. So, how long are you here for?'}","{r:'neeti',v:'neeti_exclaim',n:'Neeti',show:'Okay! Nice city! I’ve been there once. So, how long are you here for?',say:'Okay! Nice city! I’ve been there once. So, how long are you here for?'}");
+  h=h.replace("{r:'neeti',n:'Neeti',show:'(Chuckling) All the best for you! Maybe I’ll see you in Chandigarh!',say:'All the best for you! Maybe I’ll see you in Chandigarh!'}","{r:'neeti',v:'neeti_exclaim',n:'Neeti',show:'(Chuckling) All the best for you! Maybe I’ll see you in Chandigarh!',say:'All the best for you! Maybe I’ll see you in Chandigarh!'}");
+
+  // Keep two spoken beats but only one visible Neeti paragraph.
+  h=h.replace("s.dialogue.map(x=>`<div class=\"turn ${x.r}\"><b>${esc(x.n)}:</b>${esc(x.show)}</div>`).join('')","s.dialogue.filter(x=>x.show).map(x=>`<div class=\"turn ${x.r}\"><b>${esc(x.n)}:</b>${esc(x.show)}</div>`).join('')");
+
+  document.open();document.write(h);document.close();
+})().catch(e=>{document.body.innerHTML='<p style="font-family:Arial;padding:24px">Unit 1 could not load. Please refresh.</p>';console.error(e)});
+</script>
