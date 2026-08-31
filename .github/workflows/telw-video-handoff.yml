@@ -1,0 +1,23 @@
+name: TELW Video Audio Handoff
+on:
+  push:
+    paths:
+      - '.github/workflows/telw-video-handoff.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  handoff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download private short-lived audio bundle
+        run: |
+          curl --fail --location 'https://vtqatrhwfvzyodiftvkc.supabase.co/storage/v1/object/sign/telw-video-render/bundles/1788152660598-audio-bundle.mp3?token=eyJraWQiOiIwZDU2Mzk2NS0yYWZmLTQ0ZGItOGI1Yi0yYTU2NTU1ZmQ4MDgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0ZWx3LXZpZGVvLXJlbmRlci9idW5kbGVzLzE3ODgxNTI2NjA1OTgtYXVkaW8tYnVuZGxlLm1wMyIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODgxNTI2NjEsImV4cCI6MTc4ODE1MzI2MX0.pkl5u0vqRDkS2OnUacckQGuc6nR2PsRw3RzmQKHTgSQ' --output upgrad-audio.zip
+          file upgrad-audio.zip
+          unzip -t upgrad-audio.zip
+      - name: Upload handoff artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: upgrad-audio
+          path: upgrad-audio.zip
+          retention-days: 1
