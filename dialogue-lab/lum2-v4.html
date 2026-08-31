@@ -1,0 +1,48 @@
+<!doctype html><meta charset="utf-8"><title>ASCENT Dialogue Lab · LUM Unit 2</title>
+<script>
+(async()=>{
+  const r=await fetch('./lum2-v3.html',{cache:'no-store'});
+  let h=await r.text();
+
+  const adminPanel=`
+  <style>
+    #adminTestNav{position:sticky;top:0;z-index:9999;background:#fff8e8;border:1px solid #e2b85d;border-radius:10px;padding:10px 12px;margin:0 0 14px;font-family:Arial;box-shadow:0 4px 14px #0002}
+    #adminTestNav b{color:#143a60;margin-right:10px}
+    #adminTestNav button{margin:3px 4px 3px 0;border:0;border-radius:8px;padding:8px 10px;font-weight:700;cursor:pointer;background:#143a60;color:white}
+    #adminTestNav button.skip{background:#edf4fb;color:#143a60;border:1px solid #b9ccdd}
+  </style>
+  <div id="adminTestNav" hidden>
+    <b>ADMIN · Test Navigation</b>
+    <button data-jump="1">KP1</button>
+    <button data-jump="3">KP2</button>
+    <button data-jump="5">KP3</button>
+    <button data-jump="7">Final Production</button>
+    <button id="adminSkipPractice" class="skip">Skip current exercise</button>
+  </div>`;
+  h=h.replace('<div class="card"><div id="start">',adminPanel+'<div class="card"><div id="start">');
+
+  const adminScript=`<script>
+  (function(){
+    let a=null;try{a=JSON.parse(localStorage.getItem('ascent_student_session')||'null')}catch(e){}
+    if(!a||a.adminDemo!==true)return;
+    const p=document.getElementById('adminTestNav');if(!p)return;p.hidden=false;
+    p.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>{
+      try{if(typeof ambStop==='function')ambStop();audio.pause();playing=false;}catch(e){}
+      document.getElementById('start').hidden=true;
+      document.getElementById('lesson').hidden=false;
+      si=Number(b.dataset.jump);pi=0;attempt=1;render();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }));
+    document.getElementById('adminSkipPractice').addEventListener('click',()=>{
+      try{if(typeof ambStop==='function')ambStop();audio.pause();playing=false;}catch(e){}
+      const pr=document.getElementById('practice'),fb=document.getElementById('feedback'),nx=document.getElementById('next');
+      if(pr)pr.hidden=true;if(fb)fb.hidden=true;if(nx)nx.disabled=false;
+      const cs=document.getElementById('coachState');if(cs)cs.textContent='Admin test: exercise skipped.';
+    });
+  })();
+  <\/script>`;
+  h=h.replace('</body>',adminScript+'</body>');
+
+  document.open();document.write(h);document.close();
+})().catch(e=>{document.body.innerHTML='<p style="font-family:Arial;padding:24px">Unit 2 could not load. Please refresh.</p>';console.error(e)});
+</script>

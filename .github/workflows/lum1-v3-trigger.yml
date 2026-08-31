@@ -11,6 +11,7 @@ on:
       - 'dialogue-lab/lum1-v9.html'
       - 'dialogue-lab/lum2-v2.html'
       - 'dialogue-lab/lum2-v3.html'
+      - 'dialogue-lab/lum2-v4.html'
       - 'dialogue-lab/home.html'
       - '.github/workflows/lum1-v3-trigger.yml'
 permissions:
@@ -28,6 +29,7 @@ jobs:
           v8=Path('dialogue-lab/lum1-v8.html').read_text()
           v9=Path('dialogue-lab/lum1-v9.html').read_text()
           u2=Path('dialogue-lab/lum2-v3.html').read_text()
+          u2a=Path('dialogue-lab/lum2-v4.html').read_text()
           assert './lum1-v8.html' in h
           assert "fetch('./lum1-v9.html'" in v8
           assert "fetch('./lum1-v3.html'" in v9
@@ -41,9 +43,11 @@ jobs:
           ]:
             assert x in v9, x
           assert 'I joined yesterday. I came here yesterday.' not in v9
-          assert './lum2-v3.html' in h
+          assert './lum2-v4.html' in h
           assert 'placement prep coming along?' in u2
           assert 'neeti_student' in u2 and 'arjun_student' in u2
           assert 'setTimeout(r,85)' in u2
+          for x in ['ADMIN · Test Navigation','data-jump="3"','data-jump="5"','adminDemo','Skip current exercise']:
+            assert x in u2a, x
           print('LUM Unit 1 and Unit 2 integrity OK')
           PY
