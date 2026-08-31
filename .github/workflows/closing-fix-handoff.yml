@@ -1,0 +1,21 @@
+name: Closing Fix Handoff
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/closing-fix-handoff.yml']
+permissions:
+  contents: read
+jobs:
+  handoff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download closing variants
+        run: |
+          curl --fail --location 'https://vtqatrhwfvzyodiftvkc.supabase.co/storage/v1/object/sign/telw-video-render/bundles/1788156063657-audio-bundle.mp3?token=eyJraWQiOiIwZDU2Mzk2NS0yYWZmLTQ0ZGItOGI1Yi0yYTU2NTU1ZmQ4MDgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0ZWx3LXZpZGVvLXJlbmRlci9idW5kbGVzLzE3ODgxNTYwNjM2NTctYXVkaW8tYnVuZGxlLm1wMyIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODgxNTYwNjMsImV4cCI6MTc4ODE1NjY2M30.IYPlCkkm7cqim8_jac77ZFr7Rf3_ZmG9O-pTV8ybOpk' --output closing-variants.zip
+          unzip -t closing-variants.zip
+      - name: Upload closing variants
+        uses: actions/upload-artifact@v4
+        with:
+          name: closing-variants
+          path: closing-variants.zip
+          retention-days: 1
