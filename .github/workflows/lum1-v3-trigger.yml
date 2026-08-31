@@ -25,10 +25,12 @@ jobs:
           v7=Path('dialogue-lab/lum1-v7.html').read_text()
           assert './lum1-v7.html' in h
           assert "fetch('./lum1-v6.html'" in v7
-          assert 'const park=' in v6 and 'const chirp=' in v6
+          assert 'const park=' in v6
+          assert 'trafficCtx.__bird=' in v6
+          assert 'trafficCtx?.__bird?.()' in v6
           assert "replaceAll('(a light laugh)','')" in v6
           assert "replaceAll('(Chuckles)','')" in v6
           assert "replaceAll('(Chuckling) ','')" in v6
-          assert 'I came here yesterday.' in v6 or "fetch('./lum1-v5.html'" in v6
+          assert "replaceAll('I joined yesterday. I came here yesterday.','I came here yesterday.')" in v6
           print('LUM Unit 1 clean audio integrity OK')
           PY
