@@ -47,9 +47,9 @@ jobs:
           assert 'placement prep coming along?' in u2
           assert 'neeti_student' in u2 and 'arjun_student' in u2
           assert 'setTimeout(r,85)' in u2
-          for x in ['Choose a Key Point','data-kp="1"','data-kp="3"','data-kp="4"','#kp=']:
+          for x in ['Choose a Key Point','data-kp="1"','data-kp="3"','data-kp="4"',"p.get('kp')"]:
             assert x in u1n, x
-          for x in ['Choose a Key Point','data-kp="1"','data-kp="3"','data-kp="5"','Admin: Skip current exercise']:
+          for x in ['Choose a Key Point','data-kp="1"','data-kp="3"','data-kp="5"','Admin: Skip current exercise',"p.get('kp')"]:
             assert x in u2n, x
           assert './lum1-v10.html' in h and './lum2-v5.html' in h
           for x in ['Sharing Professional Experience','Aligning Experiences with Others','Highlighting Key Experiences','Talking About Recent Activity and Gaps (Checking and Updating Work Status)','Talking About Past Experience in Detail','Talking About Unfinished Time']:
