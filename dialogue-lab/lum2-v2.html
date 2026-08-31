@@ -5,6 +5,10 @@
   let h=await r.text();
   // Tighten only KP1 conversation turn-taking: 90 ms instead of 280 ms.
   h=h.replace("await new Promise(r=>setTimeout(r,280))","await new Promise(r=>setTimeout(r,si===1?90:280))");
+  // Canonical KP1 wording.
+  h=h.replace("Same. Anyway, how’s the placement prep going?","Same. Anyway, how’s your placement prep coming along?");
+  // Unit 2 uses younger, livelier canteen voices without changing Unit 1 voice character.
+  h=h.replace("speak(x[1],x[0])","speak(x[1],x[0]==='neeti'?'neeti_student':'arjun_student')");
   document.open();document.write(h);document.close();
 })().catch(e=>{document.body.innerHTML='<p style="font-family:Arial;padding:24px">Unit 2 could not load. Please refresh.</p>';console.error(e)});
 </script>
