@@ -14,24 +14,25 @@ jobs:
       - name: Fetch official FIIB logo
         run: |
           python - <<'PY'
-          import requests
-          from bs4 import BeautifulSoup
+          import re, requests
           from urllib.parse import urljoin
           page='https://www.fiib.edu.in/fiib-events'
           html=requests.get(page,timeout=30).text
-          soup=BeautifulSoup(html,'html.parser')
           img=None
-          for tag in soup.find_all('img'):
-              alt=(tag.get('alt') or '').strip().lower()
-              src=tag.get('src') or tag.get('data-src')
-              if src and ('fiib logo' in alt or ('logo' in alt and 'fiib' in alt)):
-                  img=urljoin(page,src); break
+          tags=re.findall(r'<img\b[^>]*>',html,flags=re.I)
+          for tag in tags:
+              low=tag.lower()
+              if 'fiib logo' in low or ('fiib' in low and 'logo' in low):
+                  m=re.search(r'(?:src|data-src)=["\']([^"\']+)',tag,flags=re.I)
+                  if m:
+                      img=urljoin(page,m.group(1)); break
           if not img:
-              for tag in soup.find_all('img'):
-                  src=tag.get('src') or tag.get('data-src') or ''
-                  if 'logo' in src.lower() and 'fiib' in src.lower():
-                      img=urljoin(page,src); break
+              for tag in tags:
+                  m=re.search(r'(?:src|data-src)=["\']([^"\']+)',tag,flags=re.I)
+                  if m and 'logo' in m.group(1).lower():
+                      img=urljoin(page,m.group(1)); break
           if not img:
+              open('page.html','w').write(html)
               raise SystemExit('FIIB logo image not found')
           print('LOGO',img)
           r=requests.get(img,timeout=30); r.raise_for_status()
