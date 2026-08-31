@@ -358,7 +358,7 @@
         const response = await fetch(DIALOGUE_LAB_ADMIN_HANDOFF_URL,{method:"POST",headers:{"apikey":SUPABASE_PUBLISHABLE_KEY,"Authorization":"Bearer "+SUPABASE_PUBLISHABLE_KEY,"Content-Type":"application/json"},body:JSON.stringify({ascent_session_token:session.sessionToken})});
         const result = await response.json().catch(()=>({}));
         if(!response.ok || result.ok!==true || !result.session_token) throw new Error(result.message||"Dialogue Lab administrator access could not be opened.");
-        const url = "https://ascent-dialogue-lab-pages.pages.dev/dialogue-lab/#handoff=" + encodeURIComponent(result.session_token);
+        const url = "https://manutelw.github.io/telw-apps/dialogue-lab/#handoff=" + encodeURIComponent(result.session_token);
         setAppHubStatus("Dialogue Lab administrator access ready.","success");
         window.open(url,"_blank","noopener,noreferrer");
       } catch(error) {
