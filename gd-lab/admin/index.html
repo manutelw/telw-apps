@@ -2,41 +2,52 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GD Lab · ClarionPrep</title>
+<title>GD Lab Admin · ClarionPrep</title>
 <style>
 :root{--navy:#0e2344;--blue:#2458d7;--ink:#172033;--muted:#667085;--line:#dfe5ee;--bg:#eef2f7}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--ink)}header{background:var(--navy);color:#fff;padding:18px 24px}.wrap{max-width:980px;margin:24px auto;padding:0 16px}.intro,.player{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}.intro h1{margin:0 0 6px;font-size:24px}.intro p,.muted{color:var(--muted)}.topics{display:grid;grid-template-columns:1fr 1fr;gap:12px}.topic{width:100%;border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff;color:var(--ink);text-align:left;cursor:pointer;font:inherit}.topic:hover,.topic:focus-visible{border-color:var(--blue);box-shadow:0 0 0 2px rgba(36,88,215,.08)}.topic strong{display:block;font-size:15px;line-height:1.35}.topic span{display:block;margin-top:7px;color:var(--muted);font-size:12px}.player[hidden]{display:none}.player h2{margin:0 0 5px}.turn{padding:12px 14px;margin:10px 0;border:1px solid var(--line);border-radius:11px;background:#fbfdff}.turn b{color:var(--navy)}.turn p{margin:5px 0 0;line-height:1.5}.status{padding:14px;border-radius:11px;background:#fff;color:var(--muted)}.error{color:#b42318;background:#fff0ee;border:1px solid #f2c7c1}.play{border:0;border-radius:9px;padding:10px 14px;background:var(--blue);color:#fff;font-weight:700;cursor:pointer;margin-top:10px}.back{display:inline-block;margin-top:10px;color:var(--blue);font-weight:700;text-decoration:none}@media(max-width:700px){.topics{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--ink)}header{background:var(--navy);color:#fff;padding:18px 24px;font-weight:700}.wrap{max-width:900px;margin:24px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px}.card h1{margin:0 0 14px;font-size:24px}.topic{display:flex;gap:10px;align-items:flex-start;padding:13px 4px;border-bottom:1px solid var(--line);cursor:pointer}.topic:last-child{border-bottom:0}.topic input{margin-top:3px}.topic strong{font-size:15px;line-height:1.35}.topic span{display:block;margin-top:4px;color:var(--muted);font-size:12px}.start{width:100%;margin-top:18px;padding:14px;border:0;border-radius:10px;background:var(--blue);color:#fff;font-weight:800;font-size:16px;cursor:pointer}.start:disabled{opacity:.5;cursor:not-allowed}.status{margin:14px 0;color:var(--muted)}.error{color:#b42318}.live{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}.live[hidden]{display:none}.live h2{margin:0 0 6px;font-size:20px}.bubble{padding:12px 14px;margin:9px 0;border-radius:11px;background:#f8fafc;border:1px solid var(--line)}.bubble.you{background:#eef4ff}.bubble b{display:block;margin-bottom:4px}.controls{display:flex;gap:10px;margin-top:14px}.mic,.again{flex:1;padding:13px;border:0;border-radius:10px;font-weight:800;cursor:pointer}.mic{background:var(--blue);color:#fff}.again{background:#fff;color:var(--blue);border:1px solid var(--blue)}.mic:disabled{opacity:.55}.small{font-size:12px;color:var(--muted);margin-top:8px}.back{display:inline-block;margin-top:16px;color:var(--blue);font-weight:700;text-decoration:none}@media(max-width:650px){.wrap{margin:14px auto}.controls{display:block}.controls button{width:100%;margin-bottom:8px}}
 </style>
 </head>
 <body>
-<header><b>ClarionPrep GD Lab — Admin</b></header>
+<header>ClarionPrep GD Lab — Admin</header>
 <div class="wrap">
-<section class="intro"><h1>Choose a GD topic</h1><p>Click a topic to hear the simulated group discuss it.</p></section>
-<div id="statusBox" class="status">Loading topics…</div>
-<div id="topicList" class="topics" hidden></div>
-<section id="player" class="player" hidden>
-  <h2 id="playerTitle"></h2><div id="playerContext" class="muted"></div>
-  <div id="playerStatus" class="status">Preparing the group…</div>
-  <div id="turns"></div>
-  <button id="playAgain" class="play" type="button" hidden>Play discussion</button>
-</section>
-<a class="back" href="/ascent/admin-settings.html">← Back to Admin Hub</a>
+  <section class="card">
+    <h1>Choose a GD topic</h1>
+    <div id="status" class="status">Loading topics…</div>
+    <div id="topics"></div>
+    <button id="startBtn" class="start" type="button" disabled>START</button>
+    <section id="live" class="live" hidden>
+      <h2 id="liveTitle"></h2>
+      <div class="small">You open the discussion. Then the AI participants respond to what you actually say.</div>
+      <div id="chat"></div>
+      <div id="liveStatus" class="status">Press the microphone when you are ready.</div>
+      <div class="controls">
+        <button id="micBtn" class="mic" type="button">🎙 Start my contribution</button>
+        <button id="againBtn" class="again" type="button">Choose another topic</button>
+      </div>
+    </section>
+  </section>
+  <a class="back" href="/ascent/admin-settings.html">← Back to Admin Hub</a>
 </div>
 <script>
 (()=>{
 const API='https://vtqatrhwfvzyodiftvkc.supabase.co/functions/v1/telw-gd-admin';
 const KEYS=['ascent_admin_master_session','ascent_trainer_session'];
-const el=id=>document.getElementById(id);let session=null,currentAudios=[];
+const $=id=>document.getElementById(id);let session=null,selected=null,history=[],turnNo=1,recorder=null,chunks=[],stream=null,busy=false;
 function esc(s){return String(s||'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
 function getSession(){for(const key of KEYS){try{const x=JSON.parse(localStorage.getItem(key)||'null');if(x&&x.sessionToken&&String(x.role||'').toUpperCase()==='ADMIN'&&new Date(x.expiresAt).getTime()>Date.now())return x}catch{}}return null}
-async function api(action,data,timeout=12000){const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','X-ASCENT-ADMIN-SESSION':session.sessionToken},body:JSON.stringify(Object.assign({action},data||{})),signal:c.signal});const j=await r.json().catch(()=>({}));if(r.status===401)throw Error('Your administrator session has expired. Return to the Admin Hub and sign in again.');if(!r.ok)throw Error(j.error||'GD Lab request failed.');return j}finally{clearTimeout(t)}}
-function showError(msg){el('statusBox').className='status error';el('statusBox').textContent=msg}
-async function loadTopics(){session=getSession();if(!session){showError('GD Lab could not find a valid administrator session.');return}try{const j=await api('topic_list',{});el('statusBox').hidden=true;el('topicList').hidden=false;el('topicList').innerHTML=(j.topics||[]).map(x=>'<button class="topic" type="button" data-id="'+x.id+'"><strong>'+esc(x.title)+'</strong><span>Difficulty '+x.difficulty+'/5</span></button>').join('');el('topicList').querySelectorAll('.topic').forEach(b=>b.addEventListener('click',()=>openTopic(b.dataset.id,b.querySelector('strong').textContent)))}catch(e){showError(e.name==='AbortError'?'GD Lab took too long to load.':e.message)}}
-async function openTopic(id,title){stopAll();el('player').hidden=false;el('playerTitle').textContent=title;el('playerContext').textContent='';el('turns').innerHTML='';el('playAgain').hidden=true;el('playerStatus').className='status';el('playerStatus').textContent='Preparing the group discussion…';el('player').scrollIntoView({behavior:'smooth',block:'start'});try{const j=await api('preview_topic',{topic_id:id},45000);el('playerTitle').textContent=j.topic.title;el('playerContext').textContent=j.topic.context||'';renderTurns(j.turns||[]);el('playerStatus').textContent='';el('playerStatus').hidden=true;await playSequence()}catch(e){el('playerStatus').hidden=false;el('playerStatus').className='status error';el('playerStatus').textContent=e.name==='AbortError'?'The group took too long to prepare. Please click the topic again.':e.message}}
-function renderTurns(items){currentAudios=[];el('turns').innerHTML=items.map((x,i)=>'<div class="turn"><b>'+esc(x.speaker)+'</b><p>'+esc(x.text)+'</p></div>').join('');items.forEach(x=>{if(x.audio)currentAudios.push(new Audio('data:audio/mpeg;base64,'+x.audio))});el('playAgain').hidden=currentAudios.length===0}
-function stopAll(){currentAudios.forEach(a=>{try{a.pause();a.currentTime=0}catch{}})}
-async function playSequence(){if(!currentAudios.length)return;stopAll();for(const a of currentAudios){await new Promise((resolve,reject)=>{a.onended=resolve;a.onerror=reject;const p=a.play();if(p&&p.catch)p.catch(reject)}).catch(()=>{throw Error('Playback was blocked by the browser. Use Play discussion.')})}}
-el('playAgain').addEventListener('click',()=>playSequence().catch(()=>{}));loadTopics();
+async function api(action,data,timeout=45000){const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','X-ASCENT-ADMIN-SESSION':session.sessionToken},body:JSON.stringify(Object.assign({action},data||{})),signal:c.signal});const j=await r.json().catch(()=>({}));if(r.status===401)throw Error('Your administrator session has expired. Return to the Admin Hub and sign in again.');if(!r.ok)throw Error(j.error||'GD Lab request failed.');return j}finally{clearTimeout(t)}}
+function addBubble(speaker,text,isYou=false){const d=document.createElement('div');d.className='bubble'+(isYou?' you':'');d.innerHTML='<b>'+esc(speaker)+'</b><div>'+esc(text)+'</div>';$('chat').appendChild(d);d.scrollIntoView({behavior:'smooth',block:'nearest'})}
+async function loadTopics(){session=getSession();if(!session){$('status').className='status error';$('status').textContent='No active administrator session. Return to the Admin Hub.';return}try{const j=await api('topic_list',{},12000);$('status').textContent='';$('topics').innerHTML=(j.topics||[]).map((x,i)=>'<label class="topic"><input type="radio" name="topic" value="'+x.id+'" data-title="'+esc(x.title)+'"><div><strong>'+esc(x.title)+'</strong><span>Difficulty '+x.difficulty+'/5</span></div></label>').join('');document.querySelectorAll('input[name=topic]').forEach(r=>r.addEventListener('change',()=>{selected={id:r.value,title:r.dataset.title};$('startBtn').disabled=false}))}catch(e){$('status').className='status error';$('status').textContent=e.message||'Could not load topics.'}}
+function resetLive(){history=[];turnNo=1;$('chat').innerHTML='';$('liveStatus').textContent='Press the microphone when you are ready.';$('micBtn').disabled=false;$('micBtn').textContent='🎙 Start my contribution'}
+$('startBtn').addEventListener('click',()=>{if(!selected)return;resetLive();$('live').hidden=false;$('liveTitle').textContent=selected.title;$('live').scrollIntoView({behavior:'smooth',block:'start'})});
+$('againBtn').addEventListener('click',()=>{if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('live').hidden=true;window.scrollTo({top:0,behavior:'smooth'})});
+async function startRec(){if(busy)return;try{stream=await navigator.mediaDevices.getUserMedia({audio:true});chunks=[];recorder=new MediaRecorder(stream);recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};recorder.onstop=sendRec;recorder.start();$('micBtn').textContent='■ Stop and send';$('liveStatus').textContent=turnNo===1?'Give your opening contribution.':'Respond to the discussion.'}catch(e){$('liveStatus').className='status error';$('liveStatus').textContent='Microphone access was not available.'}}
+function stopRec(){if(recorder&&recorder.state==='recording'){recorder.stop();$('micBtn').disabled=true;$('liveStatus').textContent='Listening to your contribution…'}}
+$('micBtn').addEventListener('click',()=>{if(recorder&&recorder.state==='recording')stopRec();else startRec()});
+async function sendRec(){busy=true;try{const blob=new Blob(chunks,{type:recorder.mimeType||'audio/webm'});if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}const data=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result));fr.onerror=rej;fr.readAsDataURL(blob)});const j=await api('admin_turn',{topic_id:selected.id,audio:data,mime:blob.type,history,student_turn_no:turnNo},60000);addBubble('You',j.student_text,true);history.push({speaker:'You',text:j.student_text});addBubble(j.reply.speaker,j.reply.text);history.push({speaker:j.reply.speaker,text:j.reply.text});if(j.reply.audio){const a=new Audio('data:audio/mpeg;base64,'+j.reply.audio);await a.play().catch(()=>{});await new Promise(resolve=>{a.onended=resolve;setTimeout(resolve,20000)})}if(j.complete){$('liveStatus').textContent='Discussion complete. Choose another topic or restart this one.';$('micBtn').disabled=true;$('micBtn').textContent='Discussion complete'}else{turnNo++;$('liveStatus').textContent='Your turn again.';$('micBtn').disabled=false;$('micBtn').textContent='🎙 Start my contribution'}}catch(e){$('liveStatus').className='status error';$('liveStatus').textContent=e.message||'Could not continue the discussion.';$('micBtn').disabled=false;$('micBtn').textContent='🎙 Try my contribution again'}finally{busy=false;recorder=null;chunks=[]}}
+loadTopics();
 })();
 </script>
-</body></html>
+</body>
+</html>
