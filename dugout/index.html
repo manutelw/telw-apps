@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Dugout PI Listening Lab · Admin Preview</title>
+<style>
+:root{--navy:#143a60;--navy2:#0d2943;--blue:#27679d;--gold:#c67b00;--goldsoft:#fff5df;--bg:#eef4f9;--surface:#fff;--text:#24364a;--muted:#6c7b8d;--border:#d7e1eb;--red:#b42318;--shadow:0 18px 55px rgba(13,42,70,.12)}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}button,a{font:inherit}.top{background:linear-gradient(135deg,var(--navy2),var(--blue));color:#fff}.topin{max-width:1120px;margin:auto;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{font-size:23px;font-weight:800}.brand small{display:block;color:#f0bd5c;font-size:12px;margin-top:3px}.badge{padding:6px 10px;border:1px solid rgba(255,255,255,.22);border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#ffe3a4}.wrap{max-width:1120px;margin:22px auto;padding:0 18px 48px}.card{background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow)}.hero{padding:24px 26px;margin-bottom:16px}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--gold)}h1,h2{color:var(--navy)}h1{margin:7px 0 8px;font-size:32px}.hero p{margin:0;color:var(--muted);line-height:1.6}.stage{padding:22px}.bar{display:flex;align-items:center;gap:12px;margin-bottom:18px}.counter{font-size:13px;font-weight:800;color:var(--navy);min-width:92px}.progress{height:8px;flex:1;background:#e6edf4;border-radius:999px;overflow:hidden}.progress span{display:block;height:100%;background:var(--gold);transition:width .2s}.question-card{background:linear-gradient(145deg,#102b47,#1d5688);color:#fff;border-radius:17px;padding:30px;min-height:290px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}.question-card:before{content:'?';position:absolute;right:18px;top:-34px;font-size:180px;font-weight:900;color:rgba(255,255,255,.045)}.category{display:inline-flex;align-self:flex-start;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#ffe0a0;margin-bottom:18px}.qnum{font-size:12px;color:rgba(255,255,255,.48);font-weight:800;letter-spacing:.8px;text-transform:uppercase}.qtext{font-size:clamp(25px,4vw,37px);line-height:1.25;font-weight:700;margin-top:12px;max-width:880px}.listen-panel{margin-top:16px;padding:18px;border:1px solid var(--border);border-radius:14px;background:#f8fbfe}.listen-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--gold)}.status{margin-top:7px;color:var(--muted);font-size:14px;min-height:22px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.btn{border:0;border-radius:10px;padding:11px 15px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block}.primary{background:var(--navy);color:#fff}.secondary{background:#eaf2f9;color:var(--navy)}.gold{background:var(--goldsoft);color:#8b5a00;border:1px solid #efd89e}.btn:disabled{opacity:.45;cursor:not-allowed}.navrow{display:flex;justify-content:space-between;gap:10px;margin-top:18px}.access{padding:36px;text-align:center}.access h2{margin-top:0}.access p{color:var(--muted);line-height:1.6}.login{margin-top:10px}.smallnote{margin-top:16px;color:var(--muted);font-size:12px;line-height:1.55}.list{margin-top:16px;padding:20px}.list h2{margin-top:0}.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.qjump{border:1px solid var(--border);background:#fff;border-radius:10px;padding:10px 12px;text-align:left;cursor:pointer;color:var(--text)}.qjump:hover{background:#f4f8fc}.qjump.active{border-color:var(--gold);background:var(--goldsoft)}.qjump b{color:var(--navy);margin-right:7px}.hidden{display:none!important}@media(max-width:700px){.qgrid{grid-template-columns:1fr}.qtext{font-size:27px}.question-card{padding:24px;min-height:260px}.topin{align-items:flex-start}.navrow{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<header class="top"><div class="topin"><div class="brand">DUGOUT<small>Standard PI · Listening Lab</small></div><div class="badge">Admin preview</div></div></header>
+<main class="wrap">
+<section id="gate" class="card access"><h2>Checking administrator access…</h2><p id="gateText">This preview is available only through a current ASCENT administrator session.</p><a id="loginLink" class="btn primary login hidden" href="../ascent/admin-login.html">Open Admin Login</a></section>
+<div id="app" class="hidden">
+<section class="card hero"><div class="eyebrow">Dugout preparation · Stage 1</div><h1>Listen to the interviewer first.</h1><p>Use the controls below to hear the 20 standard PI questions exactly as a candidate may hear them in a Dugout interview. This version is listening-only. Student response practice will be added as the next layer.</p></section>
+<section class="card stage">
+<div class="bar"><div id="counter" class="counter">Question 1 of 20</div><div class="progress"><span id="fill" style="width:5%"></span></div></div>
+<div class="question-card"><div id="category" class="category">Opening & Fit</div><div id="qnum" class="qnum">Question 01</div><div id="qtext" class="qtext"></div></div>
+<div class="listen-panel"><div class="listen-title">Mock interviewer audio</div><div id="status" class="status">Ready.</div><div class="actions"><button id="play" class="btn primary">▶ Play question</button><button id="replay" class="btn secondary" disabled>↻ Hear again</button><button id="playAll" class="btn gold">▶ Play full set</button><button id="stopAll" class="btn secondary hidden">■ Stop full set</button></div></div>
+<div class="navrow"><button id="prev" class="btn secondary">← Previous</button><button id="next" class="btn primary">Next →</button></div>
+<div class="smallnote">Admin preview only. Audio is generated through the existing Dialogue Lab voice service after administrator validation. No student recording or answer evaluation is active in this build.</div>
+</section>
+<section class="card list"><h2>Question bank</h2><div id="qgrid" class="qgrid"></div></section>
+</div>
+</main>
+<audio id="audio"></audio>
+<script>
+const SUPABASE_URL='https://vtqatrhwfvzyodiftvkc.supabase.co';
+const KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
+const HANDOFF=SUPABASE_URL+'/functions/v1/dialogue-lab-admin-handoff';
+const VOICE=SUPABASE_URL+'/functions/v1/ascent-dialogue-voice';
+const ADMIN_KEYS=['ascent_admin_master_session','ascent_trainer_session'];
+const QUESTIONS=[
+{c:'Opening & Fit',q:'Tell me about yourself.'},
+{c:'Opening & Fit',q:'Why are you interested in this role?'},
+{c:'Opening & Fit',q:'Why do you want to work with this company?'},
+{c:'Opening & Fit',q:'What makes you a good fit for this role?'},
+{c:'Strengths & Evidence',q:'Which of your strengths will help you succeed in this role?'},
+{c:'Strengths & Evidence',q:'Tell me about a project, internship, assignment or experience that is relevant to this role.'},
+{c:'Behavioural',q:'Tell me about a time you faced a difficult situation. What did you do?'},
+{c:'Behavioural',q:'Tell me about a time you worked with other people to get something done.'},
+{c:'Behavioural',q:'Tell me about a time something did not go as planned. How did you respond?'},
+{c:'Behavioural',q:'Tell me about a time you took responsibility or ownership.'},
+{c:'Judgement',q:'Tell me about a time you had to make a decision with limited information or under pressure.'},
+{c:'Behavioural',q:'Tell me about a disagreement or conflict you faced. How did you handle it?'},
+{c:'Self-awareness',q:'What is one area you are currently trying to improve?'},
+{c:'Closing Fit',q:'Why should we hire you?'},
+{c:'Career Direction',q:'Where do you see yourself developing over the next few years?'},
+{c:'Commitment',q:'Are you comfortable with the location, timings, travel, work arrangement or other requirements of the role?'},
+{c:'Situational',q:'What would you do if you were given a task you had never handled before?'},
+{c:'Situational',q:'What would you do if two important tasks needed your attention at the same time?'},
+{c:'Situational',q:'What would you do if you disagreed with your manager or received feedback you did not agree with?'},
+{c:'Close',q:'Do you have any questions for us?'}
+];
+const $=id=>document.getElementById(id),audio=$('audio');
+let studentToken='',idx=0,currentUrl='',lastBlob=null,playAllMode=false,stopRequested=false;
+function readAdmin(){for(const k of ADMIN_KEYS){try{const s=JSON.parse(localStorage.getItem(k)||'null');const expiry=new Date(s?.expiresAt).getTime();if(s?.sessionToken&&String(s?.role||'').toUpperCase()==='ADMIN'&&Number.isFinite(expiry)&&expiry>Date.now())return s}catch(_){}}return null}
+async function handoff(){const admin=readAdmin();if(!admin)throw new Error('NO_ADMIN');const r=await fetch(HANDOFF,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify({ascent_session_token:admin.sessionToken})});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok||!d.session_token)throw new Error(d.message||'ADMIN_HANDOFF_FAILED');studentToken=d.session_token}
+async function speak(text){const r=await fetch(VOICE,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify({action:'SPEAK',session_token:studentToken,text,role:'coach'})});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.message||'Voice could not play.');const bin=atob(d.audio_base64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:d.audio_mime||'audio/mpeg'})}
+async function playBlob(blob){if(currentUrl)URL.revokeObjectURL(currentUrl);currentUrl=URL.createObjectURL(blob);audio.src=currentUrl;await audio.play();return new Promise(res=>{audio.onended=res;audio.onerror=res})}
+function render(){const x=QUESTIONS[idx];$('counter').textContent=`Question ${idx+1} of ${QUESTIONS.length}`;$('fill').style.width=((idx+1)/QUESTIONS.length*100)+'%';$('category').textContent=x.c;$('qnum').textContent='Question '+String(idx+1).padStart(2,'0');$('qtext').textContent=x.q;$('prev').disabled=idx===0||playAllMode;$('next').disabled=idx===QUESTIONS.length-1||playAllMode;$('replay').disabled=!lastBlob||playAllMode;document.querySelectorAll('.qjump').forEach((b,i)=>b.classList.toggle('active',i===idx))}
+function buildGrid(){const g=$('qgrid');QUESTIONS.forEach((x,i)=>{const b=document.createElement('button');b.className='qjump';b.innerHTML=`<b>${String(i+1).padStart(2,'0')}</b>${x.q}`;b.onclick=()=>{if(playAllMode)return;idx=i;lastBlob=null;render();window.scrollTo({top:0,behavior:'smooth'})};g.appendChild(b)})}
+async function playCurrent(){if(playAllMode)return;try{$('play').disabled=true;$('status').textContent='Preparing interviewer audio…';const blob=await speak(QUESTIONS[idx].q);lastBlob=blob;$('status').textContent='Interviewer speaking…';render();await playBlob(blob);$('status').textContent='Ready. You may hear the question again or move on.'}catch(e){$('status').textContent=e.message||'Audio could not be prepared.'}finally{$('play').disabled=false;render()}}
+async function replay(){if(!lastBlob||playAllMode)return;try{$('status').textContent='Interviewer speaking…';await playBlob(lastBlob);$('status').textContent='Ready.'}catch{$('status').textContent='Audio could not play.'}}
+async function playAll(){if(playAllMode)return;playAllMode=true;stopRequested=false;$('playAll').disabled=true;$('play').disabled=true;$('stopAll').classList.remove('hidden');render();try{for(let i=idx;i<QUESTIONS.length;i++){if(stopRequested)break;idx=i;lastBlob=null;render();$('status').textContent=`Preparing question ${i+1}…`;const blob=await speak(QUESTIONS[i].q);if(stopRequested)break;lastBlob=blob;$('status').textContent=`Interviewer speaking · question ${i+1} of ${QUESTIONS.length}`;await playBlob(blob);if(stopRequested)break;await new Promise(r=>setTimeout(r,650))}$('status').textContent=stopRequested?'Full-set playback stopped.':'Full set complete.'}catch(e){$('status').textContent=e.message||'Playback stopped because audio could not be prepared.'}finally{playAllMode=false;$('playAll').disabled=false;$('play').disabled=false;$('stopAll').classList.add('hidden');render()}}
+function stopAll(){stopRequested=true;audio.pause();audio.currentTime=0;$('status').textContent='Stopping…'}
+$('play').onclick=playCurrent;$('replay').onclick=replay;$('playAll').onclick=playAll;$('stopAll').onclick=stopAll;$('prev').onclick=()=>{if(idx>0&&!playAllMode){idx--;lastBlob=null;render()}};$('next').onclick=()=>{if(idx<QUESTIONS.length-1&&!playAllMode){idx++;lastBlob=null;render()}};
+(async()=>{buildGrid();render();try{await handoff();$('gate').classList.add('hidden');$('app').classList.remove('hidden')}catch(e){$('gate').querySelector('h2').textContent='Administrator access required';$('gateText').textContent=e.message==='NO_ADMIN'?'Sign in through the ASCENT Admin Portal, then reopen Dugout PI Listening Lab.':'Your administrator session could not be validated. Please sign in again.';$('loginLink').classList.remove('hidden')}})();
+</script>
+</body>
+</html>
