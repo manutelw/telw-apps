@@ -21,6 +21,7 @@ jobs:
           test -f gd-lab/index.html
           test -f gd-lab/admin/index.html
           grep -q "gd-session-recordings" gd-lab/index.html
-          grep -q "admin_turn" gd-lab/admin/index.html
+          grep -q "admin_human_turn" gd-lab/admin/index.html
+          grep -q "admin_ai_turn" gd-lab/admin/index.html
           grep -q "telw-gd-admin" gd-lab/admin/index.html
           ! grep -R "functions/ascent\|ascent/recording-vault" gd-lab
