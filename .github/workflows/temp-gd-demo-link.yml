@@ -1,0 +1,35 @@
+name: Add GD Lab Link to Learner Demo
+on:
+  push:
+    branches: [feature/gd-demo-student-link]
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: ${{ !contains(github.event.head_commit.message, '[gd-demo-link-applied]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/gd-demo-student-link
+      - name: Add GD Lab navigation only
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('ascent/practice.html')
+          s=p.read_text()
+          old='<div class="live-mock-actions"><a class="coach-link" href="./coach.html">Ask ASCENT Coach</a><a class="fix-link" href="./coach.html?mode=fix&source=practice">Fix a problem</a></div>'
+          new='<div class="live-mock-actions"><a class="fix-link" href="../gd-lab/">GD Lab</a><a class="coach-link" href="./coach.html">Ask ASCENT Coach</a><a class="fix-link" href="./coach.html?mode=fix&source=practice">Fix a problem</a></div>'
+          if 'href="../gd-lab/">GD Lab</a>' not in s:
+              assert old in s
+              s=s.replace(old,new,1)
+              p.write_text(s)
+          PY
+      - name: Commit change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ascent/practice.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Show GD Lab in learner demo [gd-demo-link-applied]"
+          git push origin HEAD:feature/gd-demo-student-link
