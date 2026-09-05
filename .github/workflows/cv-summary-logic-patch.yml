@@ -1,0 +1,52 @@
+name: Patch CV Builder career summary logic
+
+on:
+  push:
+    paths:
+      - '.github/workflows/cv-summary-logic-patch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch CV Builder
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('workers/profile-review.js')
+          text = path.read_text(encoding='utf-8')
+
+          replacements = [
+              ('<li>Name the role you want in your three-line summary.</li>', '<li>Build the Career Summary as one concise paragraph: current status → capability claim → evidence with impact where available → aspiration.</li>'),
+              ('<li>Use three short summary lines: who you are, proof of your strengths, and the role you seek.</li>', '<li>Do not treat a claim as proof. Support the claim with what you actually did and, where the CV provides it, what changed or resulted. With a JD, make the aspiration role-specific; without a JD, use the target role/role family supplied by the user or a direction already supported by the CV.</li>'),
+              ("add('Career summary',s2,summaryHeading&&summaryWords>=25?'A summary is present; keep it evidence-led and role-directed.':'Use a three-line summary: current status, proven strengths, and target role.');", "add('Career summary',s2,summaryHeading&&summaryWords>=25?'A summary is present; keep the capability claim distinct from the evidence and state impact where the source supports it.':'Use one concise summary paragraph: current status, capability claim, evidence with impact where supported, and aspiration.');"),
+              ('async function repairCvIndependently(env,originalText){const prompt=`', "async function repairCvIndependently(env,originalText,targetRole=''){const prompt=`"),
+              ('- career summary concise enough for approximately three printed lines;\\n', '- Career Summary must be one concise paragraph, not bullets or separate mini-paragraphs;\\n- build the summary in the logic NOW → CLAIM → EVIDENCE/IMPACT → ASPIRATION;\\n- NOW: state the current academic/professional status exactly as supported by the source;\\n- CLAIM: state one or two credible capabilities or areas of strength. Treat these as claims, not as evidence;\\n- EVIDENCE/IMPACT: support the claim with a specific action, project, internship exposure, work responsibility, or achievement from the source. Include a result, change, contribution, or business consequence only when the source explicitly supports it. Never describe an activity alone as impact;\\n- ASPIRATION: if TARGET ROLE OR ROLE FAMILY below is supplied, use it to state a credible next direction. If it is blank, use only a career direction explicitly supported by the source; if none exists, do not invent one and end the summary after evidence/impact;\\n'),
+              ('\\n\\nORIGINAL CV:\\n${originalText}`;', '\\n\\nTARGET ROLE OR ROLE FAMILY (may be blank):\\n${targetRole}\\n\\nORIGINAL CV:\\n${originalText}`;'),
+              ('const repair=await repairCvIndependently(env,content);', 'const repair=await repairCvIndependently(env,content,role);'),
+              ('Keep the career summary concise enough for approximately three printed lines.', 'Keep the Career Summary as one concise paragraph using NOW → CLAIM → EVIDENCE/IMPACT → ASPIRATION. NOW must state the candidate’s current status from the source CV. CLAIM must identify one or two role-relevant capabilities but must not be presented as proof. EVIDENCE/IMPACT must support the claim with a specific action, project, internship/work exposure or achievement from the original CV, and must include a result, change, contribution or business consequence only when the source CV explicitly supports it; never relabel activity as impact. ASPIRATION must align to the supplied target role and JD, but it must not create a capability or keyword that the original CV does not support.')
+          ]
+
+          for old, new in replacements:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'Expected exactly one occurrence, found {count}: {old[:100]}')
+              text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+
+      - name: Commit patch and remove temporary workflow
+        run: |
+          rm .github/workflows/cv-summary-logic-patch.yml
+          git config user.name "ASCENT Build Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add workers/profile-review.js .github/workflows/cv-summary-logic-patch.yml
+          git commit -m "Refine CV career summaries for claim, evidence, impact and aspiration"
+          git push
