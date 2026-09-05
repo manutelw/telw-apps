@@ -5,13 +5,17 @@
 <title>GD Lab Admin · ClarionPrep</title>
 <style>
 :root{--navy:#0e2344;--blue:#2458d7;--ink:#172033;--muted:#667085;--line:#dfe5ee;--bg:#eef2f7;--green:#137a48}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--ink)}header{background:var(--navy);color:#fff;padding:18px 24px;font-weight:700}.wrap{max-width:900px;margin:24px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px}.card h1{margin:0 0 14px;font-size:24px}.topic{display:flex;gap:10px;align-items:flex-start;padding:13px 4px;border-bottom:1px solid var(--line);cursor:pointer}.topic:last-child{border-bottom:0}.topic input{margin-top:3px}.topic strong{font-size:15px;line-height:1.35}.topic span{display:block;margin-top:4px;color:var(--muted);font-size:12px}.start{width:100%;margin-top:18px;padding:14px;border:0;border-radius:10px;background:var(--blue);color:#fff;font-weight:800;font-size:16px;cursor:pointer}.start:disabled{opacity:.5;cursor:not-allowed}.status{margin:14px 0;color:var(--muted)}.error{color:#b42318}.live{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}.live[hidden]{display:none}.live h2{margin:0 0 6px;font-size:20px}.bubble{padding:12px 14px;margin:9px 0;border-radius:11px;background:#f8fafc;border:1px solid var(--line)}.bubble.you{background:#eef4ff}.bubble.mod{background:#f3f4f6;color:#475467}.bubble b{display:block;margin-bottom:4px}.room-state{display:flex;align-items:center;gap:9px;margin:12px 0;padding:11px 13px;border-radius:10px;background:#f8fafc;border:1px solid var(--line);font-size:13px}.dot{width:10px;height:10px;border-radius:50%;background:#98a2b3}.dot.live{background:var(--green);box-shadow:0 0 0 4px rgba(19,122,72,.12)}.dot.ai{background:var(--blue);box-shadow:0 0 0 4px rgba(36,88,215,.12)}.small{font-size:12px;color:var(--muted);margin-top:8px}.meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)}.back{display:inline-block;margin-top:16px;color:var(--blue);font-weight:700;text-decoration:none}.learn-link{display:inline-block;margin-top:16px;margin-right:18px;padding:10px 14px;border-radius:9px;background:#eef3ff;color:#1d4cb5;font-weight:800;text-decoration:none}@media(max-width:650px){.wrap{margin:14px auto}}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--ink)}header{background:var(--navy);color:#fff;padding:18px 24px;font-weight:700}.wrap{max-width:900px;margin:24px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px}.card h1{margin:0 0 14px;font-size:24px}.topic{display:flex;gap:10px;align-items:flex-start;padding:13px 4px;border-bottom:1px solid var(--line);cursor:pointer}.topic:last-child{border-bottom:0}.topic input{margin-top:3px}.topic strong{font-size:15px;line-height:1.35}.topic span{display:block;margin-top:4px;color:var(--muted);font-size:12px}.start{width:100%;margin-top:18px;padding:14px;border:0;border-radius:10px;background:var(--blue);color:#fff;font-weight:800;font-size:16px;cursor:pointer}.start:disabled{opacity:.5;cursor:not-allowed}.status{margin:14px 0;color:var(--muted)}.error{color:#b42318}.live{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}.live[hidden]{display:none}.live h2{margin:0 0 6px;font-size:20px}.bubble{padding:12px 14px;margin:9px 0;border-radius:11px;background:#f8fafc;border:1px solid var(--line)}.bubble.you{background:#eef4ff}.bubble.mod{background:#f3f4f6;color:#475467}.bubble b{display:block;margin-bottom:4px}.room-state{display:flex;align-items:center;gap:9px;margin:12px 0;padding:11px 13px;border-radius:10px;background:#f8fafc;border:1px solid var(--line);font-size:13px}.dot{width:10px;height:10px;border-radius:50%;background:#98a2b3}.dot.live{background:var(--green);box-shadow:0 0 0 4px rgba(19,122,72,.12)}.dot.ai{background:var(--blue);box-shadow:0 0 0 4px rgba(36,88,215,.12)}.small{font-size:12px;color:var(--muted);margin-top:8px}.meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)}.back{display:inline-block;margin-top:16px;color:var(--blue);font-weight:700;text-decoration:none}.basics-panel{margin-bottom:18px;padding:14px 16px;border:1px solid #cfdaf5;border-radius:11px;background:#f7f9ff}.learn-link{display:inline-block;padding:10px 15px;border-radius:9px;background:var(--blue);color:#fff;font-weight:800;text-decoration:none}.basics-line{margin-top:7px;color:#475467;font-size:13px;font-weight:700}@media(max-width:650px){.wrap{margin:14px auto}}
 </style>
 </head>
 <body>
 <header>ClarionPrep GD Lab — Admin</header>
 <div class="wrap">
   <section class="card">
+    <div class="basics-panel">
+      <a class="learn-link" href="/gd-lab/learn/">GD Basics</a>
+      <div class="basics-line">Learn the moves. Then practise them live.</div>
+    </div>
     <h1>Choose a GD topic</h1>
     <div id="status" class="status">Loading topics…</div>
     <div id="topics"></div>
@@ -24,7 +28,6 @@
       <div id="chat"></div>
     </section>
   </section>
-  <a class="learn-link" href="/gd-lab/learn/">▶ Learn the GD Moves</a>
   <a class="back" href="/ascent/admin-settings.html">← Back to Admin Hub</a>
 </div>
 <script>
