@@ -1,0 +1,12 @@
+name = "clarion-cat-simulator"
+main = "src/worker.js"
+compatibility_date = "2026-08-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[vars]
+APP_NAME = "Clarion CAT Simulator"
+AI_PROVIDER_URL = ""
+AI_MODEL = ""
