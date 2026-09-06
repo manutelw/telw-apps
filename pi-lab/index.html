@@ -30,15 +30,49 @@ const ITEMS=[
 const audio=document.getElementById('audio');let currentUrl='',rec=null,chunks=[],stream=null;
 function validSession(key){try{const s=JSON.parse(localStorage.getItem(key)||'null');const exp=new Date(s?.expiresAt).getTime();if(s?.sessionToken&&Number.isFinite(exp)&&exp>Date.now())return s}catch{}return null}
 async function adminVoiceToken(admin){const r=await fetch(ADMIN_HANDOFF,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify({ascent_session_token:admin.sessionToken})});const d=await r.json().catch(()=>({}));if(r.ok&&d.ok&&d.session_token)return d.session_token;return ''}
-function openApp(mode){accessMode=mode;document.getElementById('gate').style.display='none';document.getElementById('app').style.display='block';build()}
+function openApp(mode){accessMode=mode;document.getElementById('gate').style.display='none';document.getElementById('app').style.display='block';build();startAudioPreload()}
 async function init(){const student=validSession(STUDENT_KEY);if(student){voiceToken=student.sessionToken;openApp('student');return}const admin=validSession(ADMIN_KEY)||(()=>{const s=validSession(TRAINER_KEY);return String(s?.role||'').toUpperCase()==='ADMIN'?s:null})();if(admin){voiceToken=await adminVoiceToken(admin);openApp('admin');return}const trainer=validSession(TRAINER_KEY);if(trainer){voiceToken=trainer.sessionToken;openApp('trainer');return}if(TEST_MODE){openApp('test');return}document.getElementById('gateTitle').textContent='Trainer access';document.getElementById('gateText').textContent='Use the same email address and password you use for the ASCENT Trainer Portal.';document.getElementById('trainerLoginForm').style.display='grid'}
 async function trainerLogin(email,password){const r=await fetch(TRAINER_LOGIN,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({p_email:email,p_password:password})});const p=await r.json().catch(()=>({}));const d=Array.isArray(p)?p[0]:p;if(!r.ok||!d||d.ok!==true||!d.sessionToken&&!d.session_token)throw Error(d?.message||'Trainer login failed.');const session={...d,sessionToken:d.sessionToken||d.session_token,expiresAt:d.expiresAt||d.expires_at};localStorage.setItem(TRAINER_KEY,JSON.stringify(session));voiceToken=session.sessionToken;openApp('trainer')}
 document.getElementById('trainerLoginForm').addEventListener('submit',async e=>{e.preventDefault();const status=document.getElementById('loginStatus');status.textContent='Signing in…';try{await trainerLogin(document.getElementById('trainerEmail').value.trim(),document.getElementById('trainerPassword').value);status.textContent=''}catch(err){status.textContent=err.message||'Trainer login failed.'}});
 function browserSpeak(text,kind){return new Promise((resolve,reject)=>{if(!('speechSynthesis' in window))return reject(Error('Audio is unavailable in this browser.'));speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text),vs=speechSynthesis.getVoices();if(vs.length){u.voice=kind==='q'?(vs.find(v=>/female|samantha|zira|karen|moira/i.test(v.name))||vs[Math.min(1,vs.length-1)]):(vs.find(v=>/male|david|mark|daniel/i.test(v.name))||vs[0])}u.rate=0.96;u.onend=resolve;u.onerror=()=>reject(Error('Audio could not play.'));speechSynthesis.speak(u)})}
 async function speak(text,role,kind){if(!voiceToken){await browserSpeak(text,kind);return null}const r=await fetch(VOICE,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify({action:'SPEAK',session_token:voiceToken,text,role})});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok){if(accessMode==='trainer'||accessMode==='admin'||accessMode==='test'){await browserSpeak(text,kind);return null}throw Error(d.message||'Audio could not be prepared.')}const bin=atob(d.audio_base64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:d.audio_mime||'audio/mpeg'})}
+
+const audioCache=new Map();
+function audioKey(i,kind){return `${i}:${kind}`}
+function prepareAudio(i,kind){
+  if(i<0||i>=ITEMS.length||!voiceToken)return Promise.resolve(null);
+  const key=audioKey(i,kind);
+  if(!audioCache.has(key)){
+    const item=ITEMS[i];
+    const job=speak(kind==='q'?item.q:item.a,kind==='q'?'neeti_student':'arjun_student',kind).catch(e=>{audioCache.delete(key);throw e});
+    audioCache.set(key,job)
+  }
+  return audioCache.get(key)
+}
+function preloadCard(i){
+  if(i<0||i>=ITEMS.length||!voiceToken)return;
+  prepareAudio(i,'q').catch(()=>{});
+  prepareAudio(i,'a').catch(()=>{})
+}
+function startAudioPreload(){
+  if(!voiceToken)return;
+  preloadCard(0);
+  setTimeout(()=>preloadCard(1),200);
+  const cards=[...document.querySelectorAll('.qcard')];
+  if(!('IntersectionObserver' in window))return;
+  const observer=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(!entry.isIntersecting)return;
+      const i=cards.indexOf(entry.target);
+      if(i>=0){preloadCard(i);preloadCard(i+1)}
+    })
+  },{rootMargin:'600px 0px'});
+  cards.forEach(card=>observer.observe(card))
+}
+
 async function playBlob(blob){if(!blob)return;if(currentUrl)URL.revokeObjectURL(currentUrl);currentUrl=URL.createObjectURL(blob);audio.src=currentUrl;await audio.play()}
 function esc(s){return String(s||'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
-async function playText(i,kind,btn){const item=ITEMS[i],status=document.getElementById('s'+i);try{btn.disabled=true;status.textContent='Preparing audio…';const blob=await speak(kind==='q'?item.q:item.a,kind==='q'?'neeti_student':'arjun_student',kind);status.textContent=kind==='q'?'Interviewer speaking…':'Model candidate speaking…';await playBlob(blob);status.textContent='Ready.'}catch(e){status.textContent=e.message||'Audio unavailable.'}finally{btn.disabled=false}}
+async function playText(i,kind,btn){const status=document.getElementById('s'+i);try{btn.disabled=true;const cached=audioCache.has(audioKey(i,kind));status.textContent=cached?'Playing…':'Preparing audio…';const blob=await prepareAudio(i,kind);status.textContent=kind==='q'?'Interviewer speaking…':'Model candidate speaking…';await playBlob(blob);status.textContent='Ready.';preloadCard(i+1)}catch(e){status.textContent=e.message||'Audio unavailable.'}finally{btn.disabled=false}}
 async function toggleRecord(i,btn){const player=document.getElementById('p'+i),status=document.getElementById('s'+i);if(rec){rec.stop();return}try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});chunks=[];rec=new MediaRecorder(stream,MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?{mimeType:'audio/webm;codecs=opus'}:{});rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};rec.onstop=()=>{const blob=new Blob(chunks,{type:rec.mimeType||'audio/webm'});stream.getTracks().forEach(t=>t.stop());stream=null;rec=null;btn.textContent='Record your repeat';btn.classList.remove('recording');player.src=URL.createObjectURL(blob);player.classList.add('show');status.textContent='Listen back. Repeat again until it sounds natural.'};rec.start();btn.textContent='Stop recording';btn.classList.add('recording');status.textContent='Speak now. Repeat the model answer as naturally as you can.'}catch(e){status.textContent='Microphone access is needed for this practice.'}}
 function build(){const grouped={};ITEMS.forEach((x,i)=>(grouped[x.c]||(grouped[x.c]=[])).push({...x,i}));document.getElementById('content').innerHTML=Object.entries(grouped).map(([cat,arr])=>'<section class="card category"><h2>'+esc(cat)+'</h2>'+arr.map(x=>'<div class="qcard"><div class="q">'+esc(x.q)+'</div><div class="model"><b>Model response</b><div>'+esc(x.a)+'</div></div><div class="steps"><div class="step"><b>1 · Hear the interviewer</b><button class="btn" onclick="playText('+x.i+',\'q\',this)">▶ Play question</button></div><div class="step"><b>2 · Hear the model candidate</b><button class="btn secondary" onclick="playText('+x.i+',\'a\',this)">▶ Play response</button></div><div class="step"><b>3 · Repeat it yourself</b><button class="btn" onclick="toggleRecord('+x.i+',this)">Record your repeat</button><audio id="p'+x.i+'" class="playback" controls></audio></div></div><div id="s'+x.i+'" class="status">Ready.</div></div>').join('')+'</section>').join('')}
 init();
