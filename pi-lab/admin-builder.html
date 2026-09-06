@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>PI Assignment Builder · ClarionPrep</title>
+<style>
+:root{--navy:#143a60;--blue:#27679d;--gold:#c67b00;--ink:#24364a;--muted:#687a8d;--line:#d7e1eb;--bg:#eef4f8;--green:#18794e;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;padding:18px 22px}.top{max-width:1100px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:14px}.top b{font-size:22px}.top a{color:#fff;text-decoration:none;font-weight:700}
+.wrap{max-width:1100px;margin:24px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px}.card h1,.card h2{margin:0 0 8px;color:var(--navy)}.card p{margin:6px 0;color:var(--muted);line-height:1.55}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field{display:flex;flex-direction:column;gap:7px}.field.full{grid-column:1/-1}.field label{font-weight:800;color:var(--navy);font-size:13px}.field input,.field textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font:inherit;background:#fff}.field textarea{min-height:96px;resize:vertical}.help{font-size:12px;color:var(--muted)}
+.questions{display:grid;gap:10px;margin-top:14px}.qrow{display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:start}.qno{width:42px;height:42px;border-radius:10px;background:#eef5fb;color:var(--navy);display:grid;place-items:center;font-weight:800}.qrow textarea{min-height:62px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font:inherit;resize:vertical}.iconbtn{border:1px solid var(--line);background:#fff;color:var(--red);border-radius:10px;padding:10px 12px;font-weight:800;cursor:pointer}.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer}.btn.primary{background:var(--navy);color:#fff}.btn.secondary{background:#eaf2f9;color:var(--navy)}.btn.green{background:var(--green);color:#fff}.btn:disabled{opacity:.5;cursor:not-allowed}.status{margin-top:12px;min-height:20px;font-size:13px;color:var(--muted)}.status.ok{color:var(--green)}.status.err{color:var(--red)}
+.preview{display:grid;gap:10px;margin-top:12px}.preview-item{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fbfdff}.preview-item strong{color:var(--navy)}.badge{display:inline-block;padding:5px 8px;border-radius:999px;background:#eef5fb;color:var(--navy);font-size:11px;font-weight:800}
+.note{padding:12px 14px;border-radius:10px;background:#fff7e8;color:#704700;font-size:13px;line-height:1.5}.gate{max-width:650px;margin:50px auto;text-align:center}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.qrow{grid-template-columns:36px 1fr}.iconbtn{grid-column:2}.top{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<header><div class="top"><div><b>ClarionPrep PI Assignment Builder</b><div style="font-size:12px;opacity:.85;margin-top:4px">Admin workspace</div></div><a href="../ascent/admin-settings.html">← Back to Admin Hub</a></div></header>
+<div id="gate" class="card gate"><h2>Checking administrator access…</h2><p>Please wait.</p></div>
+<main id="app" class="wrap" hidden>
+<section class="card"><span class="badge">TEST BUILDER</span><h1 style="margin-top:10px">Create a targeted PI assignment</h1><p>For this first test, you can upload the JD, enter up to 10 PI questions, and prepare a test recipient. Nothing is released to students yet.</p></section>
+<section class="card">
+<h2>1. Placement details</h2>
+<div class="grid">
+<div class="field"><label for="assignmentName">Assignment name</label><input id="assignmentName" placeholder="Example: Evalueserve PI Prep"></div>
+<div class="field"><label for="companyName">Company</label><input id="companyName" placeholder="Company name"></div>
+<div class="field"><label for="roleName">Role</label><input id="roleName" placeholder="Role / position"></div>
+<div class="field"><label for="testEmail">Test recipient email</label><input id="testEmail" type="email" value="manutelw@gmail.com"></div>
+<div class="field full"><label for="jdFile">Upload JD</label><input id="jdFile" type="file" accept=".pdf,.doc,.docx,.txt"><div id="jdMeta" class="help">Accepted for this draft: PDF, DOC, DOCX or TXT. The secure backend will later extract and store the JD.</div></div>
+</div>
+</section>
+<section class="card">
+<h2>2. Add your PI questions</h2>
+<p>Enter between 1 and 10 questions. You can add or remove rows before release.</p>
+<div id="questions" class="questions"></div>
+<div class="btns"><button id="addQuestion" class="btn secondary" type="button">+ Add question</button><button id="saveDraft" class="btn primary" type="button">Save draft</button><button id="previewButton" class="btn secondary" type="button">Preview</button></div>
+<div id="builderStatus" class="status"></div>
+</section>
+<section class="card">
+<h2>3. Release test</h2>
+<div class="note">The email/release backend is not connected in this version yet. This page prepares the admin workflow safely without exposing questions to students. Once the secure assignment backend is connected, this button will send only the selected assignment link to the chosen recipient.</div>
+<div class="btns"><button id="sendTest" class="btn green" type="button" disabled>Send test link to manutelw@gmail.com</button></div>
+</section>
+<section id="previewCard" class="card" hidden><h2>Preview</h2><div id="preview" class="preview"></div></section>
+</main>
+<script>
+const ADMIN_KEY='ascent_admin_master_session',TRAINER_KEY='ascent_trainer_session',DRAFT_KEY='pi_admin_assignment_draft_v1';
+function validAdmin(){for(const key of [ADMIN_KEY,TRAINER_KEY]){try{const s=JSON.parse(localStorage.getItem(key)||'null');const exp=new Date(s?.expiresAt).getTime();if(s?.sessionToken&&String(s?.role||'').toUpperCase()==='ADMIN'&&Number.isFinite(exp)&&exp>Date.now())return s}catch{}}return null}
+const admin=validAdmin();if(!admin){document.getElementById('gate').innerHTML='<h2>Administrator access required</h2><p>Open this page from the ASCENT Admin Hub after signing in.</p><p><a href="../ascent/" style="color:#143a60;font-weight:800">Go to ASCENT login</a></p>'}else{document.getElementById('gate').hidden=true;document.getElementById('app').hidden=false;init()}
+function qValues(){return [...document.querySelectorAll('.qtext')].map(x=>x.value.trim()).filter(Boolean)}
+function renderQuestionRows(values=['']){const box=document.getElementById('questions');box.innerHTML='';values.slice(0,10).forEach((value,i)=>{const row=document.createElement('div');row.className='qrow';row.innerHTML=`<div class="qno">${i+1}</div><textarea class="qtext" maxlength="1000" placeholder="Type PI question ${i+1}"></textarea><button class="iconbtn" type="button" aria-label="Remove question">Remove</button>`;row.querySelector('textarea').value=value||'';row.querySelector('.iconbtn').onclick=()=>{const vals=qValues();vals.splice(i,1);renderQuestionRows(vals.length?vals:['']);updateAddButton()};box.appendChild(row)});updateAddButton()}
+function updateAddButton(){document.getElementById('addQuestion').disabled=document.querySelectorAll('.qrow').length>=10}
+function collect(){return{assignmentName:document.getElementById('assignmentName').value.trim(),companyName:document.getElementById('companyName').value.trim(),roleName:document.getElementById('roleName').value.trim(),testEmail:document.getElementById('testEmail').value.trim(),jdName:document.getElementById('jdFile').files[0]?.name||document.getElementById('jdFile').dataset.savedName||'',questions:qValues(),savedAt:new Date().toISOString()}}
+function restore(){try{const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');if(!d)return;assignmentName.value=d.assignmentName||'';companyName.value=d.companyName||'';roleName.value=d.roleName||'';testEmail.value=d.testEmail||'manutelw@gmail.com';if(d.jdName){jdFile.dataset.savedName=d.jdName;jdMeta.textContent='Saved draft JD: '+d.jdName+' · choose the file again when the secure upload backend is enabled.'}renderQuestionRows(Array.isArray(d.questions)&&d.questions.length?d.questions:[''])}catch{renderQuestionRows([''])}}
+function save(){const d=collect();if(!d.questions.length){setStatus('Add at least one PI question before saving.','err');return}localStorage.setItem(DRAFT_KEY,JSON.stringify(d));setStatus('Draft saved in this browser.','ok')}
+function preview(){const d=collect();if(!d.questions.length){setStatus('Add at least one PI question to preview.','err');return}previewCard.hidden=false;const head=[d.assignmentName,d.companyName,d.roleName].filter(Boolean).join(' · ')||'Untitled PI assignment';document.getElementById('preview').innerHTML=`<div class="preview-item"><strong>${esc(head)}</strong><div style="margin-top:6px;color:#687a8d">JD: ${esc(d.jdName||'Not uploaded')} · Test recipient: ${esc(d.testEmail||'Not set')}</div></div>`+d.questions.map((q,i)=>`<div class="preview-item"><strong>Q${i+1}.</strong> ${esc(q)}</div>`).join('');previewCard.scrollIntoView({behavior:'smooth',block:'start'})}
+function setStatus(msg,type=''){const el=document.getElementById('builderStatus');el.className='status'+(type?' '+type:'');el.textContent=msg}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function init(){renderQuestionRows(['']);restore();addQuestion.onclick=()=>{const vals=[...document.querySelectorAll('.qtext')].map(x=>x.value);if(vals.length<10){vals.push('');renderQuestionRows(vals)}};saveDraft.onclick=save;previewButton.onclick=preview;jdFile.onchange=()=>{const f=jdFile.files[0];if(f){jdMeta.textContent='Selected JD: '+f.name+' ('+Math.ceil(f.size/1024)+' KB)'}};testEmail.oninput=()=>{sendTest.textContent='Send test link to '+(testEmail.value.trim()||'recipient')}}
+</script>
+</body>
+</html>
