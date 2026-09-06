@@ -35,6 +35,7 @@ export default {
         try {
           questions = await generateSection(key, bp, seed, env);
         } catch (e) {
+          console.error("CAT generation fallback", key, e?.message || e);
           questions = expandFallback(key, bp.targetCount, seed);
         }
         sections.push({name:bp.name,key,durationSec:bp.durationSec,questions});
@@ -52,7 +53,7 @@ export default {
 };
 
 async function generateSection(section, blueprint, seed, env) {
-  if (!env.AI_PROVIDER_URL || !env.AI_API_KEY) throw new Error("AI not configured");
+  if (!env.GEMINI_API_KEY || !env.GEMINI_MODEL) throw new Error("Gemini not configured");
 
   const instruction = {
     task: "Generate original CAT-style practice questions",
@@ -72,6 +73,7 @@ async function generateSection(section, blueprint, seed, env) {
         "avoid culturally obscure knowledge",
         "avoid dependency on current affairs",
         "include all information needed",
+        "do not copy or closely paraphrase past CAT questions",
         "return JSON only"
       ]
     },
@@ -82,36 +84,39 @@ async function generateSection(section, blueprint, seed, env) {
         topic:"string",
         passage:"optional string",
         prompt:"string",
-        options:"array for MCQ only",
+        options:"array of exactly 4 strings for MCQ only",
         answer:"zero-based option index for MCQ; normalized string for TITA",
         rationale:"short solution rationale"
       }]
     }
   };
 
-  const out = await callAIProvider(instruction, env);
+  const out = await callGemini(instruction, env);
   const qs = Array.isArray(out?.questions) ? out.questions : [];
   const valid = qs.filter(validateQuestion);
-  if (valid.length < Math.ceil(blueprint.targetCount * 0.85)) throw new Error("Insufficient valid AI questions");
+  if (valid.length < Math.ceil(blueprint.targetCount * 0.85)) throw new Error("Insufficient valid Gemini questions");
   return valid.slice(0, blueprint.targetCount);
 }
 
-async function callAIProvider(instruction, env) {
-  const r = await fetch(env.AI_PROVIDER_URL, {
+async function callGemini(instruction, env) {
+  const model = encodeURIComponent(env.GEMINI_MODEL.trim());
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
+  const r = await fetch(url, {
     method:"POST",
-    headers:{
-      "content-type":"application/json",
-      "authorization":`Bearer ${env.AI_API_KEY}`
-    },
+    headers:{"content-type":"application/json"},
     body:JSON.stringify({
-      model:env.AI_MODEL || undefined,
-      input:instruction,
-      response_format:"json"
+      contents:[{role:"user",parts:[{text:JSON.stringify(instruction)}]}],
+      generationConfig:{
+        responseMimeType:"application/json",
+        temperature:0.8
+      }
     })
   });
-  if(!r.ok) throw new Error(`AI provider ${r.status}`);
+  if(!r.ok) throw new Error(`Gemini ${r.status}: ${await r.text()}`);
   const data = await r.json();
-  return data.output_json || data.json || data;
+  const text = data?.candidates?.[0]?.content?.parts?.map(p=>p.text || "").join("") || "";
+  if(!text) throw new Error("Gemini returned no content");
+  return JSON.parse(text);
 }
 
 function validateQuestion(q){
