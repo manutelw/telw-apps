@@ -215,9 +215,26 @@
     ensureVisibleSortControls();
   }
 
+  function addCatTrainerLink(){
+    if(document.getElementById("catSimulatorTrainerLink")) return;
+    const actions=document.querySelector(".topbar-actions");
+    if(!actions) return;
+    const logout=document.getElementById("logoutButton");
+    const link=document.createElement("a");
+    link.id="catSimulatorTrainerLink";
+    link.className="home-button";
+    link.href="https://cat.clarionprep.com";
+    link.target="_blank";
+    link.rel="noopener noreferrer";
+    link.textContent="CAT Simulator";
+    if(logout) actions.insertBefore(link,logout);
+    else actions.appendChild(link);
+  }
+
   window.renderResultsTable=renderStudentSummaryResults;
 
   document.addEventListener("DOMContentLoaded",function(){
+    addCatTrainerLink();
     window.setTimeout(function(){
       enforceSandeepResultsUi();
       ensureVisibleSortControls();
