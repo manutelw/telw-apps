@@ -1,3 +1,5 @@
+import {checkCatAccess,bearerFrom,sessionCookieFrom,setSessionCookie,clearSessionCookie} from './access.js';
+
 const FALLBACK = {
   VARC: [
     {type:"MCQ",difficulty:"easy",topic:"summary",passage:"Many firms use employee output as the main measure of productivity. Yet output alone may overlook collaboration, mentoring and learning. A workplace can therefore produce more in the short term while weakening capabilities that matter later.",prompt:"Which option best captures the central idea?",options:["Output is the only useful measure of productivity.","Higher short-term output may hide losses in other important workplace capabilities.","Mentoring always reduces productivity.","Firms should stop measuring productivity."],answer:1},
@@ -26,7 +28,30 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    if (url.pathname === "/api/session" && request.method === "POST") {
+      const token=bearerFrom(request);
+      const access=await checkCatAccess(token);
+      if(!access.ok) return json({ok:false,reason:access.reason||'unauthorized',error:access.error},access.status||403);
+      return json({ok:true,email:access.user.email,accessType:access.accessType},200,{"set-cookie":setSessionCookie(token)});
+    }
+
+    if (url.pathname === "/api/logout" && request.method === "POST") {
+      return json({ok:true},200,{"set-cookie":clearSessionCookie()});
+    }
+
+    if ((url.pathname === "/" || url.pathname === "/index.html") && request.method === "GET") {
+      return asset(env,request,"/login.html");
+    }
+
+    if (url.pathname === "/test" && request.method === "GET") {
+      const access=await checkCatAccess(sessionCookieFrom(request));
+      if(!access.ok) return Response.redirect(new URL('/',request.url),302);
+      return asset(env,request,"/index.html");
+    }
+
     if (url.pathname === "/api/new-attempt" && request.method === "POST") {
+      const access=await checkCatAccess(sessionCookieFrom(request));
+      if(!access.ok) return json({error:'Unauthorized',reason:access.reason||'unauthorized'},access.status||403);
       const seed = crypto.randomUUID();
       const keys = ["VARC","DILR","QA"];
       const generated = await Promise.all(keys.map(async key => {
@@ -43,6 +68,8 @@ export default {
     }
 
     if (url.pathname === "/api/score" && request.method === "POST") {
+      const access=await checkCatAccess(sessionCookieFrom(request));
+      if(!access.ok) return json({error:'Unauthorized',reason:access.reason||'unauthorized'},access.status||403);
       const body = await request.json();
       return json(scorePaper(body.paper, body.state));
     }
@@ -50,6 +77,11 @@ export default {
     return env.ASSETS.fetch(request);
   }
 };
+
+async function asset(env,request,path){
+  const u=new URL(request.url);u.pathname=path;u.search='';
+  return env.ASSETS.fetch(new Request(u.toString(),request));
+}
 
 async function generateSection(section, blueprint, seed, env) {
   if (!env.GEMINI_API_KEY || !env.GEMINI_MODEL) throw new Error("Gemini not configured");
@@ -216,4 +248,4 @@ function scorePaper(paper,state){
 
 function normalize(x){return String(x).trim().toLowerCase().replace(/\s+/g," ");}
 function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return Math.abs(h);}
-function json(x){return new Response(JSON.stringify(x),{headers:{"content-type":"application/json","cache-control":"no-store"}});}
+function json(x,status=200,extraHeaders={}){return new Response(JSON.stringify(x),{status,headers:{"content-type":"application/json","cache-control":"no-store",...extraHeaders}});}

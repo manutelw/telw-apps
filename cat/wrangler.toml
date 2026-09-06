@@ -2,6 +2,7 @@ name = "clarion-cat"
 main = "src/worker.js"
 compatibility_date = "2026-08-01"
 workers_dev = true
+keep_vars = true
 
 [assets]
 directory = "./public"
@@ -9,4 +10,3 @@ binding = "ASSETS"
 
 [vars]
 APP_NAME = "Clarion CAT Simulator"
-GEMINI_MODEL = ""
