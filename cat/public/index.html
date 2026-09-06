@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Clarion CAT Simulator</title>
+  <style>
+    :root{
+      --navy:#0b1f3a; --blue:#1f5fbf; --pale:#eef4fb; --line:#d6dde8;
+      --green:#1a8f4c; --red:#c0392b; --violet:#7d3c98; --orange:#d97706;
+      --text:#172033; --muted:#667085; --bg:#f5f7fb;
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:var(--bg)}
+    button,input{font:inherit}
+    .top{height:58px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+    .brand{font-weight:700}.timer{font-weight:700;background:#fff;color:#111;padding:8px 12px;border-radius:5px}
+    .section-tabs{display:flex;background:#fff;border-bottom:1px solid var(--line)}
+    .section-tabs div{padding:13px 22px;border-right:1px solid var(--line);font-size:14px}
+    .section-tabs .active{background:var(--blue);color:#fff;font-weight:700}
+    .layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;min-height:calc(100vh - 106px)}
+    .main{padding:22px 28px;background:#fff}
+    .side{border-left:1px solid var(--line);padding:16px;background:#fbfcfe}
+    .qhead{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:18px}
+    .qtype{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+    .passage{line-height:1.55;background:#fafafa;border:1px solid var(--line);padding:16px;margin:12px 0 18px;border-radius:4px}
+    .question{font-size:17px;line-height:1.5;font-weight:600;margin:14px 0}
+    .options{display:grid;gap:10px}
+    .opt{border:1px solid var(--line);padding:12px;border-radius:4px;display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+    .opt:hover{background:#f7faff}
+    .tita{padding:10px;border:1px solid var(--line);border-radius:4px;width:260px}
+    .legend{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;margin:12px 0}
+    .lg{display:flex;align-items:center;gap:7px}.dot{width:22px;height:22px;border-radius:3px;border:1px solid #aaa}
+    .notvisited{background:#fff}.notanswered{background:var(--red)}.answered{background:var(--green)}
+    .review{background:var(--violet);border-radius:50%}.ansreview{background:linear-gradient(135deg,var(--violet) 55%,var(--green) 55%);border-radius:50%}
+    .palette{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
+    .qbtn{height:38px;border:1px solid #aaa;background:#fff;border-radius:4px;cursor:pointer}
+    .qbtn.active{outline:3px solid #222}
+    .side-title{font-weight:700;margin-top:10px}
+    .actions{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 28px;display:flex;gap:10px;justify-content:space-between}
+    .left-actions,.right-actions{display:flex;gap:10px}
+    .btn{border:1px solid #9aa4b2;background:#fff;padding:10px 14px;border-radius:4px;cursor:pointer}
+    .primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+    .submit{background:var(--green);color:white;border-color:var(--green)}
+    .start{max-width:760px;margin:60px auto;padding:32px;background:white;border:1px solid var(--line);border-radius:8px}
+    .start h1{margin-top:0}.start li{margin:9px 0}.hidden{display:none!important}
+    .result{max-width:850px;margin:40px auto;background:#fff;border:1px solid var(--line);padding:28px}
+    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{padding:16px;border:1px solid var(--line);border-radius:6px}
+    .small{font-size:12px;color:var(--muted)}
+    @media(max-width:900px){.layout{grid-template-columns:1fr}.side{border-left:0;border-top:1px solid var(--line)}.cards{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div id="start" class="start">
+  <div class="small">CLARIONPREP</div>
+  <h1>CAT-Style Full Test Simulator</h1>
+  <p>This simulator follows the CAT test experience closely while using original CAT-style questions.</p>
+  <ul>
+    <li>Three timed sections: VARC, DILR and Quantitative Ability.</li>
+    <li>Questions include MCQ and TITA formats.</li>
+    <li>MCQs use +3 / −1 marking. TITA uses +3 / 0.</li>
+    <li>Questions may change across attempts while the difficulty blueprint remains comparable.</li>
+  </ul>
+  <button class="btn primary" id="begin">Start New Attempt</button>
+  <p class="small" id="loadMsg"></p>
+</div>
+
+<div id="exam" class="hidden">
+  <div class="top">
+    <div class="brand">Clarion CAT Simulator</div>
+    <div class="timer" id="timer">40:00</div>
+  </div>
+  <div class="section-tabs" id="tabs"></div>
+  <div class="layout">
+    <div>
+      <div class="main">
+        <div class="qhead"><strong id="qnum">Question 1</strong><span class="qtype" id="qtype">MCQ</span></div>
+        <div id="passage" class="passage hidden"></div>
+        <div id="question" class="question"></div>
+        <div id="answerArea"></div>
+      </div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" id="clear">Clear Response</button>
+          <button class="btn" id="mark">Mark for Review & Next</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn primary" id="saveNext">Save & Next</button>
+          <button class="btn submit hidden" id="submitSection">Submit Section</button>
+        </div>
+      </div>
+    </div>
+    <aside class="side">
+      <div class="side-title" id="sideSection">VARC</div>
+      <div class="legend">
+        <div class="lg"><span class="dot notvisited"></span>Not visited</div>
+        <div class="lg"><span class="dot notanswered"></span>Not answered</div>
+        <div class="lg"><span class="dot answered"></span>Answered</div>
+        <div class="lg"><span class="dot review"></span>Marked</div>
+        <div class="lg"><span class="dot ansreview"></span>Answered + marked</div>
+      </div>
+      <div class="palette" id="palette"></div>
+    </aside>
+  </div>
+</div>
+
+<div id="result" class="result hidden">
+  <div class="small">ATTEMPT COMPLETE</div>
+  <h1>Your CAT-style test summary</h1>
+  <div class="cards">
+    <div class="card"><div class="small">SCORE</div><h2 id="rScore"></h2></div>
+    <div class="card"><div class="small">ATTEMPTED</div><h2 id="rAttempt"></h2></div>
+    <div class="card"><div class="small">CORRECT</div><h2 id="rCorrect"></h2></div>
+    <div class="card"><div class="small">ACCURACY</div><h2 id="rAccuracy"></h2></div>
+  </div>
+  <p id="rBreak"></p>
+  <button class="btn primary" onclick="location.reload()">Take Another Attempt</button>
+</div>
+
+<script>
+let paper=null, sectionIndex=0, qIndex=0, remaining=0, tick=null;
+let state=[];
+
+const $=id=>document.getElementById(id);
+$('begin').onclick=startAttempt;
+
+async function startAttempt(){
+  $('begin').disabled=true; $('loadMsg').textContent='Preparing a fresh CAT-style paper…';
+  try{
+    const r=await fetch('/api/new-attempt',{method:'POST'});
+    if(!r.ok) throw new Error('generation failed');
+    paper=await r.json();
+    state=paper.sections.map(s=>s.questions.map(()=>({visited:false,answer:null,marked:false})));
+    $('start').classList.add('hidden'); $('exam').classList.remove('hidden');
+    startSection(0);
+  }catch(e){
+    $('loadMsg').textContent='Could not create the paper. Please try again.';
+    $('begin').disabled=false;
+  }
+}
+
+function startSection(i){
+  sectionIndex=i; qIndex=0;
+  remaining=paper.sections[i].durationSec;
+  renderTabs(); renderQuestion(); startTimer();
+}
+
+function renderTabs(){
+  $('tabs').innerHTML=paper.sections.map((s,i)=>`<div class="${i===sectionIndex?'active':''}">${s.name}</div>`).join('');
+  $('sideSection').textContent=paper.sections[sectionIndex].name;
+}
+
+function startTimer(){
+  clearInterval(tick); updateTimer();
+  tick=setInterval(()=>{remaining--; updateTimer(); if(remaining<=0){clearInterval(tick); finishSection();}},1000);
+}
+function updateTimer(){
+  const m=Math.floor(remaining/60), s=remaining%60;
+  $('timer').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function renderQuestion(){
+  const sec=paper.sections[sectionIndex], q=sec.questions[qIndex], st=state[sectionIndex][qIndex];
+  st.visited=true;
+  $('qnum').textContent=`Question ${qIndex+1} of ${sec.questions.length}`;
+  $('qtype').textContent=q.type;
+  $('question').textContent=q.prompt;
+  if(q.passage){$('passage').textContent=q.passage;$('passage').classList.remove('hidden')}
+  else {$('passage').classList.add('hidden')}
+  if(q.type==='MCQ'){
+    $('answerArea').innerHTML=`<div class="options">${q.options.map((o,i)=>`
+      <label class="opt"><input type="radio" name="ans" value="${i}" ${st.answer===i?'checked':''}/> <span>${o}</span></label>`).join('')}</div>`;
+    document.querySelectorAll('input[name=ans]').forEach(el=>el.onchange=()=>{st.answer=Number(el.value);renderPalette()});
+  } else {
+    $('answerArea').innerHTML=`<input class="tita" id="tita" placeholder="Type your answer" value="${st.answer??''}"/>`;
+    $('tita').oninput=e=>{st.answer=e.target.value.trim();renderPalette()};
+  }
+  $('submitSection').classList.toggle('hidden',qIndex!==sec.questions.length-1);
+  renderPalette();
+}
+
+function qClass(st){
+  if(st.marked && st.answer!==null && st.answer!=='') return 'ansreview';
+  if(st.marked) return 'review';
+  if(st.answer!==null && st.answer!=='') return 'answered';
+  if(st.visited) return 'notanswered';
+  return 'notvisited';
+}
+function renderPalette(){
+  const arr=state[sectionIndex];
+  $('palette').innerHTML=arr.map((st,i)=>`<button class="qbtn ${qClass(st)} ${i===qIndex?'active':''}" data-i="${i}">${i+1}</button>`).join('');
+  document.querySelectorAll('.qbtn').forEach(b=>b.onclick=()=>{qIndex=Number(b.dataset.i);renderQuestion()});
+}
+function next(){
+  const len=paper.sections[sectionIndex].questions.length;
+  if(qIndex<len-1){qIndex++;renderQuestion();}
+}
+$('saveNext').onclick=()=>{state[sectionIndex][qIndex].marked=false;next()};
+$('mark').onclick=()=>{state[sectionIndex][qIndex].marked=true;next()};
+$('clear').onclick=()=>{state[sectionIndex][qIndex].answer=null;renderQuestion()};
+$('submitSection').onclick=()=>{if(confirm('Submit this section? You cannot return to it.'))finishSection()};
+
+function finishSection(){
+  clearInterval(tick);
+  if(sectionIndex<paper.sections.length-1){startSection(sectionIndex+1)}
+  else submitExam();
+}
+
+async function submitExam(){
+  $('exam').classList.add('hidden');
+  const r=await fetch('/api/score',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({paper,state})});
+  const res=await r.json();
+  $('result').classList.remove('hidden');
+  $('rScore').textContent=res.score;
+  $('rAttempt').textContent=res.attempted;
+  $('rCorrect').textContent=res.correct;
+  $('rAccuracy').textContent=res.accuracy+'%';
+  $('rBreak').textContent=res.sectionSummary.map(x=>`${x.section}: ${x.score}`).join(' | ');
+}
+</script>
+</body>
+</html>
