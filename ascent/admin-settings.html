@@ -178,7 +178,7 @@
         <button id="liveMockAppButton" class="app-card live" type="button"><strong>Live Mock Interview</strong><span>Open Live Mock with administrator access</span></button>
         <button id="dialogueLabAppLink" class="app-card dialogue" type="button"><strong>Dialogue Lab – Test</strong><span>Open the separate Below-5 video and speaking-practice site with free admin access</span></button>
         <a class="app-card gd" href="../gd-lab/admin/"><strong>GD Lab</strong><span>Open GD topics, assignments, full-session recordings and results</span></a>
-        <a class="app-card ascent" href="https://cat.clarionprep.com" target="_blank" rel="noopener noreferrer"><strong>CAT Simulator</strong><span>Open the separate CAT-style full-test simulator</span></a>
+        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong><span>Open the separate CAT-style full-test simulator</span></button>
       </div>
       <div id="appHubStatus" class="admin-status" role="status" aria-live="polite"></div>
     </section>
@@ -287,6 +287,7 @@
     const PORTAL_MANAGER_GLOBAL_URL = SUPABASE_URL + "/rest/v1/rpc/ascent_admin_set_institutional_portals_enabled";
     const LIVE_MOCK_ADMIN_HANDOFF_URL = SUPABASE_URL + "/functions/v1/live-mock-admin-handoff";
     const DIALOGUE_LAB_ADMIN_HANDOFF_URL = SUPABASE_URL + "/functions/v1/dialogue-lab-admin-handoff";
+    const CAT_ADMIN_HANDOFF_URL = "https://cat.clarionprep.com/admin-handoff";
     let portalManagerRecords = [];
     let allPaymentRecords = [];
     let displayedPaymentRecords = [];
@@ -371,6 +372,30 @@
       }
     }
 
+    function openCatSimulatorAdmin() {
+      const button = document.getElementById("catSimulatorAdminButton");
+      if (!session || !session.sessionToken) {
+        setAppHubStatus("Your administrator session is not available. Sign in again.","error");
+        return;
+      }
+      button.disabled = true;
+      setAppHubStatus("Opening CAT Simulator with administrator access…");
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = CAT_ADMIN_HANDOFF_URL;
+      form.target = "_blank";
+      const token = document.createElement("input");
+      token.type = "hidden";
+      token.name = "ascent_session_token";
+      token.value = session.sessionToken;
+      form.appendChild(token);
+      document.body.appendChild(form);
+      form.submit();
+      form.remove();
+      setAppHubStatus("CAT Simulator administrator access opened.","success");
+      window.setTimeout(()=>{button.disabled=false;},700);
+    }
+
     async function enterDemoStudent(demoMode) {
       const status = document.getElementById("adminWorkspaceStatus");
       status.className = "admin-status";
@@ -417,7 +442,6 @@
         window.location.href = destination;
       } catch (error) { status.className="admin-status error"; status.textContent=error.message || "The administrator workspace could not be opened."; }
     }
-
     async function loadAdminInstitutions() {
       const select = document.getElementById("adminInstitutionSelect");
       try {
@@ -543,6 +567,7 @@
       document.getElementById("logoutButton").addEventListener("click",()=>{localStorage.removeItem(SESSION_STORAGE_KEY);localStorage.removeItem(ADMIN_MASTER_SESSION_KEY);localStorage.removeItem(LIVE_MOCK_SESSION_KEY);window.location.replace("./");});
       document.getElementById("ascentAppButton").addEventListener("click",()=>{void enterAdminWorkspace("./trainer.html");});
       document.getElementById("liveMockAppButton").addEventListener("click",()=>{void openLiveMockAdmin();});
+      document.getElementById("catSimulatorAdminButton").addEventListener("click",openCatSimulatorAdmin);
       document.getElementById("adminPrivateDemoButton").addEventListener("click",()=>{void enterDemoStudent("PRIVATE");});
       document.getElementById("adminInstitutionalDemoButton").addEventListener("click",()=>{void enterDemoStudent("INSTITUTIONAL");});
       document.getElementById("adminTrainerPortalLink").addEventListener("click",event=>{event.preventDefault();void enterAdminWorkspace("./trainer.html");});
