@@ -1,5 +1,6 @@
 const SUPABASE_URL='https://vtqatrhwfvzyodiftvkc.supabase.co';
 const SUPABASE_KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
+const OWNER_EMAILS=new Set(['manutelw@gmail.com']);
 
 export async function verifyToken(token){
   if(!token) return {ok:false,status:401,error:'Missing session'};
@@ -14,6 +15,7 @@ export async function checkCatAccess(token){
   if(!verified.ok) return verified;
   const user=verified.user;
   const email=String(user.email||'').toLowerCase();
+  if(OWNER_EMAILS.has(email)) return {ok:true,user,accessType:'owner'};
   if(email.endsWith('@fiib.edu.in')) return {ok:true,user,accessType:'institutional_free'};
 
   try{
