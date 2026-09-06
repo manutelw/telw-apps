@@ -1,5 +1,9 @@
 import {checkCatAccess,bearerFrom,sessionCookieFrom,setSessionCookie,clearSessionCookie} from './access.js';
 
+const ASCENT_SUPABASE_URL='https://vtqatrhwfvzyodiftvkc.supabase.co';
+const ASCENT_SUPABASE_KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
+const ASCENT_ADMIN_VALIDATE_RPC=ASCENT_SUPABASE_URL+'/rest/v1/rpc/ascent_admin_trainer_entry_list';
+
 const FALLBACK = {
   VARC: [
     {type:"MCQ",difficulty:"easy",topic:"summary",passage:"Many firms use employee output as the main measure of productivity. Yet output alone may overlook collaboration, mentoring and learning. A workplace can therefore produce more in the short term while weakening capabilities that matter later.",prompt:"Which option best captures the central idea?",options:["Output is the only useful measure of productivity.","Higher short-term output may hide losses in other important workplace capabilities.","Mentoring always reduces productivity.","Firms should stop measuring productivity."],answer:1},
@@ -36,14 +40,29 @@ export default {
     }
 
     if (url.pathname === "/api/logout" && request.method === "POST") {
-      return json({ok:true},200,{"set-cookie":`${clearSessionCookie()}, ${clearAdminCookie()}`});
+      const headers=new Headers({"content-type":"application/json","cache-control":"no-store"});
+      headers.append("set-cookie",clearSessionCookie());
+      headers.append("set-cookie",clearAdminCookie());
+      return new Response(JSON.stringify({ok:true}),{status:200,headers});
+    }
+
+    if (url.pathname === "/admin-handoff" && request.method === "POST") {
+      const origin=request.headers.get('origin')||'';
+      if(!isClarionOrigin(origin)) return new Response('Administrator handoff is not available from this origin.',{status:403,headers:{"cache-control":"no-store"}});
+      let token='';
+      try{
+        const form=await request.formData();
+        token=String(form.get('ascent_session_token')||'').trim();
+      }catch{
+        return new Response('Administrator handoff could not be read.',{status:400,headers:{"cache-control":"no-store"}});
+      }
+      const valid=await validateAscentAdminSession(token);
+      if(!valid) return new Response('Your ASCENT administrator session is not valid or has expired.',{status:403,headers:{"cache-control":"no-store"}});
+      const cookie=await setAdminCookie(env);
+      return new Response(null,{status:303,headers:{location:new URL('/test',request.url).toString(),"set-cookie":cookie,"cache-control":"no-store"}});
     }
 
     if ((url.pathname === "/" || url.pathname === "/index.html") && request.method === "GET") {
-      if (isAdminPortalNavigation(request)) {
-        const cookie=await setAdminCookie(env);
-        return new Response(null,{status:302,headers:{location:new URL('/test',request.url).toString(),"set-cookie":cookie,"cache-control":"no-store"}});
-      }
       return asset(env,request,"/login.html");
     }
 
@@ -87,18 +106,30 @@ export default {
   }
 };
 
-function isAdminPortalNavigation(request){
-  const referer=request.headers.get('referer')||'';
-  const site=(request.headers.get('sec-fetch-site')||'').toLowerCase();
-  const mode=(request.headers.get('sec-fetch-mode')||'').toLowerCase();
-  const user=request.headers.get('sec-fetch-user')||'';
+function isClarionOrigin(origin){
   try{
-    const ref=new URL(referer);
-    const host=ref.hostname.toLowerCase();
-    const isClarionHost=host==='clarionprep.com' || host.endsWith('.clarionprep.com');
-    const isAdminPath=ref.pathname.startsWith('/portal/ceo/');
-    return isClarionHost && isAdminPath && site==='same-site' && mode==='navigate' && user==='?1';
+    const u=new URL(origin);
+    const host=u.hostname.toLowerCase();
+    return u.protocol==='https:' && (host==='clarionprep.com' || host.endsWith('.clarionprep.com'));
   }catch{
+    return false;
+  }
+}
+
+async function validateAscentAdminSession(token){
+  if(!token) return false;
+  try{
+    const r=await fetch(ASCENT_ADMIN_VALIDATE_RPC,{
+      method:'POST',
+      headers:{apikey:ASCENT_SUPABASE_KEY,authorization:`Bearer ${ASCENT_SUPABASE_KEY}`,'content-type':'application/json'},
+      body:JSON.stringify({p_session_token:token})
+    });
+    if(!r.ok) return false;
+    const payload=await r.json();
+    const result=Array.isArray(payload)?payload[0]:payload;
+    return Boolean(result && result.ok===true);
+  }catch(error){
+    console.error('CAT admin handoff validation failed',error?.message||error);
     return false;
   }
 }
