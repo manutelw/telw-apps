@@ -36,22 +36,29 @@ export default {
     }
 
     if (url.pathname === "/api/logout" && request.method === "POST") {
-      return json({ok:true},200,{"set-cookie":clearSessionCookie()});
+      return json({ok:true},200,{"set-cookie":`${clearSessionCookie()}, ${clearAdminCookie()}`});
     }
 
     if ((url.pathname === "/" || url.pathname === "/index.html") && request.method === "GET") {
+      if (isAdminPortalNavigation(request)) {
+        const cookie=await setAdminCookie(env);
+        return new Response(null,{status:302,headers:{location:new URL('/test',request.url).toString(),"set-cookie":cookie,"cache-control":"no-store"}});
+      }
       return asset(env,request,"/login.html");
     }
 
     if (url.pathname === "/test" && request.method === "GET") {
+      if (await hasAdminSession(request,env)) return asset(env,request,"/index.html");
       const access=await checkCatAccess(sessionCookieFrom(request));
       if(!access.ok) return Response.redirect(new URL('/',request.url),302);
       return asset(env,request,"/index.html");
     }
 
     if (url.pathname === "/api/new-attempt" && request.method === "POST") {
-      const access=await checkCatAccess(sessionCookieFrom(request));
-      if(!access.ok) return json({error:'Unauthorized',reason:access.reason||'unauthorized'},access.status||403);
+      if (!(await hasAdminSession(request,env))) {
+        const access=await checkCatAccess(sessionCookieFrom(request));
+        if(!access.ok) return json({error:'Unauthorized',reason:access.reason||'unauthorized'},access.status||403);
+      }
       const seed = crypto.randomUUID();
       const keys = ["VARC","DILR","QA"];
       const generated = await Promise.all(keys.map(async key => {
@@ -68,8 +75,10 @@ export default {
     }
 
     if (url.pathname === "/api/score" && request.method === "POST") {
-      const access=await checkCatAccess(sessionCookieFrom(request));
-      if(!access.ok) return json({error:'Unauthorized',reason:access.reason||'unauthorized'},access.status||403);
+      if (!(await hasAdminSession(request,env))) {
+        const access=await checkCatAccess(sessionCookieFrom(request));
+        if(!access.ok) return json({error:'Unauthorized',reason:access.reason||'unauthorized'},access.status||403);
+      }
       const body = await request.json();
       return json(scorePaper(body.paper, body.state));
     }
@@ -77,6 +86,68 @@ export default {
     return env.ASSETS.fetch(request);
   }
 };
+
+function isAdminPortalNavigation(request){
+  const referer=request.headers.get('referer')||'';
+  const site=(request.headers.get('sec-fetch-site')||'').toLowerCase();
+  const mode=(request.headers.get('sec-fetch-mode')||'').toLowerCase();
+  const user=request.headers.get('sec-fetch-user')||'';
+  try{
+    const ref=new URL(referer);
+    const host=ref.hostname.toLowerCase();
+    const isClarionHost=host==='clarionprep.com' || host.endsWith('.clarionprep.com');
+    const isAdminPath=ref.pathname.startsWith('/portal/ceo/');
+    return isClarionHost && isAdminPath && site==='same-site' && mode==='navigate' && user==='?1';
+  }catch{
+    return false;
+  }
+}
+
+async function setAdminCookie(env){
+  const issued=Math.floor(Date.now()/1000);
+  const sig=await adminSignature(String(issued),env);
+  return `cat_admin_session=${issued}.${sig}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`;
+}
+
+function clearAdminCookie(){
+  return 'cat_admin_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0';
+}
+
+async function hasAdminSession(request,env){
+  const cookie=request.headers.get('cookie')||'';
+  const match=cookie.match(/(?:^|;\s*)cat_admin_session=([^;]+)/);
+  if(!match || !env.GEMINI_API_KEY) return false;
+  const value=decodeURIComponent(match[1]);
+  const dot=value.indexOf('.');
+  if(dot<1) return false;
+  const issuedText=value.slice(0,dot);
+  const supplied=value.slice(dot+1);
+  const issued=Number(issuedText);
+  if(!Number.isInteger(issued)) return false;
+  const age=Math.floor(Date.now()/1000)-issued;
+  if(age<0 || age>3600) return false;
+  const expected=await adminSignature(issuedText,env);
+  return timingSafeEqual(supplied,expected);
+}
+
+async function adminSignature(value,env){
+  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.GEMINI_API_KEY),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const signed=await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(`cat-admin:${value}`));
+  return base64Url(new Uint8Array(signed));
+}
+
+function timingSafeEqual(a,b){
+  if(a.length!==b.length) return false;
+  let diff=0;
+  for(let i=0;i<a.length;i++) diff|=a.charCodeAt(i)^b.charCodeAt(i);
+  return diff===0;
+}
+
+function base64Url(bytes){
+  let binary='';
+  for(const byte of bytes) binary+=String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
 
 async function asset(env,request,path){
   const u=new URL(request.url);u.pathname=path;u.search='';
