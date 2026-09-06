@@ -215,6 +215,22 @@
     ensureVisibleSortControls();
   }
 
+  function addPiTrainerLink(){
+    if(document.getElementById("piLabTrainerLink")) return;
+    const nav=document.querySelector(".sidebar .nav-list");
+    if(!nav) return;
+    const link=document.createElement("a");
+    link.id="piLabTrainerLink";
+    link.className="nav-item";
+    link.href="../pi-lab/?trainer=1";
+    link.target="_blank";
+    link.rel="noopener noreferrer";
+    link.style.display="block";
+    link.style.textDecoration="none";
+    link.textContent="PI Question Bank";
+    nav.appendChild(link);
+  }
+
   function addCatTrainerLink(){
     if(document.getElementById("catSimulatorTrainerLink")) return;
     const nav=document.querySelector(".sidebar .nav-list");
@@ -234,6 +250,7 @@
   window.renderResultsTable=renderStudentSummaryResults;
 
   document.addEventListener("DOMContentLoaded",function(){
+    addPiTrainerLink();
     addCatTrainerLink();
     window.setTimeout(function(){
       enforceSandeepResultsUi();
