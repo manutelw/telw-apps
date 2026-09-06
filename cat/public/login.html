@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ClarionPrep · CAT Simulator</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#0b1f3a;--blue:#1f5fbf;--line:#d6dde8;--text:#172033;--muted:#667085;--bg:#f5f7fb;--green:#1a8f4c;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#eef4fb,#f8fafc);color:var(--text);min-height:100vh;display:grid;place-items:center;padding:24px}
+.shell{width:min(980px,100%);background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 24px 70px rgba(11,31,58,.12);display:grid;grid-template-columns:1.05fr .95fr}
+.hero{background:var(--navy);color:#fff;padding:44px}.kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.7}.hero h1{font-size:42px;line-height:1.05;margin:18px 0}.hero p{line-height:1.6;color:rgba(255,255,255,.82)}.hero ul{padding-left:18px;line-height:1.65;color:rgba(255,255,255,.88)}
+.panel{padding:42px}.panel h2{margin:0 0 8px}.lead{color:var(--muted);line-height:1.5;margin:0 0 24px}.tabs{display:flex;gap:8px;margin-bottom:22px}.tab{flex:1;padding:10px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer}.tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.field{margin-bottom:16px}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:7px}.field input{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:8px}.btn{width:100%;padding:12px;border:0;border-radius:8px;background:var(--blue);color:#fff;font-weight:700;cursor:pointer}.btn:disabled{opacity:.6;cursor:wait}.msg{min-height:22px;margin-top:14px;font-size:13px;line-height:1.45}.error{color:var(--red)}.ok{color:var(--green)}.note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:18px;border-top:1px solid var(--line);padding-top:16px}.hidden{display:none}
+@media(max-width:760px){.shell{grid-template-columns:1fr}.hero{padding:30px}.hero h1{font-size:34px}.panel{padding:30px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <section class="hero">
+    <div class="kicker">CLARIONPREP</div>
+    <h1>CAT practice that feels purposeful.</h1>
+    <p>Train under time pressure, build score discipline and learn when to attempt, skip or return.</p>
+    <ul>
+      <li>Fresh CAT-style papers across attempts.</li>
+      <li>Comparable difficulty so progress means something.</li>
+      <li>Free access for verified FIIB users.</li>
+      <li>Public access is product-specific and paid.</li>
+    </ul>
+  </section>
+  <section class="panel">
+    <h2>ClarionPrep Account</h2>
+    <p class="lead">Use your existing ClarionPrep credentials, or create an account here.</p>
+    <div class="tabs">
+      <button id="loginTab" class="tab active">Sign in</button>
+      <button id="signupTab" class="tab">Create account</button>
+    </div>
+    <form id="loginForm">
+      <div class="field"><label>Email</label><input id="loginEmail" type="email" autocomplete="email" required></div>
+      <div class="field"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password" required></div>
+      <button id="loginBtn" class="btn" type="submit">Sign in</button>
+    </form>
+    <form id="signupForm" class="hidden">
+      <div class="field"><label>Email</label><input id="signupEmail" type="email" autocomplete="email" required></div>
+      <div class="field"><label>Password</label><input id="signupPassword" type="password" minlength="8" autocomplete="new-password" required></div>
+      <button id="signupBtn" class="btn" type="submit">Create ClarionPrep account</button>
+    </form>
+    <div id="msg" class="msg"></div>
+    <div class="note">FIIB users with a verified <strong>@fiib.edu.in</strong> email receive free access. Other users need CAT Simulator access on their ClarionPrep account.</div>
+  </section>
+</div>
+<script>
+const SUPABASE_URL='https://vtqatrhwfvzyodiftvkc.supabase.co';
+const SUPABASE_KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+function show(mode){
+  const login=mode==='login';
+  $('loginForm').classList.toggle('hidden',!login);$('signupForm').classList.toggle('hidden',login);
+  $('loginTab').classList.toggle('active',login);$('signupTab').classList.toggle('active',!login);$('msg').textContent='';$('msg').className='msg';
+}
+$('loginTab').onclick=()=>show('login');$('signupTab').onclick=()=>show('signup');
+async function openSession(accessToken){
+  const r=await fetch('/api/session',{method:'POST',headers:{authorization:`Bearer ${accessToken}`}});
+  const j=await r.json().catch(()=>({}));
+  if(r.ok&&j.ok){location.replace('/test');return;}
+  if(j.reason==='payment_required') throw new Error('Your ClarionPrep account is valid, but CAT Simulator access is not active yet. FIIB users are free; public users need CAT access.');
+  throw new Error(j.error||'Could not open CAT Simulator access.');
+}
+$('loginForm').onsubmit=async e=>{
+  e.preventDefault();const b=$('loginBtn');b.disabled=true;$('msg').textContent='Signing in…';$('msg').className='msg';
+  try{const {data,error}=await db.auth.signInWithPassword({email:$('loginEmail').value.trim().toLowerCase(),password:$('loginPassword').value});if(error)throw error;await openSession(data.session.access_token);}catch(err){$('msg').textContent=err.message||'Sign-in failed.';$('msg').className='msg error';b.disabled=false;}
+};
+$('signupForm').onsubmit=async e=>{
+  e.preventDefault();const b=$('signupBtn');b.disabled=true;$('msg').textContent='Creating your account…';$('msg').className='msg';
+  try{const email=$('signupEmail').value.trim().toLowerCase();const password=$('signupPassword').value;const {data,error}=await db.auth.signUp({email,password});if(error)throw error;if(data.session){await openSession(data.session.access_token);}else{$('msg').textContent='Account created. Please check your email to verify it, then sign in.';$('msg').className='msg ok';b.disabled=false;}}
+  catch(err){$('msg').textContent=err.message||'Could not create account.';$('msg').className='msg error';b.disabled=false;}
+};
+(async()=>{const {data}=await db.auth.getSession();if(data?.session){try{await openSession(data.session.access_token);}catch{}}})();
+</script>
+</body>
+</html>
