@@ -20,15 +20,18 @@ export default {
       if(!token) return plain('Your ASCENT administrator session is missing.',403);
       const valid=await validateAscentAdminSession(token);
       if(!valid) return plain('Your ASCENT administrator session is not valid or has expired.',403);
-
       if(!env.GEMINI_API_KEY) return plain('CAT administrator access is not configured.',503);
+
       const cookie=await makeAdminCookie(env.GEMINI_API_KEY);
-      const headers=new Headers({
-        'location':new URL('/test',request.url).toString(),
-        'cache-control':'no-store'
-      });
+      const assetUrl=new URL('/index.html',request.url);
+      const assetResponse=await env.ASSETS.fetch(new Request(assetUrl.toString(),{method:'GET'}));
+      if(!assetResponse.ok) return plain('CAT Simulator could not be opened.',502);
+
+      const headers=new Headers(assetResponse.headers);
+      headers.set('cache-control','no-store');
+      headers.set('content-location','/test');
       headers.append('set-cookie',cookie);
-      return new Response(null,{status:303,headers});
+      return new Response(assetResponse.body,{status:200,headers});
     }
 
     return app.fetch(request,env,ctx);
