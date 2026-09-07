@@ -6,12 +6,11 @@ export async function onRequest(context) {
   const url = new URL(context.request.url);
   const isTrainerPage = url.pathname.endsWith('/ascent/trainer.html');
   const isAdminSettingsPage = url.pathname.endsWith('/ascent/admin-settings.html');
-  const isProtectedAdminPage = [
-    '/ascent/pcl.html',
-    '/ascent/professional-communication-module-1.html',
-    '/ascent/professional-communication-trainer-preview.html',
-    '/ascent/live-mock.html'
-  ].some(path => url.pathname.endsWith(path));
+  const isProtectedAdminPage =
+    url.pathname.endsWith('/ascent/pcl.html') ||
+    /\/ascent\/professional-communication-[^/]+\.html$/.test(url.pathname) ||
+    /\/ascent\/live-mock(?:-[^/]+)?\.html$/.test(url.pathname) ||
+    url.pathname.endsWith('/ascent/mock-interview.html');
 
   if (isProtectedAdminPage) {
     const token=readCookie(context.request.headers.get('cookie')||'','clarion_admin_session');
@@ -86,7 +85,7 @@ export async function onRequest(context) {
     html = html.replace(/\s*<a class="app-card live" href="\.\/share-access\.html\?product=LIVE_MOCK"><strong>Live Mock Access Links<\/strong><span>[\s\S]*?<\/span><\/a>/g,'');
 
     const secureLaunch = `
-<script data-secure-admin-launch="pcl-live-mock-2026-09-07.2">
+<script data-secure-admin-launch="pcl-live-mock-2026-09-07.3">
 (function(){
   function adminToken(){
     for(const key of ['ascent_admin_master_session','ascent_trainer_session']){
