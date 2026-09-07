@@ -215,57 +215,36 @@
     ensureVisibleSortControls();
   }
 
-  function addPiTrainerLink(){
-    if(document.getElementById("piLabTrainerLink")) return;
+  function appendTrainerLink(id,label,href,blank){
+    if(document.getElementById(id)) return;
     const nav=document.querySelector(".sidebar .nav-list");
     if(!nav) return;
     const link=document.createElement("a");
-    link.id="piLabTrainerLink";
+    link.id=id;
     link.className="nav-item";
-    link.href="../pi-lab/?trainer=1";
-    link.target="_blank";
-    link.rel="noopener noreferrer";
+    link.href=href;
+    if(blank){link.target="_blank";link.rel="noopener noreferrer";}
     link.style.display="block";
     link.style.textDecoration="none";
-    link.textContent="PI Question Bank";
+    link.textContent=label;
     nav.appendChild(link);
   }
 
-  function addPiAssignmentBuilderLink(){
-    if(document.getElementById("piAssignmentBuilderTrainerLink")) return;
-    const nav=document.querySelector(".sidebar .nav-list");
-    if(!nav) return;
-    const link=document.createElement("a");
-    link.id="piAssignmentBuilderTrainerLink";
-    link.className="nav-item";
-    link.href="../pi-lab/admin-builder.html";
-    link.style.display="block";
-    link.style.textDecoration="none";
-    link.textContent="PI for DUGOUTS";
-    nav.appendChild(link);
-  }
-
-  function addCatTrainerLink(){
-    if(document.getElementById("catSimulatorTrainerLink")) return;
-    const nav=document.querySelector(".sidebar .nav-list");
-    if(!nav) return;
-    const link=document.createElement("a");
-    link.id="catSimulatorTrainerLink";
-    link.className="nav-item";
-    link.href="https://cat.clarionprep.com";
-    link.target="_blank";
-    link.rel="noopener noreferrer";
-    link.style.display="block";
-    link.style.textDecoration="none";
-    link.textContent="CAT Simulator";
-    nav.appendChild(link);
-  }
+  function addPiTrainerLink(){appendTrainerLink("piLabTrainerLink","PI Question Bank","../pi-lab/?trainer=1",true);}
+  function addPiAssignmentBuilderLink(){appendTrainerLink("piAssignmentBuilderTrainerLink","PI for DUGOUTS","../pi-lab/admin-builder.html",false);}
+  function addGdTrainerLink(){appendTrainerLink("gdLabTrainerLink","GD Question Bank","../gd-lab/?trainer=1",true);}
+  function addGdAssignmentBuilderLink(){appendTrainerLink("gdAssignmentBuilderTrainerLink","GD for DUGOUTS","../gd-lab/admin-builder.html",false);}
+  function addLearnerAccessLink(){appendTrainerLink("learnerAccessTrainerLink","GD & PI Learner Access","./learner-access.html",false);}
+  function addCatTrainerLink(){appendTrainerLink("catSimulatorTrainerLink","CAT Simulator","https://cat.clarionprep.com",true);}
 
   window.renderResultsTable=renderStudentSummaryResults;
 
   document.addEventListener("DOMContentLoaded",function(){
     addPiTrainerLink();
     addPiAssignmentBuilderLink();
+    addGdTrainerLink();
+    addGdAssignmentBuilderLink();
+    addLearnerAccessLink();
     addCatTrainerLink();
     window.setTimeout(function(){
       enforceSandeepResultsUi();
