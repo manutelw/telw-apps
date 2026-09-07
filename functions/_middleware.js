@@ -33,14 +33,13 @@ export async function onRequest(context) {
   }
 
   // Keep the public Services menu aligned with the static landing page.
-  // PCL and Live Mock are admin-only and must never become learner/private links.
-  // Workplace Communication Test is a standalone ClarionPrep assessment add-on.
+  // WCT remains visible as a service, but the assessment itself requires trainer/admin authentication.
   const servicesMenu = `<div class="services-menu">
     <a href="./ascent/eportfolio.html">E-Portfolios</a>
     <a href="./ascent/jd-builder.html">JD Builder</a>
     <a href="./ascent/jd-mapper.html">JD Mapper</a>
     <a href="./ascent/cv-builder.html">CV Builder &amp; Evaluator</a>
-    <a href="./workplace-communication-test/">Workplace Communication Test</a>
+    <a href="./workplace-communication-test/">Workplace Communication Test · Trainer/Admin</a>
     <a data-admin-only="1" data-admin-href="#service-cat">CAT Simulator · Admin only</a>
     <a data-admin-only="1" data-admin-href="#service-dialogue">Dialogue Lab · Admin only</a>
     <a href="#service-pi-practice">PI Practice</a>
@@ -57,7 +56,8 @@ export async function onRequest(context) {
     const assessmentCard = `<a class="service-card" id="service-workplace-communication-test" href="./workplace-communication-test/">
       <span class="service-icon">WCT</span><h3>Workplace Communication Test</h3>
       <p>A 35-minute pre-hire assessment of listening, reading, writing, speaking and workplace judgement.</p>
-      <span class="go">Open the assessment →</span>
+      <p style="margin-top:10px"><strong>Access:</strong> authorised trainers and administrators only.</p>
+      <span class="go">Trainer/Admin sign-in →</span>
     </a>`;
     html = html.replace('<article class="service-card" id="service-pi-practice">', assessmentCard + '<article class="service-card" id="service-pi-practice">');
   }
