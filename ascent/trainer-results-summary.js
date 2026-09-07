@@ -236,6 +236,7 @@
   function addGdAssignmentBuilderLink(){appendTrainerLink("gdAssignmentBuilderTrainerLink","GD for DUGOUTS","../gd-lab/admin-builder.html",false);}
   function addLearnerAccessLink(){appendTrainerLink("learnerAccessTrainerLink","GD & PI Learner Access","./learner-access.html",false);}
   function addCatTrainerLink(){appendTrainerLink("catSimulatorTrainerLink","CAT Simulator","https://cat.clarionprep.com",true);}
+  function addWctTrainerLink(){appendTrainerLink("wctTrainerLink","Workplace Communication Test","../workplace-communication-test/evaluator.html",true);}
 
   window.renderResultsTable=renderStudentSummaryResults;
 
@@ -246,6 +247,7 @@
     addGdAssignmentBuilderLink();
     addLearnerAccessLink();
     addCatTrainerLink();
+    addWctTrainerLink();
     window.setTimeout(function(){
       enforceSandeepResultsUi();
       ensureVisibleSortControls();
