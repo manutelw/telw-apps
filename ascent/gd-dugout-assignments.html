@@ -44,14 +44,18 @@
 
 <script>
 const SESSION_KEY='ascent_student_session';
-const API='https://vtqatrhwfvzyodiftvkc.supabase.co/functions/v1/gd-dugout-assigned-access';
+const BASE='https://vtqatrhwfvzyodiftvkc.supabase.co';
+const KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
+const API=BASE+'/functions/v1/gd-dugout-assigned-access';
+const FEATURE_API=BASE+'/rest/v1/rpc/ascent_student_feature_access_status';
 const loading=document.getElementById('loading'),errorBox=document.getElementById('error'),empty=document.getElementById('empty'),assignments=document.getElementById('assignments');
 const studentName=document.getElementById('studentName'),studentMeta=document.getElementById('studentMeta');
 function esc(v){return String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#039;'}[c]))}
 function session(){try{const s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');const expiry=new Date(s?.expiresAt).getTime();if(!s?.sessionToken||!Number.isFinite(expiry)||expiry<=Date.now())throw 0;return s}catch{localStorage.removeItem(SESSION_KEY);location.replace('./index.html');return null}}
 function formatDate(v){if(!v)return'';const d=new Date(v);return Number.isFinite(d.getTime())?d.toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'}):''}
 function render(data){const st=data.student||{};studentName.textContent=st.fullName||'ASCENT Student';studentMeta.textContent=[st.studentId,st.email,st.batch].filter(Boolean).join(' · ')||'—';const list=Array.isArray(data.assignments)?data.assignments:[];loading.hidden=true;if(!list.length){empty.hidden=false;return}assignments.innerHTML=list.map(a=>{const topics=Array.isArray(a.topics)?a.topics.filter(x=>String(x||'').trim()):[];const descriptor=[a.company,a.role].filter(Boolean).join(' · ');const released=a.released_at?('Released '+formatDate(a.released_at)):'Released';return `<article class="assignment"><div class="assignment-top"><div><h3>${esc(a.title||'GD DUGOUT')}</h3><div class="meta">${esc(descriptor||'Assigned GD set')}</div></div><span class="released">${esc(released)}</span></div><div class="topics">${topics.length?topics.map(t=>`<div class="topic"><div class="topic-text">${esc(t)}</div><a class="btn primary" href="../gd-lab/dugout/?topic=${encodeURIComponent(String(t))}">Enter DUGOUT</a></div>`).join(''):'<div class="state empty">No topics are available in this set.</div>'}</div></article>`}).join('');assignments.hidden=false}
-async function load(s){try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_token:s.sessionToken})});const j=await r.json().catch(()=>({}));if(!r.ok||j.ok!==true){if(j.error==='INVALID_SESSION'){localStorage.removeItem(SESSION_KEY);location.replace('./index.html');return}throw Error(j.error||'Could not load your assigned GDs.')}render(j)}catch(e){loading.hidden=true;errorBox.hidden=false;errorBox.textContent=e.message||'Could not load your assigned GDs.'}}
+async function featureAllowed(s){const r=await fetch(FEATURE_API,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify({p_session_token:s.sessionToken})});const j=await r.json().catch(()=>({}));return r.ok&&j?.ok===true&&j?.features?.gdLab===true}
+async function load(s){try{if(!await featureAllowed(s)){loading.hidden=true;errorBox.hidden=false;errorBox.textContent='GD Lab access has not been enabled for your account.';return}const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_token:s.sessionToken})});const j=await r.json().catch(()=>({}));if(!r.ok||j.ok!==true){if(j.error==='INVALID_SESSION'){localStorage.removeItem(SESSION_KEY);location.replace('./index.html');return}throw Error(j.error||'Could not load your assigned GDs.')}render(j)}catch(e){loading.hidden=true;errorBox.hidden=false;errorBox.textContent=e.message||'Could not load your assigned GDs.'}}
 const s=session();if(s)load(s);
 document.getElementById('logout').onclick=()=>{localStorage.removeItem(SESSION_KEY);location.replace('./index.html')};
 </script>
