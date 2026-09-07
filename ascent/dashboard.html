@@ -372,7 +372,6 @@
       text-align:center;
     }
 
-
     .score-button {
       width:100%;
       min-width:48px;
@@ -532,7 +531,8 @@
 
       <div class="topbar-actions">
         <a class="nav-button" href="./jd-interview-mapper.html">JD Interview</a>
-        <a class="nav-button" href="../gd-lab/">GD Lab</a>
+        <a id="gdLabLink" class="nav-button" href="./gd-dugout-assignments.html" hidden>GD Lab</a>
+        <a id="piLabLink" class="nav-button" href="./pi-lab-access.html" hidden>PI Lab</a>
         <a class="nav-button practice-button" href="./practice.html">Practice</a>
         <button id="logoutButton" class="nav-button" type="button">Log Out</button>
       </div>
@@ -594,27 +594,14 @@
         </div>
       </section>
 
-
       <div id="feedbackModalBackdrop" class="modal-backdrop" hidden>
-        <section
-          class="feedback-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="feedbackModalTitle"
-        >
+        <section class="feedback-modal" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">
           <div class="feedback-modal-head">
             <div>
               <h3 id="feedbackModalTitle">Attempt Feedback</h3>
               <p id="feedbackModalMeta">—</p>
             </div>
-            <button
-              id="feedbackModalClose"
-              class="modal-close"
-              type="button"
-              aria-label="Close feedback"
-            >
-              ×
-            </button>
+            <button id="feedbackModalClose" class="modal-close" type="button" aria-label="Close feedback">×</button>
           </div>
           <div id="feedbackModalBody" class="feedback-modal-body"></div>
         </section>
@@ -628,8 +615,7 @@
     const SESSION_STORAGE_KEY = "ascent_student_session";
     const SUPABASE_URL = "https://vtqatrhwfvzyodiftvkc.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
-    const DASHBOARD_RPC_URL =
-      SUPABASE_URL + "/rest/v1/rpc/ascent_student_performance_dashboard";
+    const DASHBOARD_RPC_URL = SUPABASE_URL + "/rest/v1/rpc/ascent_student_performance_dashboard";
 
     const loadingState = document.getElementById("loadingState");
     const errorState = document.getElementById("errorState");
@@ -645,7 +631,6 @@
     const feedbackModalBody = document.getElementById("feedbackModalBody");
 
     let currentTableRows = [];
-
     let categoryChart = null;
     let overallChart = null;
 
@@ -664,19 +649,10 @@
         window.location.replace("./index.html");
         return null;
       }
-
       try {
         const session = JSON.parse(raw);
         const expiry = new Date(session.expiresAt).getTime();
-
-        if (
-          !session.sessionToken ||
-          !Number.isFinite(expiry) ||
-          expiry <= Date.now()
-        ) {
-          throw new Error("Expired session");
-        }
-
+        if (!session.sessionToken || !Number.isFinite(expiry) || expiry <= Date.now()) throw new Error("Expired session");
         return session;
       } catch (error) {
         localStorage.removeItem(SESSION_STORAGE_KEY);
@@ -689,21 +665,14 @@
       if (!value) return "—";
       const date = new Date(value);
       if (!Number.isFinite(date.getTime())) return "—";
-      return date.toLocaleDateString(undefined,{
-        day:"2-digit",
-        month:"short",
-        year:"numeric"
-      });
+      return date.toLocaleDateString(undefined,{day:"2-digit",month:"short",year:"numeric"});
     }
 
     function formatShortDate(value,index) {
       if (!value) return "Attempt " + (index + 1);
       const date = new Date(value);
       if (!Number.isFinite(date.getTime())) return "Attempt " + (index + 1);
-      return date.toLocaleDateString(undefined,{
-        day:"2-digit",
-        month:"short"
-      });
+      return date.toLocaleDateString(undefined,{day:"2-digit",month:"short"});
     }
 
     function formatScore(value) {
@@ -712,570 +681,118 @@
     }
 
     function categoryLabel(value) {
-      return String(value || "LUM").toUpperCase() === "DIAGNOSTIC"
-        ? "Diagnostic"
-        : String(value || "LUM").toUpperCase();
+      return String(value || "LUM").toUpperCase() === "DIAGNOSTIC" ? "Diagnostic" : String(value || "LUM").toUpperCase();
     }
 
-function normaliseFeedback(feedback) {
-  if (!feedback) {
-    return {
-      summary:"No detailed feedback was saved for this attempt.",
-      sections:[]
-    };
-  }
-
-  if (typeof feedback === "string") {
-    return {
-      summary:feedback,
-      sections:[]
-    };
-  }
-
-  const summary =
-    feedback.overallComment ||
-    feedback.overall_feedback ||
-    feedback.summary ||
-    feedback.feedback ||
-    "Review the points below before your next attempt.";
-
-  const sections = [];
-
-  const criteria = Array.isArray(feedback.criteria)
-    ? feedback.criteria
-    : [];
-
-  criteria.forEach(criterion => {
-    if (
-      !criterion ||
-      criterion.status === "not_assessed"
-    ) {
-      return;
-    }
-
-    const parts = [];
-
-    if (criterion.praise) {
-      parts.push("What you did well:\n" + criterion.praise);
-    }
-
-    const weakLine =
-      criterion.weak_line ||
-      criterion.weakLine ||
-      "";
-
-    if (weakLine) {
-      parts.push("Line to improve:\n“" + weakLine + "”");
-    }
-
-    const explanation =
-      criterion.explanation ||
-      "";
-
-    if (explanation) {
-      parts.push("Why this needs work:\n" + explanation);
-    }
-
-    const correctedVersion =
-      criterion.corrected_version ||
-      criterion.correctedVersion ||
-      "";
-
-    if (correctedVersion) {
-      parts.push("A clearer version:\n“" + correctedVersion + "”");
-    }
-
-    if (parts.length) {
-      sections.push({
-        title:
-          criterion.name ||
-          "Feedback",
-        text:parts.join("\n\n")
+    function normaliseFeedback(feedback) {
+      if (!feedback) return {summary:"No detailed feedback was saved for this attempt.",sections:[]};
+      if (typeof feedback === "string") return {summary:feedback,sections:[]};
+      const summary = feedback.overallComment || feedback.overall_feedback || feedback.summary || feedback.feedback || "Review the points below before your next attempt.";
+      const sections = [];
+      const criteria = Array.isArray(feedback.criteria) ? feedback.criteria : [];
+      criteria.forEach(criterion => {
+        if (!criterion || criterion.status === "not_assessed") return;
+        const parts = [];
+        if (criterion.praise) parts.push("What you did well:\n" + criterion.praise);
+        const weakLine = criterion.weak_line || criterion.weakLine || "";
+        if (weakLine) parts.push("Line to improve:\n“" + weakLine + "”");
+        const explanation = criterion.explanation || "";
+        if (explanation) parts.push("Why this needs work:\n" + explanation);
+        const correctedVersion = criterion.corrected_version || criterion.correctedVersion || "";
+        if (correctedVersion) parts.push("A clearer version:\n“" + correctedVersion + "”");
+        if (parts.length) sections.push({title:criterion.name || "Feedback",text:parts.join("\n\n")});
       });
+      const nextAction = feedback.nextAction || feedback.next_action || "";
+      if (nextAction) sections.push({title:"What to Do Next",text:String(nextAction)});
+      return {summary,sections};
     }
-  });
 
-  
-
-  const nextAction =
-    feedback.nextAction ||
-    feedback.next_action ||
-    "";
-
-  if (nextAction) {
-    sections.push({
-      title:"What to Do Next",
-      text:String(nextAction)
-    });
-  }
-
-  return {
-    summary,
-    sections
-  };
-}
-
-function formatCriterionScores(details) {
-  if (!details || typeof details !== "object") {
-    return "";
-  }
-
-  const feedback =
-    details.feedback &&
-    typeof details.feedback === "object"
-      ? details.feedback
-      : {};
-
-  const criteria =
-    Array.isArray(feedback.criteria)
-      ? feedback.criteria
-      : [];
-
-  let items = criteria
-    .filter(item =>
-      item &&
-      item.status !== "not_assessed" &&
-      item.score !== null &&
-      item.score !== undefined
-    )
-    .map(item => ({
-      name:
-        item.name ||
-        String(item.key || "Criterion")
-          .replaceAll("_"," ")
-          .replace(/\b\w/g,char => char.toUpperCase()),
-
-      score:item.score
-    }));
-
-  if (!items.length) {
-    const rawScores =
-      details.criterionScores &&
-      typeof details.criterionScores === "object"
-        ? details.criterionScores
-        : {};
-
-    items = Object.entries(rawScores)
-      .map(([key,value]) => {
-        const score =
-          value &&
-          typeof value === "object"
-            ? value.score
-            : value;
-
-        return {
-          name:key
-            .replace(/([a-z])([A-Z])/g,"$1 $2")
-            .replaceAll("_"," ")
-            .replace(/\b\w/g,char => char.toUpperCase()),
-
-          score
-        };
-      })
-      .filter(item =>
-        item.score !== null &&
-        item.score !== undefined &&
-        Number.isFinite(Number(item.score))
-      );
-  }
-
-  if (!items.length) {
-    return "";
-  }
-
-  return `
-    <section class="feedback-section">
-      <h4>Criterion-wise Scores</h4>
-      <ul class="criterion-list">
-        ${items.map(item => `
-          <li>
-            <strong>${escapeHtml(item.name)}:</strong>
-            ${escapeHtml(Number(item.score).toFixed(1))} / 2
-          </li>
-        `).join("")}
-      </ul>
-    </section>
-  `;
-}
+    function formatCriterionScores(details) {
+      if (!details || typeof details !== "object") return "";
+      const feedback = details.feedback && typeof details.feedback === "object" ? details.feedback : {};
+      const criteria = Array.isArray(feedback.criteria) ? feedback.criteria : [];
+      let items = criteria.filter(item => item && item.status !== "not_assessed" && item.score !== null && item.score !== undefined).map(item => ({name:item.name || String(item.key || "Criterion").replaceAll("_"," ").replace(/\b\w/g,char => char.toUpperCase()),score:item.score}));
+      if (!items.length) {
+        const rawScores = details.criterionScores && typeof details.criterionScores === "object" ? details.criterionScores : {};
+        items = Object.entries(rawScores).map(([key,value]) => {const score=value&&typeof value==="object"?value.score:value;return{name:key.replace(/([a-z])([A-Z])/g,"$1 $2").replaceAll("_"," ").replace(/\b\w/g,char=>char.toUpperCase()),score}}).filter(item => item.score !== null && item.score !== undefined && Number.isFinite(Number(item.score)));
+      }
+      if (!items.length) return "";
+      return `<section class="feedback-section"><h4>Criterion-wise Scores</h4><ul class="criterion-list">${items.map(item=>`<li><strong>${escapeHtml(item.name)}:</strong> ${escapeHtml(Number(item.score).toFixed(1))} / 2</li>`).join("")}</ul></section>`;
+    }
 
     function openAttemptFeedback(rowIndex,attemptIndex) {
       const row = currentTableRows[rowIndex];
-      const details =
-        row &&
-        Array.isArray(row.attemptDetails)
-          ? row.attemptDetails[attemptIndex]
-          : null;
-
+      const details = row && Array.isArray(row.attemptDetails) ? row.attemptDetails[attemptIndex] : null;
       if (!row || !details) return;
-
       const feedback = normaliseFeedback(details.feedback);
       const criterionHtml = formatCriterionScores(details);
-
-      feedbackModalTitle.textContent =
-        categoryLabel(row.category) + " · Attempt " + (attemptIndex + 1);
-
-      feedbackModalMeta.textContent =
-        formatDate(details.submittedAt || row.date) +
-        " · Score " +
-        formatScore(details.score) +
-        " / 10";
-
-      const sectionsHtml = feedback.sections.map(section => `
-        <section class="feedback-section">
-          <h4>${escapeHtml(section.title)}</h4>
-          <p>${escapeHtml(section.text)}</p>
-        </section>
-      `).join("");
-
-      feedbackModalBody.innerHTML = `
-        <section class="feedback-section">
-          <h4>Question</h4>
-          <p>${escapeHtml(row.question || "—")}</p>
-        </section>
-
-       <section class="feedback-section">
-  <h4>Total Score</h4>
-  <p>${escapeHtml(formatScore(details.score))} / 10</p>
-</section>
-
-${criterionHtml}
-
-<section class="feedback-section">
-  <h4>Detailed Feedback</h4>
-  <p>${escapeHtml(feedback.summary)}</p>
-</section>
-
-${sectionsHtml}
-      `;
-
+      feedbackModalTitle.textContent = categoryLabel(row.category) + " · Attempt " + (attemptIndex + 1);
+      feedbackModalMeta.textContent = formatDate(details.submittedAt || row.date) + " · Score " + formatScore(details.score) + " / 10";
+      const sectionsHtml = feedback.sections.map(section=>`<section class="feedback-section"><h4>${escapeHtml(section.title)}</h4><p>${escapeHtml(section.text)}</p></section>`).join("");
+      feedbackModalBody.innerHTML = `<section class="feedback-section"><h4>Question</h4><p>${escapeHtml(row.question || "—")}</p></section><section class="feedback-section"><h4>Total Score</h4><p>${escapeHtml(formatScore(details.score))} / 10</p></section>${criterionHtml}<section class="feedback-section"><h4>Detailed Feedback</h4><p>${escapeHtml(feedback.summary)}</p></section>${sectionsHtml}`;
       feedbackModalBackdrop.hidden = false;
       document.body.style.overflow = "hidden";
       feedbackModalClose.focus();
     }
 
-    function closeAttemptFeedback() {
-      feedbackModalBackdrop.hidden = true;
-      document.body.style.overflow = "";
-    }
+    function closeAttemptFeedback() {feedbackModalBackdrop.hidden=true;document.body.style.overflow="";}
 
     function highestAttemptColumn(rows) {
       let highest = 1;
-
-      rows.forEach(row => {
-        const scores = Array.isArray(row.scores) ? row.scores.slice(0,10) : [];
-        scores.forEach((score,index) => {
-          if (score !== null && score !== undefined && score !== "") {
-            highest = Math.max(highest,index + 1);
-          }
-        });
-      });
-
+      rows.forEach(row => {const scores=Array.isArray(row.scores)?row.scores.slice(0,10):[];scores.forEach((score,index)=>{if(score!==null&&score!==undefined&&score!=="")highest=Math.max(highest,index+1);});});
       return Math.min(highest,10);
     }
 
     function renderAverages(averages) {
-      const values = averages || {};
-      document.getElementById("lumAverage").innerHTML =
-        escapeHtml(formatScore(values.LUM)) + " <small>/ 10</small>";
-      document.getElementById("gdAverage").innerHTML =
-        escapeHtml(formatScore(values.GD)) + " <small>/ 10</small>";
-      document.getElementById("piAverage").innerHTML =
-        escapeHtml(formatScore(values.PI)) + " <small>/ 10</small>";
-      document.getElementById("diagnosticAverage").innerHTML =
-        escapeHtml(formatScore(values.DIAGNOSTIC)) + " <small>/ 10</small>";
+      const values=averages||{};
+      document.getElementById("lumAverage").innerHTML=escapeHtml(formatScore(values.LUM))+" <small>/ 10</small>";
+      document.getElementById("gdAverage").innerHTML=escapeHtml(formatScore(values.GD))+" <small>/ 10</small>";
+      document.getElementById("piAverage").innerHTML=escapeHtml(formatScore(values.PI))+" <small>/ 10</small>";
+      document.getElementById("diagnosticAverage").innerHTML=escapeHtml(formatScore(values.DIAGNOSTIC))+" <small>/ 10</small>";
     }
 
     function renderTable(rows) {
-      currentTableRows = Array.isArray(rows) ? rows : [];
-
-      if (currentTableRows.length === 0) {
-        tableArea.innerHTML =
-          '<div class="empty-state">No scored attempts are available yet. Complete your first response to begin this record.</div>';
-        return;
-      }
-
-      const attemptColumns = highestAttemptColumn(currentTableRows);
-      const attemptHeaders = Array.from(
-        {length:attemptColumns},
-        (_,index) => `<th>Attempt ${index + 1}</th>`
-      ).join("");
-
-      const body = currentTableRows.map((row,rowIndex) => {
-        const scores = Array.isArray(row.scores) ? row.scores : [];
-        const details = Array.isArray(row.attemptDetails) ? row.attemptDetails : [];
-
-        const scoreCells = Array.from(
-          {length:attemptColumns},
-          (_,attemptIndex) => {
-            const score = scores[attemptIndex];
-            const hasScore =
-              score !== null &&
-              score !== undefined &&
-              score !== "";
-
-            const hasDetails = Boolean(details[attemptIndex]);
-
-            if (!hasScore) {
-              return '<td class="score-cell"><span class="score-empty">—</span></td>';
-            }
-
-            if (!hasDetails) {
-              return `<td class="score-cell">${escapeHtml(formatScore(score))}</td>`;
-            }
-
-            return `
-              <td class="score-cell">
-                <button
-                  class="score-button"
-                  type="button"
-                  data-row-index="${rowIndex}"
-                  data-attempt-index="${attemptIndex}"
-                  aria-label="Open feedback for attempt ${attemptIndex + 1}, score ${escapeHtml(formatScore(score))}"
-                >
-                  ${escapeHtml(formatScore(score))}
-                </button>
-              </td>
-            `;
-          }
-        ).join("");
-
-        const feedback = String(row.overallFeedback || "").trim();
-
-        return `
-          <tr>
-            <td class="date-cell">${escapeHtml(formatDate(row.date))}</td>
-            <td><span class="category-badge">${escapeHtml(categoryLabel(row.category))}</span></td>
-            <td class="question-cell">${escapeHtml(row.question || "—")}</td>
-            ${scoreCells}
-            <td class="average-cell">${escapeHtml(formatScore(row.averageScore))}</td>
-            <td class="feedback-cell${feedback ? "" : " empty"}">${feedback ? escapeHtml(feedback) : "—"}</td>
-          </tr>
-        `;
-      }).join("");
-
-      tableArea.innerHTML = `
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Category</th>
-                <th>Question</th>
-                ${attemptHeaders}
-                <th>Average</th>
-                <th>Overall Feedback</th>
-              </tr>
-            </thead>
-            <tbody>${body}</tbody>
-          </table>
-        </div>
-      `;
-
-      tableArea.querySelectorAll(".score-button").forEach(button => {
-        button.addEventListener("click",() => {
-          openAttemptFeedback(
-            Number(button.dataset.rowIndex),
-            Number(button.dataset.attemptIndex)
-          );
-        });
-      });
+      currentTableRows=Array.isArray(rows)?rows:[];
+      if(currentTableRows.length===0){tableArea.innerHTML='<div class="empty-state">No scored attempts are available yet. Complete your first response to begin this record.</div>';return;}
+      const attemptColumns=highestAttemptColumn(currentTableRows);
+      const attemptHeaders=Array.from({length:attemptColumns},(_,index)=>`<th>Attempt ${index+1}</th>`).join("");
+      const body=currentTableRows.map((row,rowIndex)=>{const scores=Array.isArray(row.scores)?row.scores:[];const details=Array.isArray(row.attemptDetails)?row.attemptDetails:[];const scoreCells=Array.from({length:attemptColumns},(_,attemptIndex)=>{const score=scores[attemptIndex];const hasScore=score!==null&&score!==undefined&&score!=="";const hasDetails=Boolean(details[attemptIndex]);if(!hasScore)return'<td class="score-cell"><span class="score-empty">—</span></td>';if(!hasDetails)return`<td class="score-cell">${escapeHtml(formatScore(score))}</td>`;return`<td class="score-cell"><button class="score-button" type="button" data-row-index="${rowIndex}" data-attempt-index="${attemptIndex}" aria-label="Open feedback for attempt ${attemptIndex+1}, score ${escapeHtml(formatScore(score))}">${escapeHtml(formatScore(score))}</button></td>`;}).join("");const feedback=String(row.overallFeedback||"").trim();return`<tr><td class="date-cell">${escapeHtml(formatDate(row.date))}</td><td><span class="category-badge">${escapeHtml(categoryLabel(row.category))}</span></td><td class="question-cell">${escapeHtml(row.question||"—")}</td>${scoreCells}<td class="average-cell">${escapeHtml(formatScore(row.averageScore))}</td><td class="feedback-cell${feedback?"":" empty"}">${feedback?escapeHtml(feedback):"—"}</td></tr>`;}).join("");
+      tableArea.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Date</th><th>Category</th><th>Question</th>${attemptHeaders}<th>Average</th><th>Overall Feedback</th></tr></thead><tbody>${body}</tbody></table></div>`;
+      tableArea.querySelectorAll(".score-button").forEach(button=>button.addEventListener("click",()=>openAttemptFeedback(Number(button.dataset.rowIndex),Number(button.dataset.attemptIndex))));
     }
 
     function renderCategoryChart(averages) {
-      const source = averages || {};
-      const labels = ["LUM","GD","PI","Diagnostic"];
-      const values = [
-        Number(source.LUM) || 0,
-        Number(source.GD) || 0,
-        Number(source.PI) || 0,
-        Number(source.DIAGNOSTIC) || 0
-      ];
-
-      if (categoryChart) categoryChart.destroy();
-
-      categoryChart = new Chart(
-        document.getElementById("categoryChart"),
-        {
-          type:"bar",
-          data:{
-            labels,
-            datasets:[{
-              label:"Average score",
-              data:values,
-              borderWidth:1,
-              borderRadius:7
-            }]
-          },
-          options:{
-            responsive:true,
-            maintainAspectRatio:false,
-            plugins:{
-              legend:{display:false},
-              tooltip:{
-                callbacks:{
-                  label:context => "Average: " + Number(context.raw || 0).toFixed(1) + " / 10"
-                }
-              }
-            },
-            scales:{
-              y:{
-                beginAtZero:true,
-                max:10,
-                ticks:{stepSize:2},
-                title:{display:true,text:"Average score"}
-              }
-            }
-          }
-        }
-      );
+      const source=averages||{};const labels=["LUM","GD","PI","Diagnostic"];const values=[Number(source.LUM)||0,Number(source.GD)||0,Number(source.PI)||0,Number(source.DIAGNOSTIC)||0];if(categoryChart)categoryChart.destroy();categoryChart=new Chart(document.getElementById("categoryChart"),{type:"bar",data:{labels,datasets:[{label:"Average score",data:values,borderWidth:1,borderRadius:7}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:context=>"Average: "+Number(context.raw||0).toFixed(1)+" / 10"}}},scales:{y:{beginAtZero:true,max:10,ticks:{stepSize:2},title:{display:true,text:"Average score"}}}}});
     }
 
     function renderOverallChart(trend) {
-      const rows = Array.isArray(trend) ? trend : [];
-      const labels = rows.map((row,index) => formatShortDate(row.date,index));
-      const scores = rows.map(row => Number(row.score));
-      const averages = rows.map(row => Number(row.overallAverage));
-
-      if (overallChart) overallChart.destroy();
-
-      overallChart = new Chart(
-        document.getElementById("overallChart"),
-        {
-          type:"line",
-          data:{
-            labels,
-            datasets:[
-              {
-                label:"Attempt score",
-                data:scores,
-                tension:.25,
-                spanGaps:true
-              },
-              {
-                label:"Overall average",
-                data:averages,
-                tension:.25,
-                spanGaps:true
-              }
-            ]
-          },
-          options:{
-            responsive:true,
-            maintainAspectRatio:false,
-            interaction:{mode:"index",intersect:false},
-            plugins:{
-              tooltip:{
-                callbacks:{
-                  afterTitle:items => {
-                    const index = items[0] ? items[0].dataIndex : -1;
-                    return index >= 0 && rows[index]
-                      ? categoryLabel(rows[index].category)
-                      : "";
-                  }
-                }
-              }
-            },
-            scales:{
-              y:{
-                beginAtZero:true,
-                max:10,
-                ticks:{stepSize:2},
-                title:{display:true,text:"Score"}
-              },
-              x:{
-                title:{display:true,text:"Attempt date"}
-              }
-            }
-          }
-        }
-      );
+      const rows=Array.isArray(trend)?trend:[];const labels=rows.map((row,index)=>formatShortDate(row.date,index));const scores=rows.map(row=>Number(row.score));const averages=rows.map(row=>Number(row.overallAverage));if(overallChart)overallChart.destroy();overallChart=new Chart(document.getElementById("overallChart"),{type:"line",data:{labels,datasets:[{label:"Attempt score",data:scores,tension:.25,spanGaps:true},{label:"Overall average",data:averages,tension:.25,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{tooltip:{callbacks:{afterTitle:items=>{const index=items[0]?items[0].dataIndex:-1;return index>=0&&rows[index]?categoryLabel(rows[index].category):"";}}},scales:{y:{beginAtZero:true,max:10,ticks:{stepSize:2},title:{display:true,text:"Score"}},x:{title:{display:true,text:"Attempt date"}}}}});
     }
 
     async function loadDashboard(session) {
       try {
-        const response = await fetch(DASHBOARD_RPC_URL,{
-          method:"POST",
-          headers:{
-            "Content-Type":"application/json",
-            "apikey":SUPABASE_PUBLISHABLE_KEY,
-            "Authorization":"Bearer " + SUPABASE_PUBLISHABLE_KEY
-          },
-          body:JSON.stringify({
-            p_session_token:session.sessionToken
-          })
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result || result.ok !== true) {
-          throw new Error(
-            result && result.message
-              ? result.message
-              : "ASCENT could not load your performance."
-          );
-        }
-
-        studentName.textContent =
-          (result.student && result.student.fullName) ||
-          session.fullName ||
-          "ASCENT Student";
-
-        const studentId =
-          (result.student && result.student.studentId) ||
-          session.studentId ||
-          "—";
-
-        const batch =
-          (result.student && result.student.batch) ||
-          session.batch ||
-          "—";
-
-        studentMeta.textContent =
-          studentId + " · " + batch;
-
-        renderAverages(result.categoryAverages);
-        renderTable(result.tableRows);
-        renderCategoryChart(result.categoryAverages);
-        renderOverallChart(result.performanceTrend);
-
-        loadingState.hidden = true;
-        dashboardContent.hidden = false;
-      } catch (error) {
-        console.error(error);
-        loadingState.hidden = true;
-        errorState.hidden = false;
-        errorState.textContent =
-          error.message ||
-          "ASCENT could not load your performance.";
+        const response=await fetch(DASHBOARD_RPC_URL,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_PUBLISHABLE_KEY,"Authorization":"Bearer "+SUPABASE_PUBLISHABLE_KEY},body:JSON.stringify({p_session_token:session.sessionToken})});
+        const result=await response.json();
+        if(!response.ok||!result||result.ok!==true)throw new Error(result&&result.message?result.message:"ASCENT could not load your performance.");
+        studentName.textContent=(result.student&&result.student.fullName)||session.fullName||"ASCENT Student";
+        const studentId=(result.student&&result.student.studentId)||session.studentId||"—";
+        const batch=(result.student&&result.student.batch)||session.batch||"—";
+        studentMeta.textContent=studentId+" · "+batch;
+        renderAverages(result.categoryAverages);renderTable(result.tableRows);renderCategoryChart(result.categoryAverages);renderOverallChart(result.performanceTrend);
+        loadingState.hidden=true;dashboardContent.hidden=false;
+      } catch(error) {
+        console.error(error);loadingState.hidden=true;errorState.hidden=false;errorState.textContent=error.message||"ASCENT could not load your performance.";
       }
     }
 
-    function logOut() {
-      localStorage.removeItem(SESSION_STORAGE_KEY);
-      window.location.replace("./index.html");
-    }
-
-    const currentSession = loadStudentSession();
-
-    if (currentSession) {
-      loadDashboard(currentSession);
-    }
-
+    function logOut(){localStorage.removeItem(SESSION_STORAGE_KEY);window.location.replace("./index.html");}
+    const currentSession=loadStudentSession();
+    if(currentSession)loadDashboard(currentSession);
     feedbackModalClose.addEventListener("click",closeAttemptFeedback);
-
-    feedbackModalBackdrop.addEventListener("click",event => {
-      if (event.target === feedbackModalBackdrop) {
-        closeAttemptFeedback();
-      }
-    });
-
-    document.addEventListener("keydown",event => {
-      if (event.key === "Escape" && !feedbackModalBackdrop.hidden) {
-        closeAttemptFeedback();
-      }
-    });
-
+    feedbackModalBackdrop.addEventListener("click",event=>{if(event.target===feedbackModalBackdrop)closeAttemptFeedback();});
+    document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!feedbackModalBackdrop.hidden)closeAttemptFeedback();});
     logoutButton.addEventListener("click",logOut);
   </script>
+  <script src="./student-feature-links.js?v=20260907-access1"></script>
 </body>
 </html>
