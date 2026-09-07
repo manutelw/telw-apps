@@ -7,7 +7,7 @@ export async function onRequestPost(context){
   try{const form=await context.request.formData();token=String(form.get('ascent_session_token')||'').trim();}catch(_){ }
   if(!token||!(await valid(token)))return new Response('Administrator access required.',{status:403,headers:{'cache-control':'no-store'}});
   const headers=new Headers({location:'/live-mock/interview.html','cache-control':'no-store'});
-  headers.append('set-cookie','live_mock_admin_session='+encodeURIComponent(token)+'; Path=/live-mock/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600');
+  headers.append('set-cookie','clarion_admin_session='+encodeURIComponent(token)+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600');
   return new Response(null,{status:303,headers});
 }
 async function valid(token){
