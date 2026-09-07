@@ -3,8 +3,35 @@ export async function onRequest(context) {
   const url = new URL(context.request.url);
   const isTrainerPage = url.pathname.endsWith('/ascent/trainer.html');
   const isAdminSettingsPage = url.pathname.endsWith('/ascent/admin-settings.html');
-  if (!response.ok || (!isTrainerPage && !isAdminSettingsPage)) return response;
+  const isProtectedAdminPage = [
+    '/ascent/pcl.html',
+    '/ascent/professional-communication-module-1.html',
+    '/ascent/professional-communication-trainer-preview.html',
+    '/ascent/live-mock.html'
+  ].some(path => url.pathname.endsWith(path));
+  if (!response.ok || (!isTrainerPage && !isAdminSettingsPage && !isProtectedAdminPage)) return response;
   let html = await response.text();
+
+  if (isProtectedAdminPage) {
+    const adminGate = `
+<script data-admin-only-gate="pcl-live-mock-2026-09-07">
+(function(){
+  function validAdmin(){
+    for(const key of ['ascent_admin_master_session','ascent_trainer_session']){
+      try{
+        const s=JSON.parse(localStorage.getItem(key)||'null');
+        const expiry=new Date(s?.expiresAt||s?.expires_at||0).getTime();
+        const token=s?.sessionToken||s?.session_token;
+        if(token&&String(s?.role||'').toUpperCase()==='ADMIN'&&Number.isFinite(expiry)&&expiry>Date.now())return true;
+      }catch(_){ }
+    }
+    return false;
+  }
+  if(!validAdmin()) location.replace('./admin-login.html');
+})();
+</script>`;
+    html = html.replace('</head>', adminGate + '\n</head>');
+  }
 
   if (isTrainerPage) {
     const script = `
@@ -63,8 +90,9 @@ export async function onRequest(context) {
     html = html.replace('<a class="app-card pi" href="./learner-access.html"><strong>PI Practice</strong>','<a class="app-card pi" href="./practice-access.html?feature=PI_BANK"><strong>PI Practice</strong>');
     const adminPracticeCards = `\n        <a class="app-card gd" href="./practice-access.html?feature=GD_BANK"><strong>GD Practice</strong><span>Review learner applications and grant GD practice access after the 24-hour wait</span></a>\n        <a class="app-card pi" href="./practice-access.html?feature=PI_BANK"><strong>PI Practice</strong><span>Review learner applications and grant PI practice access after the 24-hour wait</span></a>`;
     if (!html.includes('<strong>GD Practice</strong>')) html = html.replace('        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>',adminPracticeCards+'\n        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>');
-    const shareCards = `\n        <a class="app-card ascent" href="./share-access.html?product=CAT_SIMULATOR"><strong>CAT Access Links</strong><span>Generate CAT links with your own attempt limit and validity period</span></a>\n        <a class="app-card live" href="./share-access.html?product=LIVE_MOCK"><strong>Live Mock Access Links</strong><span>Generate Live Mock links with controlled interview attempts and expiry</span></a>\n        <a class="app-card dialogue" href="./share-access.html?product=DIALOGUE_LAB"><strong>Dialogue Lab Access Links</strong><span>Generate Dialogue Lab links with your own launch limit and validity period</span></a>`;
+    const shareCards = `\n        <a class="app-card ascent" href="./share-access.html?product=CAT_SIMULATOR"><strong>CAT Access Links</strong><span>Generate CAT links with your own attempt limit and validity period</span></a>\n        <a class="app-card dialogue" href="./share-access.html?product=DIALOGUE_LAB"><strong>Dialogue Lab Access Links</strong><span>Generate Dialogue Lab links with your own launch limit and validity period</span></a>`;
     if (!html.includes('<strong>CAT Access Links</strong>')) html = html.replace('        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>',shareCards+'\n        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>');
+    html = html.replace(/\s*<a class="app-card live" href="\.\/share-access\.html\?product=LIVE_MOCK"><strong>Live Mock Access Links<\/strong><span>[\s\S]*?<\/span><\/a>/g,'');
   }
   const headers=new Headers(response.headers);headers.set('content-type','text/html; charset=UTF-8');headers.set('cache-control','no-store, max-age=0');
   return new Response(html,{status:response.status,statusText:response.statusText,headers});
