@@ -12,58 +12,92 @@ export async function onRequest(context) {
 
   let html = await response.text();
 
-  const menuNeedle = '<a href="./gd-lab/">GD Lab</a><a href="./pi-lab/">PI Lab</a>';
-  const menuReplacement = '<a data-admin-only="1" data-admin-href="#service-cat">CAT Simulator · Admin only</a><a data-admin-only="1" data-admin-href="#service-dialogue">Dialogue Lab · Admin only</a><a href="#service-pi-practice">PI Practice</a><a href="#service-pi-lab">PI Lab</a><a href="#service-gd-practice">GD Practice</a><a href="#service-gd-lab">GD Lab</a>';
-  if (html.includes(menuNeedle)) html = html.replace(menuNeedle, menuReplacement);
+  // Public Services menu: keep the user-defined order. The repeated Dialogue Lab
+  // entry is intentionally retained because it appears twice in the supplied list.
+  const servicesMenu = `<div class="services-menu">
+    <a href="./ascent/eportfolio.html">EP</a>
+    <a href="./ascent/jd-builder.html">JD Builder</a>
+    <a href="./ascent/jd-mapper.html">JD Mapper</a>
+    <a href="./ascent/cv-builder.html">CV Builder &amp; Evaluator</a>
+    <a href="#service-gd-lab">GD Lab</a>
+    <a href="#service-gd-practice">GD Practice</a>
+    <a href="#service-pi-lab">PI Lab</a>
+    <a href="#service-pi-practice">PI Practice</a>
+    <a href="#service-dialogue">Dialogue Lab</a>
+    <a href="#service-pcl">PCL</a>
+    <a href="#service-live-mock">Live Mock Interview</a>
+    <a href="#service-dialogue">Dialogue Lab</a>
+  </div>`;
+  html = html.replace(/<div class="services-menu">[\s\S]*?<\/div><\/div><\/div><button id="menuButton"/, servicesMenu + '</div></div><button id="menuButton"');
 
-  html = html.replace('href="./gd-lab/"', 'href="#service-gd-lab"');
-  html = html.replace('href="./pi-lab/"', 'href="#service-pi-lab"');
+  // The landing-page cards for these services should explain access first rather
+  // than taking a visitor directly into the app.
+  html = html.replace(/href="\.\/gd-lab\/"/g, 'href="#service-gd-lab"');
+  html = html.replace(/href="\.\/pi-lab\/"/g, 'href="#service-pi-lab"');
+  html = html.replace(/data-admin-only="1" data-admin-href="\.\/ascent\/pcl\.html"/g, 'href="#service-pcl"');
+  html = html.replace(/data-admin-only="1" data-admin-href="\.\/ascent\/live-mock\.html"/g, 'href="#service-live-mock"');
+  html = html.replace(/<span class="go">Admin only<\/span>/g, '<span class="go">See access details →</span>');
 
   if (!html.includes('id="service-pi-practice"')) {
     const accessSection = `
 <section id="practice-simulations" class="section alt">
   <div class="shell">
     <div class="section-head">
-      <div class="kicker">Practice &amp; simulations</div>
-      <h2>See what each practice tool does before you ask for access.</h2>
-      <p>Institutional and private learners follow different access rules. Sign in through ASCENT so the correct rule is applied to your account.</p>
+      <div class="kicker">Practice, labs &amp; live support</div>
+      <h2>What each service does, who can use it and how access works.</h2>
+      <p>Institutional learners should follow the access route shown for each service. Private candidates may request access to any of these services by emailing <a href="mailto:manutelw@gmail.com"><strong>manutelw@gmail.com</strong></a>.</p>
     </div>
     <div class="service-grid">
-      <article class="service-card" id="service-pi-practice">
-        <span class="service-icon">PI</span><h3>PI Practice</h3>
-        <p>Practise common personal-interview questions, record your answers and improve how clearly you present your evidence.</p>
-        <p style="margin-top:10px"><strong>FIIB:</strong> apply first; access can be approved after 24 hours. <strong>Private/non-FIIB:</strong> paid access opens under the private learner rules.</p>
-        <a class="go" href="./ascent/dashboard.html#practiceAccessPanel">Apply for access →</a>
-      </article>
-      <article class="service-card" id="service-pi-lab">
-        <span class="service-icon">PI+</span><h3>PI Lab</h3>
-        <p>Prepare for a specific company and role using the uploaded JD, interviewer questions and model candidate responses.</p>
-        <p style="margin-top:10px">This is trainer-assigned. Access is given only to learners included in the Excel roster uploaded with that PI assignment.</p>
-        <a class="go" href="./ascent/dashboard.html">Check my PI Lab access →</a>
+      <article class="service-card" id="service-gd-lab">
+        <span class="service-icon">GD+</span><h3>GD Lab</h3>
+        <p><strong>What it is:</strong> A trainer-created, role- or JD-specific group-discussion assignment for targeted preparation.</p>
+        <p style="margin-top:10px"><strong>Benefits:</strong> Practise discussion topics that are relevant to the actual opportunity and prepare before the selection process.</p>
+        <p style="margin-top:10px"><strong>Who can use it:</strong> Learners selected for a GD Lab assignment. Institutional learners can access it only when a trainer assigns/releases it to them.</p>
+        <p style="margin-top:10px"><strong>Private candidates:</strong> Request access at <a href="mailto:manutelw@gmail.com">manutelw@gmail.com</a>.</p>
       </article>
       <article class="service-card" id="service-gd-practice">
         <span class="service-icon">GD</span><h3>GD Practice</h3>
-        <p>Learn and practise the core GD moves: enter, respond, develop, guide and close. Hear models, repeat them and improve your delivery.</p>
-        <p style="margin-top:10px"><strong>FIIB:</strong> apply first; access can be approved after 24 hours. <strong>Private/non-FIIB:</strong> paid access opens under the private learner rules.</p>
-        <a class="go" href="./ascent/dashboard.html#practiceAccessPanel">Apply for access →</a>
+        <p><strong>What it is:</strong> Structured practice for the core GD moves—entering, responding, developing a point, guiding the group and closing.</p>
+        <p style="margin-top:10px"><strong>Benefits:</strong> Build confidence, clearer reasoning and stronger participation before a real GD.</p>
+        <p style="margin-top:10px"><strong>Who can use it:</strong> Learners who have been granted GD Practice access. Institutional learners should sign in to ASCENT and use the practice-access application facility.</p>
+        <a class="go" href="./ascent/dashboard.html#practiceAccessPanel">Apply for GD Practice access →</a>
+        <p style="margin-top:44px"><strong>Private candidates:</strong> Request access at <a href="mailto:manutelw@gmail.com">manutelw@gmail.com</a>.</p>
       </article>
-      <article class="service-card" id="service-gd-lab">
-        <span class="service-icon">GD+</span><h3>GD Lab</h3>
-        <p>Take part in a live, continuous JD-based group discussion with AI participants and receive feedback on your own contribution.</p>
-        <p style="margin-top:10px">This is trainer-assigned. Access is given only to learners included in the Excel roster uploaded with that GD assignment.</p>
-        <a class="go" href="./ascent/gd-dugout-assignments.html">Check my GD Lab access →</a>
+      <article class="service-card" id="service-pi-lab">
+        <span class="service-icon">PI+</span><h3>PI Lab</h3>
+        <p><strong>What it is:</strong> A trainer-created, JD-specific interview assignment built around a company, role and targeted PI questions.</p>
+        <p style="margin-top:10px"><strong>Benefits:</strong> Focus preparation on the interview that is actually coming up instead of practising generic questions only.</p>
+        <p style="margin-top:10px"><strong>Who can use it:</strong> Learners selected for a PI Lab assignment. Institutional learners can access it only when a trainer assigns/releases it to them.</p>
+        <p style="margin-top:10px"><strong>Private candidates:</strong> Request access at <a href="mailto:manutelw@gmail.com">manutelw@gmail.com</a>.</p>
       </article>
-      <article class="service-card" id="service-cat">
-        <span class="service-icon">CAT</span><h3>CAT Simulator</h3>
-        <p>Run CAT-style timed practice across VARC, DILR and QA in a realistic simulation environment.</p>
-        <p style="margin-top:10px">This service is currently available to ASCENT administrators only.</p>
-        <a class="go" data-admin-only="1" data-admin-href="https://cat.clarionprep.com/">Open CAT Simulator · Admin only</a>
+      <article class="service-card" id="service-pi-practice">
+        <span class="service-icon">PI</span><h3>PI Practice</h3>
+        <p><strong>What it is:</strong> Structured practice for common personal-interview questions with spoken-answer practice and feedback.</p>
+        <p style="margin-top:10px"><strong>Benefits:</strong> Improve answer structure, evidence, clarity and delivery before a real interview.</p>
+        <p style="margin-top:10px"><strong>Who can use it:</strong> Learners who have been granted PI Practice access. Institutional learners should sign in to ASCENT and use the practice-access application facility.</p>
+        <a class="go" href="./ascent/dashboard.html#practiceAccessPanel">Apply for PI Practice access →</a>
+        <p style="margin-top:44px"><strong>Private candidates:</strong> Request access at <a href="mailto:manutelw@gmail.com">manutelw@gmail.com</a>.</p>
       </article>
       <article class="service-card" id="service-dialogue">
         <span class="service-icon">DL</span><h3>Dialogue Lab</h3>
-        <p>Build spoken communication through guided dialogues, listening models and repeated learner practice.</p>
-        <p style="margin-top:10px">This service is currently available to ASCENT administrators only.</p>
-        <a class="go" data-admin-only="1" data-admin-href="./dialogue-lab/home.html">Open Dialogue Lab · Admin only</a>
+        <p><strong>What it is:</strong> Guided listening-and-speaking practice built around natural workplace and everyday professional dialogues.</p>
+        <p style="margin-top:10px"><strong>Benefits:</strong> Build fluency, listening, usable language and confidence through repeated practice rather than passive study.</p>
+        <p style="margin-top:10px"><strong>Who can use it:</strong> Learners for whom Dialogue Lab access has been enabled by their programme or administrator.</p>
+        <p style="margin-top:10px"><strong>Private candidates:</strong> Request access at <a href="mailto:manutelw@gmail.com">manutelw@gmail.com</a>.</p>
+      </article>
+      <article class="service-card" id="service-pcl">
+        <span class="service-icon">PCL</span><h3>PCL</h3>
+        <p><strong>What it is:</strong> Professional Communication Lab practice for handling workplace communication clearly and appropriately.</p>
+        <p style="margin-top:10px"><strong>Benefits:</strong> Strengthen the language, judgement and response patterns needed in professional situations.</p>
+        <p style="margin-top:10px"><strong>Who can use it:</strong> Learners whose institution, trainer or administrator has enabled PCL access.</p>
+        <p style="margin-top:10px"><strong>Private candidates:</strong> Request access at <a href="mailto:manutelw@gmail.com">manutelw@gmail.com</a>.</p>
+      </article>
+      <article class="service-card" id="service-live-mock">
+        <span class="service-icon">LIVE</span><h3>Live Mock Interview</h3>
+        <p><strong>What it is:</strong> A realistic spoken mock interview with follow-up questions and performance review.</p>
+        <p style="margin-top:10px"><strong>Benefits:</strong> Test preparation under interview pressure, practise handling follow-ups and identify the next improvement priority.</p>
+        <p style="margin-top:10px"><strong>Who can use it:</strong> Learners for whom Live Mock Interview access has been enabled by their programme, trainer or administrator.</p>
+        <p style="margin-top:10px"><strong>Private candidates:</strong> Request access at <a href="mailto:manutelw@gmail.com">manutelw@gmail.com</a>.</p>
       </article>
     </div>
   </div>
