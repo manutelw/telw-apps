@@ -1,8 +1,10 @@
 export async function onRequest(context) {
   const response = await context.next();
   const url = new URL(context.request.url);
+  const isLanding = url.pathname === '/' || url.pathname === '/index.html';
+  const isTrainerPortal = url.pathname === '/portal/trainer/' || url.pathname === '/portal/trainer/index.html';
 
-  if (!response.ok || (url.pathname !== '/' && url.pathname !== '/index.html')) {
+  if (!response.ok || (!isLanding && !isTrainerPortal)) {
     return response;
   }
 
@@ -11,6 +13,24 @@ export async function onRequest(context) {
   if (!supportedHost) return response;
 
   let html = await response.text();
+
+  // Add a standalone Workplace Communication Test entry to the trainer/admin portal.
+  // This is navigation only and does not connect WCT to ASCENT data or scoring.
+  if (isTrainerPortal) {
+    if (!html.includes('id="wctPortalAccess"')) {
+      const wctAccess = `<a class="btn btn-ghost" id="wctPortalAccess" href="/workplace-communication-test/evaluator.html"><span>Workplace Communication Test</span> ↗</a>`;
+      html = html.replace('<a class="btn btn-ghost" href="/app/"><span>Open Practice</span> ↗</a>', wctAccess + '\n    <a class="btn btn-ghost" href="/app/"><span>Open Practice</span> ↗</a>');
+    }
+
+    const headers = new Headers(response.headers);
+    headers.set('content-type', 'text/html; charset=UTF-8');
+    headers.set('cache-control', 'no-store, max-age=0');
+    return new Response(html, {
+      status: response.status,
+      statusText: response.statusText,
+      headers
+    });
+  }
 
   // Keep the public Services menu aligned with the static landing page.
   // PCL and Live Mock are admin-only and must never become learner/private links.
