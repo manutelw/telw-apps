@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ClarionPrep · Workplace Communication Evaluator</title>
+<style>
+:root{--navy:#143a60;--navy2:#0d2943;--soft:#eef5fb;--gold:#c67b00;--text:#24364a;--muted:#687a8d;--border:#d7e1eb;--shadow:0 18px 50px rgba(20,58,96,.10)}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f8fb;color:var(--text)}header{background:linear-gradient(145deg,var(--navy2),#1d5688);color:#fff;padding:28px 0}.shell{width:min(1100px,calc(100% - 30px));margin:auto}h1{margin:0 0 8px}header p{margin:0;color:rgba(255,255,255,.78)}main{padding:28px 0 60px}.card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:24px;margin-bottom:18px;box-shadow:var(--shadow)}h2,h3{color:var(--navy)}.btn{border:0;border-radius:10px;padding:11px 15px;background:var(--navy);color:#fff;font:inherit;font-weight:800;cursor:pointer}.btn.gold{background:var(--gold)}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.meta{padding:12px;border-radius:10px;background:var(--soft)}.meta strong{display:block;color:var(--navy);margin-bottom:3px}.response{white-space:pre-wrap;line-height:1.6;background:#fbfdff;border:1px solid var(--border);padding:16px;border-radius:10px}.rubric{width:100%;border-collapse:collapse}.rubric th,.rubric td{border-bottom:1px solid var(--border);padding:10px;text-align:left;vertical-align:top}.rubric th{color:var(--navy)}select,textarea{font:inherit;border:1px solid var(--border);border-radius:8px;padding:8px}textarea{width:100%;min-height:90px}.scoreline{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.total{font-size:34px;font-weight:800;color:var(--navy)}.band{display:inline-block;padding:8px 12px;border-radius:999px;background:var(--soft);font-weight:800;color:var(--navy)}audio{width:100%;margin-top:10px}.hidden{display:none!important}.small{font-size:13px;color:var(--muted);line-height:1.5}.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:28px}@media(max-width:720px){.grid{grid-template-columns:1fr}.rubric{font-size:14px}}
+</style>
+</head>
+<body>
+<header><div class="shell"><h1>Workplace Communication Evaluator</h1><p>Controlled pilot · Score the candidate’s productive communication using the common rubric.</p></div></header>
+<main class="shell">
+<section id="loadCard" class="card">
+  <h2>Open a candidate submission</h2>
+  <p>Select the ZIP downloaded from the candidate test. The file is processed locally in this browser.</p>
+  <input id="zipInput" type="file" accept=".zip">
+</section>
+
+<div id="evaluation" class="hidden">
+<section class="card"><div class="grid" id="candidateMeta"></div></section>
+<section class="card"><h2>Objective sections</h2><div class="grid"><div class="meta"><strong>Listening</strong><span id="listeningScore"></span></div><div class="meta"><strong>Reading</strong><span id="readingScore"></span></div></div></section>
+
+<section class="card">
+  <h2>Writing · 20 marks</h2><div id="writingResponse" class="response"></div>
+  <table class="rubric"><thead><tr><th>Criterion</th><th>What 5 looks like</th><th>Score /5</th></tr></thead><tbody>
+    <tr><td>Task fulfilment</td><td>Explains the issue, action and revised delivery clearly; nothing essential is missing.</td><td><select class="score" data-section="writing"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+    <tr><td>Clarity &amp; structure</td><td>Easy to follow, concise, logically ordered and appropriately specific.</td><td><select class="score" data-section="writing"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+    <tr><td>Tone &amp; audience awareness</td><td>Professional, accountable and suitably direct for a manager.</td><td><select class="score" data-section="writing"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+    <tr><td>Language control</td><td>Grammar and vocabulary support meaning with only minor slips; wording is natural and precise.</td><td><select class="score" data-section="writing"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+  </tbody></table>
+  <p><strong>Writing subtotal: <span id="writingSubtotal">0</span>/20</strong></p>
+</section>
+
+<section class="card">
+  <h2>Speak to Explain · 20 marks</h2><div id="audioOne"></div>
+  <table class="rubric"><thead><tr><th>Criterion</th><th>What 5 looks like</th><th>Score /5</th></tr></thead><tbody>
+    <tr><td>Response structure</td><td>Task, personal contribution and outcome are all clear and connected.</td><td><select class="score" data-section="speaking"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+    <tr><td>Clarity &amp; comprehensibility</td><td>Speech is consistently easy to understand; pronunciation supports meaning.</td><td><select class="score" data-section="speaking"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+    <tr><td>Fluency</td><td>Maintains a natural flow with manageable hesitation and effective pausing.</td><td><select class="score" data-section="speaking"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+    <tr><td>Language control</td><td>Uses sufficient vocabulary and grammatical control to explain the experience precisely.</td><td><select class="score" data-section="speaking"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+  </tbody></table><p><strong>Speaking subtotal: <span id="speakingSubtotal">0</span>/20</strong></p>
+</section>
+
+<section class="card">
+  <h2>Workplace Situation · 20 marks</h2><div id="audioTwo"></div>
+  <table class="rubric"><thead><tr><th>Criterion</th><th>What 5 looks like</th><th>Score /5</th></tr></thead><tbody>
+    <tr><td>Direct answer &amp; prioritisation</td><td>Identifies what requires immediate attention and states a clear first move.</td><td><select class="score" data-section="judgement"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+    <tr><td>Reasoning</td><td>Explains why the chosen sequence protects accuracy, deadlines and stakeholder trust.</td><td><select class="score" data-section="judgement"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+    <tr><td>Action &amp; ownership</td><td>Shows personal responsibility, verification and sensible coordination rather than passing the problem on.</td><td><select class="score" data-section="judgement"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+    <tr><td>Audience awareness &amp; closure</td><td>Communicates who needs to know what, and closes with a credible next step or update.</td><td><select class="score" data-section="judgement"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+  </tbody></table><p><strong>Situation subtotal: <span id="judgementSubtotal">0</span>/20</strong></p>
+</section>
+
+<section class="card">
+  <h2>Evaluator note</h2><textarea id="evaluatorNote" placeholder="Optional concise evidence-based note for the recruiter or institution."></textarea>
+  <h2>Final result</h2><div class="scoreline"><span class="total" id="finalTotal">40/100</span><span class="band" id="band">Incomplete evaluation</span><span class="band" id="cefr">CEFR indicator pending</span></div>
+  <p class="small">The CEFR label is a provisional internal indicator for this pilot, not a certified CEFR examination result. Recruiter-readiness bands should be validated against real hiring outcomes before high-stakes use.</p>
+  <button id="downloadReport" class="btn gold">Download evaluated report</button>
+</section>
+</div>
+<div class="footer">Powered by <strong>telw.co.in</strong></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+let submission=null,files={},finalReport=null;
+const $=id=>document.getElementById(id);const qsa=s=>[...document.querySelectorAll(s)];
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function sum(section){return qsa(`.score[data-section="${section}"]`).reduce((a,e)=>a+(e.value===''?0:Number(e.value)),0)}
+function allScored(){return qsa('.score').every(e=>e.value!=='')}
+function calc(){
+  const w=sum('writing'),s=sum('speaking'),j=sum('judgement');$('writingSubtotal').textContent=w;$('speakingSubtotal').textContent=s;$('judgementSubtotal').textContent=j;
+  if(!submission)return;
+  const objective=Number(submission.objective_score?.total||0),total=objective+w+s+j;$('finalTotal').textContent=`${total}/100`;
+  if(!allScored()){$('band').textContent='Incomplete evaluation';$('cefr').textContent='CEFR indicator pending';return;}
+  const band=total>=85?'A · Client Ready':total>=70?'B · Workplace Ready':total>=55?'C · Workplace Ready with Support':'D · Development Required';$('band').textContent=band;
+  const language=Number(submission.objective_score?.listening||0)+Number(submission.objective_score?.reading||0)+w+s;
+  const pct=language/80*100;const cefr=pct>=85?'B2+ indicator':pct>=70?'B2 indicator':pct>=55?'B1+ indicator':pct>=40?'B1 indicator':'A2+ / below indicator';$('cefr').textContent=cefr;
+  finalReport={...submission,manual_scores:{writing:w,speaking:s,workplace_judgement:j},final_score:total,workplace_readiness_band:band,provisional_cefr_indicator:cefr,evaluator_note:$('evaluatorNote').value,evaluated_at:new Date().toISOString()};
+}
+function audioFromBlob(blob,target){const url=URL.createObjectURL(blob);const a=document.createElement('audio');a.controls=true;a.src=url;$(target).innerHTML='';$(target).appendChild(a)}
+async function loadZip(file){
+  try{
+    const zip=await JSZip.loadAsync(file);const entry=zip.file('submission.json');if(!entry)throw new Error('submission.json not found.');submission=JSON.parse(await entry.async('text'));
+    if(submission.schema_version!=='wct-v1')throw new Error('Unsupported submission version.');
+    $('candidateMeta').innerHTML=`<div class="meta"><strong>Candidate</strong>${esc(submission.candidate.name)}</div><div class="meta"><strong>Attempt ID</strong>${esc(submission.attempt_id)}</div><div class="meta"><strong>Email</strong>${esc(submission.candidate.email)}</div><div class="meta"><strong>Roll / Applicant ID</strong>${esc(submission.candidate.candidate_id)}</div><div class="meta"><strong>Institution / Cohort / Campaign</strong>${esc(submission.candidate.cohort)}</div><div class="meta"><strong>Time used</strong>${Math.ceil(Number(submission.time_used_seconds||0)/60)} minutes</div>`;
+    $('listeningScore').textContent=`${submission.objective_score.listening}/20`;$('readingScore').textContent=`${submission.objective_score.reading}/20`;$('writingResponse').textContent=submission.answers?.writing||'[No writing response]';
+    const a1=zip.file('speaking-explain.webm'),a2=zip.file('workplace-situation.webm');
+    $('audioOne').innerHTML=a1?'':'<p class="small">No recording supplied.</p>';$('audioTwo').innerHTML=a2?'':'<p class="small">No recording supplied.</p>';
+    if(a1)audioFromBlob(await a1.async('blob'),'audioOne');if(a2)audioFromBlob(await a2.async('blob'),'audioTwo');
+    $('evaluation').classList.remove('hidden');calc();
+  }catch(e){alert('Could not open this submission: '+e.message)}
+}
+function downloadReport(){
+  calc();if(!allScored()){alert('Please score every rubric criterion before issuing a final report.');return;}
+  finalReport.evaluator_note=$('evaluatorNote').value;const text=[
+    'ClarionPrep Workplace Communication Test — Evaluated Report','Controlled Pilot · Version 1','',
+    `Candidate: ${finalReport.candidate.name}`,`Email: ${finalReport.candidate.email}`,`Roll / Applicant ID: ${finalReport.candidate.candidate_id}`,`Institution / Cohort / Campaign: ${finalReport.candidate.cohort}`,`Attempt ID: ${finalReport.attempt_id}`,'',
+    `Listening: ${finalReport.objective_score.listening}/20`,`Reading: ${finalReport.objective_score.reading}/20`,`Writing: ${finalReport.manual_scores.writing}/20`,`Speaking: ${finalReport.manual_scores.speaking}/20`,`Workplace Situation: ${finalReport.manual_scores.workplace_judgement}/20`,'',
+    `FINAL SCORE: ${finalReport.final_score}/100`,`WORKPLACE READINESS: ${finalReport.workplace_readiness_band}`,`PROVISIONAL CEFR: ${finalReport.provisional_cefr_indicator}`,'',
+    `Evaluator note: ${finalReport.evaluator_note||'—'}`,'','Pilot note: CEFR mapping is provisional and not a certified CEFR examination result. Validate bands against hiring outcomes before high-stakes deployment.','','Powered by telw.co.in'
+  ].join('\n');
+  const blob=new Blob([text],{type:'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${finalReport.attempt_id}_evaluated-report.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+$('zipInput').addEventListener('change',e=>{if(e.target.files[0])loadZip(e.target.files[0])});qsa('.score').forEach(e=>e.addEventListener('change',calc));$('evaluatorNote').addEventListener('input',calc);$('downloadReport').addEventListener('click',downloadReport);
+</script>
+</body>
+</html>
