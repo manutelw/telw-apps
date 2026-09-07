@@ -1,1 +1,1 @@
-CI trigger only: public Services menu adds GD Practice and PI Practice. No ASCENT runtime code is changed.
+CI trigger only: root Services menu is now direct in index.html. No ASCENT runtime code is changed.
