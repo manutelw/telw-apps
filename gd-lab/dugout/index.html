@@ -2,7 +2,8 @@
 const API='https://vtqatrhwfvzyodiftvkc.supabase.co/functions/v1/gd-dugout-practice';
 const params=new URLSearchParams(location.search);
 const TOPIC=(params.get('topic')||'').trim();
-const STUDENT_NAME=(params.get('name')||'').trim();
+let STUDENT_NAME='';
+try{const learnerSession=JSON.parse(localStorage.getItem('ascent_student_session')||'null');STUDENT_NAME=String(learnerSession?.fullName||'').trim().split(/\s+/)[0]||''}catch{}
 const topicEl=document.getElementById('topic'),liveTopic=document.getElementById('liveTopic');
 let history=[],remaining=180,timer=null,timerRunning=false,timeExpired=false,active=false,finished=false,rec=null,chunks=[],stream=null,selectedMove='',currentAudio=null,cycleTimer=null,cycleId=0,busy=false,finishAfterContribution=false,handoverAudio=null,handoverPromise=null;
 function esc(s){return String(s||'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
