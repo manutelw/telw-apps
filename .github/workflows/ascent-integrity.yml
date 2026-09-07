@@ -10,6 +10,8 @@ on:
       - 'android-ascent-play/**'
       - 'live-mock/**'
       - 'functions/ascent/**'
+      - 'functions/_middleware.js'
+      - 'workplace-communication-test/**'
       - 'workers/profile-review.js'
       - 'cat/**'
       - 'pi-lab/**'
@@ -26,6 +28,8 @@ on:
       - 'android-ascent-play/**'
       - 'live-mock/**'
       - 'functions/ascent/**'
+      - 'functions/_middleware.js'
+      - 'workplace-communication-test/**'
       - 'workers/profile-review.js'
       - 'cat/**'
       - 'pi-lab/**'
@@ -52,4 +56,5 @@ jobs:
           node --check ascent/practice-access-v2.js
           node --check ascent/recording-vault.js
           node --check ascent/trainer-results-summary.js
+          node --check workplace-communication-test/app.js
           if [ -f functions/ascent/submit-response.js ]; then node --check functions/ascent/submit-response.js; fi
