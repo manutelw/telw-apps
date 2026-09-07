@@ -2,13 +2,17 @@ export async function onRequest(context) {
   const response = await context.next();
   const url = new URL(context.request.url);
 
-  if (!response.ok || !url.pathname.endsWith('/ascent/trainer.html')) {
+  const isTrainerPage = url.pathname.endsWith('/ascent/trainer.html');
+  const isAdminSettingsPage = url.pathname.endsWith('/ascent/admin-settings.html');
+
+  if (!response.ok || (!isTrainerPage && !isAdminSettingsPage)) {
     return response;
   }
 
   let html = await response.text();
 
-  const script = `
+  if (isTrainerPage) {
+    const script = `
 <script data-ascent-results-task-filter="2026-08-27.1">
 (function () {
   const RESULT_TASK_OPTIONS = [
@@ -100,8 +104,22 @@ export async function onRequest(context) {
 })();
 </script>`;
 
-  html = html.replace(/<script data-ascent-results-task-filter="[^"]+">[\s\S]*?<\/script>/, "");
-  html = html.replace('</body>', script + '\n</body>');
+    html = html.replace(/<script data-ascent-results-task-filter="[^"]+">[\s\S]*?<\/script>/, "");
+    html = html.replace('</body>', script + '\n</body>');
+  }
+
+  if (isAdminSettingsPage) {
+    const adminPracticeCards = `
+        <a class="app-card gd" href="./learner-access.html"><strong>GD Practice</strong><span>Grant or remove student access to the GD practice question bank</span></a>
+        <a class="app-card pi" href="./learner-access.html"><strong>PI Practice</strong><span>Grant or remove student access to the PI practice question bank</span></a>`;
+
+    if (!html.includes('<strong>GD Practice</strong>')) {
+      html = html.replace(
+        '        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>',
+        adminPracticeCards + '\n        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>'
+      );
+    }
+  }
 
   const headers = new Headers(response.headers);
   headers.set('content-type', 'text/html; charset=UTF-8');
