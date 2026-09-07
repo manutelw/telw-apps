@@ -1,37 +1,27 @@
+const SUPABASE_URL='https://vtqatrhwfvzyodiftvkc.supabase.co';
+const SUPABASE_KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
+const ADMIN_VALIDATE=SUPABASE_URL+'/rest/v1/rpc/ascent_admin_trainer_entry_list';
+
 export async function onRequest(context) {
-  const response = await context.next();
   const url = new URL(context.request.url);
   const isTrainerPage = url.pathname.endsWith('/ascent/trainer.html');
   const isAdminSettingsPage = url.pathname.endsWith('/ascent/admin-settings.html');
-  const isProtectedAdminPage = [
-    '/ascent/pcl.html',
-    '/ascent/professional-communication-module-1.html',
-    '/ascent/professional-communication-trainer-preview.html',
-    '/ascent/live-mock.html'
-  ].some(path => url.pathname.endsWith(path));
-  if (!response.ok || (!isTrainerPage && !isAdminSettingsPage && !isProtectedAdminPage)) return response;
-  let html = await response.text();
+  const isProtectedAdminPage =
+    url.pathname.endsWith('/ascent/pcl.html') ||
+    /\/ascent\/professional-communication-[^/]+\.html$/.test(url.pathname) ||
+    /\/ascent\/live-mock(?:-[^/]+)?\.html$/.test(url.pathname) ||
+    url.pathname.endsWith('/ascent/mock-interview.html');
 
   if (isProtectedAdminPage) {
-    const adminGate = `
-<script data-admin-only-gate="pcl-live-mock-2026-09-07">
-(function(){
-  function validAdmin(){
-    for(const key of ['ascent_admin_master_session','ascent_trainer_session']){
-      try{
-        const s=JSON.parse(localStorage.getItem(key)||'null');
-        const expiry=new Date(s?.expiresAt||s?.expires_at||0).getTime();
-        const token=s?.sessionToken||s?.session_token;
-        if(token&&String(s?.role||'').toUpperCase()==='ADMIN'&&Number.isFinite(expiry)&&expiry>Date.now())return true;
-      }catch(_){ }
+    const token=readCookie(context.request.headers.get('cookie')||'','clarion_admin_session');
+    if(!token || !(await validAdminToken(token))){
+      return new Response(null,{status:302,headers:{location:'/ascent/admin-login.html','cache-control':'no-store'}});
     }
-    return false;
   }
-  if(!validAdmin()) location.replace('./admin-login.html');
-})();
-</script>`;
-    html = html.replace('</head>', adminGate + '\n</head>');
-  }
+
+  const response = await context.next();
+  if (!response.ok || (!isTrainerPage && !isAdminSettingsPage && !isProtectedAdminPage)) return response;
+  let html = await response.text();
 
   if (isTrainerPage) {
     const script = `
@@ -93,7 +83,45 @@ export async function onRequest(context) {
     const shareCards = `\n        <a class="app-card ascent" href="./share-access.html?product=CAT_SIMULATOR"><strong>CAT Access Links</strong><span>Generate CAT links with your own attempt limit and validity period</span></a>\n        <a class="app-card dialogue" href="./share-access.html?product=DIALOGUE_LAB"><strong>Dialogue Lab Access Links</strong><span>Generate Dialogue Lab links with your own launch limit and validity period</span></a>`;
     if (!html.includes('<strong>CAT Access Links</strong>')) html = html.replace('        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>',shareCards+'\n        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>');
     html = html.replace(/\s*<a class="app-card live" href="\.\/share-access\.html\?product=LIVE_MOCK"><strong>Live Mock Access Links<\/strong><span>[\s\S]*?<\/span><\/a>/g,'');
+
+    const secureLaunch = `
+<script data-secure-admin-launch="pcl-live-mock-2026-09-07.3">
+(function(){
+  function adminToken(){
+    for(const key of ['ascent_admin_master_session','ascent_trainer_session']){
+      try{const s=JSON.parse(localStorage.getItem(key)||'null');const exp=new Date(s?.expiresAt||s?.expires_at||0).getTime();const token=s?.sessionToken||s?.session_token;if(token&&String(s?.role||'').toUpperCase()==='ADMIN'&&Number.isFinite(exp)&&exp>Date.now())return token;}catch(_){ }
+    }
+    return '';
   }
+  function launch(action){
+    const token=adminToken();
+    if(!token){location.href='./admin-login.html';return;}
+    const form=document.createElement('form');form.method='POST';form.action=action;form.style.display='none';
+    const input=document.createElement('input');input.type='hidden';input.name='ascent_session_token';input.value=token;form.appendChild(input);document.body.appendChild(form);form.submit();
+  }
+  document.querySelectorAll('a[href="./professional-communication-trainer-preview.html"],a[href="./pcl.html"]').forEach(a=>{a.removeAttribute('target');a.removeAttribute('rel');a.href='#';a.addEventListener('click',e=>{e.preventDefault();launch('./pcl-admin-handoff');});});
+  const live=document.getElementById('liveMockAppButton');
+  if(live)live.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();launch('../live-mock/admin-handoff');},true);
+})();
+</script>`;
+    html = html.replace('</body>', secureLaunch + '\n</body>');
+  }
+
   const headers=new Headers(response.headers);headers.set('content-type','text/html; charset=UTF-8');headers.set('cache-control','no-store, max-age=0');
   return new Response(html,{status:response.status,statusText:response.statusText,headers});
+}
+
+function readCookie(header,name){
+  const match=header.match(new RegExp('(?:^|;\\s*)'+name+'=([^;]+)'));
+  return match?decodeURIComponent(match[1]):'';
+}
+
+async function validAdminToken(token){
+  try{
+    const r=await fetch(ADMIN_VALIDATE,{method:'POST',headers:{apikey:SUPABASE_KEY,authorization:'Bearer '+SUPABASE_KEY,'content-type':'application/json'},body:JSON.stringify({p_session_token:token})});
+    if(!r.ok)return false;
+    const payload=await r.json();
+    const result=Array.isArray(payload)?payload[0]:payload;
+    return Boolean(result&&result.ok===true);
+  }catch(_){return false;}
 }

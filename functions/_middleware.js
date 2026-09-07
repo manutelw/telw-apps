@@ -14,27 +14,20 @@ export async function onRequest(context) {
 
   let html = await response.text();
 
-  // Add a standalone Workplace Communication Test entry to the trainer/admin portal.
-  // This is navigation only and does not connect WCT to ASCENT data or scoring.
+  // Preserve the standalone Workplace Communication Test entry in the trainer/admin portal.
   if (isTrainerPortal) {
     if (!html.includes('id="wctPortalAccess"')) {
       const wctAccess = `<a class="btn btn-ghost" id="wctPortalAccess" href="/workplace-communication-test/evaluator.html"><span>Workplace Communication Test</span> ↗</a>`;
       html = html.replace('<a class="btn btn-ghost" href="/app/"><span>Open Practice</span> ↗</a>', wctAccess + '\n    <a class="btn btn-ghost" href="/app/"><span>Open Practice</span> ↗</a>');
     }
-
     const headers = new Headers(response.headers);
     headers.set('content-type', 'text/html; charset=UTF-8');
     headers.set('cache-control', 'no-store, max-age=0');
-    return new Response(html, {
-      status: response.status,
-      statusText: response.statusText,
-      headers
-    });
+    return new Response(html,{status:response.status,statusText:response.statusText,headers});
   }
 
-  // Keep the public Services menu aligned with the static landing page.
-  // PCL and Live Mock are admin-only and must never become learner/private links.
-  // Workplace Communication Test is a standalone ClarionPrep assessment add-on.
+  // PCL and Live Mock are deliberately absent from every public Services surface.
+  // Their only supported entry is the authenticated ASCENT Admin Settings hub.
   const servicesMenu = `<div class="services-menu">
     <a href="./ascent/eportfolio.html">E-Portfolios</a>
     <a href="./ascent/jd-builder.html">JD Builder</a>
@@ -47,12 +40,15 @@ export async function onRequest(context) {
     <a href="#service-pi-lab">PI Lab</a>
     <a href="#service-gd-practice">GD Practice</a>
     <a href="#service-gd-lab">GD Lab</a>
-    <a data-admin-only="1" data-admin-href="./ascent/pcl.html">PCL · Admin only</a>
-    <a data-admin-only="1" data-admin-href="./ascent/live-mock.html">Live Mock Interview · Admin only</a>
   </div>`;
   html = html.replace(/<div class="services-menu">[\s\S]*?<\/div><\/div><\/div><button id="menuButton"/, servicesMenu + '</div></div><button id="menuButton"');
 
-  // Add the standalone assessment to the visible Services grid without changing ASCENT core.
+  // Strip static/legacy PCL and Live Mock cards before the page reaches the browser.
+  html = html.replace(/<a class="service-card"[^>]*data-admin-href="\.\/ascent\/pcl\.html"[^>]*>[\s\S]*?<\/a>/g,'');
+  html = html.replace(/<a class="service-card"[^>]*data-admin-href="\.\/ascent\/live-mock\.html"[^>]*>[\s\S]*?<\/a>/g,'');
+  html = html.replace(/<article class="service-card(?: admin-locked)?" id="service-pcl"[\s\S]*?<\/article>/g,'');
+  html = html.replace(/<article class="service-card(?: admin-locked)?" id="service-live-mock"[\s\S]*?<\/article>/g,'');
+
   if (!html.includes('id="service-workplace-communication-test"')) {
     const assessmentCard = `<a class="service-card" id="service-workplace-communication-test" href="./workplace-communication-test/">
       <span class="service-icon">WCT</span><h3>Workplace Communication Test</h3>
@@ -62,7 +58,6 @@ export async function onRequest(context) {
     html = html.replace('<article class="service-card" id="service-pi-practice">', assessmentCard + '<article class="service-card" id="service-pi-practice">');
   }
 
-  // GD/PI lab cards explain access first. Do not rewrite PCL or Live Mock admin locks.
   html = html.replace(/href="\.\/gd-lab\/"/g, 'href="#service-gd-lab"');
   html = html.replace(/href="\.\/pi-lab\/"/g, 'href="#service-pi-lab"');
 
@@ -71,9 +66,9 @@ export async function onRequest(context) {
 <section id="practice-simulations" class="section alt">
   <div class="shell">
     <div class="section-head">
-      <div class="kicker">Practice, labs &amp; live support</div>
-      <h2>What each service does, who can use it and how access works.</h2>
-      <p>Institutional learners should follow the access route shown for each learner service. Private candidates may request access to eligible learner services by emailing <a href="mailto:manutelw@gmail.com"><strong>manutelw@gmail.com</strong></a>. PCL and Live Mock Interview are administrator-only.</p>
+      <div class="kicker">Practice &amp; labs</div>
+      <h2>What each learner service does, who can use it and how access works.</h2>
+      <p>Institutional learners should follow the access route shown for each learner service. Private candidates may request access to eligible learner services by emailing <a href="mailto:manutelw@gmail.com"><strong>manutelw@gmail.com</strong></a>.</p>
     </div>
     <div class="service-grid">
       <article class="service-card" id="service-gd-lab">
@@ -111,16 +106,6 @@ export async function onRequest(context) {
         <p><strong>What it is:</strong> Guided listening-and-speaking practice built around natural workplace and everyday professional dialogues.</p>
         <p style="margin-top:10px"><strong>Benefits:</strong> Build fluency, listening, usable language and confidence through repeated practice rather than passive study.</p>
       </article>
-      <article class="service-card admin-locked" id="service-pcl" aria-disabled="true">
-        <span class="service-icon">PCL</span><h3>PCL</h3>
-        <p><strong>Administrator only.</strong> PCL is not available to learners, private candidates or trainers as a public-access service.</p>
-        <span class="go">Admin only</span>
-      </article>
-      <article class="service-card admin-locked" id="service-live-mock" aria-disabled="true">
-        <span class="service-icon">LIVE</span><h3>Live Mock Interview</h3>
-        <p><strong>Administrator only.</strong> Live Mock Interview is not available to learners, private candidates or trainers as a public-access service.</p>
-        <span class="go">Admin only</span>
-      </article>
     </div>
   </div>
 </section>`;
@@ -130,10 +115,5 @@ export async function onRequest(context) {
   const headers = new Headers(response.headers);
   headers.set('content-type', 'text/html; charset=UTF-8');
   headers.set('cache-control', 'no-store, max-age=0');
-
-  return new Response(html, {
-    status: response.status,
-    statusText: response.statusText,
-    headers
-  });
+  return new Response(html,{status:response.status,statusText:response.statusText,headers});
 }
