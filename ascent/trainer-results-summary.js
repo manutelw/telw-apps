@@ -241,7 +241,7 @@
     link.href="../pi-lab/admin-builder.html";
     link.style.display="block";
     link.style.textDecoration="none";
-    link.textContent="PI Assignment Builder";
+    link.textContent="PI for DUGOUTS";
     nav.appendChild(link);
   }
 
