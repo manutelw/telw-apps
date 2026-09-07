@@ -1,1 +1,1 @@
-CI trigger only: PCL and Live Mock are admin-only across public, direct URL, student and trainer entry paths. No ASCENT core learning runtime logic is changed.
+CI trigger only: PCL and Live Mock remain admin-only, with public menu entries pointing only to information cards. No ASCENT core learning runtime logic is changed.
