@@ -1,1 +1,1 @@
-CI trigger only: static landing no longer exposes PCL or Live Mock. No ASCENT core runtime logic is changed.
+CI trigger only: PCL and Live Mock are admin-only across public, direct URL, student and trainer entry paths. No ASCENT core learning runtime logic is changed.
