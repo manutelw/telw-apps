@@ -1,8 +1,10 @@
 export async function onRequest(context) {
   const response = await context.next();
   const url = new URL(context.request.url);
+  const isLanding = url.pathname === '/' || url.pathname === '/index.html';
+  const isTrainerPortal = url.pathname === '/portal/trainer/' || url.pathname === '/portal/trainer/index.html';
 
-  if (!response.ok || (url.pathname !== '/' && url.pathname !== '/index.html')) {
+  if (!response.ok || (!isLanding && !isTrainerPortal)) {
     return response;
   }
 
@@ -12,8 +14,20 @@ export async function onRequest(context) {
 
   let html = await response.text();
 
-  // Public Services deliberately excludes PCL and Live Mock Interview.
-  // Those products are available only from the authenticated Admin Settings hub.
+  // Preserve the standalone Workplace Communication Test entry in the trainer/admin portal.
+  if (isTrainerPortal) {
+    if (!html.includes('id="wctPortalAccess"')) {
+      const wctAccess = `<a class="btn btn-ghost" id="wctPortalAccess" href="/workplace-communication-test/evaluator.html"><span>Workplace Communication Test</span> ↗</a>`;
+      html = html.replace('<a class="btn btn-ghost" href="/app/"><span>Open Practice</span> ↗</a>', wctAccess + '\n    <a class="btn btn-ghost" href="/app/"><span>Open Practice</span> ↗</a>');
+    }
+    const headers = new Headers(response.headers);
+    headers.set('content-type', 'text/html; charset=UTF-8');
+    headers.set('cache-control', 'no-store, max-age=0');
+    return new Response(html,{status:response.status,statusText:response.statusText,headers});
+  }
+
+  // PCL and Live Mock are deliberately absent from every public Services surface.
+  // Their only supported entry is the authenticated ASCENT Admin Settings hub.
   const servicesMenu = `<div class="services-menu">
     <a href="./ascent/eportfolio.html">E-Portfolios</a>
     <a href="./ascent/jd-builder.html">JD Builder</a>
@@ -29,13 +43,12 @@ export async function onRequest(context) {
   </div>`;
   html = html.replace(/<div class="services-menu">[\s\S]*?<\/div><\/div><\/div><button id="menuButton"/, servicesMenu + '</div></div><button id="menuButton"');
 
-  // Remove any static/legacy public cards for PCL or Live Mock before sending HTML.
+  // Strip static/legacy PCL and Live Mock cards before the page reaches the browser.
   html = html.replace(/<a class="service-card"[^>]*data-admin-href="\.\/ascent\/pcl\.html"[^>]*>[\s\S]*?<\/a>/g,'');
   html = html.replace(/<a class="service-card"[^>]*data-admin-href="\.\/ascent\/live-mock\.html"[^>]*>[\s\S]*?<\/a>/g,'');
   html = html.replace(/<article class="service-card(?: admin-locked)?" id="service-pcl"[\s\S]*?<\/article>/g,'');
   html = html.replace(/<article class="service-card(?: admin-locked)?" id="service-live-mock"[\s\S]*?<\/article>/g,'');
 
-  // Add the standalone assessment to the visible Services grid without changing ASCENT core.
   if (!html.includes('id="service-workplace-communication-test"')) {
     const assessmentCard = `<a class="service-card" id="service-workplace-communication-test" href="./workplace-communication-test/">
       <span class="service-icon">WCT</span><h3>Workplace Communication Test</h3>
@@ -102,10 +115,5 @@ export async function onRequest(context) {
   const headers = new Headers(response.headers);
   headers.set('content-type', 'text/html; charset=UTF-8');
   headers.set('cache-control', 'no-store, max-age=0');
-
-  return new Response(html, {
-    status: response.status,
-    statusText: response.statusText,
-    headers
-  });
+  return new Response(html,{status:response.status,statusText:response.statusText,headers});
 }
