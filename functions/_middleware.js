@@ -12,9 +12,8 @@ export async function onRequest(context) {
 
   let html = await response.text();
 
-  // Keep the public Services menu aligned with the static landing page.
-  // PCL and Live Mock are admin-only and must never become learner/private links.
-  // Workplace Communication Test is a standalone ClarionPrep assessment add-on.
+  // Public Services deliberately excludes PCL and Live Mock Interview.
+  // Those products are available only from the authenticated Admin Settings hub.
   const servicesMenu = `<div class="services-menu">
     <a href="./ascent/eportfolio.html">E-Portfolios</a>
     <a href="./ascent/jd-builder.html">JD Builder</a>
@@ -27,10 +26,14 @@ export async function onRequest(context) {
     <a href="#service-pi-lab">PI Lab</a>
     <a href="#service-gd-practice">GD Practice</a>
     <a href="#service-gd-lab">GD Lab</a>
-    <a data-admin-only="1" data-admin-href="./ascent/pcl.html">PCL · Admin only</a>
-    <a data-admin-only="1" data-admin-href="./ascent/live-mock.html">Live Mock Interview · Admin only</a>
   </div>`;
   html = html.replace(/<div class="services-menu">[\s\S]*?<\/div><\/div><\/div><button id="menuButton"/, servicesMenu + '</div></div><button id="menuButton"');
+
+  // Remove any static/legacy public cards for PCL or Live Mock before sending HTML.
+  html = html.replace(/<a class="service-card"[^>]*data-admin-href="\.\/ascent\/pcl\.html"[^>]*>[\s\S]*?<\/a>/g,'');
+  html = html.replace(/<a class="service-card"[^>]*data-admin-href="\.\/ascent\/live-mock\.html"[^>]*>[\s\S]*?<\/a>/g,'');
+  html = html.replace(/<article class="service-card(?: admin-locked)?" id="service-pcl"[\s\S]*?<\/article>/g,'');
+  html = html.replace(/<article class="service-card(?: admin-locked)?" id="service-live-mock"[\s\S]*?<\/article>/g,'');
 
   // Add the standalone assessment to the visible Services grid without changing ASCENT core.
   if (!html.includes('id="service-workplace-communication-test"')) {
@@ -42,7 +45,6 @@ export async function onRequest(context) {
     html = html.replace('<article class="service-card" id="service-pi-practice">', assessmentCard + '<article class="service-card" id="service-pi-practice">');
   }
 
-  // GD/PI lab cards explain access first. Do not rewrite PCL or Live Mock admin locks.
   html = html.replace(/href="\.\/gd-lab\/"/g, 'href="#service-gd-lab"');
   html = html.replace(/href="\.\/pi-lab\/"/g, 'href="#service-pi-lab"');
 
@@ -51,9 +53,9 @@ export async function onRequest(context) {
 <section id="practice-simulations" class="section alt">
   <div class="shell">
     <div class="section-head">
-      <div class="kicker">Practice, labs &amp; live support</div>
-      <h2>What each service does, who can use it and how access works.</h2>
-      <p>Institutional learners should follow the access route shown for each learner service. Private candidates may request access to eligible learner services by emailing <a href="mailto:manutelw@gmail.com"><strong>manutelw@gmail.com</strong></a>. PCL and Live Mock Interview are administrator-only.</p>
+      <div class="kicker">Practice &amp; labs</div>
+      <h2>What each learner service does, who can use it and how access works.</h2>
+      <p>Institutional learners should follow the access route shown for each learner service. Private candidates may request access to eligible learner services by emailing <a href="mailto:manutelw@gmail.com"><strong>manutelw@gmail.com</strong></a>.</p>
     </div>
     <div class="service-grid">
       <article class="service-card" id="service-gd-lab">
@@ -90,16 +92,6 @@ export async function onRequest(context) {
         <span class="service-icon">DL</span><h3>Dialogue Lab</h3>
         <p><strong>What it is:</strong> Guided listening-and-speaking practice built around natural workplace and everyday professional dialogues.</p>
         <p style="margin-top:10px"><strong>Benefits:</strong> Build fluency, listening, usable language and confidence through repeated practice rather than passive study.</p>
-      </article>
-      <article class="service-card admin-locked" id="service-pcl" aria-disabled="true">
-        <span class="service-icon">PCL</span><h3>PCL</h3>
-        <p><strong>Administrator only.</strong> PCL is not available to learners, private candidates or trainers as a public-access service.</p>
-        <span class="go">Admin only</span>
-      </article>
-      <article class="service-card admin-locked" id="service-live-mock" aria-disabled="true">
-        <span class="service-icon">LIVE</span><h3>Live Mock Interview</h3>
-        <p><strong>Administrator only.</strong> Live Mock Interview is not available to learners, private candidates or trainers as a public-access service.</p>
-        <span class="go">Admin only</span>
       </article>
     </div>
   </div>
