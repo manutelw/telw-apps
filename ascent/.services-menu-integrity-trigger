@@ -1,1 +1,1 @@
-CI trigger only: PCL and Live Mock removed from public landing menu/cards. No ASCENT core runtime logic is changed.
+CI trigger only: static landing no longer exposes PCL or Live Mock. No ASCENT core runtime logic is changed.
