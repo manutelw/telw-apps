@@ -1,20 +1,23 @@
 (function(){
   'use strict';
   const KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
-  const URL='https://vtqatrhwfvzyodiftvkc.supabase.co/rest/v1/rpc/ascent_student_feature_access_status';
+  const BASE='https://vtqatrhwfvzyodiftvkc.supabase.co';
+  const FEATURE_URL=BASE+'/rest/v1/rpc/ascent_student_feature_access_status';
+  const PRACTICE_URL=BASE+'/rest/v1/rpc/ascent_student_practice_access_status';
+  const APPLY_URL=BASE+'/functions/v1/ascent-practice-access-apply';
   const SESSION_KEY='ascent_student_session';
   const gd=document.getElementById('gdLabLink');
   const pi=document.getElementById('piLabLink');
-  if(!gd&&!pi)return;
   let s=null;
   try{s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch{}
   if(!s?.sessionToken)return;
-  fetch(URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify({p_session_token:s.sessionToken})})
-    .then(r=>r.json().then(d=>({ok:r.ok,d})))
-    .then(({ok,d})=>{
-      if(!ok||d?.ok!==true)return;
-      if(gd)gd.hidden=d?.features?.gdLab!==true;
-      if(pi)pi.hidden=d?.features?.piLab!==true;
-    })
-    .catch(()=>{});
+  function rpc(url,body){return fetch(url,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify(body)}).then(async r=>{const d=await r.json().catch(()=>({}));if(!r.ok||d?.ok===false)throw Error(d?.message||d?.code||'Request failed');return d})}
+  function fmt(v){if(!v)return'';const d=new Date(v);return Number.isFinite(d.getTime())?d.toLocaleString():''}
+  function ensurePanel(){let p=document.getElementById('practiceAccessPanel');if(p)return p;const main=document.querySelector('.content-card');if(!main)return null;p=document.createElement('section');p.id='practiceAccessPanel';p.className='panel';p.innerHTML='<h3>PI & GD Practice Access</h3><p class="panel-subtitle">Apply separately for PI Practice and GD Practice. A trainer can approve only after 24 hours. If you do not access an approved practice bank for more than 24 hours, that permission is automatically withdrawn and you must apply again.</p><div id="practiceAccessCards" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px"></div><div id="practiceAccessStatus" style="margin-top:10px;color:#687a8d;font-size:12px"></div>';const anchor=main.querySelector('.page-head');if(anchor&&anchor.nextSibling)main.insertBefore(p,anchor.nextSibling);else main.prepend(p);return p}
+  function card(label,key,data){const active=data?.active===true,status=String(data?.status||'NONE');let action='';if(active)action='<a href="./practice.html" data-practice-open="'+key+'" style="display:inline-flex;margin-top:10px;padding:9px 12px;border-radius:9px;background:#143a60;color:#fff;font-weight:800;text-decoration:none">Open '+label+'</a>';else if(status==='PENDING')action='<div style="margin-top:10px;padding:9px 11px;border-radius:9px;background:#fff6dd;color:#704700;font-weight:700">Application pending'+(data?.eligibleAt?' · Earliest approval '+fmt(data.eligibleAt):'')+'</div>';else action='<button type="button" data-apply="'+key+'" style="margin-top:10px;border:0;border-radius:9px;padding:10px 13px;background:#27679d;color:#fff;font-weight:800;cursor:pointer">Apply for access</button>';const note=active?(data?.lastAccessedAt?'Last access: '+fmt(data.lastAccessedAt):'Access active'):(status==='EXPIRED'?'Previous permission expired after more than 24 hours without access. Apply again.':status==='REJECTED'?'Previous application was not approved. You may apply again.':'Access requires trainer approval.');return '<div style="padding:15px;border:1px solid #d7e1eb;border-radius:13px;background:#fbfdff"><strong style="display:block;color:#143a60;font-size:15px">'+label+'</strong><span style="display:block;margin-top:6px;color:#687a8d;font-size:12px;line-height:1.45">'+note+'</span>'+action+'</div>'}
+  function renderPractice(d){const p=ensurePanel();if(!p)return;const box=document.getElementById('practiceAccessCards');box.innerHTML=card('PI Practice','PI_BANK',d.pi)+card('GD Practice','GD_BANK',d.gd);box.querySelectorAll('[data-apply]').forEach(b=>b.onclick=()=>apply(b));}
+  async function apply(b){const status=document.getElementById('practiceAccessStatus');b.disabled=true;status.textContent='Submitting application…';try{const d=await rpc(APPLY_URL,{session_token:s.sessionToken,feature_code:b.dataset.apply});status.textContent=d.email_sent===false?'Application recorded. The trainer email could not be delivered; please inform the trainer.':'Application submitted. The 24-hour waiting period has started.';await loadPractice()}catch(e){status.textContent=e.message;b.disabled=false}}
+  async function loadPractice(){try{const d=await rpc(PRACTICE_URL,{p_session_token:s.sessionToken});renderPractice(d)}catch(e){const p=ensurePanel();if(p)document.getElementById('practiceAccessStatus').textContent=e.message}}
+  rpc(FEATURE_URL,{p_session_token:s.sessionToken}).then(d=>{if(gd)gd.hidden=d?.features?.gdLab!==true;if(pi)pi.hidden=d?.features?.piLab!==true}).catch(()=>{});
+  loadPractice();
 })();
