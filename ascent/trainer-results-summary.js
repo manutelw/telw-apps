@@ -231,6 +231,20 @@
     nav.appendChild(link);
   }
 
+  function addPiAssignmentBuilderLink(){
+    if(document.getElementById("piAssignmentBuilderTrainerLink")) return;
+    const nav=document.querySelector(".sidebar .nav-list");
+    if(!nav) return;
+    const link=document.createElement("a");
+    link.id="piAssignmentBuilderTrainerLink";
+    link.className="nav-item";
+    link.href="../pi-lab/admin-builder.html";
+    link.style.display="block";
+    link.style.textDecoration="none";
+    link.textContent="PI Assignment Builder";
+    nav.appendChild(link);
+  }
+
   function addCatTrainerLink(){
     if(document.getElementById("catSimulatorTrainerLink")) return;
     const nav=document.querySelector(".sidebar .nav-list");
@@ -251,6 +265,7 @@
 
   document.addEventListener("DOMContentLoaded",function(){
     addPiTrainerLink();
+    addPiAssignmentBuilderLink();
     addCatTrainerLink();
     window.setTimeout(function(){
       enforceSandeepResultsUi();
