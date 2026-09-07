@@ -12,6 +12,11 @@ export async function onRequest(context) {
   let html = await response.text();
 
   if (isTrainerPage) {
+    const learnerAccessLink = '<a class="restricted-tool-link" href="./learner-access.html">GD &amp; PI Learner Access</a>';
+    if (!html.includes('href="./learner-access.html"')) {
+      html = html.replace('</aside>', learnerAccessLink + '\n      </aside>');
+    }
+
     const script = `
 <script data-ascent-results-task-filter="2026-08-27.1">
 (function () {
