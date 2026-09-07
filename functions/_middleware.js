@@ -14,11 +14,13 @@ export async function onRequest(context) {
 
   // Public Services menu: keep the user-defined order. The repeated Dialogue Lab
   // entry is intentionally retained because it appears twice in the supplied list.
+  // Workplace Communication Test is a standalone ClarionPrep assessment add-on.
   const servicesMenu = `<div class="services-menu">
     <a href="./ascent/eportfolio.html">EP</a>
     <a href="./ascent/jd-builder.html">JD Builder</a>
     <a href="./ascent/jd-mapper.html">JD Mapper</a>
     <a href="./ascent/cv-builder.html">CV Builder &amp; Evaluator</a>
+    <a href="./workplace-communication-test/">Workplace Communication Test</a>
     <a href="#service-gd-lab">GD Lab</a>
     <a href="#service-gd-practice">GD Practice</a>
     <a href="#service-pi-lab">PI Lab</a>
@@ -29,6 +31,16 @@ export async function onRequest(context) {
     <a href="#service-dialogue">Dialogue Lab</a>
   </div>`;
   html = html.replace(/<div class="services-menu">[\s\S]*?<\/div><\/div><\/div><button id="menuButton"/, servicesMenu + '</div></div><button id="menuButton"');
+
+  // Add the standalone assessment to the visible Services grid without changing ASCENT core.
+  if (!html.includes('id="service-workplace-communication-test"')) {
+    const assessmentCard = `<a class="service-card" id="service-workplace-communication-test" href="./workplace-communication-test/">
+      <span class="service-icon">WCT</span><h3>Workplace Communication Test</h3>
+      <p>A 35-minute pre-hire assessment of listening, reading, writing, speaking and workplace judgement.</p>
+      <span class="go">Open the assessment →</span>
+    </a>`;
+    html = html.replace('<article class="service-card" id="service-pi-practice">', assessmentCard + '<article class="service-card" id="service-pi-practice">');
+  }
 
   // The landing-page cards for these services should explain access first rather
   // than taking a visitor directly into the app.
