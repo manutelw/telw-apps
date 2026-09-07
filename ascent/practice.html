@@ -36,6 +36,18 @@
   </div>
 
   <script>
+    const STUDENT_SESSION_KEY='ascent_student_session';
+    try{
+      const demoSession=JSON.parse(localStorage.getItem(STUDENT_SESSION_KEY)||'null');
+      if(demoSession?.adminDemo===true&&String(demoSession.demoMode||'').toUpperCase()==='INSTITUTIONAL'&&demoSession.sessionToken){
+        const landingKey='ascent_institutional_demo_dashboard_'+demoSession.sessionToken;
+        if(sessionStorage.getItem(landingKey)!=='1'){
+          sessionStorage.setItem(landingKey,'1');
+          window.location.replace('./dashboard.html');
+        }
+      }
+    }catch(error){console.warn('ASCENT demo landing check skipped:',error)}
+
     const frame=document.getElementById('practiceFrame');
     const MIC_OK='ascent_mic_check_ok_session';
     const overlay=document.getElementById('micOverlay');
