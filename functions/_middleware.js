@@ -12,31 +12,27 @@ export async function onRequest(context) {
 
   let html = await response.text();
 
-  // Public Services menu: keep the user-defined order. The repeated Dialogue Lab
-  // entry is intentionally retained because it appears twice in the supplied list.
+  // Keep the public Services menu aligned with the static landing page.
+  // PCL and Live Mock are admin-only and must never become learner/private links.
   const servicesMenu = `<div class="services-menu">
-    <a href="./ascent/eportfolio.html">EP</a>
+    <a href="./ascent/eportfolio.html">E-Portfolios</a>
     <a href="./ascent/jd-builder.html">JD Builder</a>
     <a href="./ascent/jd-mapper.html">JD Mapper</a>
     <a href="./ascent/cv-builder.html">CV Builder &amp; Evaluator</a>
-    <a href="#service-gd-lab">GD Lab</a>
-    <a href="#service-gd-practice">GD Practice</a>
-    <a href="#service-pi-lab">PI Lab</a>
+    <a data-admin-only="1" data-admin-href="#service-cat">CAT Simulator · Admin only</a>
+    <a data-admin-only="1" data-admin-href="#service-dialogue">Dialogue Lab · Admin only</a>
     <a href="#service-pi-practice">PI Practice</a>
-    <a href="#service-dialogue">Dialogue Lab</a>
-    <a href="#service-pcl">PCL</a>
-    <a href="#service-live-mock">Live Mock Interview</a>
-    <a href="#service-dialogue">Dialogue Lab</a>
+    <a href="#service-pi-lab">PI Lab</a>
+    <a href="#service-gd-practice">GD Practice</a>
+    <a href="#service-gd-lab">GD Lab</a>
+    <a data-admin-only="1" data-admin-href="./ascent/pcl.html">PCL · Admin only</a>
+    <a data-admin-only="1" data-admin-href="./ascent/live-mock.html">Live Mock Interview · Admin only</a>
   </div>`;
   html = html.replace(/<div class="services-menu">[\s\S]*?<\/div><\/div><\/div><button id="menuButton"/, servicesMenu + '</div></div><button id="menuButton"');
 
-  // The landing-page cards for these services should explain access first rather
-  // than taking a visitor directly into the app.
+  // GD/PI lab cards explain access first. Do not rewrite PCL or Live Mock admin locks.
   html = html.replace(/href="\.\/gd-lab\/"/g, 'href="#service-gd-lab"');
   html = html.replace(/href="\.\/pi-lab\/"/g, 'href="#service-pi-lab"');
-  html = html.replace(/data-admin-only="1" data-admin-href="\.\/ascent\/pcl\.html"/g, 'href="#service-pcl"');
-  html = html.replace(/data-admin-only="1" data-admin-href="\.\/ascent\/live-mock\.html"/g, 'href="#service-live-mock"');
-  html = html.replace(/<span class="go">Admin only<\/span>/g, '<span class="go">See access details →</span>');
 
   if (!html.includes('id="service-pi-practice"')) {
     const accessSection = `
@@ -45,7 +41,7 @@ export async function onRequest(context) {
     <div class="section-head">
       <div class="kicker">Practice, labs &amp; live support</div>
       <h2>What each service does, who can use it and how access works.</h2>
-      <p>Institutional learners should follow the access route shown for each service. Private candidates may request access to any of these services by emailing <a href="mailto:manutelw@gmail.com"><strong>manutelw@gmail.com</strong></a>.</p>
+      <p>Institutional learners should follow the access route shown for each learner service. Private candidates may request access to eligible learner services by emailing <a href="mailto:manutelw@gmail.com"><strong>manutelw@gmail.com</strong></a>. PCL and Live Mock Interview are administrator-only.</p>
     </div>
     <div class="service-grid">
       <article class="service-card" id="service-gd-lab">
@@ -82,22 +78,16 @@ export async function onRequest(context) {
         <span class="service-icon">DL</span><h3>Dialogue Lab</h3>
         <p><strong>What it is:</strong> Guided listening-and-speaking practice built around natural workplace and everyday professional dialogues.</p>
         <p style="margin-top:10px"><strong>Benefits:</strong> Build fluency, listening, usable language and confidence through repeated practice rather than passive study.</p>
-        <p style="margin-top:10px"><strong>Who can use it:</strong> Learners for whom Dialogue Lab access has been enabled by their programme or administrator.</p>
-        <p style="margin-top:10px"><strong>Private candidates:</strong> Request access at <a href="mailto:manutelw@gmail.com">manutelw@gmail.com</a>.</p>
       </article>
-      <article class="service-card" id="service-pcl">
+      <article class="service-card admin-locked" id="service-pcl" aria-disabled="true">
         <span class="service-icon">PCL</span><h3>PCL</h3>
-        <p><strong>What it is:</strong> Professional Communication Lab practice for handling workplace communication clearly and appropriately.</p>
-        <p style="margin-top:10px"><strong>Benefits:</strong> Strengthen the language, judgement and response patterns needed in professional situations.</p>
-        <p style="margin-top:10px"><strong>Who can use it:</strong> Learners whose institution, trainer or administrator has enabled PCL access.</p>
-        <p style="margin-top:10px"><strong>Private candidates:</strong> Request access at <a href="mailto:manutelw@gmail.com">manutelw@gmail.com</a>.</p>
+        <p><strong>Administrator only.</strong> PCL is not available to learners, private candidates or trainers as a public-access service.</p>
+        <span class="go">Admin only</span>
       </article>
-      <article class="service-card" id="service-live-mock">
+      <article class="service-card admin-locked" id="service-live-mock" aria-disabled="true">
         <span class="service-icon">LIVE</span><h3>Live Mock Interview</h3>
-        <p><strong>What it is:</strong> A realistic spoken mock interview with follow-up questions and performance review.</p>
-        <p style="margin-top:10px"><strong>Benefits:</strong> Test preparation under interview pressure, practise handling follow-ups and identify the next improvement priority.</p>
-        <p style="margin-top:10px"><strong>Who can use it:</strong> Learners for whom Live Mock Interview access has been enabled by their programme, trainer or administrator.</p>
-        <p style="margin-top:10px"><strong>Private candidates:</strong> Request access at <a href="mailto:manutelw@gmail.com">manutelw@gmail.com</a>.</p>
+        <p><strong>Administrator only.</strong> Live Mock Interview is not available to learners, private candidates or trainers as a public-access service.</p>
+        <span class="go">Admin only</span>
       </article>
     </div>
   </div>
