@@ -3,8 +3,9 @@ export async function onRequest(context) {
   const url = new URL(context.request.url);
   const isLanding = url.pathname === '/' || url.pathname === '/index.html';
   const isTrainerPortal = url.pathname === '/portal/trainer/' || url.pathname === '/portal/trainer/index.html';
+  const isAdminSettings = url.pathname === '/ascent/admin-settings.html';
 
-  if (!response.ok || (!isLanding && !isTrainerPortal)) {
+  if (!response.ok || (!isLanding && !isTrainerPortal && !isAdminSettings)) {
     return response;
   }
 
@@ -14,11 +15,27 @@ export async function onRequest(context) {
 
   let html = await response.text();
 
+  // Keep the WCT entry visible on the administrator hub without changing ASCENT core files.
+  if (isAdminSettings) {
+    if (!html.includes('id="wctAdminHubCard"')) {
+      const wctCard = `<a id="wctAdminHubCard" class="app-card cv" href="/workplace-communication-test/access.html"><strong>Workplace Communication Test</strong><span>Open the WCT, evaluator dashboard and access controls for trainers and students</span></a>`;
+      html = html.replace('<button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>', wctCard + '\n        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>');
+    }
+    const headers = new Headers(response.headers);
+    headers.set('content-type', 'text/html; charset=UTF-8');
+    headers.set('cache-control', 'no-store, max-age=0');
+    return new Response(html, {
+      status: response.status,
+      statusText: response.statusText,
+      headers
+    });
+  }
+
   // Add a standalone Workplace Communication Test entry to the trainer/admin portal.
   // This is navigation only and does not connect WCT to ASCENT data or scoring.
   if (isTrainerPortal) {
     if (!html.includes('id="wctPortalAccess"')) {
-      const wctAccess = `<a class="btn btn-ghost" id="wctPortalAccess" href="/workplace-communication-test/evaluator.html"><span>Workplace Communication Test</span> ↗</a>`;
+      const wctAccess = `<a class="btn btn-ghost" id="wctPortalAccess" href="/workplace-communication-test/access.html"><span>Workplace Communication Test</span> ↗</a>`;
       html = html.replace('<a class="btn btn-ghost" href="/app/"><span>Open Practice</span> ↗</a>', wctAccess + '\n    <a class="btn btn-ghost" href="/app/"><span>Open Practice</span> ↗</a>');
     }
 
