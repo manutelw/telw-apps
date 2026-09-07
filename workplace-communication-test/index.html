@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ClarionPrep · Workplace Communication Test</title>
+<meta name="description" content="A controlled pre-hire workplace communication assessment covering listening, reading, writing, speaking and workplace judgement.">
+<style>
+:root{--navy:#143a60;--navy2:#0d2943;--blue:#27679d;--soft:#eef5fb;--gold:#c67b00;--text:#24364a;--muted:#687a8d;--border:#d7e1eb;--ok:#176b44;--warn:#8a5a00;--bad:#a43d3d;--shadow:0 18px 50px rgba(20,58,96,.10)}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:#f5f8fb}.topbar{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border)}.topbar .inner{width:min(1120px,calc(100% - 32px));margin:auto;min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{font-weight:800;color:var(--navy);letter-spacing:.4px}.timer{font-weight:800;color:var(--navy);font-size:18px}.timer.danger{color:var(--bad)}main{width:min(980px,calc(100% - 28px));margin:32px auto 70px}.card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:26px;box-shadow:var(--shadow);margin-bottom:18px}.hero{background:linear-gradient(145deg,var(--navy2),#1d5688);color:#fff}.hero h1{margin:0 0 10px;font-size:36px}.hero p{color:rgba(255,255,255,.82);line-height:1.6}.pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.12);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.field label{display:block;font-weight:800;color:var(--navy);margin-bottom:7px}.field input,.field textarea{width:100%;border:1px solid var(--border);border-radius:10px;padding:12px;font:inherit}.field textarea{min-height:180px;resize:vertical}.section-title{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.section-title h2{margin:0;color:var(--navy)}.section-title span{font-size:12px;font-weight:800;color:var(--gold);text-transform:uppercase}.question{border-top:1px solid var(--border);padding-top:16px;margin-top:16px}.question:first-of-type{border-top:0;padding-top:0}.question p{font-weight:700;line-height:1.55}.options label{display:block;border:1px solid var(--border);border-radius:10px;padding:11px;margin:8px 0;cursor:pointer}.options label:hover{background:var(--soft)}.audio-box,.record-box{border:1px dashed #9db6cc;border-radius:12px;background:#f8fbfe;padding:16px;margin:12px 0}.btn{border:0;border-radius:10px;padding:12px 16px;font:inherit;font-weight:800;cursor:pointer;background:var(--navy);color:#fff}.btn.secondary{background:#e9f1f8;color:var(--navy)}.btn.gold{background:var(--gold)}.btn:disabled{opacity:.45;cursor:not-allowed}.status{margin-left:10px;font-size:13px;font-weight:700;color:var(--muted)}.wordcount{font-size:13px;color:var(--muted);margin-top:7px}.notice{padding:12px 14px;border-radius:10px;background:#fff5df;color:#6d4c00;line-height:1.5}.hidden{display:none!important}.footer{text-align:center;color:var(--muted);font-size:12px;padding-top:20px}.result{font-size:18px;line-height:1.6}.scorebox{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0}.scorebox div{padding:16px;border-radius:12px;background:var(--soft)}.scorebox strong{display:block;font-size:24px;color:var(--navy)}@media(max-width:700px){.grid,.scorebox{grid-template-columns:1fr}.hero h1{font-size:30px}.card{padding:20px}}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="inner"><div class="brand">ClarionPrep · Workplace Communication Test</div><div id="timer" class="timer">35:00</div></div></header>
+<main>
+<section id="intro" class="card hero">
+  <span class="pill">Controlled pilot · Version 1</span>
+  <h1>Workplace Communication Test</h1>
+  <p>This assessment measures how well you understand, write and speak in realistic workplace situations. It is not a grammar quiz. Complete it independently, use headphones, and do not refresh the page after you begin.</p>
+</section>
+<section id="identityCard" class="card">
+  <div class="section-title"><h2>Candidate details</h2><span>Before you begin</span></div>
+  <div class="grid">
+    <div class="field"><label for="candidateName">Full name</label><input id="candidateName" autocomplete="name"></div>
+    <div class="field"><label for="candidateEmail">Email</label><input id="candidateEmail" type="email" autocomplete="email"></div>
+    <div class="field"><label for="candidateId">Roll / Applicant ID</label><input id="candidateId"></div>
+    <div class="field"><label for="cohort">Institution / Cohort / Hiring campaign</label><input id="cohort"></div>
+  </div>
+  <div class="notice" style="margin-top:16px">You will need a working microphone. Your two spoken responses are recorded in your browser and included in the submission package you download at the end.</div>
+  <p><label><input id="integrityCheck" type="checkbox"> I will complete the test independently without outside help.</label></p>
+  <button id="startBtn" class="btn gold">Start 35-minute assessment</button>
+</section>
+
+<form id="testForm" class="hidden">
+<section class="card">
+  <div class="section-title"><h2>1. Listen &amp; Respond</h2><span>20 marks</span></div>
+  <p>Use headphones. Each message can be played a maximum of <strong>two times</strong>. Choose the best answer.</p>
+  <div class="audio-box"><button type="button" class="btn secondary audio-play" data-audio="a1">Play workplace message A</button><span id="a1Status" class="status">2 plays available</span></div>
+  <div class="question"><p>1. What has changed?</p><div class="options">
+    <label><input type="radio" name="l1" value="a"> The client call has moved from 3 PM to 4 PM.</label>
+    <label><input type="radio" name="l1" value="b"> The client call has moved from 4 PM to 3 PM.</label>
+    <label><input type="radio" name="l1" value="c"> The client call has been cancelled.</label>
+    <label><input type="radio" name="l1" value="d"> The presentation deadline has moved to tomorrow.</label>
+  </div></div>
+  <div class="question"><p>2. By when should the updated deck be sent?</p><div class="options">
+    <label><input type="radio" name="l2" value="a"> 2:00 PM</label><label><input type="radio" name="l2" value="b"> 2:30 PM</label><label><input type="radio" name="l2" value="c"> 3:00 PM</label><label><input type="radio" name="l2" value="d"> 4:00 PM</label>
+  </div></div>
+  <div class="audio-box"><button type="button" class="btn secondary audio-play" data-audio="a2">Play workplace message B</button><span id="a2Status" class="status">2 plays available</span></div>
+  <div class="question"><p>3. Which part of the report is incomplete?</p><div class="options">
+    <label><input type="radio" name="l3" value="a"> North region</label><label><input type="radio" name="l3" value="b"> West region</label><label><input type="radio" name="l3" value="c"> South region</label><label><input type="radio" name="l3" value="d"> Online sales</label>
+  </div></div>
+  <div class="question"><p>4. When is the missing data expected?</p><div class="options">
+    <label><input type="radio" name="l4" value="a"> 11:30 AM</label><label><input type="radio" name="l4" value="b"> 12:00 noon</label><label><input type="radio" name="l4" value="c"> 12:30 PM</label><label><input type="radio" name="l4" value="d"> 1:00 PM</label>
+  </div></div>
+</section>
+
+<section class="card">
+  <div class="section-title"><h2>2. Read &amp; Act</h2><span>20 marks</span></div>
+  <div class="question"><p><strong>Email:</strong> “Please send the final vendor comparison to me by 11:30 AM. Finance has confirmed the revised tax figures, but Procurement is still checking the delivery timelines. Do not send the document to the vendor until I approve the final version.”</p></div>
+  <div class="question"><p>5. What should happen before the document is sent to the vendor?</p><div class="options">
+    <label><input type="radio" name="r1" value="a"> Finance should approve it again.</label><label><input type="radio" name="r1" value="b"> The manager should approve the final version.</label><label><input type="radio" name="r1" value="c"> The vendor should confirm the tax figures.</label><label><input type="radio" name="r1" value="d"> Procurement should send it directly.</label>
+  </div></div>
+  <div class="question"><p>6. Which information is still being checked?</p><div class="options">
+    <label><input type="radio" name="r2" value="a"> Prices</label><label><input type="radio" name="r2" value="b"> Tax figures</label><label><input type="radio" name="r2" value="c"> Delivery timelines</label><label><input type="radio" name="r2" value="d"> Vendor names</label>
+  </div></div>
+  <div class="question"><p><strong>Chat message:</strong> “The customer has reported the same billing error for the second month. I have corrected this month’s invoice, but please check whether the account setup is causing the problem before the next billing cycle. Send the customer a short update today.”</p></div>
+  <div class="question"><p>7. What has already been done?</p><div class="options">
+    <label><input type="radio" name="r3" value="a"> The account setup has been rebuilt.</label><label><input type="radio" name="r3" value="b"> The next billing cycle has been cancelled.</label><label><input type="radio" name="r3" value="c"> This month’s invoice has been corrected.</label><label><input type="radio" name="r3" value="d"> The customer has received a refund.</label>
+  </div></div>
+  <div class="question"><p>8. What is the purpose of checking the account setup?</p><div class="options">
+    <label><input type="radio" name="r4" value="a"> To prevent the error from happening again.</label><label><input type="radio" name="r4" value="b"> To increase the customer’s bill.</label><label><input type="radio" name="r4" value="c"> To delay the customer update.</label><label><input type="radio" name="r4" value="d"> To change the billing date.</label>
+  </div></div>
+</section>
+
+<section class="card">
+  <div class="section-title"><h2>3. Write for Work</h2><span>20 marks · evaluator scored</span></div>
+  <p>You promised your manager a client-ready report by 4:00 PM. At 3:10 PM you discover that one data source contains errors. The corrected data will be available by 5:00 PM. Write a professional email to your manager explaining the situation, what you are doing, and when the final report can be delivered.</p>
+  <div class="field"><label for="writing">Write 120–180 words.</label><textarea id="writing" maxlength="1400"></textarea><div id="wordCount" class="wordcount">0 words</div></div>
+</section>
+
+<section class="card">
+  <div class="section-title"><h2>4. Speak to Explain</h2><span>20 marks · evaluator scored</span></div>
+  <p>In 60–90 seconds, explain a project, internship task or academic assignment in which you had to coordinate with other people to complete something. Make clear what the task was, what you personally did, and what happened.</p>
+  <div class="record-box"><button type="button" id="record1" class="btn">Start recording</button><button type="button" id="stop1" class="btn secondary" disabled>Stop</button><span id="record1Status" class="status">Not recorded</span><div id="playback1"></div></div>
+</section>
+
+<section class="card">
+  <div class="section-title"><h2>5. Workplace Situation</h2><span>20 marks · evaluator scored</span></div>
+  <p>You are preparing a report due in 45 minutes. At the same time, a colleague tells you that a figure already shared with a senior manager may be wrong. In 60–90 seconds, explain what you would do and why.</p>
+  <div class="record-box"><button type="button" id="record2" class="btn">Start recording</button><button type="button" id="stop2" class="btn secondary" disabled>Stop</button><span id="record2Status" class="status">Not recorded</span><div id="playback2"></div></div>
+</section>
+
+<section class="card">
+  <div class="section-title"><h2>Submit</h2><span>End of test</span></div>
+  <div class="notice">Your Listening and Reading sections are scored automatically. Writing and both spoken responses are scored later using the evaluator rubric. Download the submission package and send it exactly as instructed by your institution or recruiter.</div>
+  <button id="submitBtn" type="button" class="btn gold" style="margin-top:16px">Finish and create submission package</button>
+</section>
+</form>
+
+<section id="resultCard" class="card hidden">
+  <div class="section-title"><h2>Submission package ready</h2><span>Candidate copy</span></div>
+  <div id="resultSummary" class="result"></div>
+  <button id="downloadBtn" class="btn gold">Download submission ZIP</button>
+</section>
+<div class="footer">Powered by <strong>telw.co.in</strong></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
