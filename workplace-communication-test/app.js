@@ -1,10 +1,10 @@
 const TEST_SECONDS=35*60;
-const passages={
-  a1:"The client has moved today's review call from four PM to three PM. Please update the presentation with the latest revenue figures and send me the revised deck by two thirty so I can check it before the call.",
-  a2:"Quick update on the noon sales report. The South region numbers are still missing because the source file arrived late. The data team expects the missing figures by one PM. The rest of the report is complete and has been checked."
-};
+const SUPABASE_URL='https://vtqatrhwfvzyodiftvkc.supabase.co';
+const VOICE_ENDPOINT=SUPABASE_URL+'/functions/v1/wct-listening-voice';
 const answerKey={l1:'b',l2:'b',l3:'c',l4:'d',r1:'b',r2:'c',r3:'c',r4:'a'};
 const plays={a1:0,a2:0};
+const listeningAudio={a1:null,a2:null};
+let currentListeningAudio=null;
 let remaining=TEST_SECONDS, timerHandle=null, started=false, finished=false;
 let recorder=null,currentChunks=[],activeRecording=null;
 const recordings={one:null,two:null};
@@ -43,19 +43,51 @@ function startTest(){
   window.scrollTo({top:$('testForm').offsetTop-70,behavior:'smooth'});
 }
 
-function speakPassage(key){
-  if(!started||finished)return;
-  if(plays[key]>=2)return;
-  if(!('speechSynthesis' in window)){alert('Audio playback is not available in this browser. Please use current Chrome or Edge.');return;}
-  speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(passages[key]);
-  u.lang='en-GB';u.rate=.92;u.pitch=1;
-  plays[key]++;
-  const left=2-plays[key];
-  $(`${key}Status`).textContent=left===0?'No plays remaining':`${left} play${left===1?'':'s'} available`;
+function base64ToBlob(base64,mime){
+  const raw=atob(base64),bytes=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+  return new Blob([bytes],{type:mime||'audio/mpeg'});
+}
+async function loadListeningAudio(key){
+  if(listeningAudio[key])return listeningAudio[key];
+  const r=await fetch(VOICE_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:key})});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok||!d.ok||!d.audio_base64)throw new Error(d.message||'Listening audio could not be prepared.');
+  const blob=base64ToBlob(d.audio_base64,d.audio_mime||'audio/mpeg');
+  const url=URL.createObjectURL(blob);
+  listeningAudio[key]={url,blob};
+  return listeningAudio[key];
+}
+async function speakPassage(key){
+  if(!started||finished||plays[key]>=2)return;
   const button=qs(`[data-audio="${key}"]`);
-  if(left===0)button.disabled=true;
-  speechSynthesis.speak(u);
+  if(!button)return;
+  button.disabled=true;
+  $(`${key}Status`).textContent='Preparing natural audio…';
+  try{
+    const prepared=await loadListeningAudio(key);
+    if(currentListeningAudio){currentListeningAudio.pause();currentListeningAudio.currentTime=0;}
+    const audio=new Audio(prepared.url);
+    currentListeningAudio=audio;
+    plays[key]++;
+    const left=2-plays[key];
+    $(`${key}Status`).textContent=left===0?'Playing · no plays remaining':`Playing · ${left} play${left===1?'':'s'} remaining`;
+    audio.onended=()=>{
+      if(currentListeningAudio===audio)currentListeningAudio=null;
+      $(`${key}Status`).textContent=left===0?'No plays remaining':`${left} play${left===1?'':'s'} available`;
+      button.disabled=left===0;
+    };
+    audio.onerror=()=>{
+      if(currentListeningAudio===audio)currentListeningAudio=null;
+      plays[key]=Math.max(0,plays[key]-1);
+      $(`${key}Status`).textContent='Audio could not play. Please try again.';
+      button.disabled=false;
+    };
+    await audio.play();
+  }catch(err){
+    $(`${key}Status`).textContent='Audio could not be prepared. Please try again.';
+    button.disabled=false;
+  }
 }
 
 function countWords(){
@@ -162,7 +194,8 @@ async function finishTest(auto=false){
     const ok=confirm(`Some responses appear incomplete: ${warnings.join(', ')}. Submit anyway?`);
     if(!ok)return;
   }
-  finished=true;clearInterval(timerHandle);speechSynthesis.cancel();
+  finished=true;clearInterval(timerHandle);
+  if(currentListeningAudio){currentListeningAudio.pause();currentListeningAudio.currentTime=0;currentListeningAudio=null;}
   qsa('input,textarea,button',$('testForm')).forEach(el=>el.disabled=true);
   const id=attemptId(),data=collectAnswers(id);
   try{await buildZip(data);}catch(err){finished=false;alert(err.message);return;}
@@ -186,4 +219,5 @@ $('stop2').addEventListener('click',()=>stopRecording('two'));
 $('submitBtn').addEventListener('click',()=>finishTest(false));
 $('downloadBtn').addEventListener('click',downloadPackage);
 window.addEventListener('beforeunload',e=>{if(started&&!finished){e.preventDefault();e.returnValue='';}});
+window.addEventListener('unload',()=>{Object.values(listeningAudio).forEach(x=>{if(x&&x.url)URL.revokeObjectURL(x.url)});});
 updateTimer();
