@@ -32,8 +32,8 @@ export async function onRequest(context) {
     });
   }
 
-  // PCL and Live Mock Interview are intentionally absent from every public Services surface.
-  // Their only supported entry point is the authenticated ASCENT Admin area.
+  // PCL and Live Mock remain visible as public information only.
+  // Their menu entries scroll to explanatory cards; neither public surface links to the apps.
   const servicesMenu = `<div class="services-menu">
     <a href="./ascent/eportfolio.html">E-Portfolios</a>
     <a href="./ascent/jd-builder.html">JD Builder</a>
@@ -46,14 +46,10 @@ export async function onRequest(context) {
     <a href="#service-pi-lab">PI Lab</a>
     <a href="#service-gd-practice">GD Practice</a>
     <a href="#service-gd-lab">GD Lab</a>
+    <a href="#service-pcl">PCL</a>
+    <a href="#service-live-mock">Live Mock Interview</a>
   </div>`;
   html = html.replace(/<div class="services-menu">[\s\S]*?<\/div><\/div><\/div><button id="menuButton"/, servicesMenu + '</div></div><button id="menuButton"');
-
-  // Remove static/legacy landing-page cards for PCL and Live Mock before HTML reaches the browser.
-  html = html.replace(/<a class="service-card"[^>]*data-admin-href="\.\/ascent\/pcl\.html"[^>]*>[\s\S]*?<\/a>/g, '');
-  html = html.replace(/<a class="service-card"[^>]*data-admin-href="\.\/ascent\/live-mock\.html"[^>]*>[\s\S]*?<\/a>/g, '');
-  html = html.replace(/<article class="service-card(?: admin-locked)?" id="service-pcl"[\s\S]*?<\/article>/g, '');
-  html = html.replace(/<article class="service-card(?: admin-locked)?" id="service-live-mock"[\s\S]*?<\/article>/g, '');
 
   // Add the standalone assessment to the visible Services grid without changing ASCENT core.
   if (!html.includes('id="service-workplace-communication-test"')) {
@@ -64,6 +60,28 @@ export async function onRequest(context) {
       <span class="go">Trainer/Admin sign-in →</span>
     </a>`;
     html = html.replace('<article class="service-card" id="service-pi-practice">', assessmentCard + '<article class="service-card" id="service-pi-practice">');
+  }
+
+  // Ensure PCL and Live Mock have public explanatory cards, but never public app links.
+  if (!html.includes('id="service-pcl"')) {
+    const pclCard = `<article class="service-card" id="service-pcl">
+      <span class="service-icon">PCL</span><h3>PCL</h3>
+      <p><strong>What it is:</strong> Professional Communication Lab practice for workplace communication, language, judgement and response patterns.</p>
+      <p style="margin-top:10px"><strong>Benefits:</strong> Build clearer, more professional workplace communication through guided modules and dialogue practice.</p>
+      <p style="margin-top:10px"><strong>Access:</strong> Administrator only. Students, trainers and public visitors cannot open the app.</p>
+      <span class="go">Information only · Admin access</span>
+    </article>`;
+    html = html.replace('<article class="service-card" id="service-cat"', pclCard + '<article class="service-card" id="service-cat"');
+  }
+  if (!html.includes('id="service-live-mock"')) {
+    const liveMockCard = `<article class="service-card" id="service-live-mock">
+      <span class="service-icon">LIVE</span><h3>Live Mock Interview</h3>
+      <p><strong>What it is:</strong> A realistic spoken mock interview with adaptive follow-ups and performance review.</p>
+      <p style="margin-top:10px"><strong>Benefits:</strong> Practise pressure handling, follow-up questions and identify the next improvement priority.</p>
+      <p style="margin-top:10px"><strong>Access:</strong> Administrator only. Students, trainers and public visitors cannot open the app.</p>
+      <span class="go">Information only · Admin access</span>
+    </article>`;
+    html = html.replace('<article class="service-card" id="service-cat"', liveMockCard + '<article class="service-card" id="service-cat"');
   }
 
   // GD/PI lab cards explain access first.
@@ -114,6 +132,20 @@ export async function onRequest(context) {
         <span class="service-icon">DL</span><h3>Dialogue Lab</h3>
         <p><strong>What it is:</strong> Guided listening-and-speaking practice built around natural workplace and everyday professional dialogues.</p>
         <p style="margin-top:10px"><strong>Benefits:</strong> Build fluency, listening, usable language and confidence through repeated practice rather than passive study.</p>
+      </article>
+      <article class="service-card" id="service-pcl">
+        <span class="service-icon">PCL</span><h3>PCL</h3>
+        <p><strong>What it is:</strong> Professional Communication Lab practice for workplace communication, language, judgement and response patterns.</p>
+        <p style="margin-top:10px"><strong>Benefits:</strong> Build clearer, more professional workplace communication through guided modules and dialogue practice.</p>
+        <p style="margin-top:10px"><strong>Access:</strong> Administrator only. Students, trainers and public visitors cannot open the app.</p>
+        <span class="go">Information only · Admin access</span>
+      </article>
+      <article class="service-card" id="service-live-mock">
+        <span class="service-icon">LIVE</span><h3>Live Mock Interview</h3>
+        <p><strong>What it is:</strong> A realistic spoken mock interview with adaptive follow-ups and performance review.</p>
+        <p style="margin-top:10px"><strong>Benefits:</strong> Practise pressure handling, follow-up questions and identify the next improvement priority.</p>
+        <p style="margin-top:10px"><strong>Access:</strong> Administrator only. Students, trainers and public visitors cannot open the app.</p>
+        <span class="go">Information only · Admin access</span>
       </article>
     </div>
   </div>
