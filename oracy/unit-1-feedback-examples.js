@@ -1,5 +1,71 @@
 // ORACY Unit 1 feedback overlay: turn rubric comments into concrete practice and keep spoken teacher feedback reliable.
 (function(){
+  // Audio reliability layer. It only changes playback; lesson content, scoring and controls stay untouched.
+  if(!window.ORACY_AUDIO){
+    let ctx=null,currentSource=null;
+    const nativePlay=HTMLMediaElement.prototype.play;
+    function getContext(){
+      if(ctx)return ctx;
+      const Ctx=window.AudioContext||window.webkitAudioContext;
+      if(!Ctx)return null;
+      ctx=new Ctx();return ctx;
+    }
+    function unlock(){
+      const c=getContext();
+      if(!c)return Promise.resolve(false);
+      if(c.state==='running')return Promise.resolve(true);
+      return c.resume().then(()=>c.state==='running').catch(()=>false);
+    }
+    function stopSource(){if(currentSource){try{currentSource.stop();}catch{} currentSource=null;}}
+    async function playUrl(url){
+      stopSource();
+      const c=getContext();
+      if(!c)throw new Error('Audio is not supported in this browser.');
+      await unlock();
+      if(c.state!=='running')throw new Error('Tap the audio button once more to start sound.');
+      const res=await fetch(url);if(!res.ok)throw new Error('Audio could not be loaded.');
+      const buffer=await c.decodeAudioData(await res.arrayBuffer());
+      return await new Promise((resolve,reject)=>{
+        try{
+          const source=c.createBufferSource();source.buffer=buffer;source.connect(c.destination);currentSource=source;
+          source.onended=()=>{if(currentSource===source)currentSource=null;resolve();};source.start();
+        }catch(e){reject(e);}
+      });
+    }
+    window.ORACY_AUDIO={getContext,unlock,playUrl};
+
+    // Prime sound at the first real learner gesture, before async TTS fetching finishes.
+    const prime=()=>{
+      unlock();
+      try{
+        if(typeof audioContext!=='undefined'){
+          if(!audioContext)audioContext=getContext();
+          if(audioContext?.state!=='running')audioContext?.resume?.().catch(()=>{});
+        }
+      }catch{}
+    };
+    document.addEventListener('pointerdown',prime,{capture:true,passive:true});
+    document.addEventListener('touchstart',prime,{capture:true,passive:true});
+    document.addEventListener('keydown',prime,{capture:true});
+
+    // Keep native media playback when it works. If the browser blocks it after an async fetch,
+    // fall back to the already-unlocked Web Audio path and still fire the normal ended event.
+    HTMLMediaElement.prototype.play=function(){
+      let p;
+      try{p=nativePlay.call(this);}catch(e){p=Promise.reject(e);}
+      if(!p||typeof p.catch!=='function')return p;
+      const el=this;
+      return p.catch(async err=>{
+        if(!el.src)throw err;
+        try{
+          await playUrl(el.src);
+          el.dispatchEvent(new Event('ended'));
+          return;
+        }catch{throw err;}
+      });
+    };
+  }
+
   function score(item){const n=Number(item?.score||0);return n>=1&&n<=3?n:0;}
   function esc(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function suggestions(rubric,rule){
@@ -55,7 +121,6 @@
     return `${opening}${usedText}Here is one sentence to copy first: ${example} Say that once. Good. Now give me another sentence of your own with a similar kind of detail. ${markerText}Keep it short and natural. I’d love to hear your next version.`;
   };
 
-  // Restore spoken feedback without touching passage or pronunciation audio.
   oracySpeakTeacherFeedback=async function(box,text){
     const feedback=box.querySelector('.feedback');
     if(!feedback)return;
