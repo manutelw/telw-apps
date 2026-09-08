@@ -16,12 +16,19 @@ export default {
     if(isAdminSettingsPath(path) && response.ok){
       return ensureOracyCard(response);
     }
+    if(isUnit1HtmlPath(path) && response.ok){
+      return ensureUnit1MarkerGuidance(response);
+    }
     return response;
   }
 };
 
 function isAdminSettingsPath(path){
   return path==='/ascent/admin-settings.html' || path==='/ascent/admin-settings' || path==='/ascent/admin-settings/' || path.endsWith('/ascent/admin-settings.html');
+}
+
+function isUnit1HtmlPath(path){
+  return path==='/oracy/unit-1.html' || path==='/oracy/unit-1' || path==='/oracy/unit-1/';
 }
 
 async function handleAdminPreview(request){
@@ -52,6 +59,36 @@ async function ensureOracyCard(response){
       const gridClose=html.indexOf('</div>',html.indexOf('class="app-grid"'));
       if(gridClose>=0) html=html.slice(0,gridClose)+card+html.slice(gridClose);
     }
+  }
+  const headers=new Headers(response.headers);
+  headers.set('content-type','text/html; charset=UTF-8');
+  headers.set('cache-control','no-store, max-age=0, must-revalidate');
+  headers.set('pragma','no-cache');
+  headers.set('expires','0');
+  return new Response(html,{status:response.status,statusText:response.statusText,headers});
+}
+
+async function ensureUnit1MarkerGuidance(response){
+  let html=await response.text();
+  if(!html.includes('id="oracyMarkerRecordingGuide"')){
+    const extra=`
+<style id="oracyMarkerRecordingGuide">.marker-recording-guide{margin:10px 0;padding:10px 12px;border:1px solid #d8e2ea;border-radius:10px;background:#fff}.marker-recording-guide b{color:#16324f}.marker-recording-guide .marker-list{margin-top:5px;line-height:1.7}.feedback div{white-space:pre-line}</style>
+<script>
+(function(){
+  const markers=['You bet!','Exactly!','Oh yeah!','Really?','You know what?','By the way','Same here','Anyway'];
+  document.querySelectorAll('.speak').forEach(box=>{
+    if(box.querySelector('.marker-recording-guide'))return;
+    const eyebrow=(box.querySelector('.eyebrow')?.textContent||'').toLowerCase();
+    const min=eyebrow.includes('final')?2:1;
+    const guide=document.createElement('div');
+    guide.className='marker-recording-guide';
+    guide.innerHTML='<b>Conversation words to use</b><div class="marker-list">'+markers.join(' · ')+'</div><div style="margin-top:5px">Use at least <b>'+min+'</b> of these in your recording. ORACY will check. If you miss them, it will show you how to use them and ask you to record again.</div>';
+    const record=box.querySelector('.record');
+    if(record)box.insertBefore(guide,record);
+  });
+})();
+</script>`;
+    html=html.replace('</body>',extra+'\n</body>');
   }
   const headers=new Headers(response.headers);
   headers.set('content-type','text/html; charset=UTF-8');
