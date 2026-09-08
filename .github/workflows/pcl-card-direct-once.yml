@@ -1,0 +1,49 @@
+name: PCL card direct one-time fix
+
+on:
+  push:
+    branches: [pcl-direct-index-card]
+    paths:
+      - '.github/workflows/pcl-card-direct-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  direct-pcl-card:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pcl-direct-index-card
+          fetch-depth: 0
+      - name: Route PCL card directly to standalone index
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          admin=Path('ascent/admin-settings.html')
+          s=admin.read_text(encoding='utf-8')
+          old='href="./professional-communication-trainer-preview.html"'
+          new='href="https://pcl-professional-communication-lab.pages.dev/"'
+          if old not in s: raise SystemExit('Expected PCL card href not found')
+          admin.write_text(s.replace(old,new,1),encoding='utf-8')
+          mw=Path('functions/ascent/_middleware.js')
+          s=mw.read_text(encoding='utf-8')
+          old="  document.querySelectorAll('a[href=\"./professional-communication-trainer-preview.html\"],a[href=\"./pcl.html\"]').forEach(a=>{a.removeAttribute('target');a.removeAttribute('rel');a.href='#';a.addEventListener('click',e=>{e.preventDefault();launch('./pcl-admin-handoff');});});\n"
+          if old not in s: raise SystemExit('Expected PCL secure-launch interception not found')
+          mw.write_text(s.replace(old,'',1),encoding='utf-8')
+          Path('.github/workflows/pcl-card-direct-once.yml').unlink()
+          PY
+      - name: Verify narrow scope
+        run: |
+          grep -q 'href="https://pcl-professional-communication-lab.pages.dev/"' ascent/admin-settings.html
+          ! grep -q "launch('./pcl-admin-handoff')" functions/ascent/_middleware.js
+          test ! -f .github/workflows/pcl-card-direct-once.yml
+          git status --short
+      - name: Commit direct launch
+        run: |
+          git config user.name 'manutelw'
+          git config user.email 'manutelw@gmail.com'
+          git add ascent/admin-settings.html functions/ascent/_middleware.js .github/workflows/pcl-card-direct-once.yml
+          git commit -m 'Open PCL index directly from admin card'
+          git push origin HEAD:pcl-direct-index-card
