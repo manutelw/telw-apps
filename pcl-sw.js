@@ -1,5 +1,5 @@
 const TARGETS=new Set(['/module-1-1.html','/module-1-2.html','/module-1-3.html']);
-const AUDIO_SCRIPT='./pcl-audio-fallback.js?v=4';
+const AUDIO_SCRIPT='./pcl-audio-fallback.js?v=5';
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
 self.addEventListener('fetch',event=>{
