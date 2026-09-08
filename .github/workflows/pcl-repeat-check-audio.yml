@@ -1,0 +1,40 @@
+name: PCL Repeat Check Audio
+
+on:
+  push:
+    branches:
+      - pcl-standalone
+    paths:
+      - .github/workflows/pcl-repeat-check-audio.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pcl-standalone
+          fetch-depth: 0
+      - name: Patch KP2 and KP3
+        shell: bash
+        run: |
+          python3 -c "from pathlib import Path; mods=['1-2','1-3']; needle='<section class=\"panel\" id=\"checkPanel\" hidden><div class=\"title\">'; rep='<section class=\"panel\" id=\"checkPanel\" hidden><div class=\"title\"><div style=\"width:100%\"><div class=\"actions\" style=\"margin-top:0;margin-bottom:16px\"><button class=\"listen\" id=\"checkModelAudio\">Hear the passage again</button></div></div>'; js='\n<script>/* PCL_REPEAT_CHECK_AUDIO */(()=>{const b=document.getElementById(\"checkModelAudio\"),m=document.getElementById(\"modelAudio\");if(b&&m)b.addEventListener(\"click\",e=>{e.preventDefault();m.click();});})();</script>'; [(lambda p,s: p.write_text((s if 'id=\"checkModelAudio\"' in s else s.replace(needle,rep,1)) if 'PCL_REPEAT_CHECK_AUDIO' in s else (s if 'id=\"checkModelAudio\"' in s else s.replace(needle,rep,1)).replace('</body>',js+'\n</body>'),encoding='utf-8'))(Path('module-'+m+'.html'),Path('module-'+m+'.html').read_text(encoding='utf-8')) for m in mods]"
+          rm .github/workflows/pcl-repeat-check-audio.yml
+      - name: Verify
+        shell: bash
+        run: |
+          grep -q 'id="checkModelAudio"' module-1-2.html
+          grep -q 'id="checkModelAudio"' module-1-3.html
+          grep -q 'PCL_REPEAT_CHECK_AUDIO' module-1-2.html
+          grep -q 'PCL_REPEAT_CHECK_AUDIO' module-1-3.html
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name manutelw
+          git config user.email manutelw@gmail.com
+          git add module-1-2.html module-1-3.html .github/workflows/pcl-repeat-check-audio.yml
+          git commit -m "Repeat model audio in KP2 and KP3 comprehension"
+          git push origin HEAD:pcl-standalone
