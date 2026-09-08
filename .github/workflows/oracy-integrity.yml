@@ -6,6 +6,7 @@ on:
       - 'functions/oracy/**'
       - 'functions/ascent/admin-settings.html.js'
       - 'worker.js'
+      - 'worker-oracy.js'
       - 'wrangler.jsonc'
       - '.github/workflows/oracy-integrity.yml'
 permissions:
@@ -25,6 +26,7 @@ jobs:
           gate=Path('functions/oracy/_middleware.js').read_text()
           session=Path('functions/oracy/session.js').read_text()
           worker=Path('worker.js').read_text()
+          wrapper=Path('worker-oracy.js').read_text()
           cfg=json.loads(Path('wrangler.jsonc').read_text())
           login=Path('oracy/index.html').read_text()
           admin=Path('oracy/admin.html').read_text()
@@ -39,7 +41,9 @@ jobs:
               assert x in session, x
           for x in ['/oracy/session','/oracy/logout','/oracy/admin-handoff','validLearnerUnit','validAdmin','env.ASSETS.fetch','ORACY_VOICE','ORACY_ACCESS','clarion_admin_session']:
               assert x in worker, x
-          assert cfg['main']=='worker.js'
+          for x in ['/oracy/admin-preview','admin_preview','oracy_session','/oracy/admin-open.html','<strong>ORACY</strong>']:
+              assert x in wrapper, x
+          assert cfg['main']=='worker-oracy.js'
           assert cfg['assets']['binding']=='ASSETS'
           assert cfg['assets']['run_worker_first'] is True
           for x in ['Assigned learner access','./session','A unit link will not open']:
