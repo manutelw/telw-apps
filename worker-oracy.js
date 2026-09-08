@@ -119,6 +119,7 @@ async function ensureUnit1MarkerGuidance(response){
     html=html.replace('</body>',extra+'\n</body>');
   }
   if(!html.includes('src="./unit-1-oral-qa.js"')) html=html.replace('</body>','<script src="./unit-1-oral-qa.js"></script>\n</body>');
+  if(!html.includes('src="./unit-1-feedback-examples.js"')) html=html.replace('</body>','<script src="./unit-1-feedback-examples.js"></script>\n</body>');
   const headers=new Headers(response.headers);
   headers.set('content-type','text/html; charset=UTF-8');
   headers.set('cache-control','no-store, max-age=0, must-revalidate');
