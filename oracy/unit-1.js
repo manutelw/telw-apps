@@ -30,6 +30,24 @@ const passages={
   ]
 };
 
+const learningNotes={
+  q1:'At least means “not less than”. Example: We need at least ten chairs. You can use it for numbers, time, money and amounts.',
+  q2:'Native language means the language you first learn naturally, usually at home. You may also hear first language or mother tongue.',
+  q3:'Native can also describe a person, plant or animal that comes naturally from a place: She is a native of Jaipur. This plant is native to India.',
+  q4:'Official language means a language formally used by a government or institution. Official can also mean approved or formal: an official notice, an official website.',
+  q5:'Majority means more than half or most of a group. Example: The majority of people agreed. The opposite is minority.',
+  q6:'Use for + -ing to talk about function or use: I use my phone for taking photos. We also say for + noun: This bag is for books.',
+  q7:'Use need + noun + to + verb to show purpose: I need English to travel. Need can also be followed by a noun: I need some help.',
+  q8:'So that I can explains the result or purpose you want: I practise daily so that I can speak clearly. In the past, you may hear so that I could.',
+  q9:'To + verb is a very common way to show purpose: I went outside to make a call. For + -ing is more about use or function: This room is for studying.',
+  q10:'After can, use the base verb: can speak, can travel, can understand. Not can speaking or can spoke.',
+  q11:'/v/ begins words such as visit, very and video. The top teeth lightly touch the lower lip and the voice is switched on.',
+  q12:'/w/ begins words such as weekend, work and world. Round the lips, then move quickly into the vowel.',
+  q13:'For /v/, the lip-and-teeth contact is light. The same sound can come in the middle or end too: seven, travel, love.',
+  q14:'For /w/, the lips start rounded. The sound also appears in words such as away, always and between.',
+  q15:'Work and visit are a useful contrast: /w/ versus /v/. Try other pairs such as west–vest and wine–vine.'
+};
+
 const audioCache=new Map();
 let playToken=0;
 
@@ -53,8 +71,14 @@ document.querySelectorAll('.check').forEach(btn=>btn.addEventListener('click',()
   const out=box.querySelector('.answer');
   if(!selected){out.textContent='Choose one answer.';out.className='answer bad';return;}
   const ok=selected.value===btn.dataset.answer;
-  out.textContent=ok?'Correct.':'Try again.';
-  out.className='answer '+(ok?'ok':'bad');
+  const note=learningNotes[btn.dataset.question]||'';
+  if(ok){
+    out.innerHTML=`<b>Correct.</b>${note?`<div style="margin-top:6px"><b>Language note:</b> ${safe(note)}</div>`:''}`;
+    out.className='answer ok';
+  }else{
+    out.textContent='Try again.';
+    out.className='answer bad';
+  }
 }));
 
 async function responseError(res,label){
