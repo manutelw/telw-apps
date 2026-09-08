@@ -11,13 +11,13 @@ const passages={
     {speaker:'Mira',voice:'marin',text:'Oh yeah! You know what? Hindi is my native language, but then I use English with many visitors.'},
     {speaker:'Ravi',voice:'cedar',text:'Hey, me too! I guess because English is an official language in many places, almost everyone knows at least a little.'},
     {speaker:'Mira',voice:'marin',text:'And tell you what, even the majority of the signs here are in English and Hindi.'},
-    {speaker:'Ravi',voice:'cedar',text:'Right? I was just looking at that. It makes things much easier for visitors.'},
-    {speaker:'Mira',voice:'marin',text:'Actually, I heard some Bengali near the entrance too.'},
-    {speaker:'Ravi',voice:'cedar',text:"Really? That's interesting. I caught some Punjabi near the music stage."},
-    {speaker:'Mira',voice:'marin',text:'Same here. And over by the food stalls, I think I heard Tamil as well.'},
-    {speaker:'Ravi',voice:'cedar',text:'Good point. You know, English helps when people do not share the same native language.'},
-    {speaker:'Mira',voice:'marin',text:"Exactly. I don't speak all these languages, but I can still start a conversation."},
-    {speaker:'Ravi',voice:'cedar',text:'Me neither. Still, a few simple words can get you a long way.'},
+    {speaker:'Ravi',voice:'cedar',text:"Yeah, I noticed that. Makes it easier to get around, doesn't it? Oh—and listen, I think that's Bengali behind us."},
+    {speaker:'Mira',voice:'marin',text:"You're right! And a minute ago I heard Punjabi near the music stage."},
+    {speaker:'Ravi',voice:'cedar',text:'Really? Nice. I heard Tamil over by the food stalls too.'},
+    {speaker:'Mira',voice:'marin',text:"See? That's what I love about places like this—you hear a bit of everything."},
+    {speaker:'Ravi',voice:'cedar',text:'Exactly. And when people do not share the same native language, English often helps.'},
+    {speaker:'Mira',voice:'marin',text:"True. I don't speak all these languages, but I can still start a conversation."},
+    {speaker:'Ravi',voice:'cedar',text:'Same here. A few simple words can get you a long way.'},
     {speaker:'Mira',voice:'marin',text:'By the way, do you use English much at home?'},
     {speaker:'Ravi',voice:'cedar',text:'Not really. Mostly at work, when I travel, and when I watch videos online.'},
     {speaker:'Mira',voice:'marin',text:"Ah, same story here. Anyway, let's grab something to eat before the queue gets longer!"}
@@ -87,7 +87,7 @@ async function responseError(res,label){
   return `${label} failed (HTTP ${res.status})${detail?': '+detail:''}`;
 }
 
-function segmentKey(id,index,segment){return `b1-u1-${id}-${index}-${segment.voice}-expanded-v3`;}
+function segmentKey(id,index,segment){return `b1-u1-${id}-${index}-${segment.voice}-expanded-v4`;}
 
 async function getSegmentAudio(id,index,segment){
   const key=segmentKey(id,index,segment);
@@ -152,6 +152,6 @@ async function sendForFeedback(box,prompt,btn){
   finally{chunks=[];recorder=null;activeButton=null;btn.textContent='🎤 Record again';btn.classList.remove('live');}
 }
 
-function safe(value){return String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function safe(value){return String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));}
 
 // Unit 1 passage-length standard: dialogue ≈15 turns; monologue/presentation ≈100–120 words.
