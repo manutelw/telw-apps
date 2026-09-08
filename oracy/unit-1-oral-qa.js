@@ -1,8 +1,9 @@
-// ORACY Unit 1: oral exercise feedback + three longer WH spoken-answer questions.
+// ORACY Unit 1: oral exercise feedback + longer WH spoken-answer questions + audio-led pronunciation work.
 (function(){
   const EDGE='/oracy/session';
   const UNIT_NO=1;
   const TEACHER_STYLE='Speak as a warm, cheerful female English teacher. Keep it short, clear and encouraging. Use gentle lively intonation. Never sound formal or robotic.';
+  const PRON_STYLE='Speak clearly and naturally for an English pronunciation exercise. Give the target word or phrase only. Use crisp contrast between /w/ and /v/. Do not add explanations.';
   const attempts=new Map();
   const speechCache=new Map();
   let qaRecorder=null,qaStream=null,qaChunks=[],qaButton=null;
@@ -21,26 +22,75 @@
       key:'A strong answer should give at least one reason for learning English and explain how she practises. The passage says she needs English for her daughter’s teachers and travel, and she practises about twenty minutes every day so that she can speak with less fear.'
     },
     q15:{
-      title:'Question 5 · Speak your answer',
+      title:'Question 5 · Listen, then explain',
       question:'How do you make the /w/ and /v/ sounds differently? Explain in 2–3 sentences and give one example word for each sound.',
       expected:'For /w/, round your lips slightly; for example, work. For /v/, touch your top teeth lightly to your lower lip and use your voice; for example, visit.',
       key:'A strong answer should explain both mouth positions and give one suitable example for each sound: /w/ uses rounded lips; /v/ uses the top teeth lightly on the lower lip.'
     }
   };
 
+  const pronunciationQuestions={
+    q11:{
+      title:'Question 1 · Listen and choose',
+      instruction:'Listen to the word. Which sound does it begin with?',
+      audio:'visit',
+      choices:[['a','/w/'],['c','/v/']],
+      answer:'c',
+      reveal:'The word was “visit”. It begins with /v/.'
+    },
+    q12:{
+      title:'Question 2 · Listen and choose',
+      instruction:'Listen to the word. Which sound does it begin with?',
+      audio:'weekend',
+      choices:[['a','/v/'],['b','/w/']],
+      answer:'b',
+      reveal:'The word was “weekend”. It begins with /w/.'
+    },
+    q13:{
+      title:'Question 3 · Hear the contrast',
+      instruction:'Listen to the two words. Which order do you hear?',
+      audio:'west. vest.',
+      choices:[['a','/w/ then /v/'],['b','/v/ then /w/']],
+      answer:'a',
+      reveal:'You heard “west” first and “vest” second: /w/ then /v/.'
+    },
+    q14:{
+      title:'Question 4 · Hear the sentence',
+      instruction:'Listen carefully. Which two target words do you hear?',
+      audio:'We visit every weekend.',
+      choices:[['a','we + visit'],['b','very + weekend'],['c','visit + very']],
+      answer:'a',
+      reveal:'The sentence was “We visit every weekend.” The two target words are “we” and “visit”.'
+    }
+  };
+
   function safe(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-  async function teacherAudio(text,key=''){
-    const cacheKey=key||text;
+  async function makeAudio(text,key='',style=TEACHER_STYLE){
+    const cacheKey=`${style}|${key||text}`;
     if(speechCache.has(cacheKey))return speechCache.get(cacheKey);
-    const res=await fetch(EDGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'tts',text,voice:'marin',instructions:TEACHER_STYLE,unit_no:UNIT_NO,passage_id:key?`b1a-u1-oral-${key}`:''})});
+    const res=await fetch(EDGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'tts',text,voice:'marin',instructions:style,unit_no:UNIT_NO,passage_id:key?`b1a-u1-oral-${key}`:''})});
     if(!res.ok)return null;
     const blob=await res.blob();const url=URL.createObjectURL(blob);speechCache.set(cacheKey,url);return url;
   }
 
   async function speak(text,key=''){
-    try{const url=await teacherAudio(text,key);if(url)await new Audio(url).play();}catch{}
+    try{const url=await makeAudio(text,key,TEACHER_STYLE);if(url)await new Audio(url).play();}catch{}
   }
+
+  async function playPronunciation(text,key){
+    try{const url=await makeAudio(text,key,PRON_STYLE);if(url)await new Audio(url).play();}catch{}
+  }
+
+  function buildPronunciationQuestion(id,spec){
+    const old=document.querySelector(`.check[data-question="${id}"]`)?.closest('.activity');
+    if(!old)return;
+    old.classList.add('audio-pron-question');
+    old.innerHTML=`<h3>${safe(spec.title)}</h3><p><b>${safe(spec.instruction)}</b></p><button type="button" class="hear-pron-target">🔊 Play audio</button><div style="margin-top:10px">${spec.choices.map(([value,label])=>`<label><input type="radio" name="${id}" value="${value}"> ${safe(label)}</label>`).join('')}</div><button class="check" data-question="${id}" data-answer="${spec.answer}" style="margin-top:8px">Check</button><div class="answer"></div>`;
+    old.querySelector('.hear-pron-target').addEventListener('click',()=>playPronunciation(spec.audio,`${id}-target`));
+  }
+
+  Object.entries(pronunciationQuestions).forEach(([id,spec])=>buildPronunciationQuestion(id,spec));
 
   function rightAnswerText(button){
     const box=button.closest('.activity');
@@ -48,7 +98,7 @@
     return right?.closest('label')?.textContent?.replace(/\s+/g,' ').trim()||'';
   }
 
-  // Keep the existing learning-note feedback, but make the check response oral and reveal the answer after two wrong tries.
+  // Regular objective questions: oral response; after the second wrong attempt, say and show the answer.
   document.querySelectorAll('.check').forEach(button=>{
     if(longQuestions[button.dataset.question])return;
     button.addEventListener('click',()=>{
@@ -59,8 +109,13 @@
       if(correct){attempts.set(id,0);speak('Correct. Well done!',`${id}-correct`);return;}
       const count=(attempts.get(id)||0)+1;attempts.set(id,count);
       if(count<2){speak('Not quite. Try again.',`${id}-retry`);return;}
-      const answer=rightAnswerText(button);const out=box.querySelector('.answer');
-      const note=(typeof learningNotes!=='undefined'&&learningNotes[id])?learningNotes[id]:'';
+      const out=box.querySelector('.answer');
+      const pron=pronunciationQuestions[id];
+      if(pron){
+        out.className='answer bad';out.innerHTML=`<b>Not quite.</b> ${safe(pron.reveal)}`;
+        speak(`Not quite. ${pron.reveal}`,`${id}-answer`);attempts.set(id,0);return;
+      }
+      const answer=rightAnswerText(button);const note=(typeof learningNotes!=='undefined'&&learningNotes[id])?learningNotes[id]:'';
       if(out){out.className='answer bad';out.innerHTML=`<b>Not quite.</b> The right answer is <b>${safe(answer)}</b>.${note?`<div style="margin-top:6px"><b>Language note:</b> ${safe(note)}</div>`:''}`;}
       speak(`Not quite. The right answer is ${answer}.`,`${id}-answer`);attempts.set(id,0);
     });
