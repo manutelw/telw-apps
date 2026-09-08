@@ -1,4 +1,4 @@
-// ORACY Unit 1 feedback overlay: turn rubric comments into concrete practice.
+// ORACY Unit 1 feedback overlay: turn rubric comments into concrete practice and keep spoken teacher feedback reliable.
 (function(){
   function score(item){const n=Number(item?.score||0);return n>=1&&n<=3?n:0;}
   function esc(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -16,13 +16,8 @@
   }
   function exAt(list,i,fallback){return String(list[i]?.example||fallback).trim();}
   function itemAt(list,i,fallback){return String(list[i]?.item||fallback).trim();}
-  function markerExample(rule){
-    if(rule.type==='dialogue')return 'Exactly! English really helps me when I travel.';
-    return 'By the way, I use English with my students too.';
-  }
-  function practiceBlock(example,ownPrompt){
-    return `<div style="margin-top:6px;padding:8px 10px;border-left:3px solid #d59a19;background:#fffaf0"><b>Try this first:</b> “${esc(example)}”<br><b>Then you:</b> ${esc(ownPrompt)}</div>`;
-  }
+  function markerExample(rule){return rule.type==='dialogue'?'Exactly! English really helps me when I travel.':'By the way, I use English with my students too.';}
+  function practiceBlock(example,ownPrompt){return `<div style="margin-top:6px;padding:8px 10px;border-left:3px solid #d59a19;background:#fffaf0"><b>Try this first:</b> “${esc(example)}”<br><b>Then you:</b> ${esc(ownPrompt)}</div>`;}
 
   oracyFriendlyRubric=function(rubric,rule,usedMarkers){
     const task=score(rubric?.task_achievement),range=score(rubric?.range),accuracy=score(rubric?.accuracy),fluency=score(rubric?.fluency),coherence=score(rubric?.coherence);
@@ -33,13 +28,11 @@
     const item2=itemAt(list,1,'at least');
     const marker=markerExample(rule);
     const markerNames=usedMarkers.map(m=>ORACY_MARKER_LABELS[m]).join(', ');
-
     const taskText=task===3?'You covered the task well. Let’s stretch it with one more vivid detail.':task===2?'You answered the question. Good. Now make the answer easier to picture.':'You have the start of an answer. Now give me one clear point and one real detail.';
     const rangeText=range===3?'You used a good mix of words. Now make one of the Unit 1 expressions truly yours.':'Your meaning is clear. Let’s add one of the new expressions instead of repeating familiar words.';
     const accuracyText=accuracy===3?'Your sentences are working well. Keep the same clean shape when you add a new idea.':'Keep the sentence short and complete. Copy the pattern once, then make your own.';
     const fluencyText=fluency===3?'Your answer moves well. Now keep two ideas flowing together without stopping between every word.':'Build the answer in little chunks: idea + detail, then the next idea.';
     const coherenceText=coherence===3?'Your ideas are easy to follow. Keep using signposts only where they sound natural.':'Give the listener a signpost before you move to the next idea.';
-
     return [
       `<div><b>Your level today</b><br>${esc(oracyWarmLevelText(rubric?.cefr_estimate))}</div>`,
       `<div><b>Did you answer the task? ${task||'–'}/3</b><br>${esc(taskText)}${practiceBlock(ex1,'Now add one different detail from your own life — where, when, who with, or why.')}</div>`,
@@ -60,5 +53,30 @@
     const usedText=used.length?`I liked hearing ${used.map(m=>ORACY_MARKER_LABELS[m]).join(' and ')} in your answer. `:'';
     const markerText=passed?'Your speaking marker worked naturally. ':`On the next recording, remember to use ${rule.min===1?'one':'two'} suitable speaking marker${rule.min===1?'':'s'}. `;
     return `${opening}${usedText}Here is one sentence to copy first: ${example} Say that once. Good. Now give me another sentence of your own with a similar kind of detail. ${markerText}Keep it short and natural. I’d love to hear your next version.`;
+  };
+
+  // Restore spoken feedback without touching passage or pronunciation audio.
+  oracySpeakTeacherFeedback=async function(box,text){
+    const feedback=box.querySelector('.feedback');
+    if(!feedback)return;
+    let replay=feedback.querySelector('.oracy-hear-feedback');
+    if(!replay){
+      replay=document.createElement('button');
+      replay.type='button';replay.className='oracy-hear-feedback';replay.textContent='🔊 Hear teacher feedback';replay.style.marginTop='10px';feedback.appendChild(replay);
+    }
+    replay.disabled=true;replay.textContent='🔊 Preparing teacher feedback…';
+    try{
+      const res=await fetch(EDGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'tts',text,voice:'marin',instructions:'Speak as a warm, caring female English teacher. Sound soothing, cheerful and encouraging. Use lively but gentle intonation. Give the example sentence clearly, then invite the learner to make one of their own. Never sound formal, clinical or robotic.',unit_no:UNIT_NO})});
+      if(!res.ok)throw new Error('Audio unavailable');
+      const blob=await res.blob();
+      if(box._oracyFeedbackUrl)URL.revokeObjectURL(box._oracyFeedbackUrl);
+      const url=URL.createObjectURL(blob);box._oracyFeedbackUrl=url;
+      replay.disabled=false;replay.textContent='🔊 Hear teacher feedback again';
+      replay.onclick=()=>new Audio(url).play().catch(()=>{});
+      new Audio(url).play().catch(()=>{});
+    }catch{
+      replay.disabled=false;replay.textContent='🔊 Try teacher feedback audio again';
+      replay.onclick=()=>oracySpeakTeacherFeedback(box,text);
+    }
   };
 })();
