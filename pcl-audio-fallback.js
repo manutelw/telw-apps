@@ -62,10 +62,10 @@
 
   async function playPreloaded(text,role='coach'){
     try{
+      await browserSpeak(text,role);
+    }catch(e){
       const blob=await preload(text,role);
       await playBlob(blob);
-    }catch(e){
-      await browserSpeak(text,role);
     }
   }
 
@@ -76,6 +76,7 @@
   }
 
   function startPreload(){
+    if('speechSynthesis' in window)speechSynthesis.getVoices();
     document.querySelectorAll('[data-speak]').forEach(b=>preload(b.dataset.speak,'coach').catch(()=>{}));
     modelTurns().forEach(t=>preload(t.text,t.role).catch(()=>{}));
   }
