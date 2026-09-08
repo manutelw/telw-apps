@@ -13,24 +13,18 @@ document.querySelectorAll('.check').forEach(btn=>btn.addEventListener('click',()
   out.className='answer '+(ok?'ok':'bad');
 }));
 
-document.getElementById('gapCheck').addEventListener('click',()=>{
-  const ok=document.getElementById('g1').value==='for'&&document.getElementById('g2').value==='to';
-  const out=document.getElementById('gapAns');out.textContent=ok?'Correct.':'Try again.';out.className='answer '+(ok?'ok':'bad');
-});
-
-document.getElementById('orderCheck').addEventListener('click',()=>{
-  const typed=document.getElementById('order').value.toLowerCase().replace(/[.!?]/g,'').replace(/\s+/g,' ').trim();
-  const ok=typed==='i practise english so that i can speak clearly';
-  const out=document.getElementById('orderAns');out.textContent=ok?'Correct.':'Try: I practise English so that I can speak clearly.';out.className='answer '+(ok?'ok':'bad');
-});
-
 async function playPassage(id,button){
-  button.disabled=true;button.textContent='Preparing audio…';
+  const note=button.parentElement.querySelector('.audio-note');
+  button.disabled=true;button.textContent='Preparing audio…';if(note)note.textContent='';
   try{
     const res=await fetch(EDGE,{method:'POST',headers:{...clientHeaders(),'Content-Type':'application/json'},body:JSON.stringify({action:'tts',text:passageText[id],voice:'marin'})});
-    if(!res.ok)throw new Error('audio');
+    if(!res.ok){
+      let message='Audio is temporarily unavailable.';
+      try{const data=await res.json();if(data&&data.error==='Voice service not configured')message='Audio setup is still being completed.';}catch{}
+      throw new Error(message);
+    }
     const blob=await res.blob();player.src=URL.createObjectURL(blob);await player.play();
-  }catch{alert('The voice service is not connected yet. You can still read the passage on screen.');}
+  }catch(error){if(note)note.textContent=error.message||'Audio is temporarily unavailable.';}
   finally{button.disabled=false;button.textContent='▶ Play passage';}
 }
 document.querySelectorAll('.audio').forEach(btn=>btn.addEventListener('click',()=>playPassage(btn.dataset.id,btn)));
