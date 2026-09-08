@@ -1,0 +1,141 @@
+name: PCL static lesson audio one-time build
+
+on:
+  push:
+    branches: [pcl-standalone]
+    paths:
+      - '.github/workflows/pcl-static-audio-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-static-audio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pcl-standalone
+          fetch-depth: 0
+
+      - name: Generate fixed lesson audio and wire direct preload
+        env:
+          PCL_API: https://kjxywlvgsweagrdydbef.supabase.co/functions/v1/pcl-pilot-1
+          PCL_KEY: sb_publishable_hVL6AQ1GUGzizmiIZBWDlA_UTj5us9q
+        run: |
+          python3 - <<'PY'
+          import base64, html as htmlmod, json, os, re, time, urllib.request
+          from pathlib import Path
+
+          API=os.environ['PCL_API']
+          KEY=os.environ['PCL_KEY']
+          modules=['1-1','1-2','1-3']
+          root=Path('.')
+          audio_root=root/'audio'/'unit-1'
+          audio_root.mkdir(parents=True, exist_ok=True)
+
+          def tts(text, role, out):
+              payload=json.dumps({'action':'SPEAK','text':text,'role':role}).encode()
+              req=urllib.request.Request(API,data=payload,method='POST',headers={
+                  'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY
+              })
+              last=None
+              for attempt in range(3):
+                  try:
+                      with urllib.request.urlopen(req, timeout=90) as r:
+                          d=json.loads(r.read().decode())
+                      if not d.get('ok') or not d.get('audio_base64'):
+                          raise RuntimeError(d.get('message') or 'PCL TTS returned no audio')
+                      out.write_bytes(base64.b64decode(d['audio_base64']))
+                      return
+                  except Exception as e:
+                      last=e
+                      time.sleep(2*(attempt+1))
+              raise last
+
+          def strip_tags(s):
+              s=re.sub(r'<br\s*/?>',' ',s,flags=re.I)
+              s=re.sub(r'<[^>]+>','',s)
+              return re.sub(r'\s+',' ',htmlmod.unescape(s)).strip()
+
+          for mod in modules:
+              path=root/f'module-{mod}.html'
+              src=path.read_text(encoding='utf-8')
+
+              # All fixed Learn-section listen buttons, in page order.
+              texts=[htmlmod.unescape(x) for x in re.findall(r'data-speak="([^"]+)"',src)]
+              if not texts:
+                  raise RuntimeError(f'No data-speak clips found in {path}')
+
+              # The fixed model passage, read directly from the visible Manager/Learner turns.
+              mgr_m=re.search(r'<div class="turn mgr">(.*?)</div>',src,re.S)
+              learner_m=re.search(r'<div class="turn learner">(.*?)</div>\s*<div class="actions"><button class="listen" id="modelAudio"',src,re.S)
+              if not mgr_m or not learner_m:
+                  raise RuntimeError(f'Model passage not found in {path}')
+              manager=strip_tags(mgr_m.group(1))
+              learner=strip_tags(learner_m.group(1))
+              manager=re.sub(r'^Manager:\s*','',manager,flags=re.I)
+              learner=re.sub(r'^Learner:\s*','',learner,flags=re.I)
+
+              rel=[]
+              for i,text in enumerate(texts,1):
+                  out=audio_root/f'{mod}-learn-{i}.mp3'
+                  tts(text,'coach',out)
+                  rel.append(f'./audio/unit-1/{out.name}')
+
+              mgr_out=audio_root/f'{mod}-model-manager.mp3'
+              emp_out=audio_root/f'{mod}-model-employee.mp3'
+              tts(manager,'manager',mgr_out)
+              tts(learner,'employee',emp_out)
+
+              marker='/* PCL_STATIC_LESSON_AUDIO */'
+              # Remove an earlier version of this direct static layer if present.
+              src=re.sub(r'\n<script>\/\* PCL_STATIC_LESSON_AUDIO \*\/.*?<\/script>\s*(?=</body>)','\n',src,flags=re.S)
+
+              static_script=f'''\n<script>/* PCL_STATIC_LESSON_AUDIO */
+          (()=>{{
+            const clips={json.dumps(rel)};
+            const model={json.dumps([f'./audio/unit-1/{mgr_out.name}',f'./audio/unit-1/{emp_out.name}'])};
+            const lessonButtons=[...document.querySelectorAll('[data-speak]')];
+            const cache=new Map();
+            function prepared(src){{
+              if(!cache.has(src)){{const a=new Audio(src);a.preload='auto';a.load();cache.set(src,a);}}
+              return cache.get(src);
+            }}
+            [...clips,...model].forEach(prepared);
+            async function play(src){{const a=prepared(src);a.pause();a.currentTime=0;await a.play();await new Promise((res,rej)=>{{a.onended=res;a.onerror=()=>rej(new Error('Audio could not play.'));}});}}
+            lessonButtons.forEach((b,i)=>{{
+              if(!clips[i])return;
+              b.onclick=async()=>{{const old=b.textContent;b.disabled=true;b.textContent='Playing…';try{{await play(clips[i]);}}catch(e){{const s=document.getElementById('learnStatus');if(s){{s.textContent=e.message;s.className='status error';}}}}finally{{b.disabled=false;b.textContent=old;}}}};
+            }});
+            const modelButton=document.getElementById('modelAudio');
+            if(modelButton)modelButton.onclick=async()=>{{const old=modelButton.textContent;modelButton.disabled=true;modelButton.textContent='Playing…';try{{for(const src of model)await play(src);}}catch(e){{const s=document.getElementById('learnStatus');if(s){{s.textContent=e.message;s.className='status error';}}}}finally{{modelButton.disabled=false;modelButton.textContent=old;}}}};
+          }})();
+          </script>'''
+              src=src.replace('</body>',static_script+'\n</body>')
+              path.write_text(src,encoding='utf-8')
+
+          # This workflow is intentionally one-shot; remove it from the resulting product branch.
+          wf=Path('.github/workflows/pcl-static-audio-once.yml')
+          if wf.exists(): wf.unlink()
+          PY
+
+      - name: Verify scope and generated assets
+        run: |
+          test ! -f .github/workflows/pcl-static-audio-once.yml
+          test -d audio/unit-1
+          count=$(find audio/unit-1 -type f -name '*.mp3' | wc -l)
+          echo "Generated MP3 count: $count"
+          test "$count" -ge 12
+          grep -q 'PCL_STATIC_LESSON_AUDIO' module-1-1.html
+          grep -q 'PCL_STATIC_LESSON_AUDIO' module-1-2.html
+          grep -q 'PCL_STATIC_LESSON_AUDIO' module-1-3.html
+          git status --short
+
+      - name: Commit only static audio and Unit 1 module wiring
+        run: |
+          git config user.name 'manutelw'
+          git config user.email 'manutelw@gmail.com'
+          git add module-1-1.html module-1-2.html module-1-3.html audio/unit-1 .github/workflows/pcl-static-audio-once.yml
+          git commit -m 'Use pre-generated PCL voices for Unit 1 lesson audio'
+          git push origin HEAD:pcl-standalone
