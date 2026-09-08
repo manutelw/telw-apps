@@ -1,0 +1,76 @@
+name: PCL repeat model audio in comprehension once
+
+on:
+  push:
+    branches: [pcl-standalone]
+    paths:
+      - '.github/workflows/pcl-repeat-comprehension-audio-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  wire-repeat-audio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pcl-standalone
+          fetch-depth: 0
+
+      - name: Add same model audio to comprehension in KP2 and KP3
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          for mod in ['1-2','1-3']:
+              p=Path(f'module-{mod}.html')
+              s=p.read_text(encoding='utf-8')
+              if 'id="checkModelAudio"' not in s:
+                  needle='<section class="panel" id="checkPanel" hidden><div class="title">'
+                  replacement=(
+                    '<section class="panel" id="checkPanel" hidden><div class="title">'
+                    '<div style="width:100%"><div class="actions" style="margin-top:0;margin-bottom:16px">'
+                    '<button class="listen" id="checkModelAudio">▶ Hear the passage again</button>'
+                    '</div></div>'
+                  )
+                  if needle not in s:
+                      raise RuntimeError(f'checkPanel marker not found in {p}')
+                  s=s.replace(needle,replacement,1)
+
+              marker='/* PCL_REPEAT_CHECK_AUDIO */'
+              if marker not in s:
+                  js='''\n<script>/* PCL_REPEAT_CHECK_AUDIO */
+(()=>{
+  const checkBtn=document.getElementById('checkModelAudio');
+  const modelBtn=document.getElementById('modelAudio');
+  if(!checkBtn||!modelBtn)return;
+  checkBtn.addEventListener('click',e=>{e.preventDefault();modelBtn.click();});
+})();
+</script>'''
+                  s=s.replace('</body>',js+'\n</body>')
+              p.write_text(s,encoding='utf-8')
+
+          wf=Path('.github/workflows/pcl-repeat-comprehension-audio-once.yml')
+          if wf.exists(): wf.unlink()
+          PY
+
+      - name: Verify narrow scope
+        run: |
+          test ! -f .github/workflows/pcl-repeat-comprehension-audio-once.yml
+          grep -q 'id="checkModelAudio"' module-1-2.html
+          grep -q 'id="checkModelAudio"' module-1-3.html
+          grep -q 'PCL_REPEAT_CHECK_AUDIO' module-1-2.html
+          grep -q 'PCL_REPEAT_CHECK_AUDIO' module-1-3.html
+          changed=$(git status --short | awk '{print $2}' | sort)
+          expected=$(printf '%s\n' module-1-2.html module-1-3.html | sort)
+          test "$changed" = "$expected"
+
+      - name: Commit comprehension audio repeat
+        run: |
+          git config user.name 'manutelw'
+          git config user.email 'manutelw@gmail.com'
+          git add module-1-2.html module-1-3.html .github/workflows/pcl-repeat-comprehension-audio-once.yml
+          git commit -m 'Repeat model audio in KP2 and KP3 comprehension'
+          git push origin HEAD:pcl-standalone
