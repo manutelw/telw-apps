@@ -1,7 +1,26 @@
 const EDGE='/oracy/session';
 const UNIT_NO=1;
 const player=document.getElementById('player');
-const passageText={kp1:'This fair is amazing. I can hear so many languages. Yes. At least six languages are being spoken here today. Hindi is my native language, but I use English with many visitors. Same here. English is an official language in many places, so almost everyone knows a little. The majority of the signs here are in English and Hindi.',kp2:'I use English for reading messages and watching videos. I need English to speak to my daughter’s teachers. I am also learning it to travel more easily. I practise for twenty minutes every day so that I can speak with less fear.',kp3:'I work from home, but I visit my sister every weekend. We watch videos together. I want better English because I would like to travel and speak to people from different parts of the world.'};
+
+const PASSAGE_STYLE='Sound natural, lively and warm. Use clear B1-friendly pacing, expressive sentence stress, natural rises and falls, and genuine conversational enthusiasm. Do not sound like a formal announcement or a textbook recording. Keep articulation clear without becoming slow or robotic.';
+const passages={
+  kp1:[
+    {voice:'marin',text:'This fair is amazing! I can hear so many languages.'},
+    {voice:'cedar',text:'Yes! At least six languages are being spoken here today.'},
+    {voice:'marin',text:'Hindi is my native language, but I use English with many visitors.'},
+    {voice:'cedar',text:'Same here! English is an official language in many places, so almost everyone knows a little.'},
+    {voice:'marin',text:'And the majority of the signs here are in English and Hindi.'}
+  ],
+  kp2:[
+    {voice:'cedar',text:'I use English for reading messages and watching videos. I need English to speak to my daughter’s teachers. I am also learning it to travel more easily. I practise for twenty minutes every day so that I can speak with less fear.'}
+  ],
+  kp3:[
+    {voice:'marin',text:'I work from home, but I visit my sister every weekend. We watch videos together. I want better English because I would like to travel and speak to people from different parts of the world.'}
+  ]
+};
+
+const audioCache=new Map();
+let playToken=0;
 
 document.querySelectorAll('.check').forEach(btn=>btn.addEventListener('click',()=>{
   const box=btn.closest('.activity');
@@ -19,17 +38,52 @@ async function responseError(res,label){
   return `${label} failed (HTTP ${res.status})${detail?': '+detail:''}`;
 }
 
+function segmentKey(id,index,segment){return `b1-u1-${id}-${index}-${segment.voice}-lively-v2`;}
+
+async function getSegmentAudio(id,index,segment){
+  const key=segmentKey(id,index,segment);
+  if(audioCache.has(key)) return audioCache.get(key);
+  const res=await fetch(EDGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'tts',text:segment.text,voice:segment.voice,instructions:PASSAGE_STYLE,unit_no:UNIT_NO,passage_id:key})});
+  if(!res.ok) throw new Error(await responseError(res,'Audio'));
+  const blob=await res.blob();
+  const url=URL.createObjectURL(blob);
+  audioCache.set(key,url);
+  return url;
+}
+
+async function playUrl(url,token){
+  return new Promise((resolve,reject)=>{
+    if(token!==playToken){resolve();return;}
+    player.pause();
+    player.src=url;
+    player.onended=()=>resolve();
+    player.onerror=()=>reject(new Error('Audio could not be played.'));
+    const p=player.play();
+    if(p&&typeof p.catch==='function')p.catch(reject);
+  });
+}
+
 async function playPassage(id,button){
   const note=button.parentElement.querySelector('.audio-note');
+  const segments=passages[id]||[];
+  const token=++playToken;
   button.disabled=true;button.textContent='Preparing audio…';if(note)note.textContent='';
   try{
-    const res=await fetch(EDGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'tts',text:passageText[id],voice:'marin',unit_no:UNIT_NO,passage_id:`b1-u1-${id}-marin-v1`})});
-    if(!res.ok)throw new Error(await responseError(res,'Audio'));
-    const blob=await res.blob();player.src=URL.createObjectURL(blob);await player.play();if(note)note.textContent='Ready.';
+    const urls=await Promise.all(segments.map((segment,index)=>getSegmentAudio(id,index,segment)));
+    button.textContent='Playing…';
+    for(const url of urls){if(token!==playToken)break;await playUrl(url,token);}
+    if(note&&token===playToken)note.textContent='Ready.';
   }catch(error){if(note)note.textContent=error.message||'Audio request could not be completed.';}
-  finally{button.disabled=false;button.textContent='▶ Play passage';}
+  finally{if(token===playToken){button.disabled=false;button.textContent='▶ Play passage';}}
 }
 document.querySelectorAll('.audio').forEach(btn=>btn.addEventListener('click',()=>playPassage(btn.dataset.id,btn)));
+
+async function warmPassages(){
+  const jobs=[];
+  for(const [id,segments] of Object.entries(passages))segments.forEach((segment,index)=>jobs.push(getSegmentAudio(id,index,segment).catch(()=>null)));
+  await Promise.all(jobs);
+}
+if('requestIdleCallback' in window)requestIdleCallback(()=>warmPassages(),{timeout:1200});else setTimeout(()=>warmPassages(),500);
 
 let mediaStream=null,recorder=null,chunks=[],activeButton=null;
 document.querySelectorAll('.record').forEach(btn=>btn.addEventListener('click',()=>toggleRecording(btn)));
