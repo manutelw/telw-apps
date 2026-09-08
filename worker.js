@@ -127,7 +127,7 @@ async function handleAdminHandoff(request){
     token=String(form.get('ascent_session_token')||'').trim();
   }catch{}
   if(!token || !(await validAdmin(token))) return new Response('Administrator access required.',{status:403,headers:{'cache-control':'no-store'}});
-  const headers=new Headers({location:'/oracy/admin.html','cache-control':'no-store'});
+  const headers=new Headers({location:'/oracy/','cache-control':'no-store'});
   headers.append('set-cookie',cookie('clarion_admin_session',token,60*60,'/'));
   return new Response(null,{status:303,headers});
 }
@@ -156,7 +156,7 @@ async function injectOracyAdminCard(response){
   if(!html.includes('id="oracyAdminHubCard"')){
     const card='<button id="oracyAdminHubCard" class="app-card dialogue" type="button"><strong>ORACY</strong><span>Manage spoken-English learners, passwords and assigned units</span></button>';
     html=html.replace('<button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>',card+'\n        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>');
-    const script=`<script>(function(){var b=document.getElementById('oracyAdminHubCard');if(!b)return;b.addEventListener('click',async function(){var s=null;for(const k of ['ascent_admin_master_session','ascent_trainer_session']){try{var x=JSON.parse(localStorage.getItem(k)||'null');if(x&&x.sessionToken&&String(x.role||'').toUpperCase()==='ADMIN'){s=x;break}}catch(e){}}if(!s){location.href='/ascent/admin-login.html';return}var f=new FormData();f.append('ascent_session_token',s.sessionToken);var r=await fetch('/oracy/admin-handoff',{method:'POST',body:f});if(r.redirected){location.href=r.url;return}if(r.ok){location.href='/oracy/admin.html';return}alert('Administrator access could not be verified.');});})();</script>`;
+    const script=`<script>(function(){var b=document.getElementById('oracyAdminHubCard');if(!b)return;b.addEventListener('click',function(){var s=null;for(const k of ['ascent_admin_master_session','ascent_trainer_session']){try{var x=JSON.parse(localStorage.getItem(k)||'null');if(x&&x.sessionToken&&String(x.role||'').toUpperCase()==='ADMIN'){s=x;break}}catch(e){}}if(!s){location.href='/ascent/admin-login.html';return}var f=document.createElement('form');f.method='POST';f.action='/oracy/admin-handoff';var i=document.createElement('input');i.type='hidden';i.name='ascent_session_token';i.value=s.sessionToken;f.appendChild(i);document.body.appendChild(f);f.submit();});})();</script>`;
     html=html.replace('</body>',script+'</body>');
   }
   const headers=new Headers(response.headers);
