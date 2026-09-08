@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'oracy/**'
+      - 'functions/oracy/**'
+      - 'functions/ascent/admin-settings.html.js'
       - '.github/workflows/oracy-integrity.yml'
 permissions:
   contents: read
@@ -11,15 +13,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify ORACY B1 Unit 1 structure
+      - name: Verify ORACY B1 Unit 1 and access controls
         run: |
           python - <<'PY'
           from pathlib import Path
           h=Path('oracy/unit-1.html').read_text()
           j=Path('oracy/unit-1.js').read_text()
+          gate=Path('functions/oracy/_middleware.js').read_text()
+          login=Path('oracy/index.html').read_text()
+          admin=Path('oracy/admin.html').read_text()
+          hub=Path('functions/ascent/admin-settings.html.js').read_text()
           for x in ['Key Point 1 · Vocabulary','Key Point 2 · Grammar','Key Point 3 · Pronunciation','Speaking 1','Speaking 5','/w/ and /v/']:
               assert x in h, x
           for x in ['oracy-voice','x-oracy-client','MediaRecorder']:
               assert x in j, x
-          print('ORACY Unit 1 integrity OK')
+          for x in ['oracy_session','validLearnerUnit','/oracy/?locked=1','clarion_admin_session']:
+              assert x in gate, x
+          for x in ['Assigned learner access','./session','A unit link will not open']:
+              assert x in login, x
+          for x in ['Assign ORACY to learners','admin_set_assignment','admin_save_learner']:
+              assert x in admin, x
+          assert 'oracyAdminHubCard' in hub
+          print('ORACY Unit 1 access-control integrity OK')
           PY
