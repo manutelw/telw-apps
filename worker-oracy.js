@@ -13,12 +13,16 @@ export default {
     }
 
     const response=await base.fetch(request,env);
-    if(path==='/ascent/admin-settings.html' && response.ok){
+    if(isAdminSettingsPath(path) && response.ok){
       return ensureOracyCard(response);
     }
     return response;
   }
 };
+
+function isAdminSettingsPath(path){
+  return path==='/ascent/admin-settings.html' || path==='/ascent/admin-settings' || path==='/ascent/admin-settings/' || path.endsWith('/ascent/admin-settings.html');
+}
 
 async function handleAdminPreview(request){
   try{
@@ -38,14 +42,22 @@ async function handleAdminPreview(request){
 
 async function ensureOracyCard(response){
   let html=await response.text();
-  if(!html.includes('<strong>ORACY</strong>')){
-    const marker='<button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>';
+  if(!html.includes('id="oracyAdminHubCard"')){
     const card='<a id="oracyAdminHubCard" class="app-card dialogue" href="/oracy/admin-open.html"><strong>ORACY</strong><span>Open B1 Unit 1 and manage learner access</span></a>';
-    html=html.replace(marker,card+'\n        '+marker);
+    const catMarker='<button id="catSimulatorAdminButton"';
+    const idx=html.indexOf(catMarker);
+    if(idx>=0){
+      html=html.slice(0,idx)+card+'\n        '+html.slice(idx);
+    }else{
+      const gridClose=html.indexOf('</div>',html.indexOf('class="app-grid"'));
+      if(gridClose>=0) html=html.slice(0,gridClose)+card+html.slice(gridClose);
+    }
   }
   const headers=new Headers(response.headers);
   headers.set('content-type','text/html; charset=UTF-8');
-  headers.set('cache-control','no-store, max-age=0');
+  headers.set('cache-control','no-store, max-age=0, must-revalidate');
+  headers.set('pragma','no-cache');
+  headers.set('expires','0');
   return new Response(html,{status:response.status,statusText:response.statusText,headers});
 }
 
