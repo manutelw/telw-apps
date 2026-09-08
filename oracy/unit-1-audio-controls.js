@@ -8,6 +8,8 @@
   const pron={q11:'visit',q12:'weekend',q13:'west. vest.',q14:'We visit every weekend.'};
   const cache=new Map();
   const rawCache=new Map();
+  const rawPending=new Map();
+  const decodePending=new Map();
   let ctx=null,current=[];
 
   function getCtx(){
@@ -22,19 +24,30 @@
   async function fetchRaw(text,voice,instructions,key){
     const ck=key||`${voice}|${instructions}|${text}`;
     if(rawCache.has(ck))return rawCache.get(ck);
-    const res=await fetch(EDGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'tts',text,voice,instructions,unit_no:UNIT_NO,passage_id:key||''})});
-    if(!res.ok){let d='';try{d=(await res.text()).slice(0,220)}catch{}throw new Error(`Audio failed (HTTP ${res.status})${d?': '+d:''}`);}
-    const raw=await (await res.blob()).arrayBuffer();
-    rawCache.set(ck,raw);
-    return raw;
+    if(rawPending.has(ck))return rawPending.get(ck);
+    const pending=(async()=>{
+      const res=await fetch(EDGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'tts',text,voice,instructions,unit_no:UNIT_NO,passage_id:key||''})});
+      if(!res.ok){let d='';try{d=(await res.text()).slice(0,220)}catch{}throw new Error(`Audio failed (HTTP ${res.status})${d?': '+d:''}`);}
+      const raw=await (await res.blob()).arrayBuffer();
+      rawCache.set(ck,raw);
+      return raw;
+    })();
+    rawPending.set(ck,pending);
+    try{return await pending;}finally{rawPending.delete(ck);}
   }
 
   async function tts(text,voice,instructions,key){
     const ck=key||`${voice}|${instructions}|${text}`;
     if(cache.has(ck))return cache.get(ck);
-    const raw=await fetchRaw(text,voice,instructions,key);
-    const buf=await getCtx().decodeAudioData(raw.slice(0));
-    cache.set(ck,buf);return buf;
+    if(decodePending.has(ck))return decodePending.get(ck);
+    const pending=(async()=>{
+      const raw=await fetchRaw(text,voice,instructions,key);
+      const buf=await getCtx().decodeAudioData(raw.slice(0));
+      cache.set(ck,buf);
+      return buf;
+    })();
+    decodePending.set(ck,pending);
+    try{return await pending;}finally{decodePending.delete(ck);}
   }
   async function playBuffers(buffers,gap=.08){
     const c=await unlock();stop();
@@ -78,28 +91,34 @@
     try{await unlock();button.disabled=true;button.textContent='Preparing…';const box=button.closest('.activity');const check=box?.querySelector('.check[data-question]');const id=check?.dataset.question||'';const text=pron[id];if(!text)throw new Error('Pronunciation audio is not available.');const b=await tts(text,'marin',PRON_STYLE,`b1a-u1-oral-${id}-target`);button.textContent='Playing…';await playBuffers([b],.02);}catch(e){const out=button.closest('.activity')?.querySelector('.answer');if(out){out.className='answer bad';out.textContent=e?.message||'Audio could not be played.';}}finally{button.disabled=false;button.textContent=old;}
   }
 
-  // Warm all fixed Unit 1 audio in the background. This deliberately fetches only;
-  // it does not resume or alter the working playback engine before a learner click.
+  // Preload priority: short learner-triggered clips first. Hear-question and pronunciation
+  // clips are fetched AND decoded immediately; longer passages warm in the background after that.
   async function preloadStaticAudio(){
-    const jobs=[];
-    document.querySelectorAll('.audio').forEach(button=>{
-      const id=button.dataset.id;
-      passageSegments(button).forEach((s,i)=>jobs.push(()=>fetchRaw(s.text,s.voice||'marin',PASSAGE_STYLE,`b1-u1-${id}-${i}-${s.voice||'marin'}-expanded-v4`)));
-    });
+    const fast=[];
+    const slow=[];
     document.querySelectorAll('.hear-oral-question').forEach(button=>{
       const text=questionText(button);const box=button.closest('[data-oral-id]');const id=box?.dataset.oralId||'question';
-      if(text)jobs.push(()=>fetchRaw(text,'marin',TEACHER_STYLE,`b1a-u1-oral-${id}-question`));
+      if(text)fast.push(()=>tts(text,'marin',TEACHER_STYLE,`b1a-u1-oral-${id}-question`));
     });
     document.querySelectorAll('.hear-pron-target').forEach(button=>{
       const box=button.closest('.activity');const check=box?.querySelector('.check[data-question]');const id=check?.dataset.question||'';const text=pron[id];
-      if(text)jobs.push(()=>fetchRaw(text,'marin',PRON_STYLE,`b1a-u1-oral-${id}-target`));
+      if(text)fast.push(()=>tts(text,'marin',PRON_STYLE,`b1a-u1-oral-${id}-target`));
     });
+    document.querySelectorAll('.audio').forEach(button=>{
+      const id=button.dataset.id;
+      passageSegments(button).forEach((s,i)=>slow.push(()=>fetchRaw(s.text,s.voice||'marin',PASSAGE_STYLE,`b1-u1-${id}-${i}-${s.voice||'marin'}-expanded-v4`)));
+    });
+
     let next=0;
-    const worker=async()=>{while(next<jobs.length){const job=jobs[next++];try{await job();}catch{}}};
-    await Promise.all(Array.from({length:Math.min(4,jobs.length)},()=>worker()));
+    const fastWorker=async()=>{while(next<fast.length){const job=fast[next++];try{await job();}catch{}}};
+    await Promise.all(Array.from({length:Math.min(6,fast.length)},()=>fastWorker()));
+
+    next=0;
+    const slowWorker=async()=>{while(next<slow.length){const job=slow[next++];try{await job();}catch{}}};
+    await Promise.all(Array.from({length:Math.min(4,slow.length)},()=>slowWorker()));
   }
-  const startPreload=()=>preloadStaticAudio().catch(()=>{});
-  if('requestIdleCallback' in window)requestIdleCallback(startPreload,{timeout:700});else setTimeout(startPreload,250);
+  // Start at once. The preload does not resume the AudioContext; real playback still starts only on a learner gesture.
+  setTimeout(()=>preloadStaticAudio().catch(()=>{}),0);
 
   // Resume Web Audio on real gestures, but do not alter native media APIs or non-audio controls.
   document.addEventListener('pointerdown',e=>{if(e.target.closest('.audio,.hear-oral-question,.hear-pron-target,.oracy-hear-feedback'))unlock().catch(()=>{});},{capture:true,passive:true});
