@@ -211,7 +211,7 @@ async function playDialogueGapless(items,token){
   if(token!==playToken)return;
   const sources=[];
   let when=audioContext.currentTime+.06;
-  await new Promise((resolve,reject)=>{
+  await new Promise(resolve=>{
     buffers.forEach((buffer,index)=>{
       const {offset,duration}=trimBounds(buffer);
       const source=audioContext.createBufferSource();
@@ -225,7 +225,7 @@ async function playDialogueGapless(items,token){
     activeSources=sources;
     if(!buffers.length)resolve();
     setTimeout(()=>{if(token!==playToken)resolve();},100);
-  }).catch(reject);
+  });
   if(token===playToken)activeSources=[];
 }
 
