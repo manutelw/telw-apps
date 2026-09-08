@@ -1,0 +1,25 @@
+name: ORACY Integrity
+on:
+  pull_request:
+    paths:
+      - 'oracy/**'
+      - '.github/workflows/oracy-integrity.yml'
+permissions:
+  contents: read
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify ORACY B1 Unit 1 structure
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          h=Path('oracy/unit-1.html').read_text()
+          j=Path('oracy/unit-1.js').read_text()
+          for x in ['Key Point 1 · Vocabulary','Key Point 2 · Grammar','Key Point 3 · Pronunciation','Speaking 1','Speaking 5','/w/ and /v/']:
+              assert x in h, x
+          for x in ['oracy-voice','x-oracy-client','MediaRecorder']:
+              assert x in j, x
+          print('ORACY Unit 1 integrity OK')
+          PY
