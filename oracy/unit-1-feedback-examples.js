@@ -1,71 +1,5 @@
 // ORACY Unit 1 feedback overlay: turn rubric comments into concrete practice and keep spoken teacher feedback reliable.
 (function(){
-  // Audio reliability layer. It only changes playback; lesson content, scoring and controls stay untouched.
-  if(!window.ORACY_AUDIO){
-    let ctx=null,currentSource=null;
-    const nativePlay=HTMLMediaElement.prototype.play;
-    function getContext(){
-      if(ctx)return ctx;
-      const Ctx=window.AudioContext||window.webkitAudioContext;
-      if(!Ctx)return null;
-      ctx=new Ctx();return ctx;
-    }
-    function unlock(){
-      const c=getContext();
-      if(!c)return Promise.resolve(false);
-      if(c.state==='running')return Promise.resolve(true);
-      return c.resume().then(()=>c.state==='running').catch(()=>false);
-    }
-    function stopSource(){if(currentSource){try{currentSource.stop();}catch{} currentSource=null;}}
-    async function playUrl(url){
-      stopSource();
-      const c=getContext();
-      if(!c)throw new Error('Audio is not supported in this browser.');
-      await unlock();
-      if(c.state!=='running')throw new Error('Tap the audio button once more to start sound.');
-      const res=await fetch(url);if(!res.ok)throw new Error('Audio could not be loaded.');
-      const buffer=await c.decodeAudioData(await res.arrayBuffer());
-      return await new Promise((resolve,reject)=>{
-        try{
-          const source=c.createBufferSource();source.buffer=buffer;source.connect(c.destination);currentSource=source;
-          source.onended=()=>{if(currentSource===source)currentSource=null;resolve();};source.start();
-        }catch(e){reject(e);}
-      });
-    }
-    window.ORACY_AUDIO={getContext,unlock,playUrl};
-
-    // Prime sound at the first real learner gesture, before async TTS fetching finishes.
-    const prime=()=>{
-      unlock();
-      try{
-        if(typeof audioContext!=='undefined'){
-          if(!audioContext)audioContext=getContext();
-          if(audioContext?.state!=='running')audioContext?.resume?.().catch(()=>{});
-        }
-      }catch{}
-    };
-    document.addEventListener('pointerdown',prime,{capture:true,passive:true});
-    document.addEventListener('touchstart',prime,{capture:true,passive:true});
-    document.addEventListener('keydown',prime,{capture:true});
-
-    // Keep native media playback when it works. If the browser blocks it after an async fetch,
-    // fall back to the already-unlocked Web Audio path and still fire the normal ended event.
-    HTMLMediaElement.prototype.play=function(){
-      let p;
-      try{p=nativePlay.call(this);}catch(e){p=Promise.reject(e);}
-      if(!p||typeof p.catch!=='function')return p;
-      const el=this;
-      return p.catch(async err=>{
-        if(!el.src)throw err;
-        try{
-          await playUrl(el.src);
-          el.dispatchEvent(new Event('ended'));
-          return;
-        }catch{throw err;}
-      });
-    };
-  }
-
   function score(item){const n=Number(item?.score||0);return n>=1&&n<=3?n:0;}
   function esc(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function suggestions(rubric,rule){
@@ -127,20 +61,29 @@
     let replay=feedback.querySelector('.oracy-hear-feedback');
     if(!replay){
       replay=document.createElement('button');
-      replay.type='button';replay.className='oracy-hear-feedback';replay.textContent='🔊 Hear teacher feedback';replay.style.marginTop='10px';feedback.appendChild(replay);
+      replay.type='button';
+      replay.className='oracy-hear-feedback';
+      replay.style.marginTop='10px';
+      feedback.appendChild(replay);
     }
-    replay.disabled=true;replay.textContent='🔊 Preparing teacher feedback…';
+    replay.disabled=true;
+    replay.textContent='🔊 Preparing teacher feedback…';
     try{
       const res=await fetch(EDGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'tts',text,voice:'marin',instructions:'Speak as a warm, caring female English teacher. Sound soothing, cheerful and encouraging. Use lively but gentle intonation. Give the example sentence clearly, then invite the learner to make one of their own. Never sound formal, clinical or robotic.',unit_no:UNIT_NO})});
       if(!res.ok)throw new Error('Audio unavailable');
       const blob=await res.blob();
       if(box._oracyFeedbackUrl)URL.revokeObjectURL(box._oracyFeedbackUrl);
-      const url=URL.createObjectURL(blob);box._oracyFeedbackUrl=url;
-      replay.disabled=false;replay.textContent='🔊 Hear teacher feedback again';
-      replay.onclick=()=>new Audio(url).play().catch(()=>{});
-      new Audio(url).play().catch(()=>{});
+      const url=URL.createObjectURL(blob);
+      box._oracyFeedbackUrl=url;
+      replay.disabled=false;
+      replay.textContent='🔊 Hear teacher feedback';
+      replay.onclick=()=>{
+        const audio=new Audio(url);
+        audio.play().catch(()=>{});
+      };
     }catch{
-      replay.disabled=false;replay.textContent='🔊 Try teacher feedback audio again';
+      replay.disabled=false;
+      replay.textContent='🔊 Try teacher feedback audio again';
       replay.onclick=()=>oracySpeakTeacherFeedback(box,text);
     }
   };
