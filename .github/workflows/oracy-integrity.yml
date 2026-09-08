@@ -89,8 +89,9 @@ jobs:
               assert x in session, x
           for x in ['/oracy/session','/oracy/logout','/oracy/admin-handoff','validLearnerUnit','validAdmin','env.ASSETS.fetch','ORACY_VOICE','ORACY_ACCESS','clarion_admin_session']:
               assert x in worker, x
-          for x in ['/oracy/admin-preview','admin_preview','oracy_session','/oracy/admin-open.html','<strong>ORACY</strong>']:
+          for x in ['/oracy/admin-preview','admin_preview','oracy_session','oracyDirectIndexScript','/oracy/admin-handoff','<strong>ORACY</strong>']:
               assert x in wrapper, x
+          assert not Path('oracy/admin-open.html').exists(), 'Obsolete ORACY admin launcher must stay removed'
           assert cfg['main']=='worker-oracy.js'
           assert cfg['assets']['binding']=='ASSETS'
           assert cfg['assets']['run_worker_first'] is True
