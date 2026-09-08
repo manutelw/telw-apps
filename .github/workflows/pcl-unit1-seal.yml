@@ -1,0 +1,62 @@
+name: PCL Unit 1 Seal Guard
+
+on:
+  pull_request:
+    branches: [pcl-standalone]
+  push:
+    branches: [pcl-standalone]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pcl-unit1-seal-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  unit1-seal:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current PCL
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'pcl-standalone' }}
+          fetch-depth: 0
+
+      - name: Fetch frozen Unit 1 snapshot
+        run: git fetch origin pcl-unit1-frozen-2026-09-08:pcl-unit1-frozen-2026-09-08
+
+      - name: Verify Unit 1 is byte-for-byte frozen
+        id: verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          changed=0
+          for path in module-1-1.html module-1-2.html module-1-3.html audio/unit-1; do
+            if ! git diff --quiet pcl-unit1-frozen-2026-09-08 -- "$path"; then
+              echo "PROTECTED PCL UNIT 1 CHANGE DETECTED: $path"
+              git diff --stat pcl-unit1-frozen-2026-09-08 -- "$path" || true
+              changed=1
+            fi
+          done
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          if [ "$changed" -eq 1 ] && [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PCL Unit 1 is frozen. Changes to KP1, KP2, KP3 or Unit 1 audio are not permitted."
+            exit 1
+          fi
+
+      - name: Automatically restore frozen Unit 1 after any direct push
+        if: github.event_name == 'push' && steps.verify.outputs.changed == '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout pcl-unit1-frozen-2026-09-08 -- module-1-1.html module-1-2.html module-1-3.html audio/unit-1
+          git config user.name 'PCL Unit 1 Seal Guard'
+          git config user.email 'manutelw@gmail.com'
+          git add module-1-1.html module-1-2.html module-1-3.html audio/unit-1
+          git commit -m 'AUTO-RESTORE: preserve frozen PCL Unit 1'
+          git push origin HEAD:pcl-standalone
+
+      - name: Confirm sealed state
+        if: steps.verify.outputs.changed == '0'
+        run: echo 'PCL Unit 1 matches frozen snapshot exactly.'
