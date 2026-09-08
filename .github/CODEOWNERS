@@ -13,3 +13,13 @@
 /.github/scripts/ascent_integrity_check.py @manutelw
 /.github/scripts/ascent_trainer_integrity_check.py @manutelw
 /.github/workflows/ascent-integrity.yml @manutelw
+
+# ORACY B1A UNIT 1 — frozen baseline. Do not change without Manu's explicit request.
+/oracy/unit-1.html @manutelw
+/oracy/unit-1.js @manutelw
+/oracy/unit-1-coach.js @manutelw
+/oracy/unit-1-oral-qa.js @manutelw
+/oracy/unit-1-feedback-examples.js @manutelw
+/oracy/unit-1-audio-controls.js @manutelw
+/.github/oracy-unit1.lock @manutelw
+/.github/workflows/oracy-integrity.yml @manutelw
