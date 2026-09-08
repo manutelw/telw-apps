@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>ORACY by TELW · Register</title>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+:root{--navy:#102a43;--navy2:#173b5f;--gold:#c79a3b;--bg:#f4f6f8;--paper:#fff;--text:#243b53;--muted:#7b8794;--line:#e4e9ee;--soft:#f8fafc;--red:#b42318;--green:#1d7a50}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}a,button,input,select{font:inherit}.top{background:var(--navy);color:#fff}.topbar{max-width:980px;margin:auto;padding:20px 28px;display:flex;justify-content:space-between;align-items:center}.brand{font-size:28px;font-weight:800;letter-spacing:.08em}.brand small{display:block;margin-top:3px;color:#d7b871;font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:700}.back{color:#d7e1ea;text-decoration:none;font-size:13px}.shell{max-width:980px;margin:auto;padding:48px 28px 64px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:28px;align-items:start}.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:0 10px 30px rgba(16,42,67,.04)}.eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:800}h1,h2{color:var(--navy)}h1{font-size:38px;line-height:1.08;letter-spacing:-.03em;margin:10px 0 12px}.lead{margin:0;color:var(--muted);line-height:1.7}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px}.field{margin-top:14px}.field label{display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:7px}.field input,.field select{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;outline:none}.field input:focus,.field select:focus{border-color:#98adc0;box-shadow:0 0 0 3px rgba(44,95,138,.08)}.btn{width:100%;margin-top:18px;border:0;border-radius:10px;background:var(--navy);color:#fff;padding:13px 16px;font-weight:800;cursor:pointer}.btn:hover{background:var(--navy2)}.btn:disabled{opacity:.5;cursor:not-allowed}.status{min-height:20px;margin-top:12px;color:var(--muted);font-size:13px;line-height:1.5}.error{color:var(--red)}.success{color:var(--green)}.summary{position:sticky;top:18px}.price{font-size:34px;font-weight:800;color:var(--navy);margin:10px 0 4px}.meta{color:var(--muted);font-size:13px;line-height:1.6}.rule{height:1px;background:var(--line);margin:20px 0}.tiny{font-size:12px;color:var(--muted);line-height:1.6}.success-box{display:none;border:1px solid #bddfcd;background:#f4fbf7;border-radius:14px;padding:18px;margin-top:18px}.success-box.show{display:block}.login-link{display:inline-block;margin-top:12px;color:var(--navy);font-weight:800;text-decoration:none}.secure{display:flex;gap:8px;align-items:center;margin-top:18px;color:var(--muted);font-size:12px}@media(max-width:760px){.layout{grid-template-columns:1fr}.summary{position:static}.grid{grid-template-columns:1fr}.shell{padding:34px 18px 48px}.topbar{padding:18px}.brand{font-size:25px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="topbar"><div class="brand">ORACY<small>by TELW · Spoken English</small></div><a class="back" href="./">← Course index</a></div></header>
+<main class="shell">
+<div class="layout">
+<section class="card">
+<div class="eyebrow">30-day learner access</div>
+<h1>Register. Pay. Start learning.</h1>
+<p class="lead">Choose the ORACY access you want, enter your details and complete payment securely through Razorpay. Your access begins as soon as payment is verified.</p>
+<div class="grid">
+<div class="field"><label for="name">Name</label><input id="name" autocomplete="name"></div>
+<div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email"></div>
+<div class="field"><label for="mobile">Mobile number</label><input id="mobile" inputmode="tel" autocomplete="tel"></div>
+<div class="field"><label for="password">Choose password</label><input id="password" type="password" autocomplete="new-password" minlength="6"></div>
+</div>
+<div class="field"><label for="product">Access option</label><select id="product"></select></div>
+<button id="pay" class="btn" type="button" disabled>Pay & get access</button>
+<div id="status" class="status" aria-live="polite"></div>
+<div id="done" class="success-box"><strong>Payment confirmed.</strong><div id="doneText" class="tiny" style="margin-top:7px"></div><a class="login-link" href="./">Open ORACY →</a></div>
+</section>
+<aside class="card summary">
+<div class="eyebrow">Your access</div>
+<h2 id="summaryTitle" style="margin-bottom:8px">ORACY</h2>
+<div id="price" class="price">—</div>
+<div id="summaryMeta" class="meta">Loading available access…</div>
+<div class="rule"></div>
+<div class="tiny">Access is valid for 30 days. Buying the same access again extends the current expiry by another 30 days.</div>
+<div class="secure">🔒 Secure payment through Razorpay</div>
+</aside>
+</div>
+</main>
+<script>
+const API='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/oracy-commerce';
+const $=id=>document.getElementById(id);let catalog=null;
+function money(p){return '₹'+(Number(p||0)/100).toLocaleString('en-IN',{maximumFractionDigits:2})}
+function status(msg,type=''){const e=$('status');e.textContent=msg||'';e.className='status'+(type?' '+type:'')}
+async function call(payload){const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});const d=await r.json().catch(()=>({ok:false,message:'Request failed.'}));if(!r.ok||d.ok!==true)throw new Error(d.message||'Request failed.');return d}
+function selected(){return (catalog?.products||[]).find(x=>x.code===$('product').value)}
+function updateSummary(){const p=selected();if(!p){$('summaryTitle').textContent='ORACY';$('price').textContent='—';$('summaryMeta').textContent='No paid access option is available yet.';return}$('summaryTitle').textContent=p.label;$('price').textContent=money(p.price_paise);$('summaryMeta').textContent=`${p.duration_days||30} days of access · payment upfront`}
+async function load(){try{catalog=await call({action:'CATALOG'});const products=(catalog.products||[]).filter(x=>Number(x.price_paise)>0);$('product').innerHTML=products.map(x=>`<option value="${x.code}">${x.label} · ${money(x.price_paise)}</option>`).join('');if(!catalog.enabled){status('Paid registration is not open yet.','error')}else if(!catalog.payments_ready){status('Secure payment is being configured. Please try again shortly.','error')}else if(!products.length){status('No ORACY access option is available for purchase yet.','error')}else{$('pay').disabled=false;status('')};const q=new URLSearchParams(location.search),prod=q.get('product'),email=q.get('email');if(email)$('email').value=email;if(prod&&products.some(x=>x.code===prod))$('product').value=prod;updateSummary()}catch(e){status(e.message,'error')}}
+async function pay(){const p=selected();if(!p)return;const payload={action:'CREATE_ORDER',product_code:p.code,full_name:$('name').value.trim(),email:$('email').value.trim(),mobile:$('mobile').value.trim(),password:$('password').value};$('pay').disabled=true;status('Preparing secure payment…');try{const o=await call(payload);if(typeof Razorpay==='undefined')throw new Error('The secure payment window could not be loaded. Please refresh and try again.');const rz=new Razorpay({key:o.razorpay_key_id,amount:o.amount_paise,currency:o.currency,name:'ORACY by TELW',description:`${o.product_label} · ${o.duration_days||30} days`,order_id:o.razorpay_order_id,prefill:o.buyer||{},handler:async x=>{try{status('Confirming your payment…');const v=await call({action:'VERIFY',payment_order_uuid:o.payment_order_uuid,razorpay_payment_id:x.razorpay_payment_id,razorpay_order_id:x.razorpay_order_id,razorpay_signature:x.razorpay_signature});status(v.message||'Payment confirmed.','success');$('done').classList.add('show');const exp=v.expires_at?new Date(v.expires_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'';$('doneText').textContent=`${v.product_label||o.product_label} is active${exp?' until '+exp:''}. Use your email as the login ID and the password you chose here.${v.email_sent?' We have also emailed your access link.':''}`;$('pay').disabled=false}catch(e){status(e.message,'error');$('pay').disabled=false}}});rz.on('payment.failed',()=>{status('Payment was not completed. No access has been activated.','error');$('pay').disabled=false});rz.open()}catch(e){status(e.message,'error');$('pay').disabled=false}}
+$('product').addEventListener('change',updateSummary);$('pay').onclick=pay;load();
+</script>
+</body></html>
