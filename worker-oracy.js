@@ -85,7 +85,8 @@ async function applyTelwLevelBranding(response,unitNo){
   if(!level)return response;
   let html=await response.text();
   html=html.replace(/<small>by TELW · [^<]*<\/small>/i,`<small>by TELW · LEVEL ${level}</small>`);
-  html=html.replace(/<div class="eyebrow">[^<]*Unit\s*${unitNo}[^<]*<\/div>/i,`<div class="eyebrow">LEVEL ${level} · UNIT ${unitNo}</div>`);
+  const eyebrowPattern=new RegExp(`<div class="eyebrow">[^<]*Unit\\s*${unitNo}[^<]*<\\/div>`,'i');
+  html=html.replace(eyebrowPattern,`<div class="eyebrow">LEVEL ${level} · UNIT ${unitNo}</div>`);
   if(!html.includes('src="./level-system.js"')) html=html.replace('</body>','<script src="./level-system.js"></script>\n</body>');
   const headers=new Headers(response.headers);
   headers.set('content-type','text/html; charset=UTF-8');
