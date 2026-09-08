@@ -12,12 +12,15 @@ export default {
       return handleAdminPreview(request);
     }
 
-    const response=await base.fetch(request,env);
+    let response=await base.fetch(request,env);
     if(isAdminSettingsPath(path) && response.ok){
       return ensureOracyCard(response);
     }
-    if(isUnit1HtmlPath(path) && response.ok){
-      return ensureUnit1MarkerGuidance(response);
+
+    const unitNo=oracyUnitNumber(path);
+    if(unitNo && response.ok){
+      if(unitNo===1) response=await ensureUnit1MarkerGuidance(response);
+      return applyTelwLevelBranding(response,unitNo);
     }
     return response;
   }
@@ -27,8 +30,17 @@ function isAdminSettingsPath(path){
   return path==='/ascent/admin-settings.html' || path==='/ascent/admin-settings' || path==='/ascent/admin-settings/' || path.endsWith('/ascent/admin-settings.html');
 }
 
-function isUnit1HtmlPath(path){
-  return path==='/oracy/unit-1.html' || path==='/oracy/unit-1' || path==='/oracy/unit-1/';
+function oracyUnitNumber(path){
+  const match=path.match(/^\/oracy\/unit-(\d+)(?:\.html|\/)?$/i);
+  return match?Number(match[1]):0;
+}
+
+function telwLevelForUnit(unitNo){
+  if(unitNo>=1&&unitNo<=7)return 'B1A';
+  if(unitNo>=8&&unitNo<=15)return 'B1B';
+  if(unitNo>=16&&unitNo<=22)return 'B2A';
+  if(unitNo>=23&&unitNo<=30)return 'B2B';
+  return '';
 }
 
 async function handleAdminPreview(request){
@@ -60,6 +72,21 @@ async function ensureOracyCard(response){
       if(gridClose>=0) html=html.slice(0,gridClose)+card+html.slice(gridClose);
     }
   }
+  const headers=new Headers(response.headers);
+  headers.set('content-type','text/html; charset=UTF-8');
+  headers.set('cache-control','no-store, max-age=0, must-revalidate');
+  headers.set('pragma','no-cache');
+  headers.set('expires','0');
+  return new Response(html,{status:response.status,statusText:response.statusText,headers});
+}
+
+async function applyTelwLevelBranding(response,unitNo){
+  const level=telwLevelForUnit(unitNo);
+  if(!level)return response;
+  let html=await response.text();
+  html=html.replace(/<small>by TELW · [^<]*<\/small>/i,`<small>by TELW · LEVEL ${level}</small>`);
+  html=html.replace(/<div class="eyebrow">[^<]*Unit\s*${unitNo}[^<]*<\/div>/i,`<div class="eyebrow">LEVEL ${level} · UNIT ${unitNo}</div>`);
+  if(!html.includes('src="./level-system.js"')) html=html.replace('</body>','<script src="./level-system.js"></script>\n</body>');
   const headers=new Headers(response.headers);
   headers.set('content-type','text/html; charset=UTF-8');
   headers.set('cache-control','no-store, max-age=0, must-revalidate');
