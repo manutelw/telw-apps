@@ -13,19 +13,28 @@ document.querySelectorAll('.check').forEach(btn=>btn.addEventListener('click',()
   out.className='answer '+(ok?'ok':'bad');
 }));
 
+async function responseError(res,label){
+  const type=res.headers.get('content-type')||'';
+  let detail='';
+  try{
+    if(type.includes('application/json')){
+      const data=await res.json();detail=data?.error||'';if(data?.detail)detail+=(detail?': ':'')+data.detail;
+    }else{
+      detail=(await res.text()).replace(/\s+/g,' ').trim().slice(0,240);
+    }
+  }catch{}
+  return `${label} failed (HTTP ${res.status})${detail?': '+detail:''}`;
+}
+
 async function playPassage(id,button){
   const note=button.parentElement.querySelector('.audio-note');
   button.disabled=true;button.textContent='Preparing audio…';if(note)note.textContent='';
   try{
     const res=await fetch(EDGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'tts',text:passageText[id],voice:'marin',unit_no:UNIT_NO,passage_id:`b1-u1-${id}-marin-v1`})});
-    if(!res.ok){
-      let message='Audio is temporarily unavailable.';
-      try{const data=await res.json();if(data?.error)message=data.error+(data.detail?': '+data.detail:'');}catch{}
-      throw new Error(message);
-    }
+    if(!res.ok)throw new Error(await responseError(res,'Audio'));
     const blob=await res.blob();player.src=URL.createObjectURL(blob);await player.play();
-    if(note)note.textContent=res.headers.get('x-oracy-audio')==='cache'?'Ready.':'Ready.';
-  }catch(error){if(note)note.textContent=error.message||'Audio is temporarily unavailable.';}
+    if(note)note.textContent='Ready.';
+  }catch(error){if(note)note.textContent=error.message||'Audio request could not be completed.';}
   finally{button.disabled=false;button.textContent='▶ Play passage';}
 }
 document.querySelectorAll('.audio').forEach(btn=>btn.addEventListener('click',()=>playPassage(btn.dataset.id,btn)));
@@ -53,9 +62,9 @@ async function sendForFeedback(box,prompt,btn){
   try{
     const form=new FormData();form.append('action','evaluate');form.append('unit','B1 Unit 1');form.append('unit_no',String(UNIT_NO));form.append('prompt',prompt);form.append('audio',blob,'answer.webm');
     const res=await fetch(EDGE,{method:'POST',body:form});
-    if(!res.ok){let message='Feedback is temporarily unavailable.';try{const data=await res.json();if(data?.error)message=data.error+(data.detail?': '+data.detail:'');}catch{}throw new Error(message);}
+    if(!res.ok)throw new Error(await responseError(res,'Feedback'));
     const data=await res.json();feedback.innerHTML='<b>Coach feedback</b><div>'+safe(data.feedback||'Good attempt.')+'</div>'+(data.improved?'<div><b>Try:</b> '+safe(data.improved)+'</div>':'');status.textContent='Recording discarded after feedback.';
-  }catch(error){status.textContent=(error.message||'Feedback is temporarily unavailable.')+' Your recording has been discarded.';}
+  }catch(error){status.textContent=(error.message||'Feedback request could not be completed.')+' Your recording has been discarded.';}
   finally{chunks=[];recorder=null;activeButton=null;btn.textContent='🎤 Record again';btn.classList.remove('live');}
 }
 
