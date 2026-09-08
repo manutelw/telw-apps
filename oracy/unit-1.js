@@ -1,7 +1,7 @@
-const EDGE='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/oracy-voice';
+const EDGE='/oracy/voice';
+const UNIT_NO=1;
 const player=document.getElementById('player');
 const passageText={kp1:'This fair is amazing. I can hear so many languages. Yes. At least six languages are being spoken here today. Hindi is my native language, but I use English with many visitors. Same here. English is an official language in many places, so almost everyone knows a little. The majority of the signs here are in English and Hindi.',kp2:'I use English for reading messages and watching videos. I need English to speak to my daughter’s teachers. I am also learning it to travel more easily. I practise for twenty minutes every day so that I can speak with less fear.',kp3:'I work from home, but I visit my sister every weekend. We watch videos together. I want better English because I would like to travel and speak to people from different parts of the world.'};
-const clientHeaders=()=>({'x-oracy-client':'oracy-web-v1'});
 
 document.querySelectorAll('.check').forEach(btn=>btn.addEventListener('click',()=>{
   const box=btn.closest('.activity');
@@ -17,13 +17,14 @@ async function playPassage(id,button){
   const note=button.parentElement.querySelector('.audio-note');
   button.disabled=true;button.textContent='Preparing audio…';if(note)note.textContent='';
   try{
-    const res=await fetch(EDGE,{method:'POST',headers:{...clientHeaders(),'Content-Type':'application/json'},body:JSON.stringify({action:'tts',text:passageText[id],voice:'marin'})});
+    const res=await fetch(EDGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'tts',text:passageText[id],voice:'marin',unit_no:UNIT_NO,passage_id:`b1-u1-${id}-marin-v1`})});
     if(!res.ok){
       let message='Audio is temporarily unavailable.';
-      try{const data=await res.json();if(data&&data.error==='Voice service not configured')message='Audio setup is still being completed.';}catch{}
+      try{const data=await res.json();if(data?.error)message=data.error+(data.detail?': '+data.detail:'');}catch{}
       throw new Error(message);
     }
     const blob=await res.blob();player.src=URL.createObjectURL(blob);await player.play();
+    if(note)note.textContent=res.headers.get('x-oracy-audio')==='cache'?'Ready.':'Ready.';
   }catch(error){if(note)note.textContent=error.message||'Audio is temporarily unavailable.';}
   finally{button.disabled=false;button.textContent='▶ Play passage';}
 }
@@ -50,10 +51,11 @@ async function sendForFeedback(box,prompt,btn){
   mediaStream?.getTracks().forEach(t=>t.stop());
   const blob=new Blob(chunks,{type:recorder.mimeType||'audio/webm'});status.textContent='Getting feedback…';
   try{
-    const form=new FormData();form.append('action','evaluate');form.append('unit','B1 Unit 1');form.append('prompt',prompt);form.append('audio',blob,'answer.webm');
-    const res=await fetch(EDGE,{method:'POST',headers:clientHeaders(),body:form});if(!res.ok)throw new Error('feedback');
+    const form=new FormData();form.append('action','evaluate');form.append('unit','B1 Unit 1');form.append('unit_no',String(UNIT_NO));form.append('prompt',prompt);form.append('audio',blob,'answer.webm');
+    const res=await fetch(EDGE,{method:'POST',body:form});
+    if(!res.ok){let message='Feedback is temporarily unavailable.';try{const data=await res.json();if(data?.error)message=data.error+(data.detail?': '+data.detail:'');}catch{}throw new Error(message);}
     const data=await res.json();feedback.innerHTML='<b>Coach feedback</b><div>'+safe(data.feedback||'Good attempt.')+'</div>'+(data.improved?'<div><b>Try:</b> '+safe(data.improved)+'</div>':'');status.textContent='Recording discarded after feedback.';
-  }catch{status.textContent='Feedback is not connected yet. Your recording has been discarded.';}
+  }catch(error){status.textContent=(error.message||'Feedback is temporarily unavailable.')+' Your recording has been discarded.';}
   finally{chunks=[];recorder=null;activeButton=null;btn.textContent='🎤 Record again';btn.classList.remove('live');}
 }
 
