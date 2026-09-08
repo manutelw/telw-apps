@@ -5,6 +5,8 @@ on:
       - 'oracy/**'
       - 'functions/oracy/**'
       - 'functions/ascent/admin-settings.html.js'
+      - 'worker.js'
+      - 'wrangler.jsonc'
       - '.github/workflows/oracy-integrity.yml'
 permissions:
   contents: read
@@ -13,14 +15,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify ORACY B1 Unit 1 and access controls
+      - name: Verify ORACY B1 Unit 1 and Cloudflare Worker access controls
         run: |
           python - <<'PY'
           from pathlib import Path
+          import json
           h=Path('oracy/unit-1.html').read_text()
           j=Path('oracy/unit-1.js').read_text()
           gate=Path('functions/oracy/_middleware.js').read_text()
           session=Path('functions/oracy/session.js').read_text()
+          worker=Path('worker.js').read_text()
+          cfg=json.loads(Path('wrangler.jsonc').read_text())
           login=Path('oracy/index.html').read_text()
           admin=Path('oracy/admin.html').read_text()
           hub=Path('functions/ascent/admin-settings.html.js').read_text()
@@ -32,10 +37,15 @@ jobs:
               assert x in gate, x
           for x in ['oracy_session','ORACY_ACCESS','ORACY_VOICE','session_token','unit_no']:
               assert x in session, x
+          for x in ['/oracy/session','/oracy/logout','/oracy/admin-handoff','validLearnerUnit','validAdmin','env.ASSETS.fetch','ORACY_VOICE','ORACY_ACCESS','clarion_admin_session']:
+              assert x in worker, x
+          assert cfg['main']=='worker.js'
+          assert cfg['assets']['binding']=='ASSETS'
+          assert cfg['assets']['run_worker_first'] is True
           for x in ['Assigned learner access','./session','A unit link will not open']:
               assert x in login, x
           for x in ['Assign ORACY to learners','admin_set_assignment','admin_save_learner']:
               assert x in admin, x
           assert 'oracyAdminHubCard' in hub
-          print('ORACY Unit 1 access-control and session voice integrity OK')
+          print('ORACY Unit 1 Cloudflare Worker access-control integrity OK')
           PY
