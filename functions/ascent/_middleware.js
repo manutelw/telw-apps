@@ -4,6 +4,9 @@ const ADMIN_VALIDATE=SUPABASE_URL+'/rest/v1/rpc/ascent_admin_trainer_entry_list'
 
 export async function onRequest(context) {
   const url = new URL(context.request.url);
+  if (url.pathname.endsWith('/ascent/professional-communication-trainer-preview.html')) {
+    return new Response(null,{status:302,headers:{location:'https://pcl-professional-communication-lab.pages.dev/','cache-control':'no-store'}});
+  }
   const isTrainerPage = url.pathname.endsWith('/ascent/trainer.html');
   const isAdminSettingsPage = url.pathname.endsWith('/ascent/admin-settings.html');
   const isProtectedAdminPage =
