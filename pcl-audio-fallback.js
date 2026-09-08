@@ -52,11 +52,12 @@
       speechSynthesis.cancel();
       const u=new SpeechSynthesisUtterance(t);
       const voices=speechSynthesis.getVoices()||[];
-      const english=voices.filter(v=>/^en(-|$)/i.test(v.lang||''));
-      const preferred=role==='manager'?['Microsoft Ryan Online (Natural) - English (United Kingdom)','Microsoft Guy Online (Natural) - English (United States)','Google UK English Male']:role==='employee'?['Microsoft Sonia Online (Natural) - English (United Kingdom)','Microsoft Jenny Online (Natural) - English (United States)','Google UK English Female']:['Microsoft Sonia Online (Natural) - English (United Kingdom)','Microsoft Aria Online (Natural) - English (United States)','Google UK English Female'];
-      const v=preferred.map(n=>english.find(x=>x.name===n)).find(Boolean)||english.find(x=>/Natural|Google/i.test(x.name))||english[0];
-      if(v){u.voice=v;u.lang=v.lang||'en-GB';}else u.lang='en-GB';
-      u.rate=role==='coach'?0.88:0.93;u.pitch=1;u.volume=1;u.onend=resolve;u.onerror=()=>reject(new Error('Audio could not play.'));speechSynthesis.speak(u);
+      const localEnglish=voices.filter(v=>v.localService===true&&/^en(-|$)/i.test(v.lang||'')&&!/Online/i.test(v.name||''));
+      const preferred=role==='manager'?['Microsoft George','Microsoft David Desktop','Microsoft Mark Desktop']:role==='employee'?['Microsoft Hazel','Microsoft Zira Desktop','Microsoft Susan']:['Microsoft Hazel','Microsoft Zira Desktop','Microsoft Susan'];
+      const v=preferred.map(n=>localEnglish.find(x=>x.name===n)).find(Boolean)||localEnglish[0]||null;
+      if(v){u.voice=v;u.lang=v.lang||'en-GB';}else{u.lang='en-GB';}
+      u.rate=role==='coach'?0.88:0.93;u.pitch=1;u.volume=1;u.onend=resolve;u.onerror=()=>reject(new Error('Audio could not play.'));
+      speechSynthesis.speak(u);
     });
   }
 
