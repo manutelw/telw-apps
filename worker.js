@@ -32,11 +32,17 @@ export default {
       return noStore(await env.ASSETS.fetch(request));
     }
 
-    const unitMatch=path.match(/^\/oracy\/unit-(\d+)(?:\.(?:html|js))?$/i);
+    // Every Unit page and Unit-specific runtime asset is server-gated.
+    // Learners need a valid ORACY username/password session AND an active assignment
+    // for that exact unit. A validated ASCENT administrator may bypass assignments.
+    const unitMatch=path.match(/^\/oracy\/unit-(\d+)(?:[.-][^/]*)?$/i);
     if(unitMatch){
-      const token=readCookie(request.headers.get('cookie')||'','oracy_session');
+      const cookies=request.headers.get('cookie')||'';
+      const learnerToken=readCookie(cookies,'oracy_session');
+      const adminToken=readCookie(cookies,'clarion_admin_session');
       const unitNo=Number(unitMatch[1]);
-      if(!token || !(await validLearnerUnit(token,unitNo))) return redirect('/oracy/?locked=1');
+      const adminOk=adminToken ? await validAdmin(adminToken) : false;
+      if(!adminOk && (!learnerToken || !(await validLearnerUnit(learnerToken,unitNo)))) return redirect('/oracy/?locked=1');
       return noStore(await env.ASSETS.fetch(request));
     }
 
@@ -54,25 +60,41 @@ async function handleOracySession(request){
   const ct=request.headers.get('content-type')||'';
   try{
     if(ct.includes('multipart/form-data')){
-      const token=readCookie(request.headers.get('cookie')||'','oracy_session');
-      if(!token) return json({error:'Learner session required'},401);
+      const cookies=request.headers.get('cookie')||'';
+      const learnerToken=readCookie(cookies,'oracy_session');
+      const adminToken=readCookie(cookies,'clarion_admin_session');
       const form=await request.formData();
       const unitNo=Number(form.get('unit_no')||1);
-      if(!(await validLearnerUnit(token,unitNo))) return json({error:'Unit access required'},403);
-      form.set('session_token',token);
+      const adminOk=adminToken ? await validAdmin(adminToken) : false;
+      if(!adminOk && (!learnerToken || !(await validLearnerUnit(learnerToken,unitNo)))) return json({error:'Unit access required'},403);
       form.set('unit_no',String(unitNo));
+      if(adminOk){
+        form.set('admin_token',adminToken);
+        form.delete('session_token');
+      }else{
+        form.set('session_token',learnerToken);
+        form.delete('admin_token');
+      }
       const r=await fetch(ORACY_VOICE,{method:'POST',headers:{'x-oracy-client':'oracy-web-v1'},body:form});
       return proxy(r);
     }
 
     const body=await request.json();
     if(body?.action==='tts'){
-      const token=readCookie(request.headers.get('cookie')||'','oracy_session');
-      if(!token) return json({error:'Learner session required'},401);
+      const cookies=request.headers.get('cookie')||'';
+      const learnerToken=readCookie(cookies,'oracy_session');
+      const adminToken=readCookie(cookies,'clarion_admin_session');
       const unitNo=Number(body.unit_no||1);
-      if(!(await validLearnerUnit(token,unitNo))) return json({error:'Unit access required'},403);
-      body.session_token=token;
+      const adminOk=adminToken ? await validAdmin(adminToken) : false;
+      if(!adminOk && (!learnerToken || !(await validLearnerUnit(learnerToken,unitNo)))) return json({error:'Unit access required'},403);
       body.unit_no=unitNo;
+      if(adminOk){
+        body.admin_token=adminToken;
+        delete body.session_token;
+      }else{
+        body.session_token=learnerToken;
+        delete body.admin_token;
+      }
       const r=await fetch(ORACY_VOICE,{method:'POST',headers:{'x-oracy-client':'oracy-web-v1','content-type':'application/json'},body:JSON.stringify(body)});
       return proxy(r);
     }
