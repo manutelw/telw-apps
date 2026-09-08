@@ -202,5 +202,26 @@ opinionRecord.onclick=()=>startRec('opinion');opinionStop.onclick=()=>stopRec('o
 toReview.onclick=()=>{renderReview();setStep(5)};
 function renderReview(){const arr=['mono','dialogue','opinion'].map(k=>results[k]?.feedback).filter(Boolean);if(!arr.length){reviewGrammar.textContent='Complete one or more speaking activities to generate your review.';reviewVoice.textContent='Complete one or more speaking activities to generate your review.';reviewThinking.textContent='Complete one or more speaking activities to generate your review.';reviewPriority.innerHTML='<b>Current Priority:</b> Complete one or more speaking activities first.';return}const avg=key=>Math.round((arr.reduce((s,x)=>s+x[key].score,0)/arr.length)*10)/10;reviewGrammar.innerHTML=`Average: <b>${avg('grammar')}/5</b><br><span class="small">Present Perfect for experience, shift to Simple Past for finished details, and accurate target language.</span>`;reviewVoice.innerHTML=`Average: <b>${avg('voice')}/5</b><br><span class="small">Prominence, thought groups, rhythm, pausing, intonation, pace and pronunciation.</span>`;reviewThinking.innerHTML=`Average: <b>${avg('thinking')}/5</b><br><span class="small">WHAT → WHY → PROOF → SO WHAT → WHAT NEXT.</span>`;const weakest=arr.slice().sort((a,b)=>(a.grammar.score+a.voice.score+a.thinking.score)-(b.grammar.score+b.voice.score+b.thinking.score))[0];reviewPriority.innerHTML=`<b>Current Priority:</b> ${esc(weakest.priority)}`}
 </script>
+
+<script>/* PCL_STATIC_LESSON_AUDIO */
+(()=>{
+  const clips=["./audio/unit-1/1-1-learn-1.mp3", "./audio/unit-1/1-1-learn-2.mp3", "./audio/unit-1/1-1-learn-3.mp3", "./audio/unit-1/1-1-learn-4.mp3"];
+  const model=["./audio/unit-1/1-1-model-manager.mp3", "./audio/unit-1/1-1-model-employee.mp3"];
+  const lessonButtons=[...document.querySelectorAll('[data-speak]')];
+  const cache=new Map();
+  function prepared(src){
+    if(!cache.has(src)){const a=new Audio(src);a.preload='auto';a.load();cache.set(src,a);}
+    return cache.get(src);
+  }
+  [...clips,...model].forEach(prepared);
+  async function play(src){const a=prepared(src);a.pause();a.currentTime=0;await a.play();await new Promise((res,rej)=>{a.onended=res;a.onerror=()=>rej(new Error('Audio could not play.'));});}
+  lessonButtons.forEach((b,i)=>{
+    if(!clips[i])return;
+    b.onclick=async()=>{const old=b.textContent;b.disabled=true;b.textContent='Playing…';try{await play(clips[i]);}catch(e){const s=document.getElementById('learnStatus');if(s){s.textContent=e.message;s.className='status error';}}finally{b.disabled=false;b.textContent=old;}};
+  });
+  const modelButton=document.getElementById('modelAudio');
+  if(modelButton)modelButton.onclick=async()=>{const old=modelButton.textContent;modelButton.disabled=true;modelButton.textContent='Playing…';try{for(const src of model)await play(src);}catch(e){const s=document.getElementById('learnStatus');if(s){s.textContent=e.message;s.className='status error';}}finally{modelButton.disabled=false;modelButton.textContent=old;}};
+})();
+</script>
 </body>
 </html>
