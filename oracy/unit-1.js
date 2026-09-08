@@ -129,3 +129,5 @@ async function sendForFeedback(box,prompt,btn){
 }
 
 function safe(value){return String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// Unit 1 passage-length standard: dialogue ≈15 turns; monologue/presentation ≈100–120 words.
