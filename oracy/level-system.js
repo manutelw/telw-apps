@@ -31,7 +31,8 @@ window.oracyTelwLevelForUnit=function(unitNo){
   window.oracyTeacherVoiceText=function(rubric,rule,passed,used){
     const task=typeof oracyScore==='function'?oracyScore(rubric?.task_achievement):0;
     const taskText=task>=3?'You covered the task well. ':task===2?'You answered the question; now add one small example or detail. ':'Make sure you answer each part of the question. ';
-    const usedText=used?.length&&window.ORACY_MARKER_LABELS?`I liked hearing ${used.map(m=>window.ORACY_MARKER_LABELS[m]).join(' and ')} in your answer. `:'';
+    const labelFor=m=>typeof ORACY_MARKER_LABELS!=='undefined'?(ORACY_MARKER_LABELS[m]||m):m;
+    const usedText=used?.length?`I liked hearing ${used.map(labelFor).join(' and ')} in your answer. `:'';
     const markerText=passed?'Lovely — you used the new speaking language naturally. ':`You’re close. On your next recording, use ${rule?.min===1?'one':'two'} of the suggested speaking expressions naturally. `;
     return `Nice try. You’re working on TELW Level ${level}. ${taskText}${usedText}${markerText}Keep your sentences short, clear and natural. You do not need fancy English. One clear idea, one useful detail, then the next idea. Give it another go — I’d love to hear the stronger version.`;
   };
