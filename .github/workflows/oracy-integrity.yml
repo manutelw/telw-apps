@@ -8,6 +8,8 @@ on:
       - 'worker.js'
       - 'worker-oracy.js'
       - 'wrangler.jsonc'
+      - '.github/oracy-unit1.lock'
+      - '.github/CODEOWNERS'
       - '.github/workflows/oracy-integrity.yml'
 permissions:
   contents: read
@@ -16,6 +18,52 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Verify frozen ORACY B1A Unit 1 baseline
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          lock = Path('.github/oracy-unit1.lock')
+          assert lock.exists(), 'ORACY B1A Unit 1 lock file is missing'
+          protected = {}
+          for raw in lock.read_text().splitlines():
+              line = raw.strip()
+              if not line or line.startswith('#'):
+                  continue
+              expected, path = line.split(None, 1)
+              protected[path.strip()] = expected.strip()
+
+          required = {
+              'oracy/unit-1.html',
+              'oracy/unit-1.js',
+              'oracy/unit-1-coach.js',
+              'oracy/unit-1-oral-qa.js',
+              'oracy/unit-1-feedback-examples.js',
+              'oracy/unit-1-audio-controls.js',
+          }
+          assert set(protected) == required, 'Protected Unit 1 file set changed'
+
+          for path, expected in protected.items():
+              assert Path(path).exists(), f'Protected Unit 1 file missing: {path}'
+              actual = subprocess.check_output(['git','hash-object',path], text=True).strip()
+              assert actual == expected, (
+                  f'BALLISTIC LOCK: {path} changed. ORACY B1A Unit 1 is frozen. '
+                  'Do not alter it unless Manu explicitly requests that Unit 1 be unlocked.'
+              )
+
+          wrapper = Path('worker-oracy.js').read_text()
+          for x in [
+              'unit-1-oral-qa.js',
+              'unit-1-feedback-examples.js',
+              'unit-1-audio-controls.js',
+              'ensureUnit1MarkerGuidance',
+              'applyTelwLevelBranding',
+          ]:
+              assert x in wrapper, f'BALLISTIC LOCK: Unit 1 runtime hook missing: {x}'
+
+          print('ORACY B1A Unit 1 ballistic lock intact')
+          PY
       - name: Verify ORACY B1 Unit 1 and Cloudflare Worker access controls
         run: |
           python - <<'PY'
