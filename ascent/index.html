@@ -252,7 +252,8 @@
       margin-bottom: 8px;
     }
 
-    input {
+    input,
+    #accessSearch {
       width: 100%;
       min-height: 50px;
       border: 1px solid var(--border);
@@ -267,10 +268,31 @@
         box-shadow 0.2s ease;
     }
 
-    input:focus {
+    #accessSearch {
+      appearance: none;
+      padding-right: 42px;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--navy) 50%),
+        linear-gradient(135deg, var(--navy) 50%, transparent 50%);
+      background-position:
+        calc(100% - 20px) 21px,
+        calc(100% - 14px) 21px;
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+    }
+
+    input:focus,
+    #accessSearch:focus {
       border-color: #4d83b5;
       box-shadow: 0 0 0 4px rgba(77, 131, 181, 0.13);
-      background: var(--white);
+      background-color: var(--white);
+    }
+
+    .access-guidance {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
     }
 
     .password-wrap {
@@ -922,14 +944,14 @@ body.commercial-entry #panelTitle {
       </div>
 
 <h2 id="panelTitle">
-  Find your ASCENT access
+  Access Point
 </h2>
 
 <p
   id="panelIntro"
   class="login-intro"
 >
-  Enter your institution name. If you are registering independently, enter TELW-PRIVATE.
+  Choose the access point that applies to you.
 </p>
 
 <form
@@ -938,17 +960,23 @@ body.commercial-entry #panelTitle {
 >
   <div class="form-group">
     <label for="accessSearch">
-      Institution name
+      Access Point
     </label>
 
-    <input
+    <select
       id="accessSearch"
       name="accessSearch"
-      type="text"
-      autocomplete="organization"
-      placeholder="Enter your institution name or TELW-PRIVATE"
+      aria-describedby="accessGuidance"
       required
     >
+      <option value="">NAME OF YOUR INSTITUTION</option>
+      <option value="FIIB">FIIB</option>
+      <option value="TELW-PRIVATE">PRIVATE LEARNER</option>
+    </select>
+
+    <p id="accessGuidance" class="access-guidance">
+      Use Private Learner if your institution has not been registered with us.
+    </p>
   </div>
 
   <button
@@ -1994,7 +2022,7 @@ async function applyInstitutionBranding(accessPoint) {
     const title = String(
       portal.portalName ||
       accessPoint.display_name ||
-      "Institutional Access"
+      "Access Point"
     );
 
     institutionPortalTitle.textContent = title;
@@ -2025,7 +2053,7 @@ function hydrateInstitutionFromCache() {
 
   const cached = boot.cached;
   const title = String(
-    cached.portalName || cached.shortName || "Institutional Access"
+    cached.portalName || cached.shortName || "Access Point"
   ).trim();
   const shortName = String(cached.shortName || boot.slug.toUpperCase()).trim();
   const logoUrl = String(cached.logoUrl || "").trim();
@@ -2080,7 +2108,7 @@ accessForm.addEventListener(
 
     if (!searchValue) {
       showAccessStatus(
-        "Please enter your institution, learning group, or access code.",
+        "Please select an access point.",
         "error"
       );
 
