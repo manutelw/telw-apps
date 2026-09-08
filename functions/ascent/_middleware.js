@@ -101,7 +101,6 @@ export async function onRequest(context) {
     const form=document.createElement('form');form.method='POST';form.action=action;form.style.display='none';
     const input=document.createElement('input');input.type='hidden';input.name='ascent_session_token';input.value=token;form.appendChild(input);document.body.appendChild(form);form.submit();
   }
-  document.querySelectorAll('a[href="./professional-communication-trainer-preview.html"],a[href="./pcl.html"]').forEach(a=>{a.removeAttribute('target');a.removeAttribute('rel');a.href='#';a.addEventListener('click',e=>{e.preventDefault();launch('./pcl-admin-handoff');});});
   const live=document.getElementById('liveMockAppButton');
   if(live)live.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();launch('../live-mock/admin-handoff');},true);
 })();
