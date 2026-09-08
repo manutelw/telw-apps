@@ -78,6 +78,7 @@ jobs:
           cfg=json.loads(Path('wrangler.jsonc').read_text())
           login=Path('oracy/index.html').read_text()
           admin=Path('oracy/admin.html').read_text()
+          register=Path('oracy/register.html').read_text()
           hub=Path('functions/ascent/admin-settings.html.js').read_text()
           for x in ['Key Point 1 · Vocabulary','Key Point 2 · Grammar','Key Point 3 · Pronunciation','Speaking 1','Speaking 5','/w/ and /v/']:
               assert x in h, x
@@ -95,10 +96,12 @@ jobs:
           assert cfg['main']=='worker-oracy.js'
           assert cfg['assets']['binding']=='ASSETS'
           assert cfg['assets']['run_worker_first'] is True
-          for x in ['Assigned learner access','./session','A unit link will not open']:
+          for x in ['Assigned learner access','./session','Register & pay for access']:
               assert x in login, x
-          for x in ['Assign ORACY to learners','admin_set_assignment','admin_save_learner']:
+          for x in ['Assign ORACY to learners','admin_set_assignment','admin_save_learner','Paid learner access','Send payment links']:
               assert x in admin, x
+          for x in ['checkout.razorpay.com','CREATE_ORDER','VERIFY','30-day learner access']:
+              assert x in register, x
           assert 'oracyAdminHubCard' in hub
           print('ORACY Unit 1 Cloudflare Worker access-control integrity OK')
           PY
