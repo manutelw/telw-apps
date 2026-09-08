@@ -48,8 +48,53 @@ const learningNotes={
   q15:'Work and visit are a useful contrast: /w/ versus /v/. Try other pairs such as west–vest and wine–vine.'
 };
 
+const discourseExercises=[
+  {
+    id:'dm1',
+    title:'Conversation exercise 1 · Strong agreement',
+    question:'What do “You bet!” and “Exactly!” do in a conversation?',
+    choices:[['a','They show strong agreement.'],['b','They show doubt.'],['c','They politely end the conversation.']],
+    answer:'a',
+    markers:['you bet','exactly'],
+    labels:['You bet','Exactly'],
+    note:'“You bet!” is informal and enthusiastic: it means “definitely” or “yes, certainly”. “Exactly!” says that the other person is completely right.'
+  },
+  {
+    id:'dm2',
+    title:'Conversation exercise 2 · Reacting naturally',
+    question:'What do “Oh yeah!” and “Really?” usually show here?',
+    choices:[['a','They give formal instructions.'],['b','They show interest, recognition or surprise.'],['c','They mean the speaker is angry.']],
+    answer:'b',
+    markers:['oh yeah','really'],
+    labels:['Oh yeah','Really'],
+    note:'“Oh yeah!” is informal and can show agreement, recognition or enthusiasm. “Really?” shows interest or surprise and often invites the other person to say more.'
+  },
+  {
+    id:'dm3',
+    title:'Conversation exercise 3 · Bringing in a thought',
+    question:'What is the difference between “You know what?” and “By the way”?',
+    choices:[['a','“You know what?” introduces a thought; “By the way” adds a side point or changes topic gently.'],['b','Both mean “I disagree”.'],['c','Both are used only to say goodbye.']],
+    answer:'a',
+    markers:['you know what','by the way'],
+    labels:['You know what','By the way'],
+    note:'“You know what?” gets the listener ready for a thought, idea or bit of news. “By the way” introduces something related but not central to the current topic.'
+  },
+  {
+    id:'dm4',
+    title:'Conversation exercise 4 · Linking and moving on',
+    question:'What do “Same here” and “Anyway” do?',
+    choices:[['a','“Same here” means the same is true for me; “Anyway” returns to the main point or moves the talk on.'],['b','Both mean “I do not understand”.'],['c','Both introduce a new person.']],
+    answer:'a',
+    markers:['same here','anyway'],
+    labels:['Same here','Anyway'],
+    note:'“Same here” is an informal way to say “the same is true for me”. “Anyway” helps you return to the main point, close a side topic or move the conversation forward.'
+  }
+];
+
 const audioCache=new Map();
 let playToken=0;
+let audioContext=null;
+let activeSources=[];
 
 function refreshVisiblePassages(){
   document.querySelectorAll('.audio').forEach(button=>{
@@ -64,6 +109,15 @@ function refreshVisiblePassages(){
   });
 }
 refreshVisiblePassages();
+
+function insertDiscourseExercises(){
+  const q5=document.querySelector('.check[data-question="q5"]')?.closest('.activity');
+  if(!q5)return;
+  const html=`<div class="activity"><div class="eyebrow">Conversation toolbox</div><h3>Small words. Big difference.</h3><p>These expressions help English sound natural. First choose the meaning. Then use <b>both</b> expressions in new sentences of your own.</p></div>`+
+    discourseExercises.map(ex=>`<div class="activity discourse" data-discourse="${ex.id}"><h3>${safe(ex.title)}</h3><p>${safe(ex.question)}</p>${ex.choices.map(c=>`<label><input type="radio" name="${ex.id}" value="${c[0]}"> ${safe(c[1])}</label>`).join('')}<p><b>Now use each expression once in a different sentence.</b></p><label>${safe(ex.labels[0])}: <input type="text" data-marker-use="0" placeholder="Write your own sentence"></label><label>${safe(ex.labels[1])}: <input type="text" data-marker-use="1" placeholder="Write your own sentence"></label><button class="marker-check" data-id="${ex.id}">Check meaning & use</button><div class="answer"></div></div>`).join('');
+  q5.insertAdjacentHTML('afterend',html);
+}
+insertDiscourseExercises();
 
 document.querySelectorAll('.check').forEach(btn=>btn.addEventListener('click',()=>{
   const box=btn.closest('.activity');
@@ -81,6 +135,33 @@ document.querySelectorAll('.check').forEach(btn=>btn.addEventListener('click',()
   }
 }));
 
+function normaliseWords(value){return String(value||'').toLowerCase().replace(/[’']/g,"'").replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/g,' ').trim();}
+function sentenceUsesMarker(sentence,marker){
+  const s=normaliseWords(sentence);
+  const m=normaliseWords(marker);
+  return s.includes(m)&&s.split(' ').length>=4;
+}
+
+document.querySelectorAll('.marker-check').forEach(btn=>btn.addEventListener('click',()=>{
+  const ex=discourseExercises.find(x=>x.id===btn.dataset.id);
+  const box=btn.closest('.discourse');
+  const out=box.querySelector('.answer');
+  const selected=box.querySelector(`input[name="${ex.id}"]:checked`);
+  if(!selected){out.textContent='Choose the meaning first.';out.className='answer bad';return;}
+  if(selected.value!==ex.answer){out.textContent='Not quite. Try the meaning again.';out.className='answer bad';return;}
+  const uses=[...box.querySelectorAll('[data-marker-use]')].map((input,i)=>sentenceUsesMarker(input.value,ex.markers[i]));
+  if(!uses[0]||!uses[1]){
+    const missing=[];
+    if(!uses[0])missing.push(ex.labels[0]);
+    if(!uses[1])missing.push(ex.labels[1]);
+    out.innerHTML=`<b>The meaning is right.</b><div style="margin-top:6px">Now write a new sentence using ${safe(missing.join(' and '))}. Make it a complete sentence, not just the expression.</div><div style="margin-top:6px"><b>Meaning:</b> ${safe(ex.note)}</div>`;
+    out.className='answer bad';
+    return;
+  }
+  out.innerHTML=`<b>Good.</b> You understood the expressions and used both yourself.<div style="margin-top:6px"><b>Meaning:</b> ${safe(ex.note)}</div>`;
+  out.className='answer ok';
+}));
+
 async function responseError(res,label){
   const type=res.headers.get('content-type')||'';let detail='';
   try{if(type.includes('application/json')){const data=await res.json();detail=data?.error||data?.message||'';if(data?.detail)detail+=(detail?': ':'')+data.detail;}else{detail=(await res.text()).replace(/\s+/g,' ').trim().slice(0,240);}}catch{}
@@ -91,13 +172,61 @@ function segmentKey(id,index,segment){return `b1-u1-${id}-${index}-${segment.voi
 
 async function getSegmentAudio(id,index,segment){
   const key=segmentKey(id,index,segment);
-  if(audioCache.has(key)) return audioCache.get(key);
+  if(audioCache.has(key))return audioCache.get(key);
   const res=await fetch(EDGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'tts',text:segment.text,voice:segment.voice,instructions:PASSAGE_STYLE,unit_no:UNIT_NO,passage_id:key})});
-  if(!res.ok) throw new Error(await responseError(res,'Audio'));
+  if(!res.ok)throw new Error(await responseError(res,'Audio'));
   const blob=await res.blob();
-  const url=URL.createObjectURL(blob);
-  audioCache.set(key,url);
-  return url;
+  const item={blob,url:URL.createObjectURL(blob)};
+  audioCache.set(key,item);
+  return item;
+}
+
+function stopScheduledAudio(){
+  activeSources.forEach(source=>{try{source.stop();}catch{}});
+  activeSources=[];
+  player.pause();
+}
+
+function trimBounds(buffer){
+  const threshold=.004;
+  const channels=Array.from({length:buffer.numberOfChannels},(_,i)=>buffer.getChannelData(i));
+  const total=buffer.length;
+  let start=0,end=total-1;
+  const loudAt=i=>channels.some(ch=>Math.abs(ch[i])>threshold);
+  while(start<total&&!loudAt(start))start++;
+  while(end>start&&!loudAt(end))end--;
+  const pad=Math.floor(buffer.sampleRate*.025);
+  start=Math.max(0,start-pad);
+  end=Math.min(total-1,end+pad);
+  return {offset:start/buffer.sampleRate,duration:Math.max(.05,(end-start+1)/buffer.sampleRate)};
+}
+
+async function playDialogueGapless(items,token){
+  const Ctx=window.AudioContext||window.webkitAudioContext;
+  if(!Ctx)throw new Error('Continuous dialogue audio is not supported in this browser.');
+  if(!audioContext)audioContext=new Ctx();
+  await audioContext.resume();
+  stopScheduledAudio();
+  const buffers=await Promise.all(items.map(async item=>audioContext.decodeAudioData(await item.blob.arrayBuffer())));
+  if(token!==playToken)return;
+  const sources=[];
+  let when=audioContext.currentTime+.06;
+  await new Promise(resolve=>{
+    buffers.forEach((buffer,index)=>{
+      const {offset,duration}=trimBounds(buffer);
+      const source=audioContext.createBufferSource();
+      source.buffer=buffer;
+      source.connect(audioContext.destination);
+      sources.push(source);
+      source.start(when,offset,duration);
+      when+=duration+.08;
+      if(index===buffers.length-1)source.onended=resolve;
+    });
+    activeSources=sources;
+    if(!buffers.length)resolve();
+    setTimeout(()=>{if(token!==playToken)resolve();},100);
+  });
+  if(token===playToken)activeSources=[];
 }
 
 async function playUrl(url,token){
@@ -116,11 +245,16 @@ async function playPassage(id,button){
   const note=button.parentElement.querySelector('.audio-note');
   const segments=passages[id]||[];
   const token=++playToken;
+  stopScheduledAudio();
   button.disabled=true;button.textContent='Preparing audio…';if(note)note.textContent='';
   try{
-    const urls=await Promise.all(segments.map((segment,index)=>getSegmentAudio(id,index,segment)));
+    const items=await Promise.all(segments.map((segment,index)=>getSegmentAudio(id,index,segment)));
     button.textContent='Playing…';
-    for(const url of urls){if(token!==playToken)break;await playUrl(url,token);}
+    if(id==='kp1'){
+      await playDialogueGapless(items,token);
+    }else{
+      for(const item of items){if(token!==playToken)break;await playUrl(item.url,token);}
+    }
     if(note&&token===playToken)note.textContent='Ready.';
   }catch(error){if(note)note.textContent=error.message||'Audio request could not be completed.';}
   finally{if(token===playToken){button.disabled=false;button.textContent='▶ Play passage';}}
