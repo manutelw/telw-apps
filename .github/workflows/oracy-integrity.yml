@@ -4,6 +4,7 @@ on:
     paths:
       - 'oracy/**'
       - 'functions/oracy/**'
+      - 'supabase/functions/oracy-voice/**'
       - 'functions/ascent/admin-settings.html.js'
       - 'worker.js'
       - 'worker-oracy.js'
@@ -128,3 +129,5 @@ jobs:
           PY
       - name: Verify approved ORACY B1A Unit 2
         run: python .github/scripts/oracy_unit2_review_check.py
+      - name: Verify ORACY B1A Unit 3 review candidate
+        run: python .github/scripts/oracy_unit3_review_check.py
