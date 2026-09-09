@@ -80,7 +80,7 @@ async function handleOracySession(request){
     }
 
     const body=await request.json();
-    if(body?.action==='tts'){
+    if(['tts','realtime-token','conversation-feedback'].includes(body?.action)){
       const cookies=request.headers.get('cookie')||'';
       const learnerToken=readCookie(cookies,'oracy_session');
       const adminToken=readCookie(cookies,'clarion_admin_session');

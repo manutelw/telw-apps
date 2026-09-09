@@ -4,6 +4,7 @@ import re
 h = Path('oracy/unit-2.html').read_text()
 c = Path('oracy/unit-2-content.js').read_text()
 e = Path('oracy/unit-shared.js').read_text()
+r = Path('oracy/conversation-shared.js').read_text()
 i = Path('oracy/index.html').read_text()
 w = Path('worker.js').read_text()
 
@@ -21,3 +22,8 @@ for x in ['Task achievement', 'Range', 'Accuracy', 'Fluency', 'Coherence', 'Phon
 assert 'href="./unit-${n}.html"' in i, 'Existing index route generator missing'
 assert r'^\/oracy\/unit-(\d+)' in w, 'Server-side unit gate missing'
 print('ORACY Unit 2 review checks OK')
+
+assert './conversation-shared.js' in h, 'Unit 2 must use the shared live-conversation engine'
+for x in ['RTCPeerConnection', '/v1/realtime/calls', 'input_audio_buffer.speech_started', 'conversation-feedback']:
+    assert x in r, f'Shared Realtime conversation engine missing {x}'
+assert './unit-2-conversation.js' not in h, 'Unit 2 must not use the retired serial conversation runtime'
