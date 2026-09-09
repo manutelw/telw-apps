@@ -60,7 +60,6 @@ export async function onRequest(context) {
     <a data-admin-only="1" data-admin-href="#service-cat">CAT Simulator · Admin only</a>
     <a data-admin-only="1" data-admin-href="#service-dialogue">Dialogue Lab · Admin only</a>
     <a href="#service-pi-practice">PI Practice</a>
-    <a href="#service-pi-lab">PI Lab</a>
     <a href="#service-gd-practice">GD Practice</a>
     <a href="#service-gd-lab">GD Lab</a>
     <a href="#service-pcl">PCL</a>
@@ -101,9 +100,8 @@ export async function onRequest(context) {
     html = html.replace('<article class="service-card" id="service-cat"', liveMockCard + '<article class="service-card" id="service-cat"');
   }
 
-  // GD/PI lab cards explain access first.
+  // GD lab cards explain access first.
   html = html.replace(/href="\.\/gd-lab\/"/g, 'href="#service-gd-lab"');
-  html = html.replace(/href="\.\/pi-lab\/"/g, 'href="#service-pi-lab"');
 
   if (!html.includes('id="service-pi-practice"')) {
     const accessSection = `
@@ -129,13 +127,6 @@ export async function onRequest(context) {
         <p style="margin-top:10px"><strong>Who can use it:</strong> Learners who have been granted GD Practice access. Institutional learners should sign in to ASCENT and use the practice-access application facility.</p>
         <a class="go" href="./ascent/dashboard.html#practiceAccessPanel">Apply for GD Practice access →</a>
         <p style="margin-top:44px"><strong>Private candidates:</strong> Request access at <a href="mailto:manutelw@gmail.com">manutelw@gmail.com</a>.</p>
-      </article>
-      <article class="service-card" id="service-pi-lab">
-        <span class="service-icon">PI+</span><h3>PI Lab</h3>
-        <p><strong>What it is:</strong> A trainer-created, JD-specific interview assignment built around a company, role and targeted PI questions.</p>
-        <p style="margin-top:10px"><strong>Benefits:</strong> Focus preparation on the interview that is actually coming up instead of practising generic questions only.</p>
-        <p style="margin-top:10px"><strong>Who can use it:</strong> Learners selected for a PI Lab assignment. Institutional learners can access it only when a trainer assigns/releases it to them.</p>
-        <p style="margin-top:10px"><strong>Private candidates:</strong> Request access at <a href="mailto:manutelw@gmail.com">manutelw@gmail.com</a>.</p>
       </article>
       <article class="service-card" id="service-pi-practice">
         <span class="service-icon">PI</span><h3>PI Practice</h3>

@@ -29,7 +29,6 @@ export async function onRequest(context) {
     <a class="student-tool" href="./practice.html">GD Practice</a>
     <a class="student-tool" href="./jd-interview-mapper.html">JD Interview</a>
     <a class="student-tool" href="./gd-dugout-assignments.html">GD Lab</a>
-    <a class="student-tool" href="./pi-lab-access.html">PI Lab</a>
   </div>
 </section>`;
 

@@ -230,8 +230,6 @@
     nav.appendChild(link);
   }
 
-  function addPiTrainerLink(){appendTrainerLink("piLabTrainerLink","PI Question Bank","../pi-lab/?trainer=1",true);}
-  function addPiAssignmentBuilderLink(){appendTrainerLink("piAssignmentBuilderTrainerLink","PI for DUGOUTS","../pi-lab/admin-builder.html",false);}
   function addGdTrainerLink(){appendTrainerLink("gdLabTrainerLink","GD Question Bank","../gd-lab/?trainer=1",true);}
   function addGdAssignmentBuilderLink(){appendTrainerLink("gdAssignmentBuilderTrainerLink","GD for DUGOUTS","../gd-lab/admin-builder.html",false);}
   function addLearnerAccessLink(){appendTrainerLink("learnerAccessTrainerLink","GD & PI Learner Access","./learner-access.html",false);}
@@ -240,8 +238,6 @@
   window.renderResultsTable=renderStudentSummaryResults;
 
   document.addEventListener("DOMContentLoaded",function(){
-    addPiTrainerLink();
-    addPiAssignmentBuilderLink();
     addGdTrainerLink();
     addGdAssignmentBuilderLink();
     addLearnerAccessLink();
