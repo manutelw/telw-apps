@@ -1,0 +1,8 @@
+# ORACY B1A UNIT 2 — FROZEN APPROVED BASELINE
+# Approved by Manu Vikraman on 2026-09-09 after the shared Realtime engine was merged.
+# DO NOT MODIFY these content files while building later ORACY units.
+# Shared architecture files remain reusable and are protected by regression tests.
+# Format: <git-blob-sha>  <path>
+
+0182790e01308cad47ae4722d7c933c2067aa51a  oracy/unit-2.html
+356a1d351fc31b03dece41a2b3f6e2cca79f81dc  oracy/unit-2-content.js
