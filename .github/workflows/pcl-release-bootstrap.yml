@@ -59,8 +59,8 @@ jobs:
           test "$(find . -maxdepth 1 -type f -name 'module-*-*.html' | wc -l)" -eq 42
           test "$(find audio -type f -name '*.mp3' | wc -l)" -eq 252
           test "$(find pcl/frozen -type f -name 'unit-*.sha256' | wc -l)" -eq 13
-          test "$(rg -o 'href="./module-[0-9]+-[0-9]+.html"' index.html | wc -l)" -eq 42
-          if rg -n -i 'serviceWorker|speechSynthesis|heygen|localStorage|indexedDB|/ascent/|download[[:space:]]*=' module-{2..14}-*.html; then exit 1; fi
+          test "$(grep -oE 'href="./module-[0-9]+-[0-9]+.html"' index.html | wc -l)" -eq 42
+          if grep -Eni 'serviceWorker|speechSynthesis|heygen|localStorage|indexedDB|/ascent/|download[[:space:]]*=' module-{2..14}-*.html; then exit 1; fi
       - name: Commit sealed units and publish
         shell: bash
         run: |
