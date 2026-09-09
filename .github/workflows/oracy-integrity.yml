@@ -11,6 +11,9 @@ on:
       - 'wrangler.jsonc'
       - '.github/oracy-unit1.lock'
       - '.github/oracy-unit2.lock'
+      - '.github/oracy-unit*.lock'
+      - '.github/oracy-level-*.lock'
+      - '.github/oracy-b1a-b2b-package.lock'
       - '.github/CODEOWNERS'
       - '.github/workflows/oracy-integrity.yml'
 permissions:
@@ -131,3 +134,5 @@ jobs:
         run: python .github/scripts/oracy_unit2_review_check.py
       - name: Verify ORACY B1A Unit 3 review candidate
         run: python .github/scripts/oracy_unit3_review_check.py
+      - name: Verify frozen ORACY Units 1-30 and level/package locks
+        run: python .github/scripts/oracy_course_integrity_check.py
