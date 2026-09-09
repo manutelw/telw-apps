@@ -15,6 +15,7 @@ on:
       - 'workers/profile-review.js'
       - 'cat/**'
       - 'pi-lab/**'
+      - 'netlify/edge-functions/**'
       - 'portal/ceo/**'
       - '.github/scripts/ascent_integrity_check.py'
       - '.github/scripts/ascent_trainer_integrity_check.py'
@@ -33,6 +34,7 @@ on:
       - 'workers/profile-review.js'
       - 'cat/**'
       - 'pi-lab/**'
+      - 'netlify/edge-functions/**'
       - 'portal/ceo/**'
       - '.github/scripts/ascent_integrity_check.py'
       - '.github/scripts/ascent_trainer_integrity_check.py'
@@ -58,3 +60,4 @@ jobs:
           node --check ascent/trainer-results-summary.js
           node --check workplace-communication-test/app.js
           if [ -f functions/ascent/submit-response.js ]; then node --check functions/ascent/submit-response.js; fi
+          if [ -f netlify/edge-functions/pi-lab-lock.js ]; then node --check netlify/edge-functions/pi-lab-lock.js; fi
