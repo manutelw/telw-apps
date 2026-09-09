@@ -73,13 +73,21 @@ async function authorised(sessionToken:string,adminToken:string,unitNo:number){
 async function generateTts(req: Request, text: string, voice: string, instructions: string) {
   const body:any={ model: "gpt-4o-mini-tts", voice, input: text, response_format: "mp3" };
   if(instructions) body.instructions=instructions;
-  const r = await fetch("https://api.openai.com/v1/audio/speech", {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-  if (!r.ok) { let detail = ""; try { detail = (await r.text()).slice(0, 500); } catch {} return { ok: false as const, response: json(req, { error: "TTS failed", detail }, 502) }; }
-  return { ok: true as const, bytes: new Uint8Array(await r.arrayBuffer()) };
+  let detail="";
+  for(let attempt=0;attempt<3;attempt++){
+    const r = await fetch("https://api.openai.com/v1/audio/speech", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if(r.ok)return { ok: true as const, bytes: new Uint8Array(await r.arrayBuffer()) };
+    try { detail = (await r.text()).slice(0, 500); } catch {}
+    if(attempt===2||!(r.status===429||r.status>=500))break;
+    const retrySeconds=Math.min(2,Math.max(.25,Number(r.headers.get("retry-after")||0)));
+    await new Promise(resolve=>setTimeout(resolve,retrySeconds*1000*(attempt+1)));
+  }
+  console.error("ORACY_TTS_FAILED",detail);
+  return { ok: false as const, response: json(req, { error: "TTS failed", detail }, 502) };
 }
 
 async function tts(req: Request, payload: any) {
