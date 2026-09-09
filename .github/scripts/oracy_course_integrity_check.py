@@ -34,5 +34,8 @@ check_lock(ROOT/'.github/oracy-b1a-b2b-package.lock')
 
 worker=(ROOT/'worker.js').read_text(); shared=(ROOT/'oracy/unit-shared.js').read_text(); conv=(ROOT/'oracy/conversation-shared.js').read_text(); voice=(ROOT/'supabase/functions/oracy-voice/index.ts').read_text()
 assert r'unit-(\d+)' in worker and 'validLearnerUnit' in worker and "'/oracy/?locked=1'" in worker
-assert 'setTimeout(()=>preload()' in shared and 'RTCPeerConnection' in conv and 'silence_duration_ms:350' in voice
+assert 'setTimeout(()=>preload()' in shared and 'for(const load of fast)' in shared
+assert 'Promise.all(segs.map' not in shared and 'let next=getAudio(segs[0][2]' in shared
+assert 'RTCPeerConnection' in conv and 'silence_duration_ms:350' in voice
+assert 'for(let attempt=0;attempt<3;attempt++)' in voice and 'r.status===429||r.status>=500' in voice
 print('ORACY Units 1-30, four level freezes and final package lock OK')
