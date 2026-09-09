@@ -47,7 +47,11 @@ jobs:
         run: |
           set -euo pipefail
           node pcl/build-modules.mjs
-          node pcl/generate-audio.mjs
+          for attempt in 1 2 3 4; do
+            node pcl/generate-audio.mjs && break
+            test "$attempt" -lt 4 || exit 1
+            sleep 10
+          done
           node pcl/update-index.mjs
           for unit in {2..14}; do
             node pcl/test-unit.mjs "$unit"
