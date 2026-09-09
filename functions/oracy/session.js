@@ -17,7 +17,7 @@ export async function onRequestPost(context){
     }
 
     const body=await context.request.json();
-    if(body?.action==='tts'){
+    if(['tts','realtime-token','conversation-feedback'].includes(body?.action)){
       const token=readCookie(context.request.headers.get('cookie')||'','oracy_session');
       if(!token)return json({error:'Learner session required'},401);
       const unitNo=Number(body.unit_no||1);
