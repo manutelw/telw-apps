@@ -105,3 +105,5 @@ jobs:
           assert 'oracyAdminHubCard' in hub
           print('ORACY Unit 1 Cloudflare Worker access-control integrity OK')
           PY
+      - name: Verify ORACY B1A Unit 2 review candidate
+        run: python .github/scripts/oracy_unit2_review_check.py
