@@ -26,6 +26,7 @@ window.ORACY_UNIT={
     q10:{question:'Which two polite requests does the speaker use in the passage?',expected:'The speaker asks, “Do you mind if I use this chair?” and “Could you turn the sound down, please?”',key:'A strong answer includes both requests: permission to use the chair and a request to turn the sound down.'}
   },
   pron:{q11:'think',q12:'this',q13:'thank. that.',q14:'Thank you for that.',q15:'Thank you for that thoughtful gift.'},
+  conversation:{maxLearnerTurns:4,silenceMs:720,minSpeechMs:220},
   speaking:{
     s1:{type:'controlled',min:0,markers:[],prompt:'Repeat “Could you lend me your umbrella, please?” Then make a new polite request by changing the object.',model:'Could you lend me your umbrella, please? Could you lend me your charger, please?',own:'Now choose another object and make the same polite request.'},
     s2:{type:'monologue',min:0,markers:[],prompt:'Say what you sometimes borrow, why you need it, and when you return it. Use borrow and return.',model:'I sometimes borrow a ladder from my neighbour because I cannot reach a high shelf. I return it the same day.',own:'Now name something you really borrow and give one clear reason.'},
