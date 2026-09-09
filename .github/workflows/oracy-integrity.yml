@@ -9,6 +9,7 @@ on:
       - 'worker-oracy.js'
       - 'wrangler.jsonc'
       - '.github/oracy-unit1.lock'
+      - '.github/oracy-unit2.lock'
       - '.github/CODEOWNERS'
       - '.github/workflows/oracy-integrity.yml'
 permissions:
@@ -64,6 +65,26 @@ jobs:
 
           print('ORACY B1A Unit 1 ballistic lock intact')
           PY
+      - name: Verify frozen ORACY B1A Unit 2 baseline
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          protected = {}
+          for raw in Path('.github/oracy-unit2.lock').read_text().splitlines():
+              line = raw.strip()
+              if not line or line.startswith('#'):
+                  continue
+              expected, path = line.split(None, 1)
+              protected[path.strip()] = expected.strip()
+
+          assert set(protected) == {'oracy/unit-2.html', 'oracy/unit-2-content.js'}
+          for path, expected in protected.items():
+              actual = subprocess.check_output(['git','hash-object',path], text=True).strip()
+              assert actual == expected, f'APPROVED UNIT 2 LOCK: {path} changed'
+          print('ORACY B1A Unit 2 approved content lock intact')
+          PY
       - name: Verify ORACY B1 Unit 1 and Cloudflare Worker access controls
         run: |
           python - <<'PY'
@@ -105,5 +126,5 @@ jobs:
           assert 'oracyAdminHubCard' in hub
           print('ORACY Unit 1 Cloudflare Worker access-control integrity OK')
           PY
-      - name: Verify ORACY B1A Unit 2 review candidate
+      - name: Verify approved ORACY B1A Unit 2
         run: python .github/scripts/oracy_unit2_review_check.py
