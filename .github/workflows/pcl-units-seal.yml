@@ -1,0 +1,28 @@
+name: PCL Units 2-14 Seal
+on:
+  push:
+    branches: [pcl-standalone]
+  pull_request:
+    paths:
+      - 'module-*.html'
+      - 'audio/unit-*/**'
+      - 'pcl/**'
+      - 'supabase/functions/pcl-pilot-1/**'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node pcl/verify-frozen.mjs
+      - run: |
+          for unit in {2..14}; do
+            node pcl/test-unit.mjs "$unit"
+          done
+      - run: |
+          git fetch origin pcl-unit1-frozen-2026-09-08
+          git diff --exit-code origin/pcl-unit1-frozen-2026-09-08 -- module-1-1.html module-1-2.html module-1-3.html audio/unit-1
