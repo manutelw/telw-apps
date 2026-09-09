@@ -73,7 +73,6 @@ jobs:
             git add "module-${unit}-1.html" "module-${unit}-2.html" "module-${unit}-3.html" "audio/unit-${unit}" "pcl/frozen/unit-${unit}.sha256"
             git commit -m "Build and freeze PCL Unit ${unit}"
           done
-          git add index.html pcl/update-index.mjs .github/workflows/pcl-units-seal.yml
-          git rm .github/workflows/pcl-release-bootstrap.yml
+          git add index.html pcl/update-index.mjs
           git commit -m "Complete PCL 14-unit production release"
           git push origin HEAD:pcl-standalone
