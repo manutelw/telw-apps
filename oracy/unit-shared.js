@@ -51,7 +51,7 @@
   document.querySelectorAll('.hear-pron').forEach(b=>b.addEventListener('click',()=>playPron(b)));
   document.querySelectorAll('.record-oral').forEach(b=>b.addEventListener('click',()=>oralToggle(b)));
   document.querySelectorAll('.record-pron').forEach(b=>b.addEventListener('click',()=>pronRecord(b)));
-  document.querySelectorAll('.record').forEach(b=>{const box=b.closest('.speak'),spec=U.speaking[b.dataset.task];markerGuide(box,spec);b.addEventListener('click',()=>speakToggle(b))});
+  document.querySelectorAll('.record').forEach(b=>{if(b.closest('[data-ai-conversation]'))return;const box=b.closest('.speak'),spec=U.speaking[b.dataset.task];markerGuide(box,spec);b.addEventListener('click',()=>speakToggle(b))});
   document.addEventListener('pointerdown',e=>{if(e.target.closest('button'))unlock().catch(()=>{})},{capture:true,passive:true});
 
   async function preload(){const fast=[];document.querySelectorAll('.hear-question').forEach(b=>{const id=b.dataset.questionAudio;fast.push(()=>getAudio(U.oral[id].question,'marin',teacherStyle,`${U.level}-u${U.unitNo}-${id}-question`))});document.querySelectorAll('.hear-pron').forEach(b=>{const id=b.dataset.pron;fast.push(()=>getAudio(U.pron[id],'marin',pronStyle,`${U.level}-u${U.unitNo}-${id}-pron`))});let i=0;async function worker(){while(i<fast.length){try{await fast[i++]()}catch{}}}await Promise.all(Array.from({length:Math.min(6,fast.length)},worker));for(const [id,segs] of Object.entries(U.passages))segs.forEach(([s,v,t],n)=>fetchRaw(t,v||'marin',passageStyle,`${U.level.toLowerCase()}-u${U.unitNo}-${id}-${n}-${v||'marin'}-v1`).catch(()=>{}));}
