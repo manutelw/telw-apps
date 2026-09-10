@@ -532,6 +532,7 @@
 
   <script>
     const SESSION_STORAGE_KEY = "ascent_trainer_session";
+    const ADMIN_MASTER_SESSION_KEY = "ascent_admin_master_session";
     const ACTIVE_SECTION_STORAGE_KEY = "ascent_trainer_active_section";
     const JD_BRIEFING_ALLOWED_EMAILS = new Set([
       "manutelw@gmail.com",
@@ -615,16 +616,24 @@
       SESSION_STORAGE_KEY
     );
 
-  const raw =
-    localSession ||
-    olderTabSession;
+  const masterAdminSession =
+    localStorage.getItem(
+      ADMIN_MASTER_SESSION_KEY
+    );
 
-  if (!raw) {
+  const candidates = [
+    localSession,
+    olderTabSession,
+    masterAdminSession
+  ].filter(Boolean);
+
+  if (!candidates.length) {
     window.location.href = "./";
     return null;
   }
 
-  try {
+  for (const raw of candidates) {
+   try {
     const storedSession =
       JSON.parse(raw);
 
@@ -685,16 +694,17 @@
     );
 
     return session;
-  } catch (error) {
-    console.error(error);
-
-    localStorage.removeItem(
-      SESSION_STORAGE_KEY
-    );
-
-    window.location.href = "./";
-    return null;
+   } catch (error) {
+     console.error(error);
+   }
   }
+
+  localStorage.removeItem(
+    SESSION_STORAGE_KEY
+  );
+
+  window.location.href = "./";
+  return null;
 }
 
     function showSection(name,options={}) {
