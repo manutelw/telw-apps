@@ -1,0 +1,34 @@
+// ORACY Units 2-30: final target-cue layer for vocabulary model conversations.
+// Ensures Turn 1 directly cues Turn 2 and all four turns stay in one mini-situation.
+(function(){
+'use strict';
+const U=window.ORACY_UNIT,EDGE='/oracy/session';
+if(!U||Number(U.unitNo)<2||Number(U.unitNo)>30)return;
+const UNIT=Number(U.unitNo),LEVEL=String(U.level||''),cache=new Map();let ctx=null,sources=[];
+function norm(v){return String(v||'').toLowerCase().replace(/[’']/g,"'").replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/g,' ').trim()}
+function clean(v){return String(v||'').replace(/^[AB]:\s*/,'').trim()}
+function currentSentence(box){const item=norm(box.querySelector('h3')?.textContent||''),model=box.querySelector('.oracy-v2-model'),ls=[...model.querySelectorAll(':scope > div:not(.oracy-v2-audio)')].map(x=>x.textContent.trim()).filter(Boolean);const hit=ls.find(x=>norm(x).includes(item));return clean(hit||ls[1]||'')}
+const U30={
+ 'turning point':s=>[`A: Was there one moment when things really changed for you?`,`B: ${s}`,`A: What changed after that?`,`B: I started making different choices from that point on.`],
+ 'perspective':s=>[`A: Did that experience change the way you saw the situation?`,`B: ${s}`,`A: In what way?`,`B: I began looking at the same issue from a different angle.`],
+ 'take away':s=>[`A: What lesson stayed with you afterwards?`,`B: ${s}`,`A: Have you used that lesson since then?`,`B: Yes. I now use it when I face a similar situation.`],
+ 'make a difference':s=>[`A: Can one small change really matter?`,`B: ${s}`,`A: What kind of change do you mean?`,`B: Something simple that people can keep doing consistently.`],
+ 'put into practice':s=>[`A: Did you actually use the advice afterwards?`,`B: ${s}`,`A: And what happened when you tried it?`,`B: It became much more useful once I applied it in real life.`],
+ 'even though':s=>[`A: It sounds as if it was difficult. Did you stop?`,`B: ${s}`,`A: What kept you going?`,`B: I knew the result would be worth the effort.`],
+ 'idea':s=>[`A: What idea would you like to talk about?`,`B: ${s}`,`A: Why is that idea worth sharing?`,`B: Because it changed something important in the way I think or act.`],
+ 'worth':s=>[`A: Is there something from the experience that is worth sharing?`,`B: ${s}`,`A: Why do you think it is worth sharing?`,`B: Because someone else could use the lesson too.`],
+ 'sharing':s=>[`A: What would you feel comfortable sharing with other people?`,`B: ${s}`,`A: What would you want them to understand from it?`,`B: The main lesson I learned from the experience.`]
+};
+function fallback(item,s){const n=norm(item),t=String(s||'').trim();if(/^let['’]?s talk about/i.test(t))return [`A: What would you like to talk about?`,`B: ${t}`,`A: Why does that matter to you?`,`B: Because it connects to something I learned or changed afterwards.`];if(/^i['’]?ve|^i have|^i |^i’m|^i am/i.test(t))return [`A: What happened in your case?`,`B: ${t}`,`A: What did that lead to?`,`B: It changed what I did next.`];if(/^we |^we’re|^we are|^we’ve|^we have/i.test(t))return [`A: What do you do in that situation?`,`B: ${t}`,`A: Why do you do it that way?`,`B: Because it makes the next step clearer or easier.`];if(/^could |^can |^would |^have |^did /i.test(t))return [`A: What would you ask in that situation?`,`B: ${t}`,`A: And what answer would you expect?`,`B: A clear answer that helps us decide what to do next.`];return [`A: What stands out to you about this?`,`B: ${t||`The important point is ${item}.`}`,`A: Why does that stand out?`,`B: Because it affects what happens next.`]}
+function lines(box){const item=box.querySelector('h3')?.textContent?.trim()||'',s=currentSentence(box);if(UNIT===30&&U30[norm(item)])return U30[norm(item)](s);return fallback(item,s)}
+function key(kp,vi,si,item){return `oracy-${LEVEL.toLowerCase()}-u${UNIT}-target-cued-${kp}-${vi}-${si}-${norm(item).replace(/\s+/g,'-')}-v5`}
+function speaker(line){const a=/^A:/.test(line);return {voice:a?'marin':'cedar',text:clean(line)}}
+async function blobFor(kp,vi,si,item,line){const k=key(kp,vi,si,item);if(cache.has(k))return cache.get(k);const s=speaker(line),p=(async()=>{const r=await fetch(EDGE,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'tts',text:s.text,voice:s.voice,instructions:'Two real adults in one natural conversation. Every turn must directly respond to the previous turn. Natural B1/B2 pace, clear sentence stress, no textbook recital.',unit_no:UNIT,passage_id:k})});if(!r.ok)throw new Error(`Model audio could not be prepared (HTTP ${r.status}).`);return r.blob()})();cache.set(k,p);try{return await p}catch(e){cache.delete(k);throw e}}
+async function prepare(kp,vi,item,ls){return Promise.all(ls.map((x,i)=>blobFor(kp,vi,i,item,x)))}
+function audioContext(){if(ctx)return ctx;const C=window.AudioContext||window.webkitAudioContext;if(!C)throw new Error('Audio is not supported in this browser.');ctx=new C();return ctx}
+function stop(){sources.forEach(s=>{try{s.stop()}catch{}});sources=[]}
+async function play(kp,vi,item,ls,btn,status){try{const c=audioContext();await c.resume();stop();btn.disabled=true;status.textContent='Preparing model conversation…';const bs=await prepare(kp,vi,item,ls),bufs=await Promise.all(bs.map(b=>b.arrayBuffer().then(a=>c.decodeAudioData(a))));let when=c.currentTime+.05;bufs.forEach((b,i)=>{const src=c.createBufferSource();src.buffer=b;src.connect(c.destination);src.start(when);sources.push(src);when+=b.duration+(i<bufs.length-1?.14:0)});status.textContent='Playing model conversation.';setTimeout(()=>{if(status.textContent==='Playing model conversation.')status.textContent='Ready to replay.'},Math.max(300,(when-c.currentTime)*1000))}catch(e){status.textContent=e.message||'Model audio could not be played.'}finally{btn.disabled=false}}
+function upgrade(box){if(box.dataset.targetCuedModel==='1')return;const kp=Number(box.dataset.kp||0),vi=Number(box.dataset.vi||0),item=box.querySelector('h3')?.textContent?.trim(),model=box.querySelector('.oracy-v2-model'),oldBtn=model?.querySelector('.v2-listen'),status=model?.querySelector('.v2-audio-status');if(!item||!model||!oldBtn||!status)return;const ls=lines(box);[...model.children].filter(x=>x.tagName==='DIV'&&!x.classList.contains('oracy-v2-audio')).forEach(x=>x.remove());const wrap=model.querySelector('.oracy-v2-audio');ls.forEach(line=>{const d=document.createElement('div');d.textContent=line;model.insertBefore(d,wrap)});const btn=oldBtn.cloneNode(true);oldBtn.replaceWith(btn);btn.addEventListener('click',()=>play(kp,vi,item,ls,btn,status));box.dataset.targetCuedModel='1'}
+function install(){const boxes=[...document.querySelectorAll('.oracy-v2-vocab-drill')];if(!boxes.length)return false;boxes.forEach(upgrade);return true}
+if(!install()){const mo=new MutationObserver(()=>{if(install())mo.disconnect()});mo.observe(document.body,{childList:true,subtree:true});setTimeout(install,0);setTimeout(install,500)}
+})();
