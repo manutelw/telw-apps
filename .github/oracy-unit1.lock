@@ -1,9 +1,9 @@
-# ORACY B1A UNIT 1 — FROZEN BASELINE
-# Approved by Manu Vikraman on 2026-09-08 after PR #222.
-# Deliberately updated on 2026-09-10 at Manu Vikraman's request to rebuild Unit 1 as a speaking gym.
-# Expanded on 2026-09-10 to 5 vocabulary items and 5 speaking reps per Key Point.
-# Expanded again on 2026-09-10 so every vocabulary item has a 3-turn spoken-use drill with four-point feedback.
-# DO NOT MODIFY these files as part of later ORACY work without explicit instruction.
+# ORACY B1A UNIT 1 — FINAL FROZEN BASELINE
+# Approved by Manu Vikraman on 2026-09-10 after PR #251.
+# This is the final approved Unit 1 structure and behaviour.
+# Includes the original Key Point flow, 15 vocabulary-use drills, 15 core speaking reps, model-conversation audio, feedback, and Unit 1 audio/control layers.
+# MILITARY-GRADE FREEZE: do not modify any protected file below during later ORACY work unless Manu explicitly instructs that B1A Unit 1 be unlocked.
+# Any hash mismatch must fail ORACY integrity.
 # Format: <git-blob-sha>  <path>
 
 3eeaff54c4e0f846501d0ed11636c6c5aad8cfb3  oracy/unit-1.html
@@ -12,3 +12,5 @@
 9c308c54625d89df781dfbb649af530bed88caee  oracy/unit-1-oral-qa.js
 fe1df1e5abdd5f692455176929a0efe52cdc5b18  oracy/unit-1-feedback-examples.js
 866fc69cd9e2ae9418219aac9fc1b32dec6d49c0  oracy/unit-1-audio-controls.js
+e9091a2515f4b0a582587592630f6f75d0d3a600  oracy/unit-1-vocab-drills.js
+90e2c6c96e9c1ee0945d355e550b3fa16649806c  oracy/unit-1-vocab-audio.js

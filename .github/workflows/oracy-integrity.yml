@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify frozen ORACY B1A Unit 1 baseline
+      - name: Verify FINAL frozen ORACY B1A Unit 1 baseline
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -46,28 +46,64 @@ jobs:
               'oracy/unit-1-oral-qa.js',
               'oracy/unit-1-feedback-examples.js',
               'oracy/unit-1-audio-controls.js',
+              'oracy/unit-1-vocab-drills.js',
+              'oracy/unit-1-vocab-audio.js',
           }
-          assert set(protected) == required, 'Protected Unit 1 file set changed'
+          assert set(protected) == required, 'BALLISTIC LOCK: protected Unit 1 file set changed'
 
           for path, expected in protected.items():
-              assert Path(path).exists(), f'Protected Unit 1 file missing: {path}'
+              assert Path(path).exists(), f'BALLISTIC LOCK: protected Unit 1 file missing: {path}'
               actual = subprocess.check_output(['git','hash-object',path], text=True).strip()
               assert actual == expected, (
-                  f'BALLISTIC LOCK: {path} changed. ORACY B1A Unit 1 is frozen. '
-                  'Do not alter it unless Manu explicitly requests that Unit 1 be unlocked.'
+                  f'BALLISTIC LOCK: {path} changed. ORACY B1A Unit 1 is FINAL and frozen. '
+                  'Do not alter it unless Manu explicitly requests that B1A Unit 1 be unlocked.'
               )
 
+          coach = Path('oracy/unit-1-coach.js').read_text()
+          vocab = Path('oracy/unit-1-vocab-drills.js').read_text()
+          audio = Path('oracy/unit-1-vocab-audio.js').read_text()
           wrapper = Path('worker-oracy.js').read_text()
+
+          # Structural invariants for the approved Unit 1 design.
+          assert coach.count("title:'") >= 3, 'BALLISTIC LOCK: three Key Point speaking gyms missing'
+          for phrase in [
+              '3 Key Points · 5 vocabulary items per Key Point · 5 core speaking reps per Key Point · 5 vocabulary drills per Key Point',
+              "s.src='./unit-1-vocab-drills.js?v=20260910'",
+              'for(let kp=0;kp<3;kp++)',
+          ]:
+              assert phrase in coach, f'BALLISTIC LOCK: Unit 1 coach invariant missing: {phrase}'
+
+          for phrase in [
+              'Vocabulary speaking drill ${itemIndex+1} of 5',
+              'Question 1 of 3',
+              'Respond to statement',
+              'Target vocabulary:',
+              'Pronunciation & stress:',
+              'Key Point structure:',
+              'Conversation markers:',
+          ]:
+              assert phrase in vocab, f'BALLISTIC LOCK: Unit 1 vocabulary invariant missing: {phrase}'
+
+          for phrase in [
+              'Listen to model conversation',
+              'oracyRestoreKeyPointFlow',
+              "document.querySelectorAll('.oracy-vocab-drill').length===15",
+              "document.querySelectorAll('.oracy-vocab-model-audio').length===15",
+              'oracyPrepareVocabModel',
+          ]:
+              assert phrase in audio, f'BALLISTIC LOCK: Unit 1 audio/flow invariant missing: {phrase}'
+
           for x in [
               'unit-1-oral-qa.js',
               'unit-1-feedback-examples.js',
               'unit-1-audio-controls.js',
+              'unit-1-vocab-audio.js?v=20260910',
               'ensureUnit1MarkerGuidance',
               'applyTelwLevelBranding',
           ]:
               assert x in wrapper, f'BALLISTIC LOCK: Unit 1 runtime hook missing: {x}'
 
-          print('ORACY B1A Unit 1 ballistic lock intact')
+          print('ORACY B1A Unit 1 FINAL military-grade ballistic lock intact')
           PY
       - name: Verify frozen ORACY B1A Unit 2 baseline
         run: |
