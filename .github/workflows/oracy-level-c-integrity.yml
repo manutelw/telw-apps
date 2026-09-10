@@ -6,8 +6,10 @@ on:
       - 'oracy/unit-3*-content.js'
       - 'oracy/unit-renderer-c.js'
       - 'oracy/level-system-c.js'
+      - 'oracy/level-c-static-audio-preload.js'
       - 'oracy/unit-speaking-c-runtime.js'
       - 'oracy/unit-speaking-c-natural-audio.js'
+      - 'oracy/unit-speaking-c-challenge-audio.js'
       - 'oracy/unit-speaking-c-mixed-reps.js'
       - 'oracy/index.html'
       - 'oracy/admin.html'
@@ -19,8 +21,10 @@ on:
       - 'oracy/unit-3*-content.js'
       - 'oracy/unit-renderer-c.js'
       - 'oracy/level-system-c.js'
+      - 'oracy/level-c-static-audio-preload.js'
       - 'oracy/unit-speaking-c-runtime.js'
       - 'oracy/unit-speaking-c-natural-audio.js'
+      - 'oracy/unit-speaking-c-challenge-audio.js'
       - 'oracy/unit-speaking-c-mixed-reps.js'
       - 'oracy/index.html'
       - 'oracy/admin.html'
@@ -90,9 +94,24 @@ jobs:
           assert "QUESTION_STYLE" in natural
           assert "hash(text)" in natural
           assert "playQuestion(q)" in natural
-          assert "IntersectionObserver" in natural
+          assert "preloadAll(drills)" in natural
+          assert "const C=new Map(),DC=new Map()" in natural
           assert "captivating" in natural and "come across as" in natural
           assert "inlingua" not in natural.lower()
+
+          challenge=(root/'oracy/unit-speaking-c-challenge-audio.js').read_text()
+          assert 'Promise.allSettled(preload)' in challenge
+          assert 'getAudio(text)' in challenge
+          assert 'Hear coach challenge' in challenge
+          assert 'inlingua' not in challenge.lower()
+
+          preload=(root/'oracy/level-c-static-audio-preload.js').read_text()
+          assert "Number(U.unitNo)<31" in preload
+          assert "PASSAGE_STYLE" in preload and "PRON_STYLE" in preload
+          assert "window.fetch=function" in preload
+          assert "url.includes('/oracy/session')" in preload
+          assert "const limit=6" in preload
+          assert "inlingua" not in preload.lower()
 
           mixed=(root/'oracy/unit-speaking-c-mixed-reps.js').read_text()
           for x in ('Question → Answer','Statement → Response','Hint:','How can I improve my stamina?','Raj’s grades are falling.','watching Instagram Reels','practise regularly'):
@@ -103,9 +122,9 @@ jobs:
           assert "inlingua" not in mixed.lower()
 
           html=(root/'oracy/unit-31.html').read_text()
-          for f in ('unit-31-content.js','unit-renderer-c.js','unit-shared.js','conversation-shared.js','level-system-c.js','unit-speaking-c-runtime.js','unit-speaking-c-natural-audio.js','unit-speaking-c-mixed-reps.js'): assert f in html
+          for f in ('unit-31-content.js','unit-renderer-c.js','level-c-static-audio-preload.js','unit-shared.js','conversation-shared.js','level-system-c.js','unit-speaking-c-runtime.js','unit-speaking-c-natural-audio.js','unit-speaking-c-challenge-audio.js','unit-speaking-c-mixed-reps.js'): assert f in html
           assert 'unit-speaking-c-dialogue-audio.js' not in html
-          assert 'unit-speaking-c-natural-audio.js?v=20260910d' in html
+          assert 'unit-speaking-c-natural-audio.js?v=20260910e' in html
           index=(root/'oracy/index.html').read_text()
           for label in ('Level B','Level C','Level D'): assert label in index
           assert "from:31,to:37" in index and "availableTo:31" in index
@@ -114,5 +133,5 @@ jobs:
           assert 'currentAdmin' in index and 'openAdminPreview' in index
           admin=(root/'oracy/admin.html').read_text()
           assert 'previewC1A1' in admin and '/oracy/unit-31.html' in admin
-          print('ORACY C1A Unit 1 mixed Q&A / statement-response rep contract OK')
+          print('ORACY C1A Unit 1 contracts preserved; Level C static audio eager preload OK')
           PY
