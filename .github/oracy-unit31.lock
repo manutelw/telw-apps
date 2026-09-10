@@ -1,0 +1,15 @@
+# C1A Unit 1 (global Unit 31) ballistic baseline — deliberate rebaseline required for any change.
+8e329beb8e5a6be3dc16cbf1b976c6826938fc5b oracy/unit-31-content.js
+9ccd47c7a6c91068cf4541453173e8ae7398d248 oracy/unit-31.html
+29d13e8d7b8886e82c558b21c3e5de3081ba6057 oracy/unit-renderer-c.js
+0026102a2891e2c5fda03c04745fd63f4955aee8 oracy/level-c-audio-binding.js
+c7341a6e8a44c3c65d12e359ff8e21cd121656a6 oracy/level-c-static-audio-preload.js
+282f9170c73d4e05567b1f1c0c27f637d382c7e2 oracy/level-system-c.js
+55075960c09bad1191bc481f1521865a496f3184 oracy/unit-speaking-c-runtime.js
+95a5166aded103896e0efcea62fce3bb40af51a9 oracy/unit-speaking-c-natural-audio.js
+f7c1783b76669972e42d57f5070f3a169073e1d5 oracy/unit-speaking-c-challenge-audio.js
+d1924ff38cad701a5852eb0685e92d7aa3b5afde oracy/unit-speaking-c-rep2-guidance.js
+96c319c467e1af359da20fd0b707b034844ddf60 oracy/unit-speaking-c-mixed-reps.js
+2ee87662a888da2d299df3b578c311499d39616a oracy/unit-shared.js
+85d62756f1a7c04d81269001140f9b8b0241f98c oracy/conversation-shared.js
+10b694ec825d8bf2a02ee738d2df7aa87816623c oracy/oracy.css
