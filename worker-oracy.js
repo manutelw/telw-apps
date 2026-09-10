@@ -13,6 +13,9 @@ export default {
     }
 
     let response=await base.fetch(request,env);
+    if(path==='/oracy/unit-speaking-gym-v2.js' && response.ok){
+      return patchSpeakingGymVocabularySource(response);
+    }
     if(isAdminSettingsPath(path) && response.ok){
       return ensureOracyCard(response);
     }
@@ -84,6 +87,17 @@ async function ensureOracyCard(response){
   return new Response(html,{status:response.status,statusText:response.statusText,headers});
 }
 
+async function patchSpeakingGymVocabularySource(response){
+  let js=await response.text();
+  const old=/function chooseVocab\(kp,sec\)\{[\s\S]*?return chosen\.slice\(0,5\)\}/;
+  const replacement=`function approvedTargets(){return uniq((U.targets||[]).slice(0,6).map(String).filter(lexical).filter(x=>!META.has(norm(x))))}\nfunction chooseVocab(kp,sec){const base=approvedTargets();if(base.length>=5){const shift=kp%base.length;return [...base.slice(shift),...base.slice(0,shift)].slice(0,5)}const chips=originalChips(sec),pool=uniq([...base,...chips]).filter(lexical).filter(x=>!META.has(norm(x)));return pool.slice(0,5)}`;
+  if(old.test(js)) js=js.replace(old,replacement);
+  const headers=new Headers(response.headers);
+  headers.set('content-type','application/javascript; charset=UTF-8');
+  headers.set('cache-control','no-store, max-age=0, must-revalidate');
+  return new Response(js,{status:response.status,statusText:response.statusText,headers});
+}
+
 async function applyTelwLevelBranding(response,unitNo){
   const level=telwLevelForUnit(unitNo);
   if(!level)return response;
@@ -92,10 +106,11 @@ async function applyTelwLevelBranding(response,unitNo){
   const eyebrowPattern=new RegExp(`<div class="eyebrow">[^<]*Unit\\s*${unitNo}[^<]*<\\/div>`,'i');
   html=html.replace(eyebrowPattern,`<div class="eyebrow">LEVEL ${level} · UNIT ${unitNo}</div>`);
   if(!html.includes('src="./level-system.js"')) html=html.replace('</body>','<script src="./level-system.js"></script>\n</body>');
-  if(unitNo>=2 && !html.includes('unit-speaking-gym-v2.js')) html=html.replace('</body>','<script src="./unit-speaking-gym-v2.js?v=20260910"></script>\n</body>');
+  if(unitNo>=2 && !html.includes('unit-speaking-gym-v2.js')) html=html.replace('</body>','<script src="./unit-speaking-gym-v2.js?v=20260910c"></script>\n</body>');
   if(unitNo>=2 && !html.includes('unit-speaking-model-natural.js')) html=html.replace('</body>','<script src="./unit-speaking-model-natural.js?v=20260910b"></script>\n</body>');
   if(unitNo>=2 && !html.includes('unit-speaking-model-coherent.js')) html=html.replace('</body>','<script src="./unit-speaking-model-coherent.js?v=20260910"></script>\n</body>');
   if(unitNo>=2 && !html.includes('unit-speaking-model-target-cued.js')) html=html.replace('</body>','<script src="./unit-speaking-model-target-cued.js?v=20260910"></script>\n</body>');
+  if(unitNo>=2 && !html.includes('unit-speaking-model-quality.js')) html=html.replace('</body>','<script src="./unit-speaking-model-quality.js?v=20260910"></script>\n</body>');
   const headers=new Headers(response.headers);
   headers.set('content-type','text/html; charset=UTF-8');
   headers.set('cache-control','no-store, max-age=0, must-revalidate');
