@@ -1,4 +1,4 @@
-# Frozen TELW Level B1B — generated only after QA passed
+# Frozen TELW Level B1B — approved baseline 2026-09-10
 2550c9867067dabbcbf540767f4f528f49d8e745 oracy/unit-8.html
 00a434d9bea6154faf56c42a321a4da1ddb8c747 oracy/unit-8-content.js
 0b32b3e1d88933f97b54714d0d6a51eaa8086a02 oracy/unit-9.html
@@ -15,3 +15,10 @@ dce5d9a03930de0ad48ac83d7b138c29f5c3beea oracy/unit-14.html
 750e5215025e063a31a0f99b8baf9c95f978f20e oracy/unit-14-content.js
 2767d0dd1b6b5642d85cf42b61042c9054a3c4cf oracy/unit-15.html
 1b6afd5c75215df6a109fc08ca925a658674ea81 oracy/unit-15-content.js
+# Shared approved speaking/runtime layer
+5a97a1a26b89256f9e5be2138f1d414ea409e1cc worker-oracy.js
+b3e3f3f414c374bf35d0d1230e4d83326d684743 oracy/unit-speaking-gym-v2.js
+39632f374070d6c522ee821289df9a5e561f538d oracy/unit-speaking-model-natural.js
+b1be3829710180eab60510dfe206b213e0a2f1e7 oracy/unit-speaking-model-coherent.js
+f88137509338fe2e2c29d1586c091bafa7c363de oracy/unit-speaking-model-target-cued.js
+4539269f1a229a5cc129f4cbbc19512277ad0707 oracy/unit-speaking-model-quality.js

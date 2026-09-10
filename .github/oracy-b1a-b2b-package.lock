@@ -1,4 +1,5 @@
-# Final frozen ORACY B1A-B2B package — generated only after QA passed
+# Final frozen ORACY B1A-B2B package — approved baseline 2026-09-10
+# Units 1-30 plus the current shared speaking/vocabulary/audio runtime. Any drift requires deliberate rebaseline.
 3eeaff54c4e0f846501d0ed11636c6c5aad8cfb3 oracy/unit-1.html
 0182790e01308cad47ae4722d7c933c2067aa51a oracy/unit-2.html
 356a1d351fc31b03dece41a2b3f6e2cca79f81dc oracy/unit-2-content.js
@@ -61,5 +62,16 @@ ee24d512ed6d76e517c202f228c8cd0d583c8a35 oracy/unit-30-content.js
 479d415557f5a26b6fe416ba1515c38eb67e6e99 oracy/unit-renderer.js
 2ee87662a888da2d299df3b578c311499d39616a oracy/unit-shared.js
 85d62756f1a7c04d81269001140f9b8b0241f98c oracy/conversation-shared.js
+2c4115b8d90bf5eacc9ad7dc1bba043cb9eb914d oracy/level-system.js
+10b694ec825d8bf2a02ee738d2df7aa87816623c oracy/oracy.css
+b3e3f3f414c374bf35d0d1230e4d83326d684743 oracy/unit-speaking-gym-v2.js
+39632f374070d6c522ee821289df9a5e561f538d oracy/unit-speaking-model-natural.js
+b1be3829710180eab60510dfe206b213e0a2f1e7 oracy/unit-speaking-model-coherent.js
+f88137509338fe2e2c29d1586c091bafa7c363de oracy/unit-speaking-model-target-cued.js
+4539269f1a229a5cc129f4cbbc19512277ad0707 oracy/unit-speaking-model-quality.js
+5a97a1a26b89256f9e5be2138f1d414ea409e1cc worker-oracy.js
+3a13f161be3a7791dde424019caa326c2b306ebc functions/oracy/session.js
+d4db16ee54572ed85bbea84640078e5a1ae10f65 functions/oracy/voice.js
+293c402a61e767e4a10ebd071b66f0d7186414ee functions/oracy/_middleware.js
 d8c0863c1592354853c44ec6ff0618cbdc6d2b5c supabase/functions/oracy-voice/index.ts
 908d6bdb69eaa0e2a8ef6d85874de771639ad3c7 supabase/functions/oracy-voice/course-units-4-30.ts
