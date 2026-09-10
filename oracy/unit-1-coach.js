@@ -57,6 +57,14 @@ function oracyRewriteSpeakingGym(){
       const challenge=document.createElement('div');challenge.className='oracy-reactive-challenge';challenge.style.cssText='margin:12px 0;padding:12px;border-radius:10px;background:#eef4ff;border:1px solid #b8caee;line-height:1.45';challenge.innerHTML='<b>Coach challenge</b><div style="margin-top:5px">Complete Rep 3 first. I will react to something you actually said.</div>';button?.before(challenge);
     }
   });
+  const main=document.querySelector('main.shell');
+  if(main&&tasks.length===5&&!document.querySelector('.oracy-speaking-gym')){
+    const gym=document.createElement('section');
+    gym.className='kp oracy-speaking-gym';
+    gym.innerHTML='<div class="eyebrow">Speaking Gym · 5 reps</div><h2>One message. Five increasingly difficult versions.</h2><p>Complete the teaching sections above, then work through all five reps here. Each rep unlocks the next one.</p>';
+    main.appendChild(gym);
+    tasks.forEach(box=>gym.appendChild(box));
+  }
 }
 function oracySetRepLock(index,locked,message){
   const box=[...document.querySelectorAll('.speak')][index];if(!box)return;const btn=box.querySelector('.record');if(!btn)return;
