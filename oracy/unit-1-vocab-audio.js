@@ -63,4 +63,33 @@ function oracyAttachVocabAudio(){
   if(observer)boxes.forEach(box=>observer.observe(box));
   else boxes.slice(0,3).forEach(box=>oracyPrepareVocabModel(Number(box.dataset.kpIndex||0),Number(box.dataset.vocabIndex||0)).catch(()=>{}));
 }
-oracyAttachVocabAudio();
+function oracyRestoreKeyPointFlow(){
+  const sections=[...document.querySelectorAll('section.kp')].slice(0,3);
+  if(sections.length<3)return false;
+  let ready=true;
+  sections.forEach(section=>{
+    const vocabFive=section.querySelector('.oracy-vocab-five');
+    const vocabDrills=section.querySelector('.oracy-vocab-drills');
+    const gym=section.querySelector('.oracy-speaking-gym');
+    if(!vocabFive||!vocabDrills||!gym){ready=false;return;}
+    const comprehension=[...section.children].filter(el=>el.classList&&el.classList.contains('activity')&&!el.classList.contains('oracy-vocab-five')&&!el.classList.contains('oracy-vocab-drill')&&!el.classList.contains('oracy-vocab-drills'));
+    const lastQuestion=comprehension[comprehension.length-1];
+    if(!lastQuestion){ready=false;return;}
+    lastQuestion.insertAdjacentElement('afterend',vocabFive);
+    vocabFive.insertAdjacentElement('afterend',vocabDrills);
+    vocabDrills.insertAdjacentElement('afterend',gym);
+  });
+  return ready;
+}
+function oracyFinishVocabLayer(){
+  const ready=oracyRestoreKeyPointFlow();
+  oracyAttachVocabAudio();
+  return ready&&document.querySelectorAll('.oracy-vocab-drill').length===15&&document.querySelectorAll('.oracy-vocab-model-audio').length===15;
+}
+if(!oracyFinishVocabLayer()){
+  const watch=new MutationObserver(()=>{if(oracyFinishVocabLayer())watch.disconnect();});
+  watch.observe(document.body,{childList:true,subtree:true});
+  setTimeout(()=>oracyFinishVocabLayer(),0);
+  setTimeout(()=>oracyFinishVocabLayer(),500);
+  setTimeout(()=>oracyFinishVocabLayer(),1500);
+}
