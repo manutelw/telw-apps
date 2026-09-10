@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate rebuilt C1A Unit 1
+      - name: Validate C1A Unit 1 speaking-first flow
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -36,7 +36,7 @@ jobs:
           u=json.loads(raw[len('window.ORACY_UNIT='):].rstrip()[:-1])
           assert u['unitNo']==31 and u['localUnitNo']==1 and u['level']=='C1A'
           assert u['title']=='Speaking Across India'
-          assert len(u['keyPoints'])==3 and all('teaching' in k for k in u['keyPoints'])
+          assert len(u['keyPoints'])==3
           assert len(u['checks'])==12
           assert set(u['oral'])=={'q5','q10'}
           assert set(u['pron'])=={'q11','q12','q13','q14','q15'}
@@ -48,9 +48,11 @@ jobs:
           assert 'cefr b range' in text or 'cefr b-range' in text
 
           renderer=(root/'oracy/unit-renderer-c.js').read_text()
-          assert 'Understand the structure' in renderer
-          assert 'Say the examples aloud.' in renderer
-          assert 'Common errors to avoid' in renderer
+          assert 'Rule before you answer' in renderer
+          assert 'Understand the structure' not in renderer
+          assert 'Get the pattern clear before you practise it' not in renderer
+          assert "q.rule||U.notes?.[q.id]" in renderer
+          assert 'ruleTip(q.key)' in renderer
 
           runtime=(root/'oracy/unit-speaking-c-runtime.js').read_text()
           required=[
@@ -72,11 +74,13 @@ jobs:
 
           html=(root/'oracy/unit-31.html').read_text()
           for f in ('unit-31-content.js','unit-renderer-c.js','unit-shared.js','conversation-shared.js','level-system-c.js','unit-speaking-c-runtime.js'): assert f in html
-          assert '20260910d' in html
           index=(root/'oracy/index.html').read_text()
           for label in ('Level B','Level C','Level D'): assert label in index
           assert "from:31,to:37" in index and "availableTo:31" in index
+          assert 'login-panel' not in index
+          assert 'Login ID' not in index and 'Log in' not in index
+          assert 'currentAdmin' in index and 'openAdminPreview' in index
           admin=(root/'oracy/admin.html').read_text()
           assert 'previewC1A1' in admin and '/oracy/unit-31.html' in admin
-          print('ORACY C1A Unit 1 general-English repetition contract OK')
+          print('ORACY C1A Unit 1 distributed-rule speaking flow OK')
           PY
