@@ -1,0 +1,96 @@
+name: ORACY C1A Unit 1 Freeze
+on:
+  pull_request:
+    paths:
+      - 'oracy/unit-31.html'
+      - 'oracy/unit-31-content.js'
+      - 'oracy/unit-renderer-c.js'
+      - 'oracy/level-c-audio-binding.js'
+      - 'oracy/level-c-static-audio-preload.js'
+      - 'oracy/level-system-c.js'
+      - 'oracy/unit-speaking-c-runtime.js'
+      - 'oracy/unit-speaking-c-natural-audio.js'
+      - 'oracy/unit-speaking-c-challenge-audio.js'
+      - 'oracy/unit-speaking-c-rep2-guidance.js'
+      - 'oracy/unit-speaking-c-mixed-reps.js'
+      - 'oracy/unit-shared.js'
+      - 'oracy/conversation-shared.js'
+      - 'oracy/oracy.css'
+      - '.github/oracy-unit31.lock'
+      - '.github/workflows/oracy-c1a-unit1-freeze.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'oracy/unit-31.html'
+      - 'oracy/unit-31-content.js'
+      - 'oracy/unit-renderer-c.js'
+      - 'oracy/level-c-audio-binding.js'
+      - 'oracy/level-c-static-audio-preload.js'
+      - 'oracy/level-system-c.js'
+      - 'oracy/unit-speaking-c-runtime.js'
+      - 'oracy/unit-speaking-c-natural-audio.js'
+      - 'oracy/unit-speaking-c-challenge-audio.js'
+      - 'oracy/unit-speaking-c-rep2-guidance.js'
+      - 'oracy/unit-speaking-c-mixed-reps.js'
+      - 'oracy/unit-shared.js'
+      - 'oracy/conversation-shared.js'
+      - 'oracy/oracy.css'
+      - '.github/oracy-unit31.lock'
+      - '.github/workflows/oracy-c1a-unit1-freeze.yml'
+jobs:
+  ballistic-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate frozen C1A Unit 1 baseline
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess, json
+          root=Path('.')
+          lock=root/'.github/oracy-unit31.lock'
+          assert lock.exists(), 'BALLISTIC C1A UNIT 1 LOCK: lock manifest missing'
+          locked=[]
+          for raw in lock.read_text().splitlines():
+              if not raw or raw.startswith('#'): continue
+              expected,path=raw.split(None,1)
+              p=root/path
+              assert p.exists(), f'BALLISTIC C1A UNIT 1 LOCK: frozen file missing: {path}'
+              actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
+              assert actual==expected, f'BALLISTIC C1A UNIT 1 LOCK: frozen baseline changed: {path}'
+              locked.append(path)
+          required={
+            'oracy/unit-31-content.js','oracy/unit-31.html','oracy/unit-renderer-c.js',
+            'oracy/level-c-audio-binding.js','oracy/level-c-static-audio-preload.js','oracy/level-system-c.js',
+            'oracy/unit-speaking-c-runtime.js','oracy/unit-speaking-c-natural-audio.js',
+            'oracy/unit-speaking-c-challenge-audio.js','oracy/unit-speaking-c-rep2-guidance.js',
+            'oracy/unit-speaking-c-mixed-reps.js','oracy/unit-shared.js','oracy/conversation-shared.js','oracy/oracy.css'
+          }
+          assert required <= set(locked), 'BALLISTIC C1A UNIT 1 LOCK: dependency coverage incomplete'
+
+          raw=(root/'oracy/unit-31-content.js').read_text()
+          assert raw.startswith('window.ORACY_UNIT=') and raw.rstrip().endswith(';')
+          u=json.loads(raw[len('window.ORACY_UNIT='):].rstrip()[:-1])
+          assert u['unitNo']==31 and u['localUnitNo']==1 and u['level']=='C1A'
+          assert u['title']=='Speaking Across India' and len(u['keyPoints'])==3 and len(u['checks'])==12
+          assert set(u['oral'])=={'q5','q10'} and set(u['pron'])=={'q11','q12','q13','q14','q15'}
+          assert set(u['speaking'])=={'s1','s2','s3','s4','s5'}
+          low=raw.lower()
+          for place in ('pune','jaipur','new delhi railway station'): assert place in low
+          for target in ('-ing and -ed adjectives','the more/less..., the more/less...','since/as meaning because'): assert target in low
+          for banned in ('placement','interview','client','manager','workplace','inlingua'): assert banned not in low
+
+          html=(root/'oracy/unit-31.html').read_text()
+          for dep in ('level-c-static-audio-preload.js','unit-speaking-c-natural-audio.js','unit-speaking-c-challenge-audio.js','unit-speaking-c-mixed-reps.js'):
+              assert dep in html, f'BALLISTIC C1A UNIT 1 LOCK: missing runtime dependency {dep}'
+
+          natural=(root/'oracy/unit-speaking-c-natural-audio.js').read_text()
+          for phrase in ('RATE=1.00','GAP=.07','natural, enthusiastic adults','rising pitch on the final stressed word','D’you','You bet!','Absolutely!','Fair enough.','Hang on.'):
+              assert phrase in natural, f'BALLISTIC C1A UNIT 1 LOCK: natural-audio contract missing {phrase}'
+          mixed=(root/'oracy/unit-speaking-c-mixed-reps.js').read_text()
+          for phrase in ('Question → Answer','Statement → Response','Hint:','How can I improve my stamina?','Raj’s grades are falling.','watching Instagram Reels','practise regularly'):
+              assert phrase in mixed, f'BALLISTIC C1A UNIT 1 LOCK: mixed-rep contract missing {phrase}'
+          preload=(root/'oracy/level-c-static-audio-preload.js').read_text()
+          assert 'preload' in preload.lower() and '/oracy/session' in preload
+          print('BALLISTIC C1A UNIT 1 FREEZE OK: exact files and approved speaking/audio contracts locked')
+          PY
