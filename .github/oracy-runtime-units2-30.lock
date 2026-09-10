@@ -1,0 +1,23 @@
+# ORACY UNITS 2-30 — FINAL SHARED RUNTIME BASELINE
+# Approved by Manu Vikraman on 2026-09-10 after student-facing QA through Unit 30.
+# This freezes the shared speaking-gym, vocabulary-dialogue, audio, rendering and ORACY access/runtime dependencies used by Units 2-30.
+# MILITARY-GRADE FREEZE: any hash mismatch must fail ORACY integrity until Manu explicitly approves a rebaseline.
+# Unit 1 remains protected independently by .github/oracy-unit1.lock.
+# Format: <git-blob-sha>  <path>
+
+5a97a1a26b89256f9e5be2138f1d414ea409e1cc  worker-oracy.js
+b3e3f3f414c374bf35d0d1230e4d83326d684743  oracy/unit-speaking-gym-v2.js
+39632f374070d6c522ee821289df9a5e561f538d  oracy/unit-speaking-model-natural.js
+b1be3829710180eab60510dfe206b213e0a2f1e7  oracy/unit-speaking-model-coherent.js
+f88137509338fe2e2c29d1586c091bafa7c363de  oracy/unit-speaking-model-target-cued.js
+4539269f1a229a5cc129f4cbbc19512277ad0707  oracy/unit-speaking-model-quality.js
+479d415557f5a26b6fe416ba1515c38eb67e6e99  oracy/unit-renderer.js
+2ee87662a888da2d299df3b578c311499d39616a  oracy/unit-shared.js
+85d62756f1a7c04d81269001140f9b8b0241f98c  oracy/conversation-shared.js
+2c4115b8d90bf5eacc9ad7dc1bba043cb9eb914d  oracy/level-system.js
+10b694ec825d8bf2a02ee738d2df7aa87816623c  oracy/oracy.css
+3a13f161be3a7791dde424019caa326c2b306ebc  functions/oracy/session.js
+d4db16ee54572ed85bbea84640078e5a1ae10f65  functions/oracy/voice.js
+293c402a61e767e4a10ebd071b66f0d7186414ee  functions/oracy/_middleware.js
+d8c0863c1592354853c44ec6ff0618cbdc6d2b5c  supabase/functions/oracy-voice/index.ts
+908d6bdb69eaa0e2a8ef6d85874de771639ad3c7  supabase/functions/oracy-voice/course-units-4-30.ts
