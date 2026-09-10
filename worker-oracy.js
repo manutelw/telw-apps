@@ -93,6 +93,7 @@ async function applyTelwLevelBranding(response,unitNo){
   html=html.replace(eyebrowPattern,`<div class="eyebrow">LEVEL ${level} · UNIT ${unitNo}</div>`);
   if(!html.includes('src="./level-system.js"')) html=html.replace('</body>','<script src="./level-system.js"></script>\n</body>');
   if(unitNo>=2 && !html.includes('unit-speaking-gym-v2.js')) html=html.replace('</body>','<script src="./unit-speaking-gym-v2.js?v=20260910"></script>\n</body>');
+  if(unitNo>=2 && !html.includes('unit-speaking-model-natural.js')) html=html.replace('</body>','<script src="./unit-speaking-model-natural.js?v=20260910"></script>\n</body>');
   const headers=new Headers(response.headers);
   headers.set('content-type','text/html; charset=UTF-8');
   headers.set('cache-control','no-store, max-age=0, must-revalidate');
