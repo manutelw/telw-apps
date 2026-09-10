@@ -28,7 +28,7 @@ async function oracyPlayVocabModel(kp,vi,btn,status){
   const Ctx=window.AudioContext||window.webkitAudioContext;
   if(!Ctx){status.textContent='Model audio is not supported in this browser.';return;}
   if(!ORACY_VOCAB_AUDIO_CTX)ORACY_VOCAB_AUDIO_CTX=new Ctx();
-  // Resume inside the click gesture so the first click remains authorised even if audio is still preparing.
+  // Resume inside the click gesture so the first click stays authorised even when audio is still preparing.
   await ORACY_VOCAB_AUDIO_CTX.resume();
   oracyStopVocabModel();
   const old=btn.textContent;btn.disabled=true;btn.textContent='🔊 Preparing model audio…';status.textContent='Preparing model conversation…';
@@ -37,7 +37,8 @@ async function oracyPlayVocabModel(kp,vi,btn,status){
     const buffers=await Promise.all(blobs.map(b=>b.arrayBuffer().then(x=>ORACY_VOCAB_AUDIO_CTX.decodeAudioData(x))));
     let when=ORACY_VOCAB_AUDIO_CTX.currentTime+.06;
     buffers.forEach((buffer,i)=>{
-      const source=ORACY_VOCAB_AUDIO_CTX.createBufferSource();source.buffer=buffer;source.connect(ORACY_VOCAB_AUDIO_CTX.destination);source.start(when);ORACY_VOCAB_AUDIO_SOURCES.push(source);
+      const source=ORACY_VOCAB_AUDIO_CTX.createBufferSource();
+      source.buffer=buffer;source.connect(ORACY_VOCAB_AUDIO_CTX.destination);source.start(when);ORACY_VOCAB_AUDIO_SOURCES.push(source);
       when+=buffer.duration+(i<buffers.length-1?.16:0);
     });
     status.textContent='Playing model conversation.';
