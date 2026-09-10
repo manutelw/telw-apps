@@ -29,7 +29,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import json,re
+          import json
           root=Path('.')
           raw=(root/'oracy/unit-31-content.js').read_text()
           assert raw.startswith('window.ORACY_UNIT=') and raw.rstrip().endswith(';')
@@ -45,15 +45,36 @@ jobs:
           for place in ('bengaluru','gurugram','hyderabad'): assert place in text
           assert 'cefr b-range' in text
           assert 'organise' in text and 'practise' in text
+
           html=(root/'oracy/unit-31.html').read_text()
           for f in ('unit-31-content.js','unit-renderer-c.js','unit-shared.js','conversation-shared.js','level-system-c.js','unit-speaking-c-runtime.js'): assert f in html
+
           runtime=(root/'oracy/unit-speaking-c-runtime.js').read_text()
-          for f in ('unit-speaking-gym-v2.js','unit-speaking-model-natural.js','unit-speaking-model-coherent.js','unit-speaking-model-target-cued.js','unit-speaking-model-quality.js'): assert f in runtime
-          assert 'approvedTargets' in runtime and 'Number(U.unitNo)>60' in runtime
+          required=[
+            'Vocabulary speaking drill ${vi+1} of 5',
+            'Vocabulary in use · 5 drills · 3 turns each',
+            'Question 1 of 3',
+            'Respond to statement',
+            'Speaking Gym · Key Point ${kp+1} · 5 reps',
+            'Free → Compress → Target language → React → Pressure finish',
+            '1. Target vocabulary:',
+            '2. Pronunciation & stress:',
+            '3. Key Point structure:',
+            '4. Conversation markers:',
+            'Listen to model conversation',
+            "const DATA=[",
+            "if(!U||Number(U.unitNo)!==31)return"
+          ]
+          for x in required: assert x in runtime, f'Missing Level C speaking invariant: {x}'
+          # 3 Key Points x 5 explicitly authored vocabulary items.
+          for x in ('overwhelming','settle into','hesitant','brush up on','hold back','demanding','spontaneous','precise','think on your feet','come across as'):
+            assert x in runtime, f'Missing C1A Unit 1 vocabulary: {x}'
+          assert runtime.count("{w:") == 15, 'C1A Unit 1 must contain exactly 15 vocabulary drill targets'
+
           index=(root/'oracy/index.html').read_text()
           for label in ('Level B','Level C','Level D'): assert label in index
           assert "from:31,to:37" in index and "availableTo:31" in index
           admin=(root/'oracy/admin.html').read_text()
           assert 'previewC1A1' in admin and '/oracy/unit-31.html' in admin
-          print('ORACY Level C1A Unit 1 and Level B/C/D index OK')
+          print('ORACY C1A Unit 1 native vocabulary + speaking contract OK')
           PY
