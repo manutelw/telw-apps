@@ -1,0 +1,59 @@
+name: ORACY Level C Units 2-30 Integrity
+on:
+  pull_request:
+    paths:
+      - 'oracy/level-c-units-2-30-specs.js'
+      - 'oracy/level-c-unit-builder.js'
+      - 'oracy/level-c-unit-enhance.js'
+      - 'oracy/rules-c1a.js'
+      - 'oracy/rules-c1b.js'
+      - 'oracy/rules-c2a.js'
+      - 'oracy/rules-c2b.js'
+      - 'oracy/unit-c.html'
+      - 'oracy/unit-speaking-c-units2-30-runtime.js'
+      - 'oracy/level-c-progress.js'
+      - 'oracy/progress-c.html'
+      - 'oracy/index.html'
+  workflow_dispatch:
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax checks
+        run: |
+          node --check oracy/level-c-units-2-30-specs.js
+          node --check oracy/level-c-unit-builder.js
+          node --check oracy/level-c-unit-enhance.js
+          node --check oracy/unit-speaking-c-units2-30-runtime.js
+          node --check oracy/level-c-progress.js
+          node --check oracy/rules-c1a.js
+          node --check oracy/rules-c1b.js
+          node --check oracy/rules-c2a.js
+          node --check oracy/rules-c2b.js
+      - name: Curriculum and architecture checks
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          files=[Path('oracy/level-c-units-2-30-specs.js'),Path('oracy/level-c-unit-builder.js'),Path('oracy/level-c-unit-enhance.js'),Path('oracy/unit-speaking-c-units2-30-runtime.js'),Path('oracy/level-c-progress.js'),Path('oracy/unit-c.html')]
+          text='\n'.join(p.read_text(encoding='utf-8') for p in files)
+          assert 'window.ORACY_C_SPECS=' in text
+          specs=Path('oracy/level-c-units-2-30-specs.js').read_text(encoding='utf-8')
+          for n in range(2,31):
+              assert f'"{n}":' in specs, f'missing Unit {n}'
+          assert 'Question → Answer' in text
+          assert 'Statement → Response' in text
+          assert 'Hint' in text
+          assert 'Evaluate within CEFR B range' in text
+          assert 'Natural, enthusiastic adult conversation in clear UK English' in text
+          assert 'preload()' in text
+          assert 'level-c-static-audio-preload.js' in Path('oracy/unit-c.html').read_text(encoding='utf-8')
+          assert 'progress-c.html?level=' in Path('oracy/index.html').read_text(encoding='utf-8')
+          banned='inlingua'.lower()
+          for p in files+[Path('oracy/rules-c1a.js'),Path('oracy/rules-c1b.js'),Path('oracy/rules-c2a.js'),Path('oracy/rules-c2b.js')]:
+              assert banned not in p.read_text(encoding='utf-8').lower(), f'banned term in {p}'
+          print('Level C Units 2-30 integrity OK')
+          PY
