@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate C1A Unit 1 and Level C shell
+      - name: Validate rebuilt C1A Unit 1
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -35,46 +35,48 @@ jobs:
           assert raw.startswith('window.ORACY_UNIT=') and raw.rstrip().endswith(';')
           u=json.loads(raw[len('window.ORACY_UNIT='):].rstrip()[:-1])
           assert u['unitNo']==31 and u['localUnitNo']==1 and u['level']=='C1A'
-          assert len(u['keyPoints'])==3
+          assert u['title']=='Speaking Across India'
+          assert len(u['keyPoints'])==3 and all('teaching' in k for k in u['keyPoints'])
           assert len(u['checks'])==12
           assert set(u['oral'])=={'q5','q10'}
           assert set(u['pron'])=={'q11','q12','q13','q14','q15'}
           assert set(u['speaking'])=={'s1','s2','s3','s4','s5'}
-          assert len(u['passages']['kp2'])==15
           text=raw.lower()
-          for place in ('bengaluru','gurugram','hyderabad'): assert place in text
-          assert 'cefr b-range' in text
-          assert 'organise' in text and 'practise' in text
+          for place in ('pune','jaipur','new delhi railway station'): assert place in text
+          for structure in ('-ing and -ed adjectives','the more/less..., the more/less...','since/as meaning because'): assert structure.lower() in text
+          for banned in ('placement','interview','client','manager','workplace','inlingua'): assert banned not in text, f'Banned drift term in learner content: {banned}'
+          assert 'cefr b range' in text or 'cefr b-range' in text
 
-          html=(root/'oracy/unit-31.html').read_text()
-          for f in ('unit-31-content.js','unit-renderer-c.js','unit-shared.js','conversation-shared.js','level-system-c.js','unit-speaking-c-runtime.js'): assert f in html
+          renderer=(root/'oracy/unit-renderer-c.js').read_text()
+          assert 'Understand the structure' in renderer
+          assert 'Say the examples aloud.' in renderer
+          assert 'Common errors to avoid' in renderer
 
           runtime=(root/'oracy/unit-speaking-c-runtime.js').read_text()
           required=[
-            'Vocabulary speaking drill ${vi+1} of 5',
-            'Vocabulary in use · 5 drills · 3 turns each',
-            'Question 1 of 3',
-            'Respond to statement',
-            'Speaking Gym · Key Point ${kp+1} · 5 reps',
-            'Free → Compress → Target language → React → Pressure finish',
-            '1. Target vocabulary:',
-            '2. Pronunciation & stress:',
-            '3. Key Point structure:',
-            '4. Conversation markers:',
+            'Vocabulary speaking drill ${vi+1} of 5 · three repetitions',
+            'Vocabulary in use · 5 drills · 15 spoken turns',
+            'Speaking Gym · Key Point ${kp+1} · five repetitions',
+            'Speak → repeat → change → react → finish',
+            'Three repetitions complete.',
+            'Five repetitions complete.',
             'Listen to model conversation',
-            "const DATA=[",
             "if(!U||Number(U.unitNo)!==31)return"
           ]
           for x in required: assert x in runtime, f'Missing Level C speaking invariant: {x}'
-          # 3 Key Points x 5 explicitly authored vocabulary items.
-          for x in ('overwhelming','settle into','hesitant','brush up on','hold back','demanding','spontaneous','precise','think on your feet','come across as'):
+          for x in ('captivating','bewildered','reassuring','articulate','hesitant','pick up','brush up on','keep up with','open up','get by','gradually','noticeably','take in','work out','come across as'):
             assert x in runtime, f'Missing C1A Unit 1 vocabulary: {x}'
-          assert runtime.count("{w:") == 15, 'C1A Unit 1 must contain exactly 15 vocabulary drill targets'
+          assert runtime.count("{w:")==15, 'C1A Unit 1 must contain exactly 15 vocabulary drill targets'
+          for banned in ('placement','interview','client','manager','workplace','inlingua'):
+            assert banned not in runtime.lower(), f'Banned drift term in speaking runtime: {banned}'
 
+          html=(root/'oracy/unit-31.html').read_text()
+          for f in ('unit-31-content.js','unit-renderer-c.js','unit-shared.js','conversation-shared.js','level-system-c.js','unit-speaking-c-runtime.js'): assert f in html
+          assert '20260910d' in html
           index=(root/'oracy/index.html').read_text()
           for label in ('Level B','Level C','Level D'): assert label in index
           assert "from:31,to:37" in index and "availableTo:31" in index
           admin=(root/'oracy/admin.html').read_text()
           assert 'previewC1A1' in admin and '/oracy/unit-31.html' in admin
-          print('ORACY C1A Unit 1 native vocabulary + speaking contract OK')
+          print('ORACY C1A Unit 1 general-English repetition contract OK')
           PY
