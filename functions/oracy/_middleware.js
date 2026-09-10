@@ -22,10 +22,16 @@ export async function onRequest(context){
   }
 
   // Protect every unit page and its unit-specific JS/assets. A URL alone is never enough.
+  // A valid ASCENT administrator has permanent ORACY access and does not need learner assignments.
   const match=path.match(/^\/oracy\/unit-(\d+)(?:\.[a-z0-9]+)?$/i);
   if(match){
     const unitNo=Number(match[1]);
-    const learnerToken=readCookie(context.request.headers.get('cookie')||'','oracy_session');
+    const cookies=context.request.headers.get('cookie')||'';
+    const adminToken=readCookie(cookies,'clarion_admin_session');
+    if(adminToken&&await validAdmin(adminToken)){
+      return noStore(await context.next());
+    }
+    const learnerToken=readCookie(cookies,'oracy_session');
     if(!learnerToken||!(await validLearnerUnit(learnerToken,unitNo))){
       return redirect('/oracy/?locked=1');
     }
