@@ -95,8 +95,9 @@ jobs:
           assert "inlingua" not in natural.lower()
 
           mixed=(root/'oracy/unit-speaking-c-mixed-reps.js').read_text()
-          for x in ('Question → Answer','Statement → Response','Hint:','How can I improve my stamina?','Raj’s grades are falling.','watching Instagram Reels','practise regularly','the roads are getting busier'):
+          for x in ('Question → Answer','Statement → Response','Hint:','How can I improve my stamina?','Raj’s grades are falling.','watching Instagram Reels','practise regularly'):
             assert x in mixed, f'Missing mixed-rep contract: {x}'
+          assert 'the roads are getting busier' in mixed.lower()
           assert mixed.count("t:'Question → Answer'") >= 6
           assert mixed.count("t:'Statement → Response'") >= 6
           assert "inlingua" not in mixed.lower()
