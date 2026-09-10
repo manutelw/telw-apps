@@ -1,12 +1,13 @@
 # ORACY B1A UNIT 1 — FROZEN BASELINE
 # Approved by Manu Vikraman on 2026-09-08 after PR #222.
 # Deliberately updated on 2026-09-10 at Manu Vikraman's request to rebuild Unit 1 as a speaking gym.
+# Expanded on 2026-09-10 to 5 vocabulary items and 5 speaking reps per Key Point.
 # DO NOT MODIFY these files as part of later ORACY work without explicit instruction.
 # Format: <git-blob-sha>  <path>
 
 3eeaff54c4e0f846501d0ed11636c6c5aad8cfb3  oracy/unit-1.html
 06e4daab21214b68760baa3efd3f2e36a2fa7f9a  oracy/unit-1.js
-dda3ee23d3a3943bc0c521dd8ca442fcce87a59c  oracy/unit-1-coach.js
+8f80481ff50552fde76a79803a35824096cd1d15  oracy/unit-1-coach.js
 9c308c54625d89df781dfbb649af530bed88caee  oracy/unit-1-oral-qa.js
 fe1df1e5abdd5f692455176929a0efe52cdc5b18  oracy/unit-1-feedback-examples.js
 866fc69cd9e2ae9418219aac9fc1b32dec6d49c0  oracy/unit-1-audio-controls.js
