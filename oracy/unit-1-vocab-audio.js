@@ -39,7 +39,7 @@ async function oracyPlayVocabModel(kp,vi,btn,status){
     buffers.forEach((buffer,i)=>{
       const source=ORACY_VOCAB_AUDIO_CTX.createBufferSource();
       source.buffer=buffer;source.connect(ORACY_VOCAB_AUDIO_CTX.destination);source.start(when);ORACY_VOCAB_AUDIO_SOURCES.push(source);
-      when+=buffer.duration+(i<buffers.length-1?.16:0);
+      when+=buffer.duration+(i<buffers.length-1 ? .16 : 0);
     });
     status.textContent='Playing model conversation.';
     const ms=Math.max(300,(when-ORACY_VOCAB_AUDIO_CTX.currentTime)*1000);
