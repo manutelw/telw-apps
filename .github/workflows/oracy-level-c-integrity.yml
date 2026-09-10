@@ -8,6 +8,7 @@ on:
       - 'oracy/level-system-c.js'
       - 'oracy/unit-speaking-c-runtime.js'
       - 'oracy/unit-speaking-c-natural-audio.js'
+      - 'oracy/unit-speaking-c-mixed-reps.js'
       - 'oracy/index.html'
       - 'oracy/admin.html'
       - '.github/workflows/oracy-level-c-integrity.yml'
@@ -20,6 +21,7 @@ on:
       - 'oracy/level-system-c.js'
       - 'oracy/unit-speaking-c-runtime.js'
       - 'oracy/unit-speaking-c-natural-audio.js'
+      - 'oracy/unit-speaking-c-mixed-reps.js'
       - 'oracy/index.html'
       - 'oracy/admin.html'
 jobs:
@@ -92,8 +94,15 @@ jobs:
           assert "captivating" in natural and "come across as" in natural
           assert "inlingua" not in natural.lower()
 
+          mixed=(root/'oracy/unit-speaking-c-mixed-reps.js').read_text()
+          for x in ('Question → Answer','Statement → Response','Hint:','How can I improve my stamina?','Raj’s grades are falling.','watching Instagram Reels','practise regularly','the roads are getting busier'):
+            assert x in mixed, f'Missing mixed-rep contract: {x}'
+          assert mixed.count("t:'Question → Answer'") >= 6
+          assert mixed.count("t:'Statement → Response'") >= 6
+          assert "inlingua" not in mixed.lower()
+
           html=(root/'oracy/unit-31.html').read_text()
-          for f in ('unit-31-content.js','unit-renderer-c.js','unit-shared.js','conversation-shared.js','level-system-c.js','unit-speaking-c-runtime.js','unit-speaking-c-natural-audio.js'): assert f in html
+          for f in ('unit-31-content.js','unit-renderer-c.js','unit-shared.js','conversation-shared.js','level-system-c.js','unit-speaking-c-runtime.js','unit-speaking-c-natural-audio.js','unit-speaking-c-mixed-reps.js'): assert f in html
           assert 'unit-speaking-c-dialogue-audio.js' not in html
           assert 'unit-speaking-c-natural-audio.js?v=20260910d' in html
           index=(root/'oracy/index.html').read_text()
@@ -104,5 +113,5 @@ jobs:
           assert 'currentAdmin' in index and 'openAdminPreview' in index
           admin=(root/'oracy/admin.html').read_text()
           assert 'previewC1A1' in admin and '/oracy/unit-31.html' in admin
-          print('ORACY C1A Unit 1 natural enthusiastic dialogue and intonation rules OK')
+          print('ORACY C1A Unit 1 mixed Q&A / statement-response rep contract OK')
           PY
