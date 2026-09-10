@@ -230,10 +230,25 @@
     nav.appendChild(link);
   }
 
-  function addGdTrainerLink(){appendTrainerLink("gdLabTrainerLink","GD Question Bank","../gd-lab/?trainer=1",true);}
+  function openGdQuestionBank(event){
+    event.preventDefault();
+    const button=document.querySelector('[data-section="questionBank"]');
+    if(button) button.click();
+    const filter=document.getElementById("bankTypeFilter");
+    if(filter){filter.value="GD";filter.dispatchEvent(new Event("change",{bubbles:true}));}
+  }
+  function addGdTrainerLink(){appendTrainerLink("gdLabTrainerLink","GD Question Bank","#questionBank",false);document.getElementById("gdLabTrainerLink")?.addEventListener("click",openGdQuestionBank);}
   function addGdAssignmentBuilderLink(){appendTrainerLink("gdAssignmentBuilderTrainerLink","GD for DUGOUTS","../gd-lab/admin-builder.html",false);}
   function addLearnerAccessLink(){appendTrainerLink("learnerAccessTrainerLink","GD & PI Learner Access","./learner-access.html",false);}
-  function addCatTrainerLink(){appendTrainerLink("catSimulatorTrainerLink","CAT Simulator","https://cat.clarionprep.com",true);}
+  function openCatSimulator(event){
+    let admin=null;
+    try{admin=JSON.parse(localStorage.getItem("ascent_admin_master_session")||"null");}catch(_){ }
+    if(!admin?.sessionToken||String(admin.role||"").toUpperCase()!=="ADMIN")return;
+    event.preventDefault();
+    const form=document.createElement("form");form.method="POST";form.action="https://cat.clarionprep.com/admin-handoff";form.target="_blank";form.style.display="none";
+    const token=document.createElement("input");token.type="hidden";token.name="ascent_session_token";token.value=admin.sessionToken;form.appendChild(token);document.body.appendChild(form);form.submit();form.remove();
+  }
+  function addCatTrainerLink(){appendTrainerLink("catSimulatorTrainerLink","CAT Simulator","https://cat.clarionprep.com",true);document.getElementById("catSimulatorTrainerLink")?.addEventListener("click",openCatSimulator);}
 
   window.renderResultsTable=renderStudentSummaryResults;
 
