@@ -1,0 +1,5 @@
+(function(){'use strict';const G=[
+'Now say the same experience again in 20–30 seconds. This time, use one -ing adjective for the situation, one -ed adjective for how you felt, and replace one vague word such as good, bad or nice with a more precise word.',
+'Now say the same idea again in 20–30 seconds. This time, show the relationship clearly with the more..., the more... or the less..., the more.... Keep only the strongest example and avoid repeating the same point.',
+'Now say the same idea again in 20–30 seconds. This time, give your main point first, then add one clear reason using since or as. Replace one vague word with a more precise expression.'
+];function apply(){const reps=[...document.querySelectorAll('.c-rep[data-rep="1"]')];if(reps.length<3)return false;reps.forEach((box,i)=>{const p=box.querySelector('p b');if(p&&G[i])p.textContent=G[i]});return true}let n=0;const t=setInterval(()=>{n++;if(apply()||n>40)clearInterval(t)},75)})();
