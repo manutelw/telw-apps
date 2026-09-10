@@ -1,0 +1,59 @@
+name: ORACY Level C Integrity
+on:
+  pull_request:
+    paths:
+      - 'oracy/unit-3*.html'
+      - 'oracy/unit-3*-content.js'
+      - 'oracy/unit-renderer-c.js'
+      - 'oracy/level-system-c.js'
+      - 'oracy/unit-speaking-c-runtime.js'
+      - 'oracy/index.html'
+      - 'oracy/admin.html'
+      - '.github/workflows/oracy-level-c-integrity.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'oracy/unit-3*.html'
+      - 'oracy/unit-3*-content.js'
+      - 'oracy/unit-renderer-c.js'
+      - 'oracy/level-system-c.js'
+      - 'oracy/unit-speaking-c-runtime.js'
+      - 'oracy/index.html'
+      - 'oracy/admin.html'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate C1A Unit 1 and Level C shell
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,re
+          root=Path('.')
+          raw=(root/'oracy/unit-31-content.js').read_text()
+          assert raw.startswith('window.ORACY_UNIT=') and raw.rstrip().endswith(';')
+          u=json.loads(raw[len('window.ORACY_UNIT='):].rstrip()[:-1])
+          assert u['unitNo']==31 and u['localUnitNo']==1 and u['level']=='C1A'
+          assert len(u['keyPoints'])==3
+          assert len(u['checks'])==12
+          assert set(u['oral'])=={'q5','q10'}
+          assert set(u['pron'])=={'q11','q12','q13','q14','q15'}
+          assert set(u['speaking'])=={'s1','s2','s3','s4','s5'}
+          assert len(u['passages']['kp2'])==15
+          text=raw.lower()
+          for place in ('bengaluru','gurugram','hyderabad'): assert place in text
+          assert 'cefr b-range' in text
+          assert 'organise' in text and 'practise' in text
+          html=(root/'oracy/unit-31.html').read_text()
+          for f in ('unit-31-content.js','unit-renderer-c.js','unit-shared.js','conversation-shared.js','level-system-c.js','unit-speaking-c-runtime.js'): assert f in html
+          runtime=(root/'oracy/unit-speaking-c-runtime.js').read_text()
+          for f in ('unit-speaking-gym-v2.js','unit-speaking-model-natural.js','unit-speaking-model-coherent.js','unit-speaking-model-target-cued.js','unit-speaking-model-quality.js'): assert f in runtime
+          assert 'approvedTargets' in runtime and 'Number(U.unitNo)>60' in runtime
+          index=(root/'oracy/index.html').read_text()
+          for label in ('Level B','Level C','Level D'): assert label in index
+          assert "from:31,to:37" in index and "availableTo:31" in index
+          admin=(root/'oracy/admin.html').read_text()
+          assert 'previewC1A1' in admin and '/oracy/unit-31.html' in admin
+          print('ORACY Level C1A Unit 1 and Level B/C/D index OK')
+          PY
