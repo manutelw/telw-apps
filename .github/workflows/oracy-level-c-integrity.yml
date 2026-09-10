@@ -127,11 +127,14 @@ jobs:
           assert 'unit-speaking-c-natural-audio.js?v=20260910e' in html
           index=(root/'oracy/index.html').read_text()
           for label in ('Level B','Level C','Level D'): assert label in index
-          assert "from:31,to:37" in index and "availableTo:31" in index
+          assert "from:31,to:37" in index and "availableTo:37" in index
+          assert "from:38,to:45" in index and "availableTo:45" in index
+          assert "from:46,to:52" in index and "availableTo:52" in index
+          assert "from:53,to:60" in index and "availableTo:60" in index
           assert 'login-panel' not in index
           assert 'Login ID' not in index and 'Log in' not in index
           assert 'currentAdmin' in index and 'openAdminPreview' in index
           admin=(root/'oracy/admin.html').read_text()
           assert 'previewC1A1' in admin and '/oracy/unit-31.html' in admin
-          print('ORACY C1A Unit 1 contracts preserved; Level C static audio eager preload OK')
+          print('ORACY C1A Unit 1 contracts preserved; full Level C availability OK')
           PY
