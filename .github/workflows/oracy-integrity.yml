@@ -64,7 +64,6 @@ jobs:
           audio = Path('oracy/unit-1-vocab-audio.js').read_text()
           wrapper = Path('worker-oracy.js').read_text()
 
-          # Structural invariants for the approved Unit 1 design.
           assert coach.count("title:'") >= 3, 'BALLISTIC LOCK: three Key Point speaking gyms missing'
           for phrase in [
               '3 Key Points · 5 vocabulary items per Key Point · 5 core speaking reps per Key Point · 5 vocabulary drills per Key Point',
@@ -170,5 +169,7 @@ jobs:
         run: python .github/scripts/oracy_unit2_review_check.py
       - name: Verify ORACY B1A Unit 3 review candidate
         run: python .github/scripts/oracy_unit3_review_check.py
+      - name: Verify Units 2-30 speaking-gym rollout
+        run: python .github/scripts/oracy_speaking_gym_v2_check.py
       - name: Verify frozen ORACY Units 1-30 and level/package locks
         run: python .github/scripts/oracy_course_integrity_check.py
