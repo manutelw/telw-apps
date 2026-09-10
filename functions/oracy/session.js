@@ -1,16 +1,25 @@
 const ORACY_ACCESS='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/oracy-access';
 const ORACY_VOICE='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/oracy-voice';
+const ASCENT_URL='https://vtqatrhwfvzyodiftvkc.supabase.co';
+const ASCENT_KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
+const ADMIN_VALIDATE=ASCENT_URL+'/rest/v1/rpc/ascent_admin_trainer_entry_list';
 
 export async function onRequestPost(context){
   const ct=context.request.headers.get('content-type')||'';
   try{
     if(ct.includes('multipart/form-data')){
-      const token=readCookie(context.request.headers.get('cookie')||'','oracy_session');
-      if(!token)return json({error:'Learner session required'},401);
+      const cookies=context.request.headers.get('cookie')||'';
+      const learnerToken=readCookie(cookies,'oracy_session');
+      const adminToken=readCookie(cookies,'clarion_admin_session');
       const form=await context.request.formData();
       const unitNo=Number(form.get('unit_no')||1);
-      if(!(await validate(token,unitNo)))return json({error:'Unit access required'},403);
-      form.set('session_token',token);
+      if(learnerToken&&await validate(learnerToken,unitNo)){
+        form.set('session_token',learnerToken);
+      }else if(adminToken&&await validAdmin(adminToken)){
+        form.set('admin_token',adminToken);
+      }else{
+        return json({error:'ORACY access required'},403);
+      }
       form.set('unit_no',String(unitNo));
       const r=await fetch(ORACY_VOICE,{method:'POST',headers:{'x-oracy-client':'oracy-web-v1'},body:form});
       return proxy(r);
@@ -18,11 +27,17 @@ export async function onRequestPost(context){
 
     const body=await context.request.json();
     if(['tts','realtime-token','conversation-feedback'].includes(body?.action)){
-      const token=readCookie(context.request.headers.get('cookie')||'','oracy_session');
-      if(!token)return json({error:'Learner session required'},401);
+      const cookies=context.request.headers.get('cookie')||'';
+      const learnerToken=readCookie(cookies,'oracy_session');
+      const adminToken=readCookie(cookies,'clarion_admin_session');
       const unitNo=Number(body.unit_no||1);
-      if(!(await validate(token,unitNo)))return json({error:'Unit access required'},403);
-      body.session_token=token;
+      if(learnerToken&&await validate(learnerToken,unitNo)){
+        body.session_token=learnerToken;
+      }else if(adminToken&&await validAdmin(adminToken)){
+        body.admin_token=adminToken;
+      }else{
+        return json({error:'ORACY access required'},403);
+      }
       body.unit_no=unitNo;
       const r=await fetch(ORACY_VOICE,{method:'POST',headers:{'x-oracy-client':'oracy-web-v1','content-type':'application/json'},body:JSON.stringify(body)});
       return proxy(r);
@@ -45,6 +60,16 @@ async function validate(token,unitNo){
     if(!r.ok)return false;
     const data=await r.json();
     return Boolean(data&&data.ok===true);
+  }catch{return false;}
+}
+
+async function validAdmin(token){
+  try{
+    const r=await fetch(ADMIN_VALIDATE,{method:'POST',headers:{apikey:ASCENT_KEY,authorization:'Bearer '+ASCENT_KEY,'content-type':'application/json'},body:JSON.stringify({p_session_token:token})});
+    if(!r.ok)return false;
+    const payload=await r.json();
+    const result=Array.isArray(payload)?payload[0]:payload;
+    return Boolean(result&&result.ok===true);
   }catch{return false;}
 }
 
