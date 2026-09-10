@@ -426,26 +426,17 @@
       } catch (error) { setTrainerEntryStatus(error.message || "The trainer portal could not be opened.","error"); }
     }
 
-    async function enterAdminWorkspace(destination) {
+    function enterAdminWorkspace(destination) {
       const status = document.getElementById("adminWorkspaceStatus");
-      const select = document.getElementById("adminInstitutionSelect");
-      let accessPointUuid = select.value;
-      if (!accessPointUuid) {
-        const fallbackOption = Array.from(select.options).find(option => option.value);
-        if (fallbackOption) {
-          accessPointUuid = fallbackOption.value;
-          select.value = accessPointUuid;
-        }
-      }
-      if (!accessPointUuid) { status.className="admin-status error"; status.textContent="No administrator institution workspace is available."; return; }
       status.className = "admin-status";
       status.textContent = "Opening administrator workspace…";
-      try {
-        const result = await callAdminRpc(ENTER_ADMIN_WORKSPACE_URL,{p_session_token:session.sessionToken,p_access_point_uuid:accessPointUuid});
-        localStorage.setItem(ADMIN_MASTER_SESSION_KEY,JSON.stringify(session));
-        localStorage.setItem(SESSION_STORAGE_KEY,JSON.stringify(result));
-        window.location.href = destination;
-      } catch (error) { status.className="admin-status error"; status.textContent=error.message || "The administrator workspace could not be opened."; }
+
+      // The master session is already a server-issued, validated ADMIN session.
+      // Keep the owner in that role instead of replacing it with a short-lived,
+      // institution-scoped trainer handoff that can trigger another login.
+      localStorage.setItem(ADMIN_MASTER_SESSION_KEY,JSON.stringify(session));
+      localStorage.setItem(SESSION_STORAGE_KEY,JSON.stringify(session));
+      window.location.href = destination;
     }
     async function loadAdminInstitutions() {
       const select = document.getElementById("adminInstitutionSelect");
