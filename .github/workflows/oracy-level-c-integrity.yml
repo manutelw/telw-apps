@@ -75,19 +75,22 @@ jobs:
             assert banned not in runtime.lower(), f'Banned drift term in speaking runtime: {banned}'
 
           natural=(root/'oracy/unit-speaking-c-natural-audio.js').read_text()
-          assert 'RATE=1.08' in natural
-          assert 'GAP=.055' in natural
-          assert "VOICE" not in natural or True
-          assert "Promise.all(rows.map" in natural
+          assert 'RATE=1.13' in natural
+          assert 'GAP=.035' in natural
+          assert "filter(x=>/^\\s*[AB]\\s*:/i.test(x))" in natural
           assert "playbackRate.value=RATE" in natural
+          assert "QUESTION_STYLE" in natural
+          assert "hash(text)" in natural
+          assert "playQuestion(q)" in natural
           assert "IntersectionObserver" in natural
           assert "captivating" in natural and "come across as" in natural
-          assert "textbook" in natural.lower()
+          assert "tired" in natural.lower() and "flat" in natural.lower()
           assert "inlingua" not in natural.lower()
 
           html=(root/'oracy/unit-31.html').read_text()
           for f in ('unit-31-content.js','unit-renderer-c.js','unit-shared.js','conversation-shared.js','level-system-c.js','unit-speaking-c-runtime.js','unit-speaking-c-natural-audio.js'): assert f in html
           assert 'unit-speaking-c-dialogue-audio.js' not in html
+          assert 'unit-speaking-c-natural-audio.js?v=20260910c' in html
           index=(root/'oracy/index.html').read_text()
           for label in ('Level B','Level C','Level D'): assert label in index
           assert "from:31,to:37" in index and "availableTo:31" in index
@@ -96,5 +99,5 @@ jobs:
           assert 'currentAdmin' in index and 'openAdminPreview' in index
           admin=(root/'oracy/admin.html').read_text()
           assert 'previewC1A1' in admin and '/oracy/unit-31.html' in admin
-          print('ORACY C1A Unit 1 distributed-rule speaking flow and natural dialogue audio OK')
+          print('ORACY C1A Unit 1 distributed-rule speaking flow and audio accuracy OK')
           PY
