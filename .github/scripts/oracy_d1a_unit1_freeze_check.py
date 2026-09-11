@@ -39,6 +39,6 @@ assert locked == REQUIRED, "D1A Unit 1 lock does not cover the exact approved pa
 voice = (ROOT / "supabase/functions/oracy-voice/index.ts").read_text(encoding="utf-8")
 assert '61:{' in voice and 'level:"D1A"' in voice
 assert 'title:"The Story So Far"' in voice
-assert 'unitNo===61?"D1A Unit 1"' in voice
+assert 'unitNo>=61&&unitNo<=90?`${later.level} Unit ${unitNo-60}`' in voice
 
 print("D1A UNIT 1 MILITARY FREEZE OK: exact approved package unchanged")

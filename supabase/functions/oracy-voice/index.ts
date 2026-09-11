@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { COURSE_UNITS_4_30 } from "./course-units-4-30.ts";
+import { COURSE_UNITS_62_90 } from "./course-units-62-90.ts";
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -99,7 +100,7 @@ async function tts(req: Request, payload: any) {
   const adminToken = String(payload?.admin_token || "").trim();
   const passageId = String(payload?.passage_id || "").trim();
   if (!(await authorised(sessionToken,adminToken,unitNo))) return json(req, { error: "ORACY access required" }, 403);
-  if (!text || text.length > 1800) return json(req, { error: "Invalid text" }, 400);
+  if (!text || text.length > 2000) return json(req, { error: "Invalid text" }, 400);
 
   if (passageId) {
     const { data: cached } = await db.from("oracy_audio_cache").select("audio_base64,content_type").eq("passage_id", passageId).maybeSingle();
@@ -233,6 +234,7 @@ const CONVERSATION_UNITS:any={
     language:"past simple, past continuous, negative questions, question tags, be and get passives, from what I gather, not quite, oddly enough, believe it or not, work your way up, branch out, end up, start from scratch, have a change of heart, take it in your stride",
     model:"Not quite. I was working in finance when an unexpected opportunity came up. I took it on, and that was how I ended up in training."
   },
+  ...COURSE_UNITS_62_90,
   ...COURSE_UNITS_4_30
 };
 
@@ -327,7 +329,7 @@ async function evaluate(req: Request, form: FormData) {
   const standardShape=`Return strict JSON only with this shape:\n{\n  "cefr_estimate":"A2|A2+|B1|B1+|B2",\n  "task_achievement":{"score":1,"comment":""},\n  "range":{"score":1,"comment":""},\n  "accuracy":{"score":1,"comment":""},\n  "fluency":{"score":1,"comment":""},\n  "coherence":{"score":1,"comment":""},\n  "phonological_control":{"score":0,"comment":"Not reliably assessed from transcript alone."},\n  "suggested_vocabulary":[{"item":"","example":""},{"item":"","example":""},{"item":"","example":""},{"item":"","example":""},{"item":"","example":""}],\n  "next_step":"",\n  "improved_version":""\n}`;
   const unit3Instruction=`You are ORACY, a warm TELW Level B1A spoken-English coach for adults. Evaluate the learner's response, not their personality.\n\nTask: ${prompt}\nLearner transcript: ${transcript}\n\nIgnore coughs, accidental fragments and obvious transcription artefacts. Score task achievement, range, accuracy, provisional fluency and coherence from 1 to 3. Do not invent fine pronunciation evidence from a transcript: phonological_control must be 0 with the stated limitation.\n\nUnit 3 language: forecast, clear up, likely, perhaps, definitely, I hope so, I hope not, if + present with will, might, probably, I'll, we'll, won't, so that, By the way. Suggest exactly five useful Unit 3 words or phrases that would improve this response, each with a short model fragment. Give one practical next step and one improved version that keeps the learner's meaning. Keep every comment concrete and B1A-friendly.\n\n${standardShape}`;
   const later=CONVERSATION_UNITS[unitNo];
-  const learnerUnitLabel=unitNo===61?"D1A Unit 1":`Unit ${unitNo}`;
+  const learnerUnitLabel=unitNo>=61&&unitNo<=90?`${later.level} Unit ${unitNo-60}`:`Unit ${unitNo}`;
   const laterUnitInstruction=later?`You are ORACY, a warm TELW Level ${later.level} spoken-English coach for adults. Evaluate the learner response, not their personality.\n\nTask: ${prompt}\nLearner transcript: ${transcript}\n\nIgnore coughs and transcription artefacts. Score task achievement, range, accuracy, provisional fluency and coherence from 1 to 3. Set phonological_control to 0 because transcript alone cannot prove fine sound detail.\n\n${learnerUnitLabel} language: ${later.language}. Suggest exactly five useful ${learnerUnitLabel} words or phrases, each with a short model fragment. Give one practical next step and one improved version. Keep comments concrete and ${later.level}-friendly.\n\n${standardShape}`:"";
   const instruction = unitNo===3?unit3Instruction:unitNo>=4&&later?laterUnitInstruction:`You are ORACY, a warm CEFR B1 spoken-English coach for adult learners. Evaluate the learner's RESPONSE, not their personality.\n\nTask: ${prompt}\nLearner transcript: ${transcript}\n\nImportant transcription rule: Ignore obvious non-linguistic noise, coughs, throat-clearing, accidental fragments, or transcription artefacts. Do not treat them as language errors.\n\nUse this CEFR-aligned ORACY rubric, with 1-3 scores where evidence exists:\n1 = below B1 task expectation; 2 = developing B1; 3 = secure B1 for this short task.\n- task_achievement: Did the learner answer the actual prompt and develop the required points?\n- range: Is there enough everyday vocabulary and some varied sentence patterns for B1?\n- accuracy: Is common grammar controlled well enough for the message to stay clear?\n- fluency: Give only a PROVISIONAL score based on how continuously and fully the transcript develops ideas. State that pauses cannot be judged reliably from transcript alone.\n- coherence: Are ideas linked in a clear sequence with connectors/discourse markers?\n- phonological_control: DO NOT invent pronunciation evidence from transcript. Return score 0 and say it is not reliably assessed from transcript alone.\n\nUnit 1 language bank has 13 vocabulary/discourse items. Core vocabulary: native language; official language; at least; almost; majority. Discourse markers: You bet!; Exactly!; Oh yeah!; Really?; You know what?; By the way; Same here; Anyway. Useful Unit 1 patterns: I use ... for -ing; I need ... to; I am learning ... to; so that I can.\n\nFor suggested_vocabulary, return EXACTLY five useful Unit 1 items/phrases that would improve THIS response. Prioritise items the learner did not use, including discourse markers where natural. Add one short model fragment for each.\n\nGive one clear next_step. Keep comments concrete and B1-friendly. Do not give a grammar lecture.\n\nGive one improved_version that keeps the learner's meaning and naturally uses some missed Unit 1 vocabulary and discourse markers.\n\n${standardShape}`;
   const r = await fetch("https://api.openai.com/v1/chat/completions", {method:"POST",headers:{"Authorization":`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({model:"gpt-4o-mini",temperature:0.1,response_format:{type:"json_object"},messages:[{role:"user",content:instruction}]})});
