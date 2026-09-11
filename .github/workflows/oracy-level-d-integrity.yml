@@ -4,6 +4,7 @@ on:
     paths:
       - 'oracy/unit-61.html'
       - 'oracy/unit-61-content.js'
+      - 'oracy/unit-61.js'
       - 'oracy/level-system-d.js'
       - 'oracy/index.html'
       - 'oracy/admin.html'
@@ -14,6 +15,7 @@ on:
     paths:
       - 'oracy/unit-61.html'
       - 'oracy/unit-61-content.js'
+      - 'oracy/unit-61.js'
       - 'oracy/level-system-d.js'
       - 'oracy/index.html'
       - 'oracy/admin.html'
@@ -44,7 +46,22 @@ jobs:
           ok(u.conversation.maxLearnerTurns===4&&u.speaking.s4.title==='You Thought You Knew Me','Four-turn AI conversation');
           const page=fs.readFileSync('oracy/unit-61.html','utf8');
           ok(page.includes('unit-renderer-c.js')&&page.includes('unit-shared.js')&&page.includes('conversation-shared.js')&&page.includes('level-system-d.js'),'Shared shell');
+          ok(page.includes('unit-61.js'),'Unit vocabulary runtime');
           ok(!/textarea|contenteditable|type=["']text/i.test(page+fs.readFileSync('oracy/unit-61-content.js','utf8')),'Spoken-only rule');
+          const vocab=fs.readFileSync('oracy/unit-61.js','utf8');
+          ok((vocab.match(/\{w:\[/g)||[]).length===3,'One vocabulary bank per Key Point');
+          ok((vocab.match(/class=\"u61record\"/g)||[]).length===1,'Per-item recording control template');
+          for(const rule of ['Now use it yourself.','Record my own usage','Checking your usage','Usage feedback','Record improved usage'])ok(vocab.includes(rule),'Vocabulary recording rule: '+rule);
+          ok(vocab.includes("form.append('action','evaluate')")&&vocab.includes("form.append('unit_no','61')"),'Protected voice feedback route');
+          for(let n=61;n<=90;n++){
+            const unitPage=`oracy/unit-${n}.html`;
+            if(!fs.existsSync(unitPage))continue;
+            const runtime=`oracy/unit-${n}.js`;
+            ok(fs.existsSync(runtime),`Level D Unit ${n} vocabulary runtime`);
+            const code=fs.readFileSync(runtime,'utf8');
+            for(const rule of ['Now use it yourself.','Record my own usage','Usage feedback','Record improved usage'])ok(code.includes(rule),`Level D Unit ${n} frozen vocabulary cycle: ${rule}`);
+            ok(code.includes("form.append('action','evaluate')"),`Level D Unit ${n} vocabulary feedback service`);
+          }
           const index=fs.readFileSync('oracy/index.html','utf8'),admin=fs.readFileSync('oracy/admin.html','utf8'),voice=fs.readFileSync('supabase/functions/oracy-voice/index.ts','utf8');
           for(const x of ['D1A','D1B','D2A','D2B','from:61,to:67','availableTo:61'])ok(index.includes(x),'Index: '+x);
           ok(admin.includes('Open Level D · D1A Unit 1')&&admin.includes("preview('/oracy/unit-61.html')"),'Admin preview');
