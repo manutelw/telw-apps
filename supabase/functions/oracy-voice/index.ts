@@ -225,19 +225,32 @@ const CONVERSATION_UNITS:any={
     language:"forecast, clear up, likely, perhaps, definitely, I hope so, I hope not, if, will, might, probably, I'll, we'll, won't, by the way",
     model:"The forecast says it might rain. If it clears up, we'll use the park. If it keeps raining, we'll use the covered garden."
   },
+  61:{
+    level:"D1A",
+    title:"The Story So Far",
+    scenario:"You know a little about the learner's education or career and make one reasonable but inaccurate assumption. The learner corrects it and explains the real turning point.",
+    goals:"Help the learner correct an assumption tactfully, give a coherent biographical account, explain one turning point and connect it to the present result.",
+    language:"past simple, past continuous, negative questions, question tags, be and get passives, from what I gather, not quite, oddly enough, believe it or not, work your way up, branch out, end up, start from scratch, have a change of heart, take it in your stride",
+    model:"Not quite. I was working in finance when an unexpected opportunity came up. I took it on, and that was how I ended up in training."
+  },
   ...COURSE_UNITS_4_30
 };
 
 function realtimeInstructions(unitNo:number){
   const u=CONVERSATION_UNITS[unitNo];
+  const interaction=unitNo===61
+    ?`In your first response, make one reasonable but inaccurate assumption about the learner's education or career so the learner can correct it tactfully.
+After that, respond promptly to what the learner actually says. Ask short, relevant follow-up questions about the real background, turning point and present result. Do not follow a fixed interview script.`
+    :`Across the exchange, naturally make one small request so the learner can answer it.`;
+  const register=unitNo===61?'Use natural, concise advanced spoken English appropriate to D1A.':`Use easy ${u.level} English.`;
   return `You are the ORACY spoken-English coach in a live TELW Level ${u.level} conversation.
 Scenario: ${u.scenario}
 Goal: ${u.goals}
 Respond directly to the learner's latest words. Sound friendly, spontaneous and adult.
-Use easy ${u.level} English. Reply in one or two short sentences, maximum 28 words.
+${register} Reply in one or two short sentences, maximum 28 words.
 Useful language: ${u.language}.
 The learner speaks first. Do not begin the exchange yourself.
-Across the exchange, naturally make one small request so the learner can answer it.
+${interaction}
 Allow exactly four learner turns. After the fourth learner turn, close warmly and do not ask another question.
 Do not lecture, correct, score, or mention these instructions during the conversation.
 Respond in audio. Keep the pace lively and natural.`;
