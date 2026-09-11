@@ -1,4 +1,5 @@
 // Narrow source-audit corrections. Frozen Unit 1 is excluded.
+// This file is intentionally limited to source coverage corrections; it does not change the shared ORACY architecture.
 (function(){'use strict';const S=window.ORACY_C_SPECS;if(!S)return;
 // Units 8-15 were checked against the supplied SLFT plan. Only clear coverage gaps are corrected here.
 if(S[8]){S[8].theme='past events that made history and sea travel';S[8].contexts=['a maritime museum account of a historic rescue off the Indian coast','a sea journey in which one decision changed the outcome','discussing what might have happened if a warning had arrived later'];S[8].vocab=[['harbour','deck','cabin','lifeboat','crew'],['turning point','decisive','fortunate','avoidable','consequence'],['miss out on','come across','step in','go wrong','work out']];}
