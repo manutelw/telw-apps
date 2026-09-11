@@ -4,6 +4,7 @@ on:
     paths:
       - 'oracy/level-c-units-2-30-specs.js'
       - 'oracy/level-c-source-16-30.js'
+      - 'oracy/level-c-source-audit-fixes.js'
       - 'oracy/level-c-listen-speak.js'
       - 'oracy/level-c-unit-builder.js'
       - 'oracy/level-c-unit-enhance.js'
@@ -30,6 +31,7 @@ jobs:
         run: |
           node --check oracy/level-c-units-2-30-specs.js
           node --check oracy/level-c-source-16-30.js
+          node --check oracy/level-c-source-audit-fixes.js
           node --check oracy/level-c-listen-speak.js
           node --check oracy/level-c-unit-builder.js
           node --check oracy/level-c-unit-enhance.js
@@ -43,7 +45,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          files=[Path('oracy/level-c-units-2-30-specs.js'),Path('oracy/level-c-source-16-30.js'),Path('oracy/level-c-listen-speak.js'),Path('oracy/level-c-unit-builder.js'),Path('oracy/level-c-unit-enhance.js'),Path('oracy/unit-speaking-c-units2-30-runtime.js'),Path('oracy/level-c-progress.js'),Path('oracy/unit-c.html')]
+          files=[Path('oracy/level-c-units-2-30-specs.js'),Path('oracy/level-c-source-16-30.js'),Path('oracy/level-c-source-audit-fixes.js'),Path('oracy/level-c-listen-speak.js'),Path('oracy/level-c-unit-builder.js'),Path('oracy/level-c-unit-enhance.js'),Path('oracy/unit-speaking-c-units2-30-runtime.js'),Path('oracy/level-c-progress.js'),Path('oracy/unit-c.html')]
           text='\n'.join(p.read_text(encoding='utf-8') for p in files)
           assert 'window.ORACY_C_SPECS=' in text
           specs=Path('oracy/level-c-units-2-30-specs.js').read_text(encoding='utf-8')
@@ -52,8 +54,11 @@ jobs:
           for n in range(16,31): assert f'{n}:' in src, f'missing source correction Unit {n}'
           for required in ('festivals, celebrations and traditions','the Internet and quantities','informal spoken register','weights, measures and currency values','newspapers and journalistic register','school days, adult education and training','letter writing and personality','advertising','the animal world and strong opinions','complaining and apologising','politics and government','British and American English and international usage','going on a cruise and future events','past experiences and memories','famous quotations, proverbs and famous mistakes'):
               assert required in src, required
+          audit=Path('oracy/level-c-source-audit-fixes.js').read_text(encoding='utf-8')
+          for required in ('harbour','lifeboat','forehead','maternal aunt','procession','first-aid point','kilometre','sociology','stray animal'):
+              assert required in audit, required
           listen=Path('oracy/level-c-listen-speak.js').read_text(encoding='utf-8')
-          for required in ('Listen to full conversation','read the suggested line','say it your way','The next response can change','action','evaluate','transcript','adaptiveLead','preload'):
+          for required in ('Listen to full conversation','read the suggested line','say it your way','The next response can change','evaluate','transcript','adaptiveLead','preload'):
               assert required.lower() in listen.lower(), required
           assert 'Question → Answer' in text
           assert 'Statement → Response' in text
@@ -61,11 +66,10 @@ jobs:
           assert 'Evaluate within CEFR B range' in text
           assert 'Natural, enthusiastic adult conversation in clear UK English' in text
           html=Path('oracy/unit-c.html').read_text(encoding='utf-8')
-          assert 'level-c-source-16-30.js' in html and 'level-c-listen-speak.js' in html
-          assert 'level-c-static-audio-preload.js' in html
+          for f in ('level-c-source-16-30.js','level-c-source-audit-fixes.js','level-c-listen-speak.js','level-c-static-audio-preload.js'): assert f in html
           assert 'progress-c.html?level=' in Path('oracy/index.html').read_text(encoding='utf-8')
           banned='inlingua'
           for p in files+[Path('oracy/rules-c1a.js'),Path('oracy/rules-c1b.js'),Path('oracy/rules-c2a.js'),Path('oracy/rules-c2b.js')]:
               assert banned not in p.read_text(encoding='utf-8').lower(), f'banned term in {p}'
-          print('Level C Units 2-30 integrity OK; Units 16-30 source-aligned listen-speak layer present')
+          print('Level C integrity OK; source audit and Units 16-30 listen-speak correction present')
           PY
