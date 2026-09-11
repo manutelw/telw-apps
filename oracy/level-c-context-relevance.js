@@ -2,28 +2,36 @@
 (function(){
 'use strict';
 const specs=window.ORACY_C_SPECS||{};
-const replacements={
- 'a new neighbourhood in Indore':'a new neighbourhood',
+const exact={
  'comparing Mysuru and Bengaluru':'comparing two cities',
- 'an evening walk beside a restored lake':'an evening walk beside a restored lake',
- 'joining a weekend cycling group':'joining a weekend cycling group',
- 'learning classical guitar in Chennai':'learning classical guitar',
- 'helping a cousin prepare for a theatre audition':'helping a cousin prepare for a theatre audition',
- 'rearranging a flat in Noida':'rearranging a flat',
- 'describing a family home in Kochi':'describing a family home',
- 'finding space in a compact Mumbai apartment':'finding space in a compact apartment',
- 'planning a family train trip to Udaipur':'planning a family train trip',
- 'describing a film set in Ladakh':'describing a film set in a mountain region',
- 'repairing spectacles in Hyderabad':'repairing spectacles',
- 'describing a handmade lamp from Jaipur':'describing a handmade lamp',
  'guiding a visitor around Hampi':'guiding a visitor around a heritage site',
- 'planning a nature trail in Sikkim':'planning a nature trail',
- 'thanking a host family in Kerala':'thanking a host family after a visit',
  'an Indian student preparing for the UK':'an Indian student preparing to study in the UK',
- 'planning a cruise from Mumbai':'planning a cruise from an Indian port'
+ 'an Indian student preparing to study in Britain':'an Indian student preparing to study in Britain'
 };
+function cleanContext(c){
+ let s=exact[c]||String(c||'');
+ s=s
+  .replace(/\bin Indore\b/g,'')
+  .replace(/\bin Chennai\b/g,'')
+  .replace(/\bin Noida\b/g,'')
+  .replace(/\bin Kochi\b/g,'')
+  .replace(/\bin Hyderabad\b/g,'')
+  .replace(/\bto Udaipur\b/g,'')
+  .replace(/\bin Ladakh\b/g,' in a mountain region')
+  .replace(/\bfrom Jaipur\b/g,'')
+  .replace(/\bin Sikkim\b/g,'')
+  .replace(/\bin Kerala\b/g,' after a visit')
+  .replace(/\bMumbai apartment\b/g,'apartment')
+  .replace(/\bfrom Mumbai\b/g,'from an Indian port')
+  .replace(/\bleaving from Mumbai\b/g,'leaving from an Indian port')
+  .replace(/\bMumbai cruise\b/g,'cruise')
+  .replace(/\s{2,}/g,' ')
+  .replace(/\s+([,.!?])/g,'$1')
+  .trim();
+ return s;
+}
 for(const unit of Object.values(specs)){
  if(!Array.isArray(unit?.contexts))continue;
- unit.contexts=unit.contexts.map(c=>replacements[c]||c);
+ unit.contexts=unit.contexts.map(cleanContext);
 }
 })();
