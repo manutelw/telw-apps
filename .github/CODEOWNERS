@@ -23,3 +23,12 @@
 /oracy/unit-1-audio-controls.js @manutelw
 /.github/oracy-unit1.lock @manutelw
 /.github/workflows/oracy-integrity.yml @manutelw
+
+# ORACY LEVEL D1A UNIT 1 — military-standard frozen baseline.
+# Any change requires Manu's explicit review and a deliberate lock rebaseline.
+/oracy/unit-61.html @manutelw
+/oracy/unit-61-content.js @manutelw
+/oracy/unit-61.js @manutelw
+/.github/oracy-d1a-unit1.lock @manutelw
+/.github/scripts/oracy_d1a_unit1_freeze_check.py @manutelw
+/.github/workflows/oracy-level-d-integrity.yml @manutelw

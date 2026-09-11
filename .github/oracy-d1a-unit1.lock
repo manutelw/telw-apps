@@ -1,0 +1,10 @@
+# ORACY LEVEL D1A UNIT 1 — MILITARY-STANDARD FROZEN BASELINE
+# Approved by Manu Vikraman on 2026-09-11 after the productive vocabulary cycle was finalised.
+# Learner-facing identity: Level D1A, Unit 1. Internal route identity: Unit 61.
+# No protected file below may change unless Manu explicitly unlocks D1A Unit 1.
+# Any Git blob hash mismatch must fail the required Level D integrity workflow.
+# Format: <git-blob-sha>  <path>
+
+0ba46dd29bd6b5b176b52febd6036e80df8e4284  oracy/unit-61.html
+0b0b42e3ebb5869c29bae7324399c65bcb59ee75  oracy/unit-61-content.js
+a4c34a2c616494a6a6abd20f3d550d09dd66f255  oracy/unit-61.js
