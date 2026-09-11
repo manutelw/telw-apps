@@ -1,16 +1,26 @@
-// Level C Units 2-30: make oral questions explain the learning purpose and the exact speaking task.
+// Level C Units 2-30: make oral questions explain the learning purpose and exact speaking task.
+// Context cleanup here is deliberately task-only: it must never mutate source specs or passage audio.
 (function(){
 'use strict';
 const U=window.ORACY_UNIT,S=window.ORACY_C_SPECS?.[U?.localUnitNo];
 if(!U||!S||Number(U.localUnitNo)<2||Number(U.localUnitNo)>30)return;
 const clean=s=>String(s||'').replace(/\s+/g,' ').trim();
+const TASK_CONTEXT={
+ 'learning classical guitar in Chennai':'learning classical guitar',
+ 'rearranging a flat in Noida':'rearranging a flat',
+ 'repairing spectacles in Hyderabad':'repairing spectacles'
+};
+function taskContext(raw){
+ const c=clean(raw);
+ return TASK_CONTEXT[c]||c;
+}
 function learningFromExample(example){
  const e=clean(example);
  if(!e)return 'Use the sentence shape from this Key Point to express the idea clearly.';
  return `Learn to reuse this sentence shape naturally in a new situation: “${e}”`;
 }
 function makeOral(id,kpIndex,sentences){
- const ctx=S.contexts[kpIndex];
+ const ctx=taskContext(S.contexts[kpIndex]);
  const kp=U.keyPoints?.[kpIndex]||{};
  const model=clean(kp.model||'');
  const vocab=(S.vocab?.[kpIndex]||[]).slice(0,3);
