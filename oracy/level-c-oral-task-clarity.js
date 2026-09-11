@@ -1,4 +1,4 @@
-// Level C Units 2-30: make oral questions explain the learning purpose and exact speaking task.
+// Level C Units 2-30: make oral questions state the situation and exact speaking task plainly.
 // Context cleanup here is deliberately task-only: it must never mutate source specs or passage audio.
 (function(){
 'use strict';
@@ -14,24 +14,17 @@ function taskContext(raw){
  const c=clean(raw);
  return TASK_CONTEXT[c]||c;
 }
-function learningFromExample(example){
- const e=clean(example);
- if(!e)return 'Use the sentence shape from this Key Point to express the idea clearly.';
- return `Learn to reuse this sentence shape naturally in a new situation: “${e}”`;
-}
 function makeOral(id,kpIndex,sentences){
  const ctx=taskContext(S.contexts[kpIndex]);
  const kp=U.keyPoints?.[kpIndex]||{};
  const model=clean(kp.model||'');
  const vocab=(S.vocab?.[kpIndex]||[]).slice(0,3);
  const starter=model.split(/(?<=[.!?])\s+/)[0]||model;
- const learning=learningFromExample(starter);
- const why='The aim is to make this way of saying the idea automatic in speech. You do not need to name the grammar rule.';
  const vocabLine=vocab.length?` If it fits naturally, include one of these words or phrases: ${vocab.join(', ')}.`:'';
  U.oral[id]={
-   question:`Situation: ${ctx}. Say ${sentences} clear sentences. First, express one idea using the same sentence shape as the model above. Then add one specific detail, reason or example.${vocabLine}`,
-   expected:`A direct response about ${ctx}, using the model sentence shape once and then adding a relevant detail.`,
-   key:`What you are learning: ${learning} Why practise it: ${why}`
+   question:`Situation: ${ctx}. Say ${sentences} clear sentences. Use the sentence pattern shown above once. Then add one specific detail, reason or example.${vocabLine}`,
+   expected:`A direct response about ${ctx}, using the model sentence pattern once and then adding a relevant detail.`,
+   key:starter?`Use this pattern: ${starter}`:'Use the sentence pattern shown above.'
  };
 }
 makeOral('q5',0,'1–2');
