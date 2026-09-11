@@ -22,21 +22,27 @@ export default {
       return handlePresentationAdminHandoff(request);
     }
 
-    if(path==='/presentation-skills/admin.html'){
+    if(path==='/presentation-skills/admin.html' || path==='/presentation-skills/admin'){
       const token=readCookie(request.headers.get('cookie')||'','clarion_admin_session');
       if(!token || !(await validAdmin(token))) return redirect('/ascent/admin-login.html');
       return noStore(await env.ASSETS.fetch(request));
     }
 
-    if(path==='/presentation-skills' || path==='/presentation-skills/') return redirect('/presentation-skills/access.html');
+    if(path==='/presentation-skills' || path==='/presentation-skills/') return redirect('/presentation-skills/access');
 
-    if(path.startsWith('/presentation-skills/') && path!=='/presentation-skills/access.html'){
+    // Cloudflare canonicalises HTML assets to extensionless paths. Serve the
+    // canonical access page directly and send the .html alias there once, so
+    // the Worker and asset layer cannot bounce the request between them.
+    if(path==='/presentation-skills/access.html') return redirect('/presentation-skills/access');
+    if(path==='/presentation-skills/access') return noStore(await env.ASSETS.fetch(request));
+
+    if(path.startsWith('/presentation-skills/')){
       const cookies=request.headers.get('cookie')||'';
       const learnerToken=readCookie(cookies,'presentation_session');
       const deviceId=readCookie(cookies,'presentation_device');
       const adminToken=readCookie(cookies,'clarion_admin_session');
       const adminOk=adminToken ? await validAdmin(adminToken) : false;
-      if(!adminOk && !(await validPresentationSession(learnerToken,deviceId))) return redirect('/presentation-skills/access.html');
+      if(!adminOk && !(await validPresentationSession(learnerToken,deviceId))) return redirect('/presentation-skills/access');
       return noStore(await env.ASSETS.fetch(request));
     }
 
