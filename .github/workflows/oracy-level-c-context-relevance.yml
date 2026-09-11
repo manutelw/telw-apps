@@ -1,0 +1,33 @@
+name: ORACY Level C Context Relevance
+on:
+  pull_request:
+    paths:
+      - 'oracy/level-c-context-relevance.js'
+      - 'oracy/unit-c.html'
+      - '.github/workflows/oracy-level-c-context-relevance.yml'
+  workflow_dispatch:
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax
+        run: node --check oracy/level-c-context-relevance.js
+      - name: Check incidental place names are removed from learner contexts
+        run: |
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const ctx={window:{}};vm.createContext(ctx);
+          vm.runInContext(fs.readFileSync('oracy/level-c-units-2-30-specs.js','utf8'),ctx);
+          if(fs.existsSync('oracy/level-c-source-16-30.js')) vm.runInContext(fs.readFileSync('oracy/level-c-source-16-30.js','utf8'),ctx);
+          if(fs.existsSync('oracy/level-c-source-audit-fixes.js')) vm.runInContext(fs.readFileSync('oracy/level-c-source-audit-fixes.js','utf8'),ctx);
+          vm.runInContext(fs.readFileSync('oracy/level-c-context-relevance.js','utf8'),ctx);
+          const text=JSON.stringify(ctx.window.ORACY_C_SPECS);
+          const banned=['in Indore','Mysuru and Bengaluru','in Chennai','in Noida','in Kochi','Mumbai apartment','to Udaipur','in Ladakh','in Hyderabad','from Jaipur','around Hampi','in Sikkim','in Kerala','from Mumbai'];
+          for(const x of banned){if(text.includes(x)) throw new Error('Incidental place name remains: '+x)}
+          if(!text.includes('preparing to study in the UK')) throw new Error('Meaningful UK context was removed');
+          console.log('Context relevance audit passed.');
+          NODE
