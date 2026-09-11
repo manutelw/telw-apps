@@ -7,6 +7,7 @@ on:
       - 'oracy/unit-renderer-c.js'
       - 'oracy/level-c-audio-binding.js'
       - 'oracy/level-c-static-audio-preload.js'
+      - 'oracy/level-c-listening-display.js'
       - 'oracy/level-system-c.js'
       - 'oracy/unit-speaking-c-runtime.js'
       - 'oracy/unit-speaking-c-natural-audio.js'
@@ -26,6 +27,7 @@ on:
       - 'oracy/unit-renderer-c.js'
       - 'oracy/level-c-audio-binding.js'
       - 'oracy/level-c-static-audio-preload.js'
+      - 'oracy/level-c-listening-display.js'
       - 'oracy/level-system-c.js'
       - 'oracy/unit-speaking-c-runtime.js'
       - 'oracy/unit-speaking-c-natural-audio.js'
@@ -61,7 +63,7 @@ jobs:
               locked.append(path)
           required={
             'oracy/unit-31-content.js','oracy/unit-31.html','oracy/unit-renderer-c.js',
-            'oracy/level-c-audio-binding.js','oracy/level-c-static-audio-preload.js','oracy/level-system-c.js',
+            'oracy/level-c-audio-binding.js','oracy/level-c-static-audio-preload.js','oracy/level-c-listening-display.js','oracy/level-system-c.js',
             'oracy/unit-speaking-c-runtime.js','oracy/unit-speaking-c-natural-audio.js',
             'oracy/unit-speaking-c-challenge-audio.js','oracy/unit-speaking-c-rep2-guidance.js',
             'oracy/unit-speaking-c-mixed-reps.js','oracy/unit-shared.js','oracy/conversation-shared.js','oracy/oracy.css'
@@ -81,8 +83,12 @@ jobs:
           for banned in ('placement','interview','client','manager','workplace','inlingua'): assert banned not in low
 
           html=(root/'oracy/unit-31.html').read_text()
-          for dep in ('level-c-static-audio-preload.js','unit-speaking-c-natural-audio.js','unit-speaking-c-challenge-audio.js','unit-speaking-c-mixed-reps.js'):
+          for dep in ('level-c-static-audio-preload.js','unit-speaking-c-natural-audio.js','unit-speaking-c-challenge-audio.js','unit-speaking-c-mixed-reps.js','level-c-listening-display.js'):
               assert dep in html, f'BALLISTIC C1A UNIT 1 LOCK: missing runtime dependency {dep}'
+
+          display=(root/'oracy/level-c-listening-display.js').read_text()
+          for phrase in ('C1A','C1B','C2A','C2B','presentation','voice note','group discussion','loaded LAST'):
+              assert phrase in display, f'BALLISTIC C1A UNIT 1 LOCK: listening display contract missing {phrase}'
 
           natural=(root/'oracy/unit-speaking-c-natural-audio.js').read_text()
           for phrase in ('RATE=1.00','GAP=.07','natural, enthusiastic adults','rising pitch on the final stressed word','D’you','You bet!','Absolutely!','Fair enough.','Hang on.'):
@@ -92,5 +98,5 @@ jobs:
               assert phrase in mixed, f'BALLISTIC C1A UNIT 1 LOCK: mixed-rep contract missing {phrase}'
           preload=(root/'oracy/level-c-static-audio-preload.js').read_text()
           assert 'preload' in preload.lower() and '/oracy/session' in preload
-          print('BALLISTIC C1A UNIT 1 FREEZE OK: exact files and approved speaking/audio contracts locked')
+          print('BALLISTIC C1A UNIT 1 FREEZE OK: exact files and approved speaking/audio/listening display contracts locked')
           PY
