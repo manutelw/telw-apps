@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'oracy/level-c-oral-task-clarity.js'
+      - 'oracy/level-c-plain-rule-snapshot.js'
+      - 'oracy/level-c-plain-rule-apply.js'
       - 'oracy/unit-c.html'
       - '.github/workflows/oracy-level-c-oral-task-clarity.yml'
   workflow_dispatch:
@@ -15,12 +17,15 @@ jobs:
         with:
           node-version: '20'
       - name: Syntax
-        run: node --check oracy/level-c-oral-task-clarity.js
-      - name: Audit Units 2-30 oral tasks
+        run: |
+          node --check oracy/level-c-oral-task-clarity.js
+          node --check oracy/level-c-plain-rule-snapshot.js
+          node --check oracy/level-c-plain-rule-apply.js
+      - name: Audit Units 2-30 oral rules
         run: |
           node <<'NODE'
           const fs=require('fs'),vm=require('vm');
-          const files=['oracy/level-c-units-2-30-specs.js','oracy/level-c-source-16-30.js','oracy/level-c-source-audit-fixes.js','oracy/rules-c1a.js','oracy/rules-c1b.js','oracy/rules-c2a.js','oracy/rules-c2b.js','oracy/level-c-unit-builder.js','oracy/level-c-unit-enhance.js','oracy/level-c-learner-friendly.js','oracy/level-c-all-structures-friendly.js','oracy/level-c-jargon-scrub.js','oracy/level-c-oral-task-clarity.js'];
+          const files=['oracy/level-c-units-2-30-specs.js','oracy/level-c-source-16-30.js','oracy/level-c-source-audit-fixes.js','oracy/rules-c1a.js','oracy/rules-c1b.js','oracy/rules-c2a.js','oracy/rules-c2b.js','oracy/level-c-unit-builder.js','oracy/level-c-unit-enhance.js','oracy/level-c-learner-friendly.js','oracy/level-c-plain-rule-snapshot.js','oracy/level-c-all-structures-friendly.js','oracy/level-c-unit6-reps-teaching.js','oracy/level-c-jargon-scrub.js','oracy/level-c-oral-task-clarity.js','oracy/level-c-plain-rule-apply.js'];
           for(let n=2;n<=30;n++){
             const ctx={window:{},location:{search:`?u=${n}`},URLSearchParams};vm.createContext(ctx);
             for(const f of files)vm.runInContext(fs.readFileSync(f,'utf8'),ctx,{filename:f});
@@ -28,11 +33,14 @@ jobs:
             for(const id of ['q5','q10']){
               const q=U.oral[id];if(!q)throw new Error(`Unit ${n} ${id} missing`);
               if(!q.question.startsWith('Situation:'))throw new Error(`Unit ${n} ${id} lacks clear situation`);
-              if(!q.key.includes('What you are learning:'))throw new Error(`Unit ${n} ${id} lacks learning purpose`);
-              if(!q.key.includes('Why practise it:'))throw new Error(`Unit ${n} ${id} lacks reason for practice`);
-              if(!/sentence shape/i.test(q.question+q.key))throw new Error(`Unit ${n} ${id} lacks usable model-shape guidance`);
-              if(/gerund|infinitive|conditional|passive|subjunctive|inversion|quantifier|superlative|comparative|adverb|preposition/i.test(q.question+q.key))throw new Error(`Unit ${n} ${id} exposes grammar jargon`);
+              if(/What you are learning|Why practise it|The aim is to make/i.test(q.key))throw new Error(`Unit ${n} ${id} contains abstract coaching language`);
+              if(!q.key||q.key.length<12)throw new Error(`Unit ${n} ${id} lacks a usable rule`);
             }
           }
-          console.log('Units 2-30 oral tasks state the situation, learning purpose, reason and usable speaking action without grammar jargon.');
+          const ctx={window:{},location:{search:'?u=6'},URLSearchParams};vm.createContext(ctx);
+          for(const f of files)vm.runInContext(fs.readFileSync(f,'utf8'),ctx,{filename:f});
+          const rule=ctx.window.ORACY_UNIT.oral.q5.key;
+          if(!rule.includes('If the situation can really happen'))throw new Error('Unit 6 real-possibility rule missing');
+          if(!rule.includes('If you are imagining a different or unlikely situation'))throw new Error('Unit 6 imagined-situation rule missing');
+          console.log('Units 2-30 use plain learner rules with no abstract learning labels.');
           NODE
