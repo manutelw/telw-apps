@@ -1,0 +1,51 @@
+(function(){
+'use strict';
+const U=window.ORACY_UNIT;if(!U||Number(U.unitNo)!==61)return;
+const B=[
+{w:[
+['formative','having a strong influence on a person’s development','Those formative years shaped the way she understood community.'],
+['pivotal','extremely important because it changes what happens next','Being asked to lead the project was a pivotal moment in his career.'],
+['trajectory','the direction in which a life or career develops','That internship changed the trajectory of her career.'],
+['vocation','work that a person feels especially suited or committed to','He gradually realised that teaching was his vocation.'],
+['resilience','the ability to recover and continue after difficulty','Her resilience became clear when she rebuilt the programme after its funding was withdrawn.']],
+i:[
+['find your feet','become confident and comfortable in a new situation','It took her a few months to find her feet in broadcasting.'],
+['carve out a niche','create a specialised area in which you become successful','He carved out a niche by reporting complex science in clear language.'],
+['come full circle','return to something connected with where you began, now with a new understanding','Her career came full circle when she returned to her old college as its director.']],
+u:'In Speaking 1 and Speaking 2, use at least two words and one idiomatic expression from this bank.'},
+{w:[
+['presume','believe something is probably true without having complete proof','I had presumed that Dr Shah studied medicine, but I may have that wrong.'],
+['clarify','make an idea or piece of information clearer and more exact','Could I clarify one detail? I studied economics, not finance.'],
+['tactful','careful not to embarrass, upset or offend another person','Her correction was tactful: she fixed the detail without making him feel foolish.'],
+['misconception','an incorrect belief caused by misunderstanding','There is a common misconception that he inherited the business.'],
+['inference','a conclusion reached from the information available','That was a reasonable inference, although it was not correct.']],
+i:[
+['put two and two together','use separate facts to reach a conclusion','I saw your Edinburgh address and put two and two together, but I reached the wrong conclusion.'],
+['get the wrong end of the stick','misunderstand a situation or what somebody meant','I am afraid I got the wrong end of the stick about your first degree.'],
+['set the record straight','correct a false idea by giving the true facts','Let me set the record straight: I joined the company after university, not before it.']],
+u:'In Speaking 3 and Speaking 4, use at least two words and one idiomatic expression from this bank.'},
+{w:[
+['adversity','a difficult situation that tests a person','The profile shows how she responded to adversity without making her sound heroic.'],
+['recognition','public acknowledgement that someone or something is valuable or successful','Her research received international recognition several years later.'],
+['initiative','a new plan or action intended to solve a problem','She launched an initiative that brought designers and older users together.'],
+['transition','the process of changing from one state, role or stage to another','His transition from engineering to education took several years.'],
+['legacy','the lasting effect that a person’s work or life leaves behind','Her real legacy is the expectation that users should be involved from the beginning.']],
+i:[
+['a turning point','an event that causes an important change in direction','Getting laid off became a turning point rather than the end of her career.'],
+['against the odds','despite serious difficulties that made success unlikely','Against the odds, the small workshop survived and attracted national attention.'],
+['go from strength to strength','become increasingly successful or effective','Once the first design was approved, the organisation went from strength to strength.']],
+u:'In Speaking 5, use at least two words and one idiomatic expression from this bank.'}
+];
+const D={
+'formative':['temporary and easily forgotten','connected only with formal qualifications'],'pivotal':['ordinary and predictable','private and confidential'],'trajectory':['a complete list of qualifications','a person’s official job title'],'vocation':['a task accepted without interest','a short period of unpaid leave'],'resilience':['the ability to avoid all criticism','a desire to work without other people'],'find your feet':['return to the place where you began','make a decision very quickly'],'carve out a niche':['copy a successful person’s career','leave a profession permanently'],'come full circle':['make progress without interruption','hide an earlier part of your life'],
+'presume':['prove something beyond doubt','ask someone to repeat every word'],'clarify':['make a claim sound more impressive','avoid answering a difficult question'],'tactful':['highly technical and precise','direct enough to cause embarrassment'],'misconception':['a fact everyone accepts','a carefully tested conclusion'],'inference':['a formal written correction','an event witnessed directly'],'put two and two together':['repeat facts without interpreting them','ignore the available evidence'],'get the wrong end of the stick':['understand a difficult point immediately','refuse to accept a correction'],'set the record straight':['make a story more entertaining than truthful','keep a detail secret'],
+'adversity':['public praise for excellent work','a smooth period without difficulty'],'recognition':['a private doubt about ability','a sudden change in direction'],'initiative':['an accidental result with no planning','a rule preventing new action'],'transition':['a permanent refusal to change','a reward for long service'],'legacy':['a problem that disappears immediately','a person’s first professional position'],'a turning point':['a period when nothing changes','a decorative detail'],'against the odds':['with every possible advantage','without making any effort'],'go from strength to strength':['return to the same difficulty','become less ambitious over time']};
+const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mix=(a,n)=>{a=[...a];for(let i=a.length-1;i;i--){const j=(n+i*7)%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+let serial=0;B.forEach(x=>[...x.w,...x.i].forEach(y=>{const id='u61-v-'+serial++;U.pron[id]=y[2];if(!U.targets.includes(y[0]))U.targets.push(y[0])}));
+function card(x,type,id){return `<article class="u61vc"><div class="u61vt">${type}</div><h4>${esc(x[0])}</h4><p><b>Meaning:</b> ${esc(x[1])}</p><p><b>In natural speech:</b> “${esc(x[2])}”</p><button type="button" class="hear-pron" data-pron="u61-v-${id}">🔊 Hear the example</button></article>`}
+function test(x,n){const opts=mix([x[1],...D[x[0]]],n+3);return `<div class="u61test"><p><b>${n+1}. What does “${esc(x[0])}” mean here?</b><br><span>“${esc(x[2])}”</span></p><div class="u61opts">${opts.map(o=>`<button type="button" data-ok="${o===x[1]?'1':'0'}">${esc(o)}</button>`).join('')}</div><div class="answer" aria-live="polite"></div></div>`}
+function panel(k,offset){const x=B[k],all=[...x.w,...x.i],e=document.createElement('section');e.className='u61v';e.innerHTML=`<div class="eyebrow">Vocabulary building · Key Point ${k+1}</div><h3>Learn precise words. Use them naturally.</h3><p>These are genuine academic and professional expressions. They are precise without being jargon.</p><div class="u61sub"><b>Five core words</b></div><div class="u61grid">${x.w.map((y,i)=>card(y,'Core word',offset+i)).join('')}</div><div class="u61sub"><b>Three idiomatic expressions</b></div><div class="u61grid">${x.i.map((y,i)=>card(y,'Idiomatic expression',offset+5+i)).join('')}</div><div class="u61quiz"><div class="eyebrow">Tap test · 8 items</div><h3>Check each meaning in context</h3>${all.map(test).join('')}<p class="u61return"><b>Now return to speaking:</b> ${esc(x.u)}</p></div>`;e.querySelectorAll('.u61opts button').forEach(b=>b.onclick=()=>{const q=b.closest('.u61test'),out=q.querySelector('.answer');q.querySelectorAll('button').forEach(z=>z.classList.remove('sel'));b.classList.add('sel');if(b.dataset.ok==='1'){out.className='answer ok';out.innerHTML='<b>Correct.</b> Hear the example again, then use the expression in your speaking.'}else{out.className='answer bad';out.innerHTML='<b>Not quite.</b> Read the example again and choose the more precise meaning.'}});return e}
+const secs=[...document.querySelectorAll('section.kp')].slice(0,3);let offset=0;secs.forEach((s,k)=>{const p=panel(k,offset);offset+=8;const listen=[...s.children].find(x=>x.tagName==='H3'&&x.textContent.startsWith('Listen:'));listen?s.insertBefore(p,listen):s.appendChild(p);const first=s.querySelector('.speak');if(first){const c=document.createElement('div');c.className='marker-guide u61use';c.innerHTML=`<b>Vocabulary use target</b><br>${esc(B[k].u)}`;first.before(c)}});
+const st=document.createElement('style');st.textContent='.u61v{margin:22px 0;padding:18px;border:1px solid #d7e2ea;border-radius:14px;background:#f8fbfd}.u61v>h3{margin:7px 0}.u61sub{margin:18px 0 9px}.u61grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.u61vc{padding:13px;border:1px solid #dce5eb;border-radius:11px;background:#fff}.u61vc h4{margin:4px 0 8px;font-size:18px}.u61vc p{margin:6px 0;line-height:1.5}.u61vt{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#7a5a16}.u61quiz{margin-top:20px;padding-top:16px;border-top:1px solid #d7e2ea}.u61test{padding:13px 0;border-bottom:1px solid #e2e9ee}.u61test span{color:#536779}.u61opts{display:grid;gap:7px}.u61opts button{text-align:left;background:#fff;color:var(--ink);border:1px solid #becdd8}.u61opts button.sel{border-color:var(--gold);box-shadow:0 0 0 2px rgba(199,154,59,.15)}.u61return{margin:16px 0 0;padding:12px;border-radius:9px;background:#fff8e8}@media(max-width:680px){.u61grid{grid-template-columns:1fr}}';document.head.appendChild(st);
+})();
