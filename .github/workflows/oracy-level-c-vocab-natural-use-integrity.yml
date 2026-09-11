@@ -1,0 +1,51 @@
+name: ORACY Level C Vocabulary Natural Use Integrity
+on:
+  pull_request:
+    paths:
+      - 'oracy/level-c-vocab-natural-use.js'
+      - 'oracy/unit-c.html'
+      - '.github/workflows/oracy-level-c-vocab-natural-use-integrity.yml'
+  workflow_dispatch:
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax
+        run: node --check oracy/level-c-vocab-natural-use.js
+      - name: Audit all Unit 2-30 vocabulary models
+        run: |
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const base=['oracy/level-c-units-2-30-specs.js','oracy/level-c-source-16-30.js','oracy/level-c-source-audit-fixes.js','oracy/rules-c1a.js','oracy/rules-c1b.js','oracy/rules-c2a.js','oracy/rules-c2b.js','oracy/level-c-unit-builder.js','oracy/level-c-unit-enhance.js','oracy/level-c-learner-friendly.js','oracy/level-c-all-structures-friendly.js'];
+          const unit6=['oracy/level-c-unit6-listening-fix.js','oracy/level-c-unit6-comprehension-vocab.js','oracy/level-c-unit6-comprehension-guidance.js','oracy/level-c-unit6-reps-teaching.js'];
+          const tail=['oracy/level-c-jargon-scrub.js','oracy/level-c-vocab-glosses.js','oracy/level-c-vocab-contrast-prep.js','oracy/level-c-vocab-natural-use.js'];
+          const banned=["fits this situation","clearest choice here","put it into a full idea","rather than just repeat the word"];
+          let count=0;
+          for(let n=2;n<=30;n++){
+            const ctx={window:{},location:{search:`?u=${n}`},URLSearchParams};vm.createContext(ctx);
+            for(const f of base)vm.runInContext(fs.readFileSync(f,'utf8'),ctx,{filename:f});
+            if(n===6)for(const f of unit6)vm.runInContext(fs.readFileSync(f,'utf8'),ctx,{filename:f});
+            for(const f of tail)vm.runInContext(fs.readFileSync(f,'utf8'),ctx,{filename:f});
+            const U=ctx.window.ORACY_UNIT,S=ctx.window.ORACY_C_SPECS[n];
+            U.practice.forEach((p,kp)=>p.items.forEach((it,vi)=>{
+              count++;
+              if(!Array.isArray(it.lines)||it.lines.length!==4)throw new Error(`Unit ${n} KP${kp+1} ${it.w}: model must have four lines`);
+              const all=it.lines.join(' ').toLowerCase();
+              for(const s of banned)if(all.includes(s))throw new Error(`Unit ${n} ${it.w}: old meta template remains: ${s}`);
+              if(!all.includes(String(it.w).toLowerCase().replace(/[’]/g,"'")))throw new Error(`Unit ${n} ${it.w}: target absent from model`);
+              if(!all.includes(String(S.contexts[kp]).toLowerCase()))throw new Error(`Unit ${n} ${it.w}: Key Point context absent from model`);
+              if(!Array.isArray(it.p)||it.p.length!==3)throw new Error(`Unit ${n} ${it.w}: three spoken uses required`);
+              if(!it.p[0].includes(S.contexts[kp]))throw new Error(`Unit ${n} ${it.w}: first spoken use must stay in Key Point context`);
+              if(!it.p[2].toLowerCase().includes('own life'))throw new Error(`Unit ${n} ${it.w}: third use must transfer to learner's own life`);
+            }));
+          }
+          if(count!==435)throw new Error(`Expected 435 vocabulary items, found ${count}`);
+          const html=fs.readFileSync('oracy/unit-c.html','utf8');
+          if(!html.includes('level-c-vocab-natural-use.js'))throw new Error('natural-use layer not loaded');
+          if(html.indexOf('level-c-vocab-contrast-prep.js')>html.indexOf('level-c-vocab-natural-use.js'))throw new Error('natural-use must load after contrast prep');
+          console.log('All 435 Unit 2-30 vocabulary models are context-first, target-bearing and free of the old meta template.');
+          NODE
