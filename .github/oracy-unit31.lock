@@ -4,7 +4,7 @@
 29d13e8d7b8886e82c558b21c3e5de3081ba6057 oracy/unit-renderer-c.js
 0026102a2891e2c5fda03c04745fd63f4955aee8 oracy/level-c-audio-binding.js
 c7341a6e8a44c3c65d12e359ff8e21cd121656a6 oracy/level-c-static-audio-preload.js
-0bbc641c0e10090b4b842a3baa746ab83b2847f8 oracy/level-c-listening-display.js
+43dc74b5b90c882d6eff01f904089c4a9da3784f oracy/level-c-listening-display.js
 282f9170c73d4e05567b1f1c0c27f637d382c7e2 oracy/level-system-c.js
 55075960c09bad1191bc481f1521865a496f3184 oracy/unit-speaking-c-runtime.js
 95a5166aded103896e0efcea62fce3bb40af51a9 oracy/unit-speaking-c-natural-audio.js
