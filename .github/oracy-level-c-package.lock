@@ -1,0 +1,25 @@
+# ORACY LEVEL C — FULL PACKAGE BALLISTIC FREEZE
+# Approved final baseline: all 30 Level C units across C1A, C1B, C2A, C2B.
+# Any change to protected Level C content/runtime files must fail CI until there is an explicit, deliberate rebaseline.
+BASELINE_COMMIT=04372b2e37ba7cc81a2cf0fbd6744b2a6fc3b28c
+SCOPE=C1A,C1B,C2A,C2B
+UNITS=1-30
+STATUS=FROZEN
+
+# Protected families:
+# oracy/level-c-*
+# oracy/rules-c*.js
+# oracy/unit-c.html
+# oracy/unit-31.html
+# oracy/unit-31-content.js
+# oracy/progress-c.html
+# oracy/unit-renderer-c.js
+# oracy/unit-shared.js
+# oracy/conversation-shared.js
+# oracy/level-system-c.js
+# oracy/unit-speaking-c-*
+# oracy/oracy.css
+
+# Freeze includes the approved listening-format rules, GD cadence, vocabulary natural-use layer,
+# oral-task clarity, learner-friendly structure language, progress checks, audio bindings/preload,
+# shared Level C renderer/runtime dependencies and the dedicated Unit 1 package.

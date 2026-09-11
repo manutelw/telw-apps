@@ -1,0 +1,110 @@
+name: ORACY Level C Package Freeze
+
+on:
+  pull_request:
+    paths:
+      - 'oracy/**'
+      - '.github/oracy-level-c-package.lock'
+      - '.github/workflows/oracy-level-c-package-freeze.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'oracy/**'
+      - '.github/oracy-level-c-package.lock'
+      - '.github/workflows/oracy-level-c-package-freeze.yml'
+
+jobs:
+  ballistic-level-c-freeze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify Level C remains byte-for-byte frozen
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          BASELINE='04372b2e37ba7cc81a2cf0fbd6744b2a6fc3b28c'
+          lock=Path('.github/oracy-level-c-package.lock').read_text(encoding='utf-8')
+          assert f'BASELINE_COMMIT={BASELINE}' in lock, 'LEVEL C FREEZE: lock baseline does not match ballistic baseline'
+          assert 'STATUS=FROZEN' in lock, 'LEVEL C FREEZE: frozen status missing'
+          assert 'SCOPE=C1A,C1B,C2A,C2B' in lock and 'UNITS=1-30' in lock, 'LEVEL C FREEZE: scope declaration changed'
+
+          subprocess.run(['git','cat-file','-e',f'{BASELINE}^{{commit}}'],check=True)
+
+          exact={
+            'oracy/unit-c.html',
+            'oracy/unit-31.html',
+            'oracy/unit-31-content.js',
+            'oracy/progress-c.html',
+            'oracy/unit-renderer-c.js',
+            'oracy/unit-shared.js',
+            'oracy/conversation-shared.js',
+            'oracy/level-system-c.js',
+            'oracy/oracy.css',
+          }
+          def protected(path):
+            return (
+              path in exact or
+              path.startswith('oracy/level-c-') or
+              (path.startswith('oracy/rules-c') and path.endswith('.js')) or
+              path.startswith('oracy/unit-speaking-c-')
+            )
+
+          def files_at(ref):
+            out=subprocess.check_output(['git','ls-tree','-r','--name-only',ref],text=True)
+            return {p for p in out.splitlines() if protected(p)}
+
+          base_files=files_at(BASELINE)
+          head_files=files_at('HEAD')
+          assert base_files, 'LEVEL C FREEZE: baseline protected set is empty'
+
+          added=sorted(head_files-base_files)
+          removed=sorted(base_files-head_files)
+          changed=[]
+          for p in sorted(base_files & head_files):
+            a=subprocess.check_output(['git','rev-parse',f'{BASELINE}:{p}'],text=True).strip()
+            b=subprocess.check_output(['git','rev-parse',f'HEAD:{p}'],text=True).strip()
+            if a!=b: changed.append(p)
+
+          if added or removed or changed:
+            print('BALLISTIC LEVEL C FREEZE VIOLATION')
+            if added:
+              print('\nProtected files added after freeze:')
+              print('\n'.join(f' + {p}' for p in added))
+            if removed:
+              print('\nProtected files removed after freeze:')
+              print('\n'.join(f' - {p}' for p in removed))
+            if changed:
+              print('\nProtected files changed after freeze:')
+              print('\n'.join(f' * {p}' for p in changed))
+            raise SystemExit(1)
+
+          # Critical contractual assertions in addition to byte identity.
+          unitc=Path('oracy/unit-c.html').read_text(encoding='utf-8')
+          unit1=Path('oracy/unit-31.html').read_text(encoding='utf-8')
+          required=(
+            'level-c-listening-display.js',
+            'level-c-gd-cadence.js',
+            'level-c-vocab-natural-use.js',
+            'level-c-vocab-meaning-ui.js',
+            'level-c-oral-task-clarity.js',
+            'level-c-own-words-prompt.js',
+            'level-c-question-rule-once.js',
+            'level-c-audio-binding.js',
+            'level-c-static-audio-preload.js',
+          )
+          for dep in required:
+            assert dep in unitc, f'LEVEL C FREEZE: required runtime missing: {dep}'
+          assert 'level-c-listening-display.js' in unit1, 'LEVEL C FREEZE: Unit 1 listening-display contract missing'
+
+          gd=Path('oracy/level-c-gd-cadence.js').read_text(encoding='utf-8')
+          for n in (3,6,9,12,15,18,21,24,27,30):
+            assert str(n) in gd, f'LEVEL C FREEZE: GD cadence marker missing for Unit {n}'
+
+          print(f'BALLISTIC LEVEL C FREEZE OK: {len(base_files)} protected files match final approved baseline {BASELINE}')
+          PY
