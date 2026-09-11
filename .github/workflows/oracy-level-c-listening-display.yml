@@ -1,0 +1,33 @@
+name: ORACY Level C Listening Display
+on:
+  pull_request:
+    paths:
+      - 'oracy/**'
+      - '.github/workflows/oracy-level-c-listening-display.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'oracy/**'
+      - '.github/workflows/oracy-level-c-listening-display.yml'
+jobs:
+  listening-display-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate genre-aware listening display
+        run: |
+          node --check oracy/level-c-listening-display.js
+          python - <<'PY'
+          from pathlib import Path
+          js=Path('oracy/level-c-listening-display.js').read_text()
+          html=Path('oracy/unit-c.html').read_text()
+          unit1=Path('oracy/unit-31.html').read_text()
+          assert "'presentation'" in js and "'voice note'" in js and "'announcement'" in js
+          assert "'conversation'" in js and "'interview'" in js and "'group discussion'" in js
+          assert "SINGLE.has(genre)?proseHtml(segs):dialogueHtml(segs)" in js
+          assert "Listen: ${label}" in js
+          assert 'level-c-listening-display.js' in html
+          assert html.index('unit-shared.js') < html.index('level-c-listening-display.js'), 'display formatter must run after passage renderer'
+          assert 'level-c-listening-display.js' not in unit1, 'frozen Unit 1 must remain untouched'
+          print('Level C listening display contract OK')
+          PY
