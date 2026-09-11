@@ -10,4 +10,6 @@ if(S[16])S[16].vocab=[['put up','keep away','go ahead','put out','go through'],[
 if(S[19])S[19].vocab=[['kilometre','mile','kilogram','pound','rupee'],['fraction','decimal','percentage','multiplied by','divided by'],['add up','work out','round off','come to','break down']];
 if(S[21])S[21].vocab=[['economics','sociology','physics','literature','geography'],['evening class','workshop','seminar','certificate course','assessment'],['catch up','fall behind','go over','hand in','keep at']];
 if(S[24])S[24].vocab=[['livestock','wildlife','stray animal','domesticated','endangered'],['opposed to','object to','in favour of','strongly believe','unconvinced'],['speak out against','stand up for','back down','bring about','deal with']];
+// Unit 28 source labels are kept internally in structures, but learners practise sentence shapes rather than tense names.
+if(S[28])S[28].vocab[1]=['will','going to','am/is/are + -ing','will be + -ing','will have + past form'];
 })();
