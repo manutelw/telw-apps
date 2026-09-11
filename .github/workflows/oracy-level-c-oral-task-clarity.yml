@@ -1,0 +1,38 @@
+name: ORACY Level C Oral Task Clarity
+on:
+  pull_request:
+    paths:
+      - 'oracy/level-c-oral-task-clarity.js'
+      - 'oracy/unit-c.html'
+      - '.github/workflows/oracy-level-c-oral-task-clarity.yml'
+  workflow_dispatch:
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax
+        run: node --check oracy/level-c-oral-task-clarity.js
+      - name: Audit Units 2-30 oral tasks
+        run: |
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const files=['oracy/level-c-units-2-30-specs.js','oracy/level-c-source-16-30.js','oracy/level-c-source-audit-fixes.js','oracy/rules-c1a.js','oracy/rules-c1b.js','oracy/rules-c2a.js','oracy/rules-c2b.js','oracy/level-c-unit-builder.js','oracy/level-c-unit-enhance.js','oracy/level-c-learner-friendly.js','oracy/level-c-all-structures-friendly.js','oracy/level-c-jargon-scrub.js','oracy/level-c-oral-task-clarity.js'];
+          for(let n=2;n<=30;n++){
+            const ctx={window:{},location:{search:`?u=${n}`},URLSearchParams};vm.createContext(ctx);
+            for(const f of files)vm.runInContext(fs.readFileSync(f,'utf8'),ctx,{filename:f});
+            const U=ctx.window.ORACY_UNIT;
+            for(const id of ['q5','q10']){
+              const q=U.oral[id];if(!q)throw new Error(`Unit ${n} ${id} missing`);
+              if(!q.question.startsWith('Situation:'))throw new Error(`Unit ${n} ${id} lacks clear situation`);
+              if(!q.key.includes('What you are learning:'))throw new Error(`Unit ${n} ${id} lacks learning purpose`);
+              if(!q.key.includes('Why practise it:'))throw new Error(`Unit ${n} ${id} lacks reason for practice`);
+              if(!/sentence shape/i.test(q.question+q.key))throw new Error(`Unit ${n} ${id} lacks usable model-shape guidance`);
+              if(/gerund|infinitive|conditional|passive|subjunctive|inversion|quantifier|superlative|comparative|adverb|preposition/i.test(q.question+q.key))throw new Error(`Unit ${n} ${id} exposes grammar jargon`);
+            }
+          }
+          console.log('Units 2-30 oral tasks state the situation, learning purpose, reason and usable speaking action without grammar jargon.');
+          NODE
