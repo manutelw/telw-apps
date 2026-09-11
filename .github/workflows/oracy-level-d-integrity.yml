@@ -1,0 +1,53 @@
+name: ORACY Level D Integrity
+on:
+  pull_request:
+    paths:
+      - 'oracy/unit-61.html'
+      - 'oracy/unit-61-content.js'
+      - 'oracy/level-system-d.js'
+      - 'oracy/index.html'
+      - 'oracy/admin.html'
+      - 'supabase/functions/oracy-voice/index.ts'
+      - '.github/workflows/oracy-level-d-integrity.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'oracy/unit-61.html'
+      - 'oracy/unit-61-content.js'
+      - 'oracy/level-system-d.js'
+      - 'oracy/index.html'
+      - 'oracy/admin.html'
+      - 'supabase/functions/oracy-voice/index.ts'
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify D1A Unit 1 and frozen courses
+        run: |
+          python .github/scripts/oracy_course_integrity_check.py
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const s={window:{}};vm.createContext(s);
+          vm.runInContext(fs.readFileSync('oracy/unit-61-content.js','utf8'),s);
+          const u=s.window.ORACY_UNIT;
+          const ok=(v,m)=>{if(!v)throw new Error(m)};
+          ok(u.unitNo===61&&u.localUnitNo===1&&u.level==='D1A','Unit identity');
+          ok(u.title==='The Story So Far','Unit title');
+          ok(u.keyPoints.length===3,'Three Key Points');
+          ok(u.checks.length===12&&Object.keys(u.oral).length===2&&Object.keys(u.pron).length===5,'15-check architecture');
+          ok(u.passages.kp1.length>=10&&u.passages.kp1.length<=12,'Media interview turn count');
+          ok(u.passages.kp2.length>=10&&u.passages.kp2.length<=12,'Conversation turn count');
+          const radioWords=u.passages.kp3[0][2].trim().split(/\s+/).length;
+          ok(radioWords>=225&&radioWords<=275,'Radio profile length');
+          ok(Object.keys(u.speaking).length===5&&u.speaking.s5.prompt.includes('75–90-second'),'Speaking tasks');
+          ok(u.conversation.maxLearnerTurns===4&&u.speaking.s4.title==='You Thought You Knew Me','Four-turn AI conversation');
+          const page=fs.readFileSync('oracy/unit-61.html','utf8');
+          ok(page.includes('unit-renderer-c.js')&&page.includes('unit-shared.js')&&page.includes('conversation-shared.js')&&page.includes('level-system-d.js'),'Shared shell');
+          ok(!/textarea|contenteditable|type=["']text/i.test(page+fs.readFileSync('oracy/unit-61-content.js','utf8')),'Spoken-only rule');
+          const index=fs.readFileSync('oracy/index.html','utf8'),admin=fs.readFileSync('oracy/admin.html','utf8'),voice=fs.readFileSync('supabase/functions/oracy-voice/index.ts','utf8');
+          for(const x of ['D1A','D1B','D2A','D2B','from:61,to:67','availableTo:61'])ok(index.includes(x),'Index: '+x);
+          ok(admin.includes('Open Level D · D1A Unit 1')&&admin.includes("preview('/oracy/unit-61.html')"),'Admin preview');
+          ok(voice.includes('61:{')&&voice.includes('make one reasonable but inaccurate assumption'),'Voice configuration');
+          console.log('ORACY D1A Unit 1 integrity OK');
+          NODE
