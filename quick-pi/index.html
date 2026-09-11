@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quick PI | ClarionPrep</title>
+<style>
+:root{--ink:#172033;--muted:#667085;--line:#e4e7ec;--navy:#102a43;--blue:#175cd3;--soft:#f7f9fc;--good:#067647;--bad:#b42318;--white:#fff}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--soft);color:var(--ink)}header{background:var(--navy);color:#fff;padding:18px 22px}.bar{max-width:980px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:20px}.brand{font-size:22px;font-weight:700}.sub{font-size:13px;opacity:.82}.timer{font-variant-numeric:tabular-nums;font-size:20px;font-weight:700}main{max-width:820px;margin:28px auto;padding:0 18px 50px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 2px 8px rgba(16,24,40,.05);margin-bottom:18px}.eyebrow{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--blue)}h1{font-size:30px;margin:7px 0 8px}h2{font-size:22px;margin:0 0 14px}p{line-height:1.55}.muted{color:var(--muted)}.progress{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:var(--muted);margin-bottom:14px}.question{font-size:25px;line-height:1.35;font-weight:700;margin:10px 0 24px}.controls{display:flex;gap:10px;flex-wrap:wrap}.btn{border:0;border-radius:10px;padding:12px 17px;font-size:16px;font-weight:700;cursor:pointer}.btn:disabled{opacity:.45;cursor:not-allowed}.primary{background:var(--blue);color:#fff}.danger{background:var(--bad);color:#fff}.secondary{background:#eef2f7;color:var(--ink)}.recording{display:none;margin:14px 0;color:var(--bad);font-weight:700}.recording.on{display:block}.status{margin-top:14px;padding:12px 14px;border-radius:10px;background:#f2f4f7;color:var(--muted)}.status.error{background:#fef3f2;color:var(--bad)}audio{width:100%;margin:15px 0}.score{font-size:34px;font-weight:800}.criterion{border-top:1px solid var(--line);padding:16px 0}.criterion:first-of-type{border-top:0}.criterion-head{display:flex;justify-content:space-between;gap:12px;font-weight:700}.pill{font-size:13px;background:#eef4ff;color:#3538cd;border-radius:999px;padding:4px 9px;white-space:nowrap}.label{font-weight:700;margin-top:10px}.weak{color:var(--bad)}.good{color:var(--good)}.hidden{display:none!important}.complete{text-align:center;padding:35px 20px}.complete .tick{font-size:48px;color:var(--good)}.note{font-size:13px;color:var(--muted);margin-top:16px}@media(max-width:600px){h1{font-size:25px}.question{font-size:22px}.card{padding:19px}.bar{align-items:flex-start}.timer{font-size:18px}}
+</style>
+</head>
+<body>
+<header><div class="bar"><div><div class="brand">ClarionPrep</div><div class="sub">Quick PI · 5-minute free practice</div></div><div><div class="sub">Session time</div><div id="sessionTimer" class="timer">00:00</div></div></div></header>
+<main>
+<section id="intro" class="card">
+<div class="eyebrow">Quick Practice · Interview</div><h1>Two fixed PI questions. Full feedback.</h1>
+<p class="muted">Record one answer at a time. Submit it for evaluation, review the feedback, then continue. The 5-minute label is the practice tier; your answer will not be cut off when five minutes is reached.</p>
+<div id="bootStatus" class="status">Preparing your free session…</div>
+</section>
+<section id="practice" class="card hidden">
+<div class="progress"><span id="progressText">Question 1 of 2</span><span>Free pack</span></div>
+<div id="questionText" class="question"></div>
+<div id="recordingState" class="recording">● Recording <span id="recordingTimer">00:00</span></div>
+<div class="controls">
+<button id="startBtn" class="btn primary">Start recording</button>
+<button id="stopBtn" class="btn danger" disabled>Stop recording</button>
+<button id="redoBtn" class="btn secondary hidden">Record again</button>
+</div>
+<audio id="preview" controls class="hidden"></audio>
+<div class="controls"><button id="submitBtn" class="btn primary" disabled>Submit for evaluation</button></div>
+<div id="practiceStatus" class="status">Your microphone will be requested only when you start recording.</div>
+</section>
+<section id="feedback" class="card hidden">
+<div class="eyebrow">PI Feedback</div><h2>Response evaluation</h2>
+<div><span id="score" class="score">—</span> <span id="scoreMax" class="muted"></span></div>
+<div id="criteria"></div>
+<div id="nextGuidance"></div>
+<div class="controls"><button id="continueBtn" class="btn primary">Continue to Question 2</button></div>
+</section>
+<section id="complete" class="card complete hidden"><div class="tick">✓</div><h1>Session Complete</h1><p>You completed both fixed questions and received feedback for each response.</p><p class="muted">Final session time: <strong id="finalTime"></strong></p></section>
+<p class="note">Quick PI is a separate public practice route. It does not sign you into ASCENT or an institution portal.</p>
+</main>
+<script>
+(()=>{
+'use strict';
+const ENDPOINT='https://vtqatrhwfvzyodiftvkc.supabase.co/functions/v1/quick-pi';
+const APIKEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
+const STORE='clarion_quick_pi_5_v1';
+const $=id=>document.getElementById(id);
+let session=null,currentQuestion=null,pendingNext=null,mediaRecorder=null,stream=null,chunks=[],audioBlob=null,sessionTick=null,recordTick=null,recordStarted=0;
+function fmt(ms){const s=Math.max(0,Math.floor(ms/1000)),m=Math.floor(s/60),r=s%60;return String(m).padStart(2,'0')+':'+String(r).padStart(2,'0')}
+function setStatus(el,msg,error=false){el.textContent=msg;el.className='status'+(error?' error':'')}
+async function postJson(body){const r=await fetch(ENDPOINT,{method:'POST',headers:{apikey:APIKEY,'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.message||'Quick PI request failed.'),{code:j.error,data:j});return j}
+function startSessionClock(startedAt){clearInterval(sessionTick);const start=new Date(startedAt).getTime();const paint=()=>{$('sessionTimer').textContent=fmt(Date.now()-start)};paint();sessionTick=setInterval(paint,1000)}
+function stopSessionClock(completedAt){clearInterval(sessionTick);sessionTick=null;const start=new Date(session.startedAt).getTime(),end=new Date(completedAt||Date.now()).getTime();const text=fmt(end-start);$('sessionTimer').textContent=text;$('finalTime').textContent=text}
+function save(){sessionStorage.setItem(STORE,JSON.stringify(session))}
+function clearSaved(){sessionStorage.removeItem(STORE)}
+function showQuestion(q){currentQuestion=q;pendingNext=null;audioBlob=null;$('practice').classList.remove('hidden');$('feedback').classList.add('hidden');$('complete').classList.add('hidden');$('questionText').textContent=q.text;$('progressText').textContent=`Question ${q.position} of 2`;$('preview').classList.add('hidden');$('preview').removeAttribute('src');$('redoBtn').classList.add('hidden');$('submitBtn').disabled=true;$('startBtn').disabled=false;$('stopBtn').disabled=true;setStatus($('practiceStatus'),'Your microphone will be requested only when you start recording.');window.scrollTo({top:$('practice').offsetTop-20,behavior:'smooth'})}
+async function boot(){
+  try{
+    const saved=JSON.parse(sessionStorage.getItem(STORE)||'null');
+    if(saved?.sessionId&&saved?.entitlementToken){
+      try{const r=await postJson({action:'resume',sessionId:saved.sessionId,entitlementToken:saved.entitlementToken});session={...saved,startedAt:r.startedAt||saved.startedAt};if(r.sessionComplete){stopSessionClock(r.completedAt);$('intro').classList.add('hidden');$('complete').classList.remove('hidden');return}startSessionClock(session.startedAt);$('intro').classList.add('hidden');showQuestion(r.question);return}catch(e){clearSaved()}
+    }
+    const r=await postJson({action:'start',tier:5});session={sessionId:r.sessionId,entitlementToken:r.entitlementToken,startedAt:r.startedAt,expiresAt:r.expiresAt};save();startSessionClock(r.startedAt);$('intro').classList.add('hidden');showQuestion(r.question);
+  }catch(e){setStatus($('bootStatus'),e.message||'Could not start Quick PI.',true)}
+}
+function preferredMime(){for(const t of ['audio/webm;codecs=opus','audio/webm','audio/mp4'])if(window.MediaRecorder&&MediaRecorder.isTypeSupported(t))return t;return ''}
+async function startRecording(){
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:true});chunks=[];const mime=preferredMime();mediaRecorder=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);mediaRecorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)};mediaRecorder.onstop=()=>{audioBlob=new Blob(chunks,{type:mediaRecorder.mimeType||'audio/webm'});const url=URL.createObjectURL(audioBlob);$('preview').src=url;$('preview').classList.remove('hidden');$('redoBtn').classList.remove('hidden');$('submitBtn').disabled=false;$('startBtn').disabled=true;$('stopBtn').disabled=true;$('recordingState').classList.remove('on');clearInterval(recordTick);stream?.getTracks().forEach(t=>t.stop());setStatus($('practiceStatus'),'Recording ready. Listen if you wish, then submit for evaluation.')};mediaRecorder.start();recordStarted=Date.now();$('startBtn').disabled=true;$('stopBtn').disabled=false;$('redoBtn').classList.add('hidden');$('submitBtn').disabled=true;$('preview').classList.add('hidden');$('recordingState').classList.add('on');const paint=()=>{$('recordingTimer').textContent=fmt(Date.now()-recordStarted)};paint();recordTick=setInterval(paint,500)}catch(e){setStatus($('practiceStatus'),'Microphone access is required to record your response.',true)}}
+function stopRecording(){if(mediaRecorder&&mediaRecorder.state==='recording')mediaRecorder.stop()}
+function redo(){audioBlob=null;$('preview').pause();$('preview').classList.add('hidden');$('redoBtn').classList.add('hidden');$('submitBtn').disabled=true;$('startBtn').disabled=false;setStatus($('practiceStatus'),'Ready to record again.')}
+function line(label,text,cls=''){if(!text)return'';return `<div class="label ${cls}">${label}</div><div>${escapeHtml(text)}</div>`}
+function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderFeedback(ev){
+ $('score').textContent=Number(ev.assessedTotal??ev.score??0).toFixed(1);$('scoreMax').textContent=`/ ${Number(ev.assessedMaximum||0).toFixed(0)} assessed marks`;
+ $('criteria').innerHTML=(ev.criteria||[]).map(c=>`<div class="criterion"><div class="criterion-head"><span>${escapeHtml(c.name)}</span><span class="pill">${c.assessed?`${Number(c.score).toFixed(1)} / 2`:'Not assessed'}</span></div>${c.assessed?line('What you did well',c.praise,'good')+line('Evidence',c.evidenceQuote)+line('Weak line',c.weakLine,'weak')+line('Why it weakened the answer',c.explanation,'weak')+line('Improved version',c.correctedVersion):line('Why not assessed',c.notAssessedReason)}</div>`).join('');
+ $('nextGuidance').innerHTML=`<div class="label">Next practice</div><p>${escapeHtml(ev.overallComment||'Review the criterion feedback before your next response.')}</p>`;
+}
+async function submit(){
+ if(!audioBlob||!session||!currentQuestion)return;
+ $('submitBtn').disabled=true;$('redoBtn').classList.add('hidden');setStatus($('practiceStatus'),'Evaluating your PI response…');
+ try{const f=new FormData();f.append('action','evaluate');f.append('session_id',session.sessionId);f.append('entitlement_token',session.entitlementToken);f.append('question_position',String(currentQuestion.position));f.append('audio',audioBlob,'quick-pi-response.webm');const r=await fetch(ENDPOINT,{method:'POST',headers:{apikey:APIKEY},body:f});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.message||'Evaluation failed.');renderFeedback(j.evaluation);pendingNext=j.nextQuestion||null;$('continueBtn').textContent=j.sessionComplete?'Finish session':`Continue to Question ${pendingNext?.position||2}`;$('feedback').classList.remove('hidden');$('practice').classList.add('hidden');$('continueBtn').dataset.complete=j.sessionComplete?'1':'0';if(j.sessionComplete){session.completedAt=j.completedAt;save()}window.scrollTo({top:$('feedback').offsetTop-20,behavior:'smooth'})}catch(e){$('submitBtn').disabled=false;$('redoBtn').classList.remove('hidden');setStatus($('practiceStatus'),e.message||'Could not evaluate this recording.',true)}}
+function continueFlow(){if($('continueBtn').dataset.complete==='1'){stopSessionClock(session.completedAt);clearSaved();$('feedback').classList.add('hidden');$('complete').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});return}if(pendingNext)showQuestion(pendingNext)}
+$('startBtn').addEventListener('click',startRecording);$('stopBtn').addEventListener('click',stopRecording);$('redoBtn').addEventListener('click',redo);$('submitBtn').addEventListener('click',submit);$('continueBtn').addEventListener('click',continueFlow);window.addEventListener('beforeunload',()=>stream?.getTracks().forEach(t=>t.stop()));boot();
+})();
+</script>
+</body>
+</html>
