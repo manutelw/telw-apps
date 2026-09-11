@@ -22,12 +22,14 @@ jobs:
           js=Path('oracy/level-c-listening-display.js').read_text()
           html=Path('oracy/unit-c.html').read_text()
           unit1=Path('oracy/unit-31.html').read_text()
-          assert "'presentation'" in js and "'voice note'" in js and "'announcement'" in js
-          assert "'conversation'" in js and "'interview'" in js and "'group discussion'" in js
+          for level in ('C1A','C1B','C2A','C2B'): assert level in js
+          for genre in ("'presentation'","'voice note'","'announcement'","'story'","'monologue'","'advertisement'","'conversation'","'interview'","'podcast'","'group discussion'"):
+              assert genre in js
           assert "SINGLE.has(genre)?proseHtml(segs):dialogueHtml(segs)" in js
           assert "Listen: ${label}" in js
-          assert 'level-c-listening-display.js' in html
-          assert html.index('unit-shared.js') < html.index('level-c-listening-display.js'), 'display formatter must run after passage renderer'
-          assert 'level-c-listening-display.js' not in unit1, 'frozen Unit 1 must remain untouched'
-          print('Level C listening display contract OK')
+          assert 'local<1||local>30' in js
+          assert 'level-c-listening-display.js' in html and 'level-c-listening-display.js' in unit1
+          assert html.rindex('level-c-listening-display.js') > html.rindex('level-c-own-words-prompt.js'), 'shared Level C formatter must load last'
+          assert unit1.rindex('level-c-listening-display.js') > unit1.rindex('level-c-own-words-prompt.js'), 'Unit 1 formatter must load last'
+          print('All four Level C sublevels use the final genre-aware listening display contract')
           PY
