@@ -5,61 +5,78 @@ const ASCENT_KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
 const ADMIN_VALIDATE=ASCENT_URL+'/rest/v1/rpc/ascent_admin_trainer_entry_list';
 const PRESENTATION_ACCESS=ASCENT_URL+'/functions/v1/presentation-skills-access';
 
+
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
     const path=url.pathname;
 
+
     if(isPrivateSource(path)) return new Response('Not found',{status:404});
+
 
     if(path==='/presentation-skills/session'){
       if(request.method!=='POST') return json({ok:false,message:'Use the Presentation Skills access form.'},405);
       return handlePresentationSession(request);
     }
 
+
     if(path==='/presentation-skills/admin-handoff'){
       if(request.method!=='POST') return json({ok:false},405);
       return handlePresentationAdminHandoff(request);
     }
 
-    if(path==='/presentation-skills/admin.html'){
+
+    if(path==='/presentation-skills/admin.html' || path==='/presentation-skills/admin'){
       const token=readCookie(request.headers.get('cookie')||'','clarion_admin_session');
       if(!token || !(await validAdmin(token))) return redirect('/ascent/admin-login.html');
       return noStore(await env.ASSETS.fetch(request));
     }
 
-    if(path==='/presentation-skills' || path==='/presentation-skills/') return redirect('/presentation-skills/access.html');
 
-    if(path.startsWith('/presentation-skills/') && path!=='/presentation-skills/access.html'){
+    if(path==='/presentation-skills' || path==='/presentation-skills/') return redirect('/presentation-skills/access');
+
+    // Cloudflare canonicalises HTML assets to extensionless paths. Serve the
+    // canonical access page directly and send the .html alias there once, so
+    // the Worker and asset layer cannot bounce the request between them.
+    if(path==='/presentation-skills/access.html') return redirect('/presentation-skills/access');
+    if(path==='/presentation-skills/access') return noStore(await env.ASSETS.fetch(request));
+
+    if(path.startsWith('/presentation-skills/')){
       const cookies=request.headers.get('cookie')||'';
       const learnerToken=readCookie(cookies,'presentation_session');
       const deviceId=readCookie(cookies,'presentation_device');
       const adminToken=readCookie(cookies,'clarion_admin_session');
       const adminOk=adminToken ? await validAdmin(adminToken) : false;
-      if(!adminOk && !(await validPresentationSession(learnerToken,deviceId))) return redirect('/presentation-skills/access.html');
+      if(!adminOk && !(await validPresentationSession(learnerToken,deviceId))) return redirect('/presentation-skills/access');
       return noStore(await env.ASSETS.fetch(request));
     }
+
 
     if(path==='/oracy/session'){
       if(request.method!=='POST') return json({ok:false,message:'Use the ORACY login form.'},405);
       return handleOracySession(request);
     }
 
+
     if(path==='/oracy/logout'){
       if(request.method!=='POST') return json({ok:false},405);
       return handleOracyLogout(request);
     }
+
 
     if(path==='/oracy/admin-handoff'){
       if(request.method!=='POST') return json({ok:false},405);
       return handleAdminHandoff(request);
     }
 
+
     if(path==='/oracy/admin.html'){
       const token=readCookie(request.headers.get('cookie')||'','clarion_admin_session');
       if(!token || !(await validAdmin(token))) return redirect('/ascent/admin-login.html');
       return noStore(await env.ASSETS.fetch(request));
     }
+
 
     // Every Unit page and Unit-specific runtime asset is server-gated.
     // Learners need a valid ORACY username/password session AND an active assignment
@@ -75,15 +92,18 @@ export default {
       return noStore(await env.ASSETS.fetch(request));
     }
 
+
     if(path==='/ascent/admin-settings.html'){
       const response=await env.ASSETS.fetch(request);
       if(!response.ok) return response;
       return injectOracyAdminCard(response);
     }
 
+
     return env.ASSETS.fetch(request);
   }
 };
+
 
 async function handleOracySession(request){
   const ct=request.headers.get('content-type')||'';
@@ -108,6 +128,7 @@ async function handleOracySession(request){
       return proxy(r);
     }
 
+
     const body=await request.json();
     if(['tts','realtime-token','conversation-feedback'].includes(body?.action)){
       const cookies=request.headers.get('cookie')||'';
@@ -128,6 +149,7 @@ async function handleOracySession(request){
       return proxy(r);
     }
 
+
     const r=await fetch(ORACY_ACCESS,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'login',login_id:String(body.login_id||''),password:String(body.password||'')})});
     const data=await r.json().catch(()=>({ok:false,message:'Login failed.'}));
     if(!r.ok || data.ok!==true || !data.session_token) return json(data,r.status||401);
@@ -139,6 +161,7 @@ async function handleOracySession(request){
   }
 }
 
+
 async function handleOracyLogout(request){
   const token=readCookie(request.headers.get('cookie')||'','oracy_session');
   if(token){
@@ -148,6 +171,7 @@ async function handleOracyLogout(request){
   headers.append('set-cookie','oracy_session=; Path=/oracy; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
   return new Response(JSON.stringify({ok:true}),{status:200,headers});
 }
+
 
 async function handleAdminHandoff(request){
   let token='';
@@ -160,6 +184,7 @@ async function handleAdminHandoff(request){
   headers.append('set-cookie',cookie('clarion_admin_session',token,60*60,'/'));
   return new Response(null,{status:303,headers});
 }
+
 
 async function handlePresentationSession(request){
   try{
@@ -174,6 +199,7 @@ async function handlePresentationSession(request){
   }catch(e){return json({ok:false,message:'Access could not be opened.'},400)}
 }
 
+
 async function handlePresentationAdminHandoff(request){
   let token='';try{const form=await request.formData();token=String(form.get('ascent_session_token')||'').trim()}catch{}
   if(!token || !(await validAdmin(token))) return new Response('Administrator access required.',{status:403,headers:{'cache-control':'no-store'}});
@@ -182,10 +208,12 @@ async function handlePresentationAdminHandoff(request){
   return new Response(null,{status:303,headers});
 }
 
+
 async function validPresentationSession(token,deviceId){
   if(!token||!deviceId)return false;
   try{const r=await fetch(PRESENTATION_ACCESS,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'VALIDATE',session_token:token,device_id:deviceId})});if(!r.ok)return false;const d=await r.json();return d&&d.ok===true}catch{return false}
 }
+
 
 async function validAdmin(token){
   try{
@@ -197,6 +225,7 @@ async function validAdmin(token){
   }catch{return false;}
 }
 
+
 async function validLearnerUnit(token,unitNo){
   try{
     const r=await fetch(ORACY_ACCESS,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'validate',session_token:token,unit_no:unitNo})});
@@ -205,6 +234,7 @@ async function validLearnerUnit(token,unitNo){
     return Boolean(data&&data.ok===true);
   }catch{return false;}
 }
+
 
 async function injectOracyAdminCard(response){
   let html=await response.text();
@@ -226,28 +256,34 @@ async function injectOracyAdminCard(response){
   return new Response(html,{status:response.status,statusText:response.statusText,headers});
 }
 
+
 function isPrivateSource(path){
   return path==='/worker.js' || path==='/wrangler.jsonc' || path.startsWith('/functions/') || path.startsWith('/supabase/') || path.startsWith('/.github/');
 }
+
 
 function readCookie(header,name){
   const match=header.match(new RegExp('(?:^|;\\s*)'+name+'=([^;]+)'));
   return match?decodeURIComponent(match[1]):'';
 }
 
+
 function cookie(name,value,maxAge,path){
   return `${name}=${encodeURIComponent(value)}; Path=${path}; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
 }
 
+
 function redirect(location){
   return new Response(null,{status:302,headers:{location,'cache-control':'no-store'}});
 }
+
 
 function noStore(response){
   const headers=new Headers(response.headers);
   headers.set('cache-control','no-store, max-age=0');
   return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
 }
+
 
 async function proxy(r){
   const headers=new Headers();
@@ -256,6 +292,7 @@ async function proxy(r){
   const x=r.headers.get('x-oracy-audio');if(x)headers.set('x-oracy-audio',x);
   return new Response(r.body,{status:r.status,statusText:r.statusText,headers});
 }
+
 
 function json(body,status=200){
   return new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json','cache-control':'no-store'}});
