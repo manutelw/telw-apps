@@ -15,10 +15,10 @@
 <header class="topbar"><div class="inner"><div class="brand">ClarionPrep · Workplace Communication Test</div><div id="timer" class="timer">35:00</div></div></header>
 <main>
 <section id="accessCard" class="card">
-  <div class="section-title"><h2>Trainer / Admin access</h2><span>Restricted</span></div>
-  <p>This Workplace Communication Test is currently restricted to authorised ClarionPrep trainers and administrators.</p>
+  <div class="section-title"><h2>Workplace Communication Test access</h2><span>Restricted</span></div>
+  <p>Sign in with your ClarionPrep administrator account. Your administrator access is unrestricted and does not require a WCT entitlement.</p>
   <form id="accessForm" class="grid">
-    <div class="field"><label for="accessEmail">Email or username</label><input id="accessEmail" autocomplete="username" required></div>
+    <div class="field"><label for="accessEmail">Email, username or Student ID</label><input id="accessEmail" autocomplete="username" required></div>
     <div class="field"><label for="accessPassword">Password</label><input id="accessPassword" type="password" autocomplete="current-password" required></div>
     <div><button id="accessBtn" class="btn gold" type="submit">Open Workplace Communication Test</button></div>
   </form>
@@ -71,13 +71,15 @@
 </main>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
-const WCT_SUPABASE_URL='https://vtqatrhwfvzyodiftvkc.supabase.co';
-const WCT_SUPABASE_KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
-const WCT_ACCESS_API=WCT_SUPABASE_URL+'/functions/v1/wct-access';
-const wctDb=window.supabase.createClient(WCT_SUPABASE_URL,WCT_SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+const WCT_ACCESS_API='https://vtqatrhwfvzyodiftvkc.supabase.co/functions/v1/wct-access';
 window.WCT_ACCESS_TOKEN='';
-async function wctLogin(e){e.preventDefault();const msg=document.getElementById('accessMessage'),btn=document.getElementById('accessBtn'),raw=document.getElementById('accessEmail').value.trim(),email=raw.toLowerCase()==='manu'?'manutelw@gmail.com':raw,password=document.getElementById('accessPassword').value;msg.className='message';msg.textContent='Checking access…';btn.disabled=true;try{const a=await wctDb.auth.signInWithPassword({email,password});if(a.error)throw a.error;const token=a.data.session?.access_token;if(!token)throw new Error('Sign-in failed.');const r=await fetch(WCT_ACCESS_API,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:'{}'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||'Trainer or admin access required.');window.WCT_ACCESS_TOKEN=token;document.getElementById('accessCard').classList.add('hidden');document.getElementById('intro').classList.remove('hidden');document.getElementById('identityCard').classList.remove('hidden');if(d.profile?.full_name)document.getElementById('candidateName').value=d.profile.full_name;if(d.profile?.email)document.getElementById('candidateEmail').value=d.profile.email;msg.textContent=''}catch(err){window.WCT_ACCESS_TOKEN='';await wctDb.auth.signOut().catch(()=>{});msg.className='message error';msg.textContent=err.message||'Trainer or admin access required.'}finally{btn.disabled=false}}
+async function wctCall(body,token=''){const headers={'Content-Type':'application/json'};if(token)headers.Authorization='Bearer '+token;const r=await fetch(WCT_ACCESS_API,{method:'POST',headers,body:JSON.stringify(body)}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||'WCT access service error.');return d}
+function showWct(d,token){const role=String(d.role||d.profile?.role||'').toUpperCase();if(role!=='ADMIN'&&d.wct_access!==true)throw new Error('WCT access is not enabled for this account.');window.WCT_ACCESS_TOKEN=token;sessionStorage.setItem('WCT_SESSION_TOKEN',token);document.getElementById('accessCard').classList.add('hidden');document.getElementById('intro').classList.remove('hidden');document.getElementById('identityCard').classList.remove('hidden');const p=d.profile||{};if(p.full_name)document.getElementById('candidateName').value=p.full_name;if(p.email)document.getElementById('candidateEmail').value=p.email;if(p.student_id)document.getElementById('candidateId').value=p.student_id;else if(p.email)document.getElementById('candidateId').value=p.email;if(p.batch)document.getElementById('cohort').value=p.batch;else if(role)document.getElementById('cohort').value='ClarionPrep '+role}
+async function wctLogin(e){e.preventDefault();const msg=document.getElementById('accessMessage'),btn=document.getElementById('accessBtn'),raw=document.getElementById('accessEmail').value.trim(),identity=raw.toLowerCase()==='manu'?'manutelw@gmail.com':raw,password=document.getElementById('accessPassword').value;msg.className='message';msg.textContent='Checking access…';btn.disabled=true;try{const d=await wctCall({action:'login',identity,password});showWct(d,d.session_token);msg.textContent=''}catch(err){window.WCT_ACCESS_TOKEN='';sessionStorage.removeItem('WCT_SESSION_TOKEN');msg.className='message error';msg.textContent=err.message||'Access denied.'}finally{btn.disabled=false}}
+function existingAdminSession(){for(const key of ['ascent_admin_master_session','ascent_trainer_session']){try{const s=JSON.parse(localStorage.getItem(key)||'null'),t=s?.sessionToken||s?.session_token,r=String(s?.role||'').toUpperCase(),expires=new Date(s?.expiresAt||s?.expires_at||0).getTime();if(t&&r==='ADMIN'&&Number.isFinite(expires)&&expires>Date.now())return t}catch(_){}}return''}
+async function restoreWct(){const saved=sessionStorage.getItem('WCT_SESSION_TOKEN')||existingAdminSession();if(!saved)return;try{const d=await wctCall({action:'status'},saved);showWct(d,saved)}catch{sessionStorage.removeItem('WCT_SESSION_TOKEN');window.WCT_ACCESS_TOKEN=''}}
 document.getElementById('accessForm').addEventListener('submit',wctLogin);
+restoreWct();
 </script>
 <script src="./app.js"></script>
 </body>
