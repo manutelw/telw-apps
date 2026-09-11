@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A 90-minute guided presentation performance lab for professionals: structure a recommendation, deliver it with authority, and defend it under pressure.">
+  <title>Presentation Performance Lab · ClarionPrep</title>
+  <link rel="stylesheet" href="./styles.css?v=20260911a">
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/">CLARION<span>PREP</span></a><div class="clock"><span id="elapsed">00:00</span><button id="pauseClock" class="ghost small">Pause</button></div></header>
+<main>
+  <section class="hero panel">
+    <p class="eyebrow">90-minute Presentation Performance Lab</p>
+    <h1>Make the point.<br>Prove it. Land it.</h1>
+    <p class="lede">Bring a messy idea. Leave with a clear recommendation you can deliver—and defend—under pressure.</p>
+    <div class="promise"><b>Your proof:</b> two recordings of the same presentation. The second must beat the first.</div>
+    <button id="startLab" class="primary">Start the lab</button>
+  </section>
+
+  <nav id="stageNav" class="stage-nav" aria-label="Course stages"></nav>
+
+  <section class="stage panel" data-stage="1" data-minutes="8">
+    <div class="stage-head"><span>1</span><div><p class="eyebrow">Shock · 8 minutes</p><h2>Catch the presentation crimes</h2></div></div>
+    <p>Listen once. Tap every problem you notice. Do not rescue the speaker yet.</p>
+    <button class="secondary speak-model" data-model="awful">▶ Play the awful presentation</button>
+    <div class="crime-grid" id="crimeGrid">
+      <button data-correct="true">The point arrives too late</button><button data-correct="true">Too much background</button><button data-correct="true">No audience consequence</button><button data-correct="true">No evidence</button><button data-correct="true">No requested action</button><button data-correct="false">The speaker uses short sentences</button>
+    </div>
+    <div class="feedback-line" id="crimeFeedback" aria-live="polite"></div>
+  </section>
+
+  <section class="stage panel" data-stage="2" data-minutes="7">
+    <div class="stage-head"><span>2</span><div><p class="eyebrow">Baseline · 7 minutes</p><h2>Present before anyone helps you</h2></div></div>
+    <div class="case"><b>Your case</b><p>Customer complaints have risen for three months. Two major accounts are threatening to leave. Management wants your recommendation.</p></div>
+    <p><b>You have 30 seconds to think and 45 seconds to speak.</b> Give the presentation exactly as you would today.</p>
+    <p class="privacy-note">Your recordings stay in this browser session. They are not uploaded.</p>
+    <div class="record-row"><button class="primary record" data-slot="baseline">🎤 Record baseline</button><span class="record-status" data-status="baseline">Not recorded</span></div>
+    <div class="playback" data-playback="baseline"></div>
+  </section>
+
+  <section class="stage panel" data-stage="3" data-minutes="15">
+    <div class="stage-head"><span>3</span><div><p class="eyebrow">Brain · 15 minutes</p><h2>Build the argument</h2></div></div>
+    <div class="five">
+      <article><b>S</b><h3>Situation</h3><p>What is happening?</p></article><article><b>S</b><h3>Stakes</h3><p>Why should they care?</p></article><article><b>S</b><h3>Solution</h3><p>What do you recommend?</p></article><article><b>S</b><h3>Support</h3><p>Why should they believe you?</p></article><article><b>S</b><h3>Step</h3><p>What must happen next?</p></article>
+    </div>
+    <p class="formula">Situation → Stakes → Solution → Support → Step</p>
+    <button class="secondary speak-model" data-model="strong">▶ Hear the 38-second model</button>
+    <div class="builder" id="builder">
+      <label>Situation<input data-part="situation" placeholder="Customer complaints have risen by 30%..."></label>
+      <label>Stakes<input data-part="stakes" placeholder="If this continues..."></label>
+      <label>Solution<input data-part="solution" placeholder="I recommend..."></label>
+      <label>Support<input data-part="support" placeholder="The pilot showed..."></label>
+      <label>Step<input data-part="step" placeholder="I need approval to..."></label>
+    </div>
+    <button id="hearBuild" class="secondary">▶ Hear my argument</button>
+  </section>
+
+  <section class="stage panel" data-stage="4" data-minutes="12">
+    <div class="stage-head"><span>4</span><div><p class="eyebrow">Surgery · 12 minutes</p><h2>Cut until the decision appears</h2></div></div>
+    <p>A presentation is not a warehouse. Select the three lines that belong in the opening.</p>
+    <div class="surgery" id="surgery">
+      <button data-keep="false">Our company was founded in 2007.</button>
+      <button data-keep="true">Complaints have risen by 30% in three months.</button>
+      <button data-keep="false">The service team currently has 46 employees.</button>
+      <button data-keep="true">Two major accounts may leave, putting ₹1.8 crore at risk.</button>
+      <button data-keep="false">We reviewed seven possible software vendors.</button>
+      <button data-keep="true">I recommend a 48-hour resolution system.</button>
+    </div>
+    <button id="checkSurgery" class="primary">Check my judgment</button><div id="surgeryResult" class="feedback-line"></div>
+  </section>
+
+  <section class="stage panel" data-stage="5" data-minutes="10">
+    <div class="stage-head"><span>5</span><div><p class="eyebrow">Mouth · 10 minutes</p><h2>Sound like the message matters</h2></div></div>
+    <div class="delivery-grid"><article><span>1</span><b>One thought</b><p>Speak in meaning-sized chunks.</p></article><article><span>2</span><b>One pause</b><p>Pause after the key message.</p></article><article><span>3</span><b>One stress</b><p>Hit the words carrying the decision.</p></article><article><span>4</span><b>One landing</b><p>Finish; do not fade away.</p></article></div>
+    <p class="script">“Two major accounts may leave. <mark>Pause.</mark> I recommend a 48-hour resolution system.”</p>
+    <button class="secondary speak-model" data-model="delivery">▶ Hear the delivery model</button>
+    <div class="record-row"><button class="primary record" data-slot="delivery">🎤 Record my version</button><span class="record-status" data-status="delivery">Not recorded</span></div><div class="playback" data-playback="delivery"></div>
+  </section>
+
+  <section class="stage panel" data-stage="6" data-minutes="8">
+    <div class="stage-head"><span>6</span><div><p class="eyebrow">Eyes · 8 minutes</p><h2>Make one slide earn its place</h2></div></div>
+    <p>Choose the title that gives the audience the conclusion—not merely the subject.</p>
+    <div class="title-choice" id="titleChoice"><button>Sales Performance</button><button>Quarterly Findings</button><button data-best="true">Repeat purchases fell after the price increase</button></div>
+    <div id="titleFeedback" class="feedback-line" aria-live="polite"></div>
+    <div class="one-slide"><p class="slide-kicker">Repeat purchases fell after the price increase</p><div class="bars"><i style="height:84%"><em>62%</em></i><i style="height:61%"><em>45%</em></i><i style="height:49%"><em>36%</em></i></div><p>Before increase · Month 1 · Month 2</p></div>
+    <p><b>Say the meaning:</b> “The important point is not the initial fall. It is that purchases did not recover.”</p>
+  </section>
+
+  <section class="stage panel fire" data-stage="7" data-minutes="10">
+    <div class="stage-head"><span>7</span><div><p class="eyebrow">Fire · 10 minutes</p><h2>Survive the hostile room</h2></div></div>
+    <p class="formula">Answer → Reason → Evidence → Stop</p>
+    <div class="challenge"><p id="hardQuestion">“That will cost too much. Why should we approve it?”</p><button id="newQuestion" class="ghost">Give me another</button></div>
+    <p>You have five seconds to begin. Answer directly—no ceremonial runway.</p>
+    <div class="record-row"><button class="primary record" data-slot="pressure">🎤 Record answer</button><span class="record-status" data-status="pressure">Not recorded</span></div><div class="playback" data-playback="pressure"></div>
+  </section>
+
+  <section class="stage panel" data-stage="8" data-minutes="15">
+    <div class="stage-head"><span>8</span><div><p class="eyebrow">Transformation · 15 minutes</p><h2>Beat your first performance</h2></div></div>
+    <ul class="conditions"><li>Message within 15 seconds</li><li>All five parts</li><li>One useful piece of evidence</li><li>One purposeful pause</li><li>One explicit next step</li></ul>
+    <div class="record-row"><button class="primary record" data-slot="final">🎤 Record final presentation</button><span class="record-status" data-status="final">Not recorded</span></div><div class="playback" data-playback="final"></div>
+    <div class="compare"><div><h3>Before</h3><div data-clone="baseline"></div></div><div><h3>After</h3><div data-clone="final"></div></div></div>
+    <div class="scorecard" id="scorecard"><p><b>Score the final performance</b></p><label><input type="checkbox"> The message was clear within 15 seconds.</label><label><input type="checkbox"> The stakes mattered to this audience.</label><label><input type="checkbox"> The recommendation was supported.</label><label><input type="checkbox"> The requested next step was explicit.</label><label><input type="checkbox"> The speaker sounded in control.</label><strong id="scoreResult">0/5</strong></div>
+  </section>
+
+  <section class="stage panel" data-stage="9" data-minutes="5">
+    <div class="stage-head"><span>9</span><div><p class="eyebrow">Transfer · 5 minutes</p><h2>Prepare the presentation that actually matters</h2></div></div>
+    <div class="builder real"><label>My audience<input data-real="audience" placeholder="Who must decide or act?"></label><label>The action I need<input data-real="action" placeholder="What must they do?"></label><label>My one-sentence message<input data-real="message" placeholder="What is the point?"></label><label>My strongest evidence<input data-real="evidence" placeholder="What makes it credible?"></label><label>My closing step<input data-real="step" placeholder="What happens next?"></label></div>
+    <button id="completeLab" class="primary">Complete the lab</button>
+    <div id="certificate" class="certificate" hidden><p class="eyebrow">Performance lab complete</p><h2>You did not merely learn presentation skills.<br>You produced evidence.</h2><p>Return before your next real presentation and rehearse the five-part argument once more.</p></div>
+  </section>
+</main>
+<footer>ClarionPrep · A TELW career-readiness product</footer>
+<script src="./app.js?v=20260911a"></script>
+</body></html>
