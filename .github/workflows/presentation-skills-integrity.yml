@@ -1,0 +1,40 @@
+name: Presentation Skills Integrity
+on:
+  pull_request:
+    paths:
+      - 'presentation-skills/**'
+      - 'supabase/functions/presentation-skills-access/**'
+      - 'supabase/migrations/*presentation_skills*'
+      - 'worker.js'
+      - '.github/workflows/presentation-skills-integrity.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'presentation-skills/**'
+      - 'supabase/functions/presentation-skills-access/**'
+      - 'supabase/migrations/*presentation_skills*'
+      - 'worker.js'
+      - '.github/workflows/presentation-skills-integrity.yml'
+permissions:
+  contents: read
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify private app and Unit 1 contracts
+        run: |
+          test -f presentation-skills/access.html
+          test -f presentation-skills/admin.html
+          test -f presentation-skills/unit-1.html
+          test -f supabase/functions/presentation-skills-access/index.ts
+          grep -q 'Hook' presentation-skills/unit-1.html
+          grep -q 'Relevance' presentation-skills/unit-1.html
+          grep -q 'Credibility' presentation-skills/unit-1.html
+          grep -q 'Subject' presentation-skills/unit-1.html
+          test "$(grep -o 'data-record="p[1-4]"' presentation-skills/unit-1.html | wc -l)" -eq 4
+          grep -q 'presentation_session' worker.js
+          grep -q 'presentation_device' worker.js
+          grep -q 'presentationSkillsAdminCard' worker.js
+          grep -q 'device_generation' supabase/functions/presentation-skills-access/index.ts
+          ! grep -q 'presentation-skills' index.html
