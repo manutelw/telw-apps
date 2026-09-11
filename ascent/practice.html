@@ -18,7 +18,7 @@
 </head>
 <body>
   <section class="live-mock-strip" aria-label="ASCENT learner tools">
-    <div class="live-mock-copy"><div class="live-mock-kicker">Practice with ASCENT</div><h2 class="live-mock-title">Record, review and improve</h2><p class="live-mock-text">Use ASCENT practice for assigned and self-selected speaking tasks, ask ASCENT Coach what to work on next, or upload a screenshot if something goes wrong.</p></div>
+    <div class="live-mock-copy"><div id="practiceKicker" class="live-mock-kicker">Practice with ASCENT</div><h2 id="practiceTitle" class="live-mock-title">Record, review and improve</h2><p id="practiceText" class="live-mock-text">Use ASCENT practice for assigned and self-selected speaking tasks, ask ASCENT Coach what to work on next, or upload a screenshot if something goes wrong.</p></div>
     <div class="live-mock-actions"><a class="coach-link" href="./coach.html">Ask ASCENT Coach</a><a class="fix-link" href="https://cat.clarionprep.com" target="_blank" rel="noopener noreferrer">CAT Simulator</a><a class="fix-link" href="./coach.html?mode=fix&source=practice">Fix a problem</a></div>
   </section>
 
@@ -56,8 +56,24 @@
     const skipBtn=document.getElementById('micSkipBtn');
     const micStatus=document.getElementById('micStatus');
     const micFill=document.getElementById('micFill');
-    const repair=new URLSearchParams(location.search).get('repair')||'';
+    const params=new URLSearchParams(location.search);
+    const repair=params.get('repair')||'';
+    const quickFocus=(params.get('quick')||'').toLowerCase();
+    const quickMinutes=params.get('minutes')||'';
+    const quickConfig={
+      interview:{bank:'PI',label:'Interview practice',title:'Personal interview practice'},
+      gd:{bank:'GD',label:'GD practice',title:'Group discussion practice'},
+      speaking:{bank:'LUM',label:'Speaking practice',title:'Focused speaking practice'},
+      workplace:{custom:true,rubric:'MANAGERIAL_COMMUNICATION',label:'Workplace practice',title:'Workplace communication practice',prompt:'A manager asks you to explain a delay, what caused it, what you have already done, and what will happen next. Give a clear, professional response.'}
+    };
     let micStream=null,micContext=null,micAnimation=null;
+
+    if(quickConfig[quickFocus]){
+      const cfg=quickConfig[quickFocus];
+      document.getElementById('practiceKicker').textContent=cfg.label+(quickMinutes?' · '+quickMinutes+' min':'');
+      document.getElementById('practiceTitle').textContent=cfg.title;
+      document.getElementById('practiceText').textContent='Your selected practice route is ready below. Choose the question shown, record your response and submit it for feedback.';
+    }
 
     if(repair==='mic')sessionStorage.removeItem(MIC_OK);
     if(repair==='reload')frame.src='./practice-core.html?v=20260827-corestable1&repair='+Date.now();
@@ -85,11 +101,43 @@
     overlay.addEventListener('click',event=>{if(event.target===overlay)closeMicCheck();});
     if(sessionStorage.getItem(MIC_OK)!=='1'&&navigator.mediaDevices?.getUserMedia){overlay.hidden=false;}
 
+    function applyQuickPractice(childDocument){
+      const cfg=quickConfig[quickFocus];
+      if(!cfg)return;
+      let attempts=0;
+      const timer=setInterval(()=>{
+        attempts++;
+        const mode=childDocument.getElementById('practiceModeSelect');
+        const bank=childDocument.getElementById('questionBankSearch');
+        const rubric=childDocument.getElementById('questionBankRubricFilter');
+        const customQuestion=childDocument.getElementById('customQuestionInput');
+        const customRubric=childDocument.getElementById('customRubricSelect');
+        if(!mode||!mode.options.length){if(attempts>80)clearInterval(timer);return;}
+        if(cfg.custom){
+          const hasCustom=Array.from(mode.options).some(o=>o.value==='custom');
+          if(!hasCustom){if(attempts>80)clearInterval(timer);return;}
+          mode.value='custom';mode.dispatchEvent(new Event('change',{bubbles:true}));
+          if(customQuestion){customQuestion.value=cfg.prompt;customQuestion.dispatchEvent(new Event('input',{bubbles:true}));customQuestion.dispatchEvent(new Event('change',{bubbles:true}));}
+          if(customRubric){customRubric.value=cfg.rubric;customRubric.dispatchEvent(new Event('change',{bubbles:true}));}
+          clearInterval(timer);return;
+        }
+        const hasBankMode=Array.from(mode.options).some(o=>o.value==='question_bank');
+        if(!hasBankMode||!bank||!bank.options.length){if(attempts>80)clearInterval(timer);return;}
+        const hasTargetBank=Array.from(bank.options).some(o=>o.value===cfg.bank);
+        if(!hasTargetBank){if(attempts>80)clearInterval(timer);return;}
+        mode.value='question_bank';mode.dispatchEvent(new Event('change',{bubbles:true}));
+        bank.value=cfg.bank;bank.dispatchEvent(new Event('change',{bubbles:true}));
+        if(rubric&&rubric.options.length&&rubric.selectedIndex<0)rubric.selectedIndex=0;
+        clearInterval(timer);
+      },150);
+    }
+
     frame.addEventListener('load',function(){
       try{
         const childDocument=frame.contentDocument;if(!childDocument)return;
         const loadVault=function(){if(childDocument.getElementById('ascentRecordingVault'))return;const vault=childDocument.createElement('script');vault.id='ascentRecordingVault';vault.src='./recording-vault.js?v=20260827-vault1';childDocument.body.appendChild(vault);};
         if(!childDocument.getElementById('ascentPracticeAccessV2')){const script=childDocument.createElement('script');script.id='ascentPracticeAccessV2';script.src='./practice-access-v2.js?v=20260827-idempotency1';script.onload=loadVault;childDocument.body.appendChild(script);}else{loadVault();}
+        applyQuickPractice(childDocument);
       }catch(error){console.error('ASCENT practice controller could not load:',error);}
     });
   </script>
