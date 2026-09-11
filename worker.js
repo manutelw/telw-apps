@@ -81,7 +81,7 @@ export default {
       return noStore(await env.ASSETS.fetch(request));
     }
 
-    if(path==='/ascent/admin-settings.html'){
+    if(path==='/ascent/admin-settings.html' || path==='/ascent/admin-settings' || path==='/ascent/admin-settings/'){
       const response=await env.ASSETS.fetch(request);
       if(!response.ok) return response;
       return injectOracyAdminCard(response);
