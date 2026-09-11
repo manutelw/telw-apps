@@ -32,3 +32,14 @@
 /.github/oracy-d1a-unit1.lock @manutelw
 /.github/scripts/oracy_d1a_unit1_freeze_check.py @manutelw
 /.github/workflows/oracy-level-d-integrity.yml @manutelw
+
+# ORACY LEVEL D UNITS 2-30 — protected course package and voice configuration.
+/oracy/unit-6* @manutelw
+/oracy/unit-7* @manutelw
+/oracy/unit-8* @manutelw
+/oracy/unit-90* @manutelw
+/oracy/level-d-units-2-30.js @manutelw
+/oracy/level-d-vocabulary-runtime.js @manutelw
+/oracy/level-system-d-2-30.js @manutelw
+/.github/scripts/build_oracy_level_d_units_2_30.py @manutelw
+/supabase/functions/oracy-voice/course-units-62-90.ts @manutelw
