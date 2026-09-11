@@ -1,0 +1,37 @@
+name: ORACY Level C GD Cadence
+on:
+  pull_request:
+    paths:
+      - 'oracy/level-c-gd-cadence.js'
+      - 'oracy/level-c-gd-focus-ui.js'
+      - 'oracy/unit-c.html'
+      - '.github/workflows/oracy-level-c-gd-cadence.yml'
+jobs:
+  gd-cadence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate GD cadence and practice contract
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const cadence=fs.readFileSync('oracy/level-c-gd-cadence.js','utf8');
+          const html=fs.readFileSync('oracy/unit-c.html','utf8');
+          const ui=fs.readFileSync('oracy/level-c-gd-focus-ui.js','utf8');
+          const required=[3,6,9,12,15,18,21,24,27,30];
+          const m=cadence.match(/ORACY_LEVEL_C_GD_CADENCE=Object\.freeze\(\[([^\]]+)\]\)/);
+          if(!m) throw new Error('GD cadence manifest missing');
+          const found=m[1].split(',').map(x=>Number(x.trim()));
+          if(JSON.stringify(found)!==JSON.stringify(required)) throw new Error('GD cadence must be exactly every third unit: '+required.join(','));
+          for(const u of required){
+            if(!new RegExp('\\n'+u+':\\{kp:').test(cadence)) throw new Error('Missing authored GD for Unit '+u);
+          }
+          const practiceCount=(cadence.match(/practice:\{topic:/g)||[]).length;
+          if(practiceCount<10) throw new Error('Each scheduled GD must have guided practice');
+          const a=html.indexOf('level-c-unit-page-bootstrap.js');
+          const b=html.indexOf('level-c-gd-cadence.js');
+          const c=html.indexOf('unit-renderer-c.js');
+          if(!(a>=0&&b>a&&c>b)) throw new Error('GD cadence must load after bootstrap and before renderer');
+          if(!ui.includes('Now practise the GD move')||!ui.includes('GD practice: respond and build')) throw new Error('GD debrief must lead into speaking practice');
+          console.log('GD cadence OK: 10 authored GDs across 30 units, each with debrief + speaking practice');
+          NODE
