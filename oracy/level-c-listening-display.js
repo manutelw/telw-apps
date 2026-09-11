@@ -1,6 +1,6 @@
-// Level C, all four sublevels: display each listening piece in the format it actually is.
+// Level C, all four sublevels: C1A, C1B, C2A, C2B.
 // Single-speaker formats are continuous prose; multi-speaker formats keep speaker labels only when the speaker changes.
-// Loaded last on every Level C unit page.
+// This file is loaded LAST on every Level C unit page.
 (function(){
 'use strict';
 const U=window.ORACY_UNIT;
