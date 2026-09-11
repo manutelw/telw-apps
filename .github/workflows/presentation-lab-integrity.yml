@@ -1,0 +1,32 @@
+name: Presentation Lab Integrity
+
+on:
+  pull_request:
+    paths:
+      - 'presentation-lab/**'
+      - '.github/workflows/presentation-lab-integrity.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'presentation-lab/**'
+      - '.github/workflows/presentation-lab-integrity.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify standalone course
+        run: |
+          test -f presentation-lab/index.html
+          test -f presentation-lab/styles.css
+          test -f presentation-lab/app.js
+          node --check presentation-lab/app.js
+          grep -q '90-minute Presentation Performance Lab' presentation-lab/index.html
+          grep -q 'data-slot="baseline"' presentation-lab/index.html
+          grep -q 'data-slot="final"' presentation-lab/index.html
+          grep -q 'Answer → Reason → Evidence → Stop' presentation-lab/index.html
+          grep -q 'Your recordings stay in this browser session' presentation-lab/index.html
