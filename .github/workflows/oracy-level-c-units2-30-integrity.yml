@@ -7,6 +7,8 @@ on:
       - 'oracy/level-c-source-audit-fixes.js'
       - 'oracy/level-c-listen-speak.js'
       - 'oracy/level-c-unit6-listening-fix.js'
+      - 'oracy/level-c-unit6-comprehension-vocab.js'
+      - 'oracy/level-c-vocab-meaning-ui.js'
       - 'oracy/level-c-unit-builder.js'
       - 'oracy/level-c-unit-enhance.js'
       - 'oracy/rules-c1a.js'
@@ -35,6 +37,8 @@ jobs:
           node --check oracy/level-c-source-audit-fixes.js
           node --check oracy/level-c-listen-speak.js
           node --check oracy/level-c-unit6-listening-fix.js
+          node --check oracy/level-c-unit6-comprehension-vocab.js
+          node --check oracy/level-c-vocab-meaning-ui.js
           node --check oracy/level-c-unit-builder.js
           node --check oracy/level-c-unit-enhance.js
           node --check oracy/unit-speaking-c-units2-30-runtime.js
@@ -47,7 +51,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          files=[Path('oracy/level-c-units-2-30-specs.js'),Path('oracy/level-c-source-16-30.js'),Path('oracy/level-c-source-audit-fixes.js'),Path('oracy/level-c-listen-speak.js'),Path('oracy/level-c-unit6-listening-fix.js'),Path('oracy/level-c-unit-builder.js'),Path('oracy/level-c-unit-enhance.js'),Path('oracy/unit-speaking-c-units2-30-runtime.js'),Path('oracy/level-c-progress.js'),Path('oracy/unit-c.html')]
+          files=[Path('oracy/level-c-units-2-30-specs.js'),Path('oracy/level-c-source-16-30.js'),Path('oracy/level-c-source-audit-fixes.js'),Path('oracy/level-c-listen-speak.js'),Path('oracy/level-c-unit6-listening-fix.js'),Path('oracy/level-c-unit6-comprehension-vocab.js'),Path('oracy/level-c-vocab-meaning-ui.js'),Path('oracy/level-c-unit-builder.js'),Path('oracy/level-c-unit-enhance.js'),Path('oracy/unit-speaking-c-units2-30-runtime.js'),Path('oracy/level-c-progress.js'),Path('oracy/unit-c.html')]
           text='\n'.join(p.read_text(encoding='utf-8') for p in files)
           assert 'window.ORACY_C_SPECS=' in text
           specs=Path('oracy/level-c-units-2-30-specs.js').read_text(encoding='utf-8')
@@ -56,7 +60,6 @@ jobs:
           for n in range(16,31): assert f'{n}:' in src, f'missing source correction Unit {n}'
           for required in ('festivals, celebrations and traditions','the Internet and quantities','informal spoken register','weights, measures and currency values','newspapers and journalistic register','school days, adult education and training','letter writing and personality','advertising','the animal world and strong opinions','complaining and apologising','politics and government','British and American English and international usage','going on a cruise and future events','past experiences and memories','famous quotations, proverbs and famous mistakes'):
               assert required in src, required
-          # Keep Units 16-30 listening conversations substantial: 15 units, 10 alternating turns each.
           assert src.count('listenSpeak:{') == 15, 'Units 16-30 must each have a listenSpeak conversation'
           assert src.count("['A'") >= 75 and src.count("['B'") >= 75, 'Units 16-30 listening conversations became too short'
           audit=Path('oracy/level-c-source-audit-fixes.js').read_text(encoding='utf-8')
@@ -66,6 +69,13 @@ jobs:
           for required in ('car-free Sundays','four-day teaching week','water-saving rules','provided that','Were the authorities to','I wish'):
               assert required in u6, required
           assert u6.count("['A'") == 15 and u6.count("['B'") == 15, 'Unit 6 must keep three substantial 10-turn listening dialogues'
+          cv=Path('oracy/level-c-unit6-comprehension-vocab.js').read_text(encoding='utf-8')
+          assert cv.count("label:'Listening comprehension'") == 12, 'Unit 6 needs four genuine comprehension MCQs per Key Point'
+          for required in ('Why does Speaker B think car-free Sundays','What condition does Speaker B give','What possible benefit of a four-day teaching week','What water-saving rule','feasible','possible and practical enough to be done','unrealistic','worthwhile','controversial','sustainable','provided that','on condition that','were I to','should it happen','I wish','back up','rule out','think through','go along with','push back on'):
+              assert required in cv, required
+          meaning=Path('oracy/level-c-vocab-meaning-ui.js').read_text(encoding='utf-8')
+          for required in ('Understand the word from context','What does','Check meaning','Choose a meaning first','Now listen to the conversation and use the word yourself'):
+              assert required in meaning, required
           listen=Path('oracy/level-c-listen-speak.js').read_text(encoding='utf-8')
           for required in ('Listen to full conversation','read the suggested line','say it your way','The next response can change','evaluate','transcript','adaptiveLead','preload'):
               assert required.lower() in listen.lower(), required
@@ -75,12 +85,12 @@ jobs:
           assert 'Evaluate within CEFR B range' in text
           assert 'Natural, enthusiastic adult conversation in clear UK English' in text
           html=Path('oracy/unit-c.html').read_text(encoding='utf-8')
-          for f in ('level-c-source-16-30.js','level-c-source-audit-fixes.js','level-c-unit6-listening-fix.js','level-c-listen-speak.js','level-c-static-audio-preload.js'): assert f in html
-          # Unit 6 correction must load after builder and before renderer/audio binding so visible text and TTS share one source.
-          assert html.index('level-c-unit-builder.js') < html.index('level-c-unit6-listening-fix.js') < html.index('unit-renderer-c.js') < html.index('level-c-audio-binding.js')
+          for f in ('level-c-source-16-30.js','level-c-source-audit-fixes.js','level-c-unit6-listening-fix.js','level-c-unit6-comprehension-vocab.js','level-c-vocab-meaning-ui.js','level-c-listen-speak.js','level-c-static-audio-preload.js'): assert f in html
+          assert html.index('level-c-unit-builder.js') < html.index('level-c-unit6-listening-fix.js') < html.index('level-c-unit6-comprehension-vocab.js') < html.index('unit-renderer-c.js') < html.index('level-c-audio-binding.js')
+          assert html.index('unit-speaking-c-units2-30-runtime.js') < html.index('level-c-vocab-meaning-ui.js')
           assert 'progress-c.html?level=' in Path('oracy/index.html').read_text(encoding='utf-8')
           banned='inlingua'
           for p in files+[Path('oracy/rules-c1a.js'),Path('oracy/rules-c1b.js'),Path('oracy/rules-c2a.js'),Path('oracy/rules-c2b.js')]:
               assert banned not in p.read_text(encoding='utf-8').lower(), f'banned term in {p}'
-          print('Level C integrity OK; Unit 6 text/audio source sync and substantial listening lengths guarded')
+          print('Level C integrity OK; Unit 6 genuine comprehension and context-first vocabulary meaning work guarded')
           PY
