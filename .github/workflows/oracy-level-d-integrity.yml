@@ -51,7 +51,8 @@ jobs:
           const vocab=fs.readFileSync('oracy/unit-61.js','utf8');
           ok((vocab.match(/\{w:\[/g)||[]).length===3,'One vocabulary bank per Key Point');
           ok((vocab.match(/class=\"u61record\"/g)||[]).length===1,'Per-item recording control template');
-          for(const rule of ['Now use it yourself.','data-attempt="0"','Attempt 1 of 2','Attempt 2 of 2','Two attempts completed','Number(btn.dataset.attempt||0)>=2'])ok(vocab.includes(rule),'Vocabulary recording rule: '+rule);
+          for(const rule of ['Hear my sentence','Now make your own sentence.','data-attempt="0"','Good.','one improved attempt','Number(btn.dataset.attempt||0)>=2'])ok(vocab.includes(rule),'Vocabulary recording rule: '+rule);
+          ok(!vocab.includes('Tap test')&&!vocab.includes('Check each meaning in context')&&!vocab.includes('u61opts'),'No passive vocabulary meaning quiz');
           ok(vocab.includes("form.append('action','evaluate')")&&vocab.includes("form.append('unit_no','61')"),'Protected voice feedback route');
           for(let n=61;n<=90;n++){
             const unitPage=`oracy/unit-${n}.html`;
@@ -59,7 +60,8 @@ jobs:
             const runtime=`oracy/unit-${n}.js`;
             ok(fs.existsSync(runtime),`Level D Unit ${n} vocabulary runtime`);
             const code=fs.readFileSync(runtime,'utf8');
-            for(const rule of ['Now use it yourself.','data-attempt="0"','Attempt 1 of 2','Attempt 2 of 2','Two attempts completed','Number(btn.dataset.attempt||0)>=2'])ok(code.includes(rule),`Level D Unit ${n} frozen vocabulary cycle: ${rule}`);
+            for(const rule of ['Hear my sentence','Now make your own sentence.','data-attempt="0"','Good.','one improved attempt','Number(btn.dataset.attempt||0)>=2'])ok(code.includes(rule),`Level D Unit ${n} frozen vocabulary cycle: ${rule}`);
+            ok(!code.includes('Tap test')&&!code.includes('Check each meaning in context'),`Level D Unit ${n} has no passive vocabulary meaning quiz`);
             ok(code.includes("form.append('action','evaluate')"),`Level D Unit ${n} vocabulary feedback service`);
           }
           const index=fs.readFileSync('oracy/index.html','utf8'),admin=fs.readFileSync('oracy/admin.html','utf8'),voice=fs.readFileSync('supabase/functions/oracy-voice/index.ts','utf8');
