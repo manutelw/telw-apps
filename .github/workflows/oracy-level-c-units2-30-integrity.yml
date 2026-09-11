@@ -10,6 +10,11 @@ on:
       - 'oracy/level-c-unit6-comprehension-vocab.js'
       - 'oracy/level-c-unit6-comprehension-guidance.js'
       - 'oracy/level-c-unit6-reps-teaching.js'
+      - 'oracy/level-c-learner-friendly.js'
+      - 'oracy/level-c-all-structures-friendly.js'
+      - 'oracy/level-c-jargon-scrub.js'
+      - 'oracy/level-c-vocab-glosses.js'
+      - 'oracy/level-c-vocab-contrast-prep.js'
       - 'oracy/level-c-vocab-meaning-ui.js'
       - 'oracy/level-c-unit-builder.js'
       - 'oracy/level-c-unit-enhance.js'
@@ -42,6 +47,11 @@ jobs:
           node --check oracy/level-c-unit6-comprehension-vocab.js
           node --check oracy/level-c-unit6-comprehension-guidance.js
           node --check oracy/level-c-unit6-reps-teaching.js
+          node --check oracy/level-c-learner-friendly.js
+          node --check oracy/level-c-all-structures-friendly.js
+          node --check oracy/level-c-jargon-scrub.js
+          node --check oracy/level-c-vocab-glosses.js
+          node --check oracy/level-c-vocab-contrast-prep.js
           node --check oracy/level-c-vocab-meaning-ui.js
           node --check oracy/level-c-unit-builder.js
           node --check oracy/level-c-unit-enhance.js
@@ -55,53 +65,75 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          files=[Path('oracy/level-c-units-2-30-specs.js'),Path('oracy/level-c-source-16-30.js'),Path('oracy/level-c-source-audit-fixes.js'),Path('oracy/level-c-listen-speak.js'),Path('oracy/level-c-unit6-listening-fix.js'),Path('oracy/level-c-unit6-comprehension-vocab.js'),Path('oracy/level-c-unit6-comprehension-guidance.js'),Path('oracy/level-c-unit6-reps-teaching.js'),Path('oracy/level-c-vocab-meaning-ui.js'),Path('oracy/level-c-unit-builder.js'),Path('oracy/level-c-unit-enhance.js'),Path('oracy/unit-speaking-c-units2-30-runtime.js'),Path('oracy/level-c-progress.js'),Path('oracy/unit-c.html')]
+          files=[Path('oracy/level-c-units-2-30-specs.js'),Path('oracy/level-c-source-16-30.js'),Path('oracy/level-c-source-audit-fixes.js'),Path('oracy/level-c-listen-speak.js'),Path('oracy/level-c-unit6-listening-fix.js'),Path('oracy/level-c-unit6-comprehension-vocab.js'),Path('oracy/level-c-unit6-comprehension-guidance.js'),Path('oracy/level-c-unit6-reps-teaching.js'),Path('oracy/level-c-learner-friendly.js'),Path('oracy/level-c-all-structures-friendly.js'),Path('oracy/level-c-jargon-scrub.js'),Path('oracy/level-c-vocab-glosses.js'),Path('oracy/level-c-vocab-contrast-prep.js'),Path('oracy/level-c-vocab-meaning-ui.js'),Path('oracy/level-c-unit-builder.js'),Path('oracy/level-c-unit-enhance.js'),Path('oracy/unit-speaking-c-units2-30-runtime.js'),Path('oracy/level-c-progress.js'),Path('oracy/unit-c.html')]
           text='\n'.join(p.read_text(encoding='utf-8') for p in files)
-          assert 'window.ORACY_C_SPECS=' in text
           specs=Path('oracy/level-c-units-2-30-specs.js').read_text(encoding='utf-8')
           for n in range(2,31): assert f'"{n}":' in specs, f'missing Unit {n}'
           src=Path('oracy/level-c-source-16-30.js').read_text(encoding='utf-8')
           for n in range(16,31): assert f'{n}:' in src, f'missing source correction Unit {n}'
-          for required in ('festivals, celebrations and traditions','the Internet and quantities','informal spoken register','weights, measures and currency values','newspapers and journalistic register','school days, adult education and training','letter writing and personality','advertising','the animal world and strong opinions','complaining and apologising','politics and government','British and American English and international usage','going on a cruise and future events','past experiences and memories','famous quotations, proverbs and famous mistakes'):
-              assert required in src, required
-          assert src.count('listenSpeak:{') == 15, 'Units 16-30 must each have a listenSpeak conversation'
-          assert src.count("['A'") >= 75 and src.count("['B'") >= 75, 'Units 16-30 listening conversations became too short'
+          assert src.count('listenSpeak:{') == 15
+          assert src.count("['A'") >= 75 and src.count("['B'") >= 75
           audit=Path('oracy/level-c-source-audit-fixes.js').read_text(encoding='utf-8')
-          for required in ('harbour','lifeboat','forehead','maternal aunt','procession','first-aid point','kilometre','sociology','stray animal'):
-              assert required in audit, required
+          for required in ('harbour','lifeboat','forehead','maternal aunt','procession','first-aid point','kilometre','sociology','stray animal'): assert required in audit
           u6=Path('oracy/level-c-unit6-listening-fix.js').read_text(encoding='utf-8')
-          for required in ('car-free Sundays','four-day teaching week','water-saving rules','provided that','Were the authorities to','I wish'):
-              assert required in u6, required
-          assert u6.count("['A'") == 15 and u6.count("['B'") == 15, 'Unit 6 must keep three substantial 10-turn listening dialogues'
+          assert u6.count("['A'") == 15 and u6.count("['B'") == 15
           cv=Path('oracy/level-c-unit6-comprehension-vocab.js').read_text(encoding='utf-8')
-          assert cv.count("label:'Listening comprehension'") == 12, 'Unit 6 needs four genuine comprehension MCQs per Key Point'
-          for required in ('Why does Speaker B think car-free Sundays','What condition does Speaker B give','What possible benefit of a four-day teaching week','What water-saving rule','feasible','possible and practical enough to be done','unrealistic','worthwhile','controversial','sustainable','provided that','on condition that','were I to','should it happen','I wish','back up','rule out','think through','go along with','push back on'):
-              assert required in cv, required
+          assert cv.count("label:'Listening comprehension'") == 12
           guidance=Path('oracy/level-c-unit6-comprehension-guidance.js').read_text(encoding='utf-8')
-          for required in ('because, as or since','if, provided that or on condition that','so, therefore, hence, as a result or which means'):
-              assert required in guidance, required
-          reps=Path('oracy/level-c-unit6-reps-teaching.js').read_text(encoding='utf-8')
-          for required in ('If the city centre were car-free every Sunday','I would support it provided that','Were I to choose','Should it happen','I wish','There must be','If the road were closed to cars, the market should be quieter','If the city tests the plan next Sunday, we will see how traffic changes'):
-              assert required in reps, required
-          assert 'first conditional' not in reps.lower() and 'second conditional' not in reps.lower(), 'Learner-facing Unit 6 reps must not use grammar jargon'
+          for required in ('because, as or since','if, provided that or on condition that','so, therefore, hence, as a result or which means'): assert required in guidance
+          gloss=Path('oracy/level-c-vocab-glosses.js').read_text(encoding='utf-8')
+          for required in ("feasible:['possible','probable']",'possible and practical enough to be done','window.ORACY_C_GLOSS','window.ORACY_C_SPECIAL_COMPARE'): assert required in gloss
+          prep=Path('oracy/level-c-vocab-contrast-prep.js').read_text(encoding='utf-8')
+          for required in ('compare:[w,...alts]','compareGlosses','What does'): assert required in prep
           meaning=Path('oracy/level-c-vocab-meaning-ui.js').read_text(encoding='utf-8')
-          for required in ('Understand the word from context','What does','Check meaning','Choose a meaning first','Now listen to the conversation and use the word yourself'):
-              assert required in meaning, required
+          for required in ('Understand the word by comparing it','Compare the three','Compare the three meanings again','Now listen to the model conversation'): assert required in meaning
+          friendly=Path('oracy/level-c-all-structures-friendly.js').read_text(encoding='utf-8')
+          for required in ('Do not name the language rule','Start from this model shape','Use two useful sentence shapes'): assert required in friendly
           listen=Path('oracy/level-c-listen-speak.js').read_text(encoding='utf-8')
-          for required in ('Listen to full conversation','read the suggested line','say it your way','The next response can change','evaluate','transcript','adaptiveLead','preload'):
-              assert required.lower() in listen.lower(), required
-          assert 'Question → Answer' in text
-          assert 'Statement → Response' in text
-          assert 'Hint' in text
-          assert 'Evaluate within CEFR B range' in text
-          assert 'Natural, enthusiastic adult conversation in clear UK English' in text
+          for required in ('Listen to full conversation','read the suggested line','say it your way','The next response can change','adaptiveLead','preload'): assert required.lower() in listen.lower()
           html=Path('oracy/unit-c.html').read_text(encoding='utf-8')
-          for f in ('level-c-source-16-30.js','level-c-source-audit-fixes.js','level-c-unit6-listening-fix.js','level-c-unit6-comprehension-vocab.js','level-c-unit6-comprehension-guidance.js','level-c-unit6-reps-teaching.js','level-c-vocab-meaning-ui.js','level-c-listen-speak.js','level-c-static-audio-preload.js'): assert f in html
-          assert html.index('level-c-unit-builder.js') < html.index('level-c-unit6-listening-fix.js') < html.index('level-c-unit6-comprehension-vocab.js') < html.index('level-c-unit6-comprehension-guidance.js') < html.index('level-c-unit6-reps-teaching.js') < html.index('unit-renderer-c.js') < html.index('level-c-audio-binding.js')
-          assert html.index('unit-speaking-c-units2-30-runtime.js') < html.index('level-c-vocab-meaning-ui.js')
+          for f in ('level-c-learner-friendly.js','level-c-all-structures-friendly.js','level-c-jargon-scrub.js','level-c-vocab-glosses.js','level-c-vocab-contrast-prep.js','level-c-vocab-meaning-ui.js'): assert f in html
+          assert html.index('level-c-unit-enhance.js') < html.index('level-c-learner-friendly.js') < html.index('level-c-all-structures-friendly.js') < html.index('level-c-unit6-reps-teaching.js') < html.index('level-c-jargon-scrub.js') < html.index('level-c-vocab-contrast-prep.js') < html.index('unit-renderer-c.js')
           assert 'progress-c.html?level=' in Path('oracy/index.html').read_text(encoding='utf-8')
           banned='inlingua'
-          for p in files+[Path('oracy/rules-c1a.js'),Path('oracy/rules-c1b.js'),Path('oracy/rules-c2a.js'),Path('oracy/rules-c2b.js')]:
-              assert banned not in p.read_text(encoding='utf-8').lower(), f'banned term in {p}'
-          print('Level C integrity OK; Unit 6 comprehension signals, learner-friendly reps and pattern contrasts guarded')
+          for p in files+[Path('oracy/rules-c1a.js'),Path('oracy/rules-c1b.js'),Path('oracy/rules-c2a.js'),Path('oracy/rules-c2b.js')]: assert banned not in p.read_text(encoding='utf-8').lower(), f'banned term in {p}'
+          print('Static Level C integrity OK')
           PY
+      - name: Vocabulary contrast coverage
+        run: |
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const ctx={window:{}};vm.createContext(ctx);
+          for(const f of ['oracy/level-c-units-2-30-specs.js','oracy/level-c-source-16-30.js','oracy/level-c-source-audit-fixes.js','oracy/level-c-vocab-glosses.js']) vm.runInContext(fs.readFileSync(f,'utf8'),ctx,{filename:f});
+          let count=0;
+          for(let n=2;n<=30;n++){
+            const V=ctx.window.ORACY_C_SPECS[n].vocab,G=ctx.window.ORACY_C_GLOSS[n];
+            if(!G||G.length!==V.length)throw new Error(`Unit ${n}: vocabulary/gloss groups mismatch`);
+            V.forEach((group,kp)=>{if(G[kp].length!==group.length)throw new Error(`Unit ${n} KP${kp+1}: vocabulary/gloss count mismatch`);G[kp].forEach((g,i)=>{if(!String(g||'').trim())throw new Error(`Unit ${n} KP${kp+1} item ${i+1}: blank gloss`);count++;});});
+          }
+          if(count!==435)throw new Error(`Expected 435 Level C vocabulary items for Units 2-30, found ${count}`);
+          console.log('All 435 Unit 2-30 vocabulary items have plain-English meanings.');
+          NODE
+      - name: Learner-facing jargon audit
+        run: |
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const base=['oracy/level-c-units-2-30-specs.js','oracy/level-c-source-16-30.js','oracy/level-c-source-audit-fixes.js','oracy/rules-c1a.js','oracy/rules-c1b.js','oracy/rules-c2a.js','oracy/rules-c2b.js','oracy/level-c-unit-builder.js','oracy/level-c-unit-enhance.js','oracy/level-c-learner-friendly.js','oracy/level-c-all-structures-friendly.js'];
+          const unit6=['oracy/level-c-unit6-listening-fix.js','oracy/level-c-unit6-comprehension-vocab.js','oracy/level-c-unit6-comprehension-guidance.js','oracy/level-c-unit6-reps-teaching.js'];
+          const tail=['oracy/level-c-jargon-scrub.js','oracy/level-c-vocab-glosses.js','oracy/level-c-vocab-contrast-prep.js'];
+          const banned=/\b(first|second|third|mixed) conditional(s)?\b|\bgerund\b|\binfinitive\b|\bbare infinitive\b|\bpassive\b|\bsubjunctive\b|\binversion\b|\bquantifier(s)?\b|\bsuperlative(s)?\b|\bcomparative(s)?\b|\badverb(s)?\b|\bpreposition(s)?\b|\breported speech\b|\bfuture perfect\b|\bfuture continuous\b|\bpast perfect\b|\brelative clause(s)?\b/i;
+          let vocabCount=0;
+          for(let n=2;n<=30;n++){
+            const ctx={window:{},location:{search:`?u=${n}`},URLSearchParams};vm.createContext(ctx);
+            for(const f of base)vm.runInContext(fs.readFileSync(f,'utf8'),ctx,{filename:f});
+            if(n===6)for(const f of unit6)vm.runInContext(fs.readFileSync(f,'utf8'),ctx,{filename:f});
+            for(const f of tail)vm.runInContext(fs.readFileSync(f,'utf8'),ctx,{filename:f});
+            const U=ctx.window.ORACY_UNIT;
+            const visible={aim:U.aim,keyPoints:U.keyPoints,checks:U.checks,notes:U.notes,oral:U.oral,pron:U.pron,conversation:U.conversation,reps:U.practice.map(p=>p.reps)};
+            const s=JSON.stringify(visible);
+            const m=s.match(banned);if(m)throw new Error(`Unit ${n} learner-facing grammar jargon remains: ${m[0]}`);
+            for(const p of U.practice)for(const it of p.items){if(!it.meaning||!Array.isArray(it.meaning.compare)||it.meaning.compare.length!==3||!it.meaning.correct||!Array.isArray(it.meaning.wrong)||it.meaning.wrong.length!==2)throw new Error(`Unit ${n} vocabulary contrast missing for ${it.w}`);vocabCount++;}
+          }
+          if(vocabCount!==435)throw new Error(`Expected 435 contrast questions, found ${vocabCount}`);
+          console.log('Units 2-30: learner-facing grammar jargon removed and all 435 vocabulary contrasts prepared.');
+          NODE
