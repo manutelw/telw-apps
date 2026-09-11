@@ -8,6 +8,8 @@ on:
       - 'oracy/level-c-listen-speak.js'
       - 'oracy/level-c-unit6-listening-fix.js'
       - 'oracy/level-c-unit6-comprehension-vocab.js'
+      - 'oracy/level-c-unit6-comprehension-guidance.js'
+      - 'oracy/level-c-unit6-reps-teaching.js'
       - 'oracy/level-c-vocab-meaning-ui.js'
       - 'oracy/level-c-unit-builder.js'
       - 'oracy/level-c-unit-enhance.js'
@@ -38,6 +40,8 @@ jobs:
           node --check oracy/level-c-listen-speak.js
           node --check oracy/level-c-unit6-listening-fix.js
           node --check oracy/level-c-unit6-comprehension-vocab.js
+          node --check oracy/level-c-unit6-comprehension-guidance.js
+          node --check oracy/level-c-unit6-reps-teaching.js
           node --check oracy/level-c-vocab-meaning-ui.js
           node --check oracy/level-c-unit-builder.js
           node --check oracy/level-c-unit-enhance.js
@@ -51,7 +55,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          files=[Path('oracy/level-c-units-2-30-specs.js'),Path('oracy/level-c-source-16-30.js'),Path('oracy/level-c-source-audit-fixes.js'),Path('oracy/level-c-listen-speak.js'),Path('oracy/level-c-unit6-listening-fix.js'),Path('oracy/level-c-unit6-comprehension-vocab.js'),Path('oracy/level-c-vocab-meaning-ui.js'),Path('oracy/level-c-unit-builder.js'),Path('oracy/level-c-unit-enhance.js'),Path('oracy/unit-speaking-c-units2-30-runtime.js'),Path('oracy/level-c-progress.js'),Path('oracy/unit-c.html')]
+          files=[Path('oracy/level-c-units-2-30-specs.js'),Path('oracy/level-c-source-16-30.js'),Path('oracy/level-c-source-audit-fixes.js'),Path('oracy/level-c-listen-speak.js'),Path('oracy/level-c-unit6-listening-fix.js'),Path('oracy/level-c-unit6-comprehension-vocab.js'),Path('oracy/level-c-unit6-comprehension-guidance.js'),Path('oracy/level-c-unit6-reps-teaching.js'),Path('oracy/level-c-vocab-meaning-ui.js'),Path('oracy/level-c-unit-builder.js'),Path('oracy/level-c-unit-enhance.js'),Path('oracy/unit-speaking-c-units2-30-runtime.js'),Path('oracy/level-c-progress.js'),Path('oracy/unit-c.html')]
           text='\n'.join(p.read_text(encoding='utf-8') for p in files)
           assert 'window.ORACY_C_SPECS=' in text
           specs=Path('oracy/level-c-units-2-30-specs.js').read_text(encoding='utf-8')
@@ -73,6 +77,13 @@ jobs:
           assert cv.count("label:'Listening comprehension'") == 12, 'Unit 6 needs four genuine comprehension MCQs per Key Point'
           for required in ('Why does Speaker B think car-free Sundays','What condition does Speaker B give','What possible benefit of a four-day teaching week','What water-saving rule','feasible','possible and practical enough to be done','unrealistic','worthwhile','controversial','sustainable','provided that','on condition that','were I to','should it happen','I wish','back up','rule out','think through','go along with','push back on'):
               assert required in cv, required
+          guidance=Path('oracy/level-c-unit6-comprehension-guidance.js').read_text(encoding='utf-8')
+          for required in ('because, as or since','if, provided that or on condition that','so, therefore, hence, as a result or which means'):
+              assert required in guidance, required
+          reps=Path('oracy/level-c-unit6-reps-teaching.js').read_text(encoding='utf-8')
+          for required in ('If the city centre were car-free every Sunday','I would support it provided that','Were I to choose','Should it happen','I wish','There must be','If the road were closed to cars, the market should be quieter','If the city tests the plan next Sunday, we will see how traffic changes'):
+              assert required in reps, required
+          assert 'first conditional' not in reps.lower() and 'second conditional' not in reps.lower(), 'Learner-facing Unit 6 reps must not use grammar jargon'
           meaning=Path('oracy/level-c-vocab-meaning-ui.js').read_text(encoding='utf-8')
           for required in ('Understand the word from context','What does','Check meaning','Choose a meaning first','Now listen to the conversation and use the word yourself'):
               assert required in meaning, required
@@ -85,12 +96,12 @@ jobs:
           assert 'Evaluate within CEFR B range' in text
           assert 'Natural, enthusiastic adult conversation in clear UK English' in text
           html=Path('oracy/unit-c.html').read_text(encoding='utf-8')
-          for f in ('level-c-source-16-30.js','level-c-source-audit-fixes.js','level-c-unit6-listening-fix.js','level-c-unit6-comprehension-vocab.js','level-c-vocab-meaning-ui.js','level-c-listen-speak.js','level-c-static-audio-preload.js'): assert f in html
-          assert html.index('level-c-unit-builder.js') < html.index('level-c-unit6-listening-fix.js') < html.index('level-c-unit6-comprehension-vocab.js') < html.index('unit-renderer-c.js') < html.index('level-c-audio-binding.js')
+          for f in ('level-c-source-16-30.js','level-c-source-audit-fixes.js','level-c-unit6-listening-fix.js','level-c-unit6-comprehension-vocab.js','level-c-unit6-comprehension-guidance.js','level-c-unit6-reps-teaching.js','level-c-vocab-meaning-ui.js','level-c-listen-speak.js','level-c-static-audio-preload.js'): assert f in html
+          assert html.index('level-c-unit-builder.js') < html.index('level-c-unit6-listening-fix.js') < html.index('level-c-unit6-comprehension-vocab.js') < html.index('level-c-unit6-comprehension-guidance.js') < html.index('level-c-unit6-reps-teaching.js') < html.index('unit-renderer-c.js') < html.index('level-c-audio-binding.js')
           assert html.index('unit-speaking-c-units2-30-runtime.js') < html.index('level-c-vocab-meaning-ui.js')
           assert 'progress-c.html?level=' in Path('oracy/index.html').read_text(encoding='utf-8')
           banned='inlingua'
           for p in files+[Path('oracy/rules-c1a.js'),Path('oracy/rules-c1b.js'),Path('oracy/rules-c2a.js'),Path('oracy/rules-c2b.js')]:
               assert banned not in p.read_text(encoding='utf-8').lower(), f'banned term in {p}'
-          print('Level C integrity OK; Unit 6 genuine comprehension and context-first vocabulary meaning work guarded')
+          print('Level C integrity OK; Unit 6 comprehension signals, learner-friendly reps and pattern contrasts guarded')
           PY
