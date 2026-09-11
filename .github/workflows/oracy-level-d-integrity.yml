@@ -9,6 +9,8 @@ on:
       - 'oracy/index.html'
       - 'oracy/admin.html'
       - 'supabase/functions/oracy-voice/index.ts'
+      - '.github/oracy-d1a-unit1.lock'
+      - '.github/scripts/oracy_d1a_unit1_freeze_check.py'
       - '.github/workflows/oracy-level-d-integrity.yml'
   push:
     branches: [main]
@@ -20,6 +22,9 @@ on:
       - 'oracy/index.html'
       - 'oracy/admin.html'
       - 'supabase/functions/oracy-voice/index.ts'
+      - '.github/oracy-d1a-unit1.lock'
+      - '.github/scripts/oracy_d1a_unit1_freeze_check.py'
+      - '.github/workflows/oracy-level-d-integrity.yml'
 jobs:
   integrity:
     runs-on: ubuntu-latest
@@ -28,6 +33,7 @@ jobs:
       - name: Verify D1A Unit 1 and frozen courses
         run: |
           python .github/scripts/oracy_course_integrity_check.py
+          python .github/scripts/oracy_d1a_unit1_freeze_check.py
           node <<'NODE'
           const fs=require('fs'),vm=require('vm');
           const s={window:{}};vm.createContext(s);
