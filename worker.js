@@ -3,6 +3,7 @@ const ORACY_VOICE='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/oracy-v
 const ASCENT_URL='https://vtqatrhwfvzyodiftvkc.supabase.co';
 const ASCENT_KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
 const ADMIN_VALIDATE=ASCENT_URL+'/rest/v1/rpc/ascent_admin_trainer_entry_list';
+const PRESENTATION_ACCESS=ASCENT_URL+'/functions/v1/presentation-skills-access';
 
 export default {
   async fetch(request,env){
@@ -10,6 +11,34 @@ export default {
     const path=url.pathname;
 
     if(isPrivateSource(path)) return new Response('Not found',{status:404});
+
+    if(path==='/presentation-skills/session'){
+      if(request.method!=='POST') return json({ok:false,message:'Use the Presentation Skills access form.'},405);
+      return handlePresentationSession(request);
+    }
+
+    if(path==='/presentation-skills/admin-handoff'){
+      if(request.method!=='POST') return json({ok:false},405);
+      return handlePresentationAdminHandoff(request);
+    }
+
+    if(path==='/presentation-skills/admin.html'){
+      const token=readCookie(request.headers.get('cookie')||'','clarion_admin_session');
+      if(!token || !(await validAdmin(token))) return redirect('/ascent/admin-login.html');
+      return noStore(await env.ASSETS.fetch(request));
+    }
+
+    if(path==='/presentation-skills' || path==='/presentation-skills/') return redirect('/presentation-skills/access.html');
+
+    if(path.startsWith('/presentation-skills/') && path!=='/presentation-skills/access.html'){
+      const cookies=request.headers.get('cookie')||'';
+      const learnerToken=readCookie(cookies,'presentation_session');
+      const deviceId=readCookie(cookies,'presentation_device');
+      const adminToken=readCookie(cookies,'clarion_admin_session');
+      const adminOk=adminToken ? await validAdmin(adminToken) : false;
+      if(!adminOk && !(await validPresentationSession(learnerToken,deviceId))) return redirect('/presentation-skills/access.html');
+      return noStore(await env.ASSETS.fetch(request));
+    }
 
     if(path==='/oracy/session'){
       if(request.method!=='POST') return json({ok:false,message:'Use the ORACY login form.'},405);
@@ -132,6 +161,32 @@ async function handleAdminHandoff(request){
   return new Response(null,{status:303,headers});
 }
 
+async function handlePresentationSession(request){
+  try{
+    const body=await request.json(),deviceId=String(body.device_id||'').trim();
+    const r=await fetch(PRESENTATION_ACCESS,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'LOGIN',login_id:String(body.login_id||''),password:String(body.password||''),device_id:deviceId})});
+    const data=await r.json().catch(()=>({ok:false,message:'Login failed.'}));
+    if(!r.ok||data.ok!==true||!data.session_token) return json(data,r.status||401);
+    const headers=new Headers({'content-type':'application/json','cache-control':'no-store'});
+    headers.append('set-cookie',cookie('presentation_session',data.session_token,30*24*60*60,'/presentation-skills'));
+    headers.append('set-cookie',cookie('presentation_device',deviceId,30*24*60*60,'/presentation-skills'));
+    return new Response(JSON.stringify({ok:true,display_name:data.display_name,expires_at:data.expires_at}),{status:200,headers});
+  }catch(e){return json({ok:false,message:'Access could not be opened.'},400)}
+}
+
+async function handlePresentationAdminHandoff(request){
+  let token='';try{const form=await request.formData();token=String(form.get('ascent_session_token')||'').trim()}catch{}
+  if(!token || !(await validAdmin(token))) return new Response('Administrator access required.',{status:403,headers:{'cache-control':'no-store'}});
+  const headers=new Headers({location:'/presentation-skills/admin.html','cache-control':'no-store'});
+  headers.append('set-cookie',cookie('clarion_admin_session',token,60*60,'/'));
+  return new Response(null,{status:303,headers});
+}
+
+async function validPresentationSession(token,deviceId){
+  if(!token||!deviceId)return false;
+  try{const r=await fetch(PRESENTATION_ACCESS,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'VALIDATE',session_token:token,device_id:deviceId})});if(!r.ok)return false;const d=await r.json();return d&&d.ok===true}catch{return false}
+}
+
 async function validAdmin(token){
   try{
     const r=await fetch(ADMIN_VALIDATE,{method:'POST',headers:{apikey:ASCENT_KEY,authorization:'Bearer '+ASCENT_KEY,'content-type':'application/json'},body:JSON.stringify({p_session_token:token})});
@@ -157,6 +212,12 @@ async function injectOracyAdminCard(response){
     const card='<button id="oracyAdminHubCard" class="app-card dialogue" type="button"><strong>ORACY</strong><span>Manage spoken-English learners, passwords and assigned units</span></button>';
     html=html.replace('<button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>',card+'\n        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>');
     const script=`<script>(function(){var b=document.getElementById('oracyAdminHubCard');if(!b)return;b.addEventListener('click',function(){var s=null;for(const k of ['ascent_admin_master_session','ascent_trainer_session']){try{var x=JSON.parse(localStorage.getItem(k)||'null');if(x&&x.sessionToken&&String(x.role||'').toUpperCase()==='ADMIN'){s=x;break}}catch(e){}}if(!s){location.href='/ascent/admin-login.html';return}var f=document.createElement('form');f.method='POST';f.action='/oracy/admin-handoff';var i=document.createElement('input');i.type='hidden';i.name='ascent_session_token';i.value=s.sessionToken;f.appendChild(i);document.body.appendChild(f);f.submit();});})();</script>`;
+    html=html.replace('</body>',script+'</body>');
+  }
+  if(!html.includes('id="presentationSkillsAdminCard"')){
+    const card='<button id="presentationSkillsAdminCard" class="app-card dialogue" type="button"><strong>Presentation Skills</strong><span>Manage the private course and single-device learner permissions</span></button>';
+    html=html.replace('<button id="catSimulatorAdminButton"',card+'\n        <button id="catSimulatorAdminButton"');
+    const script=`<script id="presentationSkillsAdminScript">(function(){var b=document.getElementById('presentationSkillsAdminCard');if(!b)return;b.addEventListener('click',function(){var s=null;for(const k of ['ascent_admin_master_session','ascent_trainer_session']){try{var x=JSON.parse(localStorage.getItem(k)||'null');if(x&&x.sessionToken&&String(x.role||'').toUpperCase()==='ADMIN'){s=x;break}}catch(e){}}if(!s){location.href='/ascent/admin-login.html';return}var f=document.createElement('form');f.method='POST';f.action='/presentation-skills/admin-handoff';var i=document.createElement('input');i.type='hidden';i.name='ascent_session_token';i.value=s.sessionToken;f.appendChild(i);document.body.appendChild(f);f.submit();});})();</script>`;
     html=html.replace('</body>',script+'</body>');
   }
   const headers=new Headers(response.headers);
