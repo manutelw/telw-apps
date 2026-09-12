@@ -3,7 +3,7 @@ on:
   push:
     branches: [restore-exact-pass-banner-20260912]
     paths:
-      - 'tmp/pass-banner/READY'
+      - 'tmp/pass-banner/READY2'
 permissions:
   contents: write
 jobs:
@@ -15,7 +15,7 @@ jobs:
       - name: Rebuild supplied banner and switch landing page to same-origin asset
         run: |
           mkdir -p assets
-          cat tmp/pass-parts/chunk*.txt | base64 -d > assets/placement-readiness-pass-exact.jpg
+          cat tmp/pass-small/part*.txt | base64 -d > assets/placement-readiness-pass-exact.jpg
           python - <<'PY'
           from pathlib import Path
           import re
@@ -28,6 +28,7 @@ jobs:
               raise SystemExit(f'Expected exactly one Placement Pass image replacement, got {n}')
           p.write_text(s2)
           PY
+          test "$(sha256sum assets/placement-readiness-pass-exact.jpg | cut -d' ' -f1)" = "309900449f7005bd513dab4d42e1e3176683185a693a3d299cda03defb5e05ce"
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add index.html assets/placement-readiness-pass-exact.jpg
