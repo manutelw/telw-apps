@@ -1,0 +1,35 @@
+name: Restore exact placement pass banner
+on:
+  push:
+    branches: [restore-exact-pass-banner-20260912]
+    paths:
+      - 'tmp/pass-banner/**'
+permissions:
+  contents: write
+jobs:
+  restore:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild exact banner and switch landing page to same-origin asset
+        run: |
+          mkdir -p assets
+          cat tmp/pass-banner/chunk*.txt | base64 -d > assets/placement-readiness-pass-exact.png
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text()
+          old=r'src="data:image/jpeg;base64,[^"]+" alt="Placement Readiness Pass — ₹3,999"'
+          new='src="assets/placement-readiness-pass-exact.png" alt="Placement Readiness Pass — ₹3,999"'
+          s2,n=re.subn(old,new,s,count=1)
+          if n!=1:
+              raise SystemExit(f'Expected exactly one Placement Pass image replacement, got {n}')
+          p.write_text(s2)
+          PY
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add index.html assets/placement-readiness-pass-exact.png
+          git commit -m "Restore exact Placement Readiness Pass image"
+          git push
