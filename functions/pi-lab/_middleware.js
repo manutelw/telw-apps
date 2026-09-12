@@ -14,26 +14,28 @@ export async function onRequest(context){
   if(!paidToken||!paidDevice){const saved=readCookie(cookieHeader,PAID_COOKIE);if(saved){const parts=saved.split('.');paidToken=parts[0]||'';paidDevice=parts[1]||'';}}
   const paidOk=paidToken&&paidDevice?await validPaid(paidToken,paidDevice):false;
   const adminOk=adminToken?await validAdmin(adminToken):false;
-  if(!paidOk&&!adminOk){
-    return new Response('Not found.',{status:404,headers:{'content-type':'text/plain; charset=UTF-8','cache-control':'no-store, max-age=0','x-robots-tag':'noindex, nofollow, noarchive'}});
-  }
+  if(!paidOk&&!adminOk){return new Response('Not found.',{status:404,headers:{'content-type':'text/plain; charset=UTF-8','cache-control':'no-store, max-age=0','x-robots-tag':'noindex, nofollow, noarchive'}})}
 
   const response=await context.next();
   if(!response.ok)return response;
   let body=response.body;
   const headers=new Headers(response.headers);
+  const isIndex=url.pathname==='/pi-lab/'||url.pathname.endsWith('/pi-lab/index.html');
   if(url.pathname.endsWith('/pi-lab/admin-builder.html')){
     let html=await response.text();
     if(!html.includes('pi-lab/roster-upload.js'))html=html.replace('</body>','<script src="./roster-upload.js?v=20260907-roster2"></script>\n</body>');
-    body=html;
-    headers.set('content-type','text/html; charset=UTF-8');
+    body=html;headers.set('content-type','text/html; charset=UTF-8');
+  }else if(isIndex&&paidOk){
+    let html=await response.text();
+    const marker='async function init(){';
+    const paidPrelude=`async function init(){\n  const __paidToken=new URLSearchParams(location.search).get('clarion_token')||localStorage.getItem('clarion_entitlement_PI_LAB')||'';\n  const __paidDevice=new URLSearchParams(location.search).get('clarion_device')||localStorage.getItem('clarion_device_v1')||'';\n  if(__paidToken&&__paidDevice){localStorage.setItem('clarion_entitlement_PI_LAB',__paidToken);localStorage.setItem('clarion_device_v1',__paidDevice);openApp('paid');return;}\n`;
+    if(html.includes(marker))html=html.replace(marker,paidPrelude);
+    body=html;headers.set('content-type','text/html; charset=UTF-8');
   }
   if(paidOk&&url.searchParams.get('clarion_token'))headers.append('set-cookie',`${PAID_COOKIE}=${encodeURIComponent(paidToken+'.'+paidDevice)}; Path=/pi-lab/; Secure; SameSite=Lax; Max-Age=2592000`);
-  headers.set('cache-control','no-store, max-age=0');
-  headers.set('x-robots-tag','noindex, nofollow, noarchive');
+  headers.set('cache-control','no-store, max-age=0');headers.set('x-robots-tag','noindex, nofollow, noarchive');
   return new Response(body,{status:response.status,statusText:response.statusText,headers});
 }
-
 function readCookie(header,name){const match=header.match(new RegExp('(?:^|;\\s*)'+name+'=([^;]+)'));return match?decodeURIComponent(match[1]):'';}
 async function validPaid(token,device){try{const r=await fetch(PAID_API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'CHECK',product_code:'PI_LAB',entitlement_token:token,device_id:device})});const d=await r.json().catch(()=>({}));return r.ok&&d.ok===true}catch(_){return false}}
 async function validAdmin(token){try{const r=await fetch(VALIDATE,{method:'POST',headers:{apikey:SUPABASE_KEY,authorization:'Bearer '+SUPABASE_KEY,'content-type':'application/json'},body:JSON.stringify({p_session_token:token})});if(!r.ok)return false;const payload=await r.json();const result=Array.isArray(payload)?payload[0]:payload;return Boolean(result&&result.ok===true)}catch(_){return false}}
