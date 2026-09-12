@@ -84,8 +84,8 @@ export async function onRequest(context) {
       <span class="service-icon">PCL</span><h3>PCL</h3>
       <p><strong>What it is:</strong> Professional Communication Lab practice for workplace communication, language, judgement and response patterns.</p>
       <p style="margin-top:10px"><strong>Benefits:</strong> Build clearer, more professional workplace communication through guided modules and dialogue practice.</p>
-      <p style="margin-top:10px"><strong>Access:</strong> Administrator only. Students, trainers and public visitors cannot open the app.</p>
-      <span class="go">Information only · Admin access</span>
+      <p style="margin-top:10px"><strong>Access:</strong> 15-day private subscription for individual learners; included for authorised FIIB learners; administrators retain secure preview access.</p>
+      <a class="go" href="./subscribe/?product=PCL">Subscribe or sign in →</a>
     </article>`;
     html = html.replace('<article class="service-card" id="service-cat"', pclCard + '<article class="service-card" id="service-cat"');
   }
@@ -145,8 +145,8 @@ export async function onRequest(context) {
         <span class="service-icon">PCL</span><h3>PCL</h3>
         <p><strong>What it is:</strong> Professional Communication Lab practice for workplace communication, language, judgement and response patterns.</p>
         <p style="margin-top:10px"><strong>Benefits:</strong> Build clearer, more professional workplace communication through guided modules and dialogue practice.</p>
-        <p style="margin-top:10px"><strong>Access:</strong> Administrator only. Students, trainers and public visitors cannot open the app.</p>
-        <span class="go">Information only · Admin access</span>
+        <p style="margin-top:10px"><strong>Access:</strong> 15-day private subscription for individual learners; included for authorised FIIB learners; administrators retain secure preview access.</p>
+        <a class="go" href="./subscribe/?product=PCL">Subscribe or sign in →</a>
       </article>
       <article class="service-card" id="service-live-mock">
         <span class="service-icon">LIVE</span><h3>Live Mock Interview</h3>
