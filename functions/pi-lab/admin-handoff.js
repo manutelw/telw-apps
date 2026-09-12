@@ -12,7 +12,7 @@ export async function onRequestPost(context){
     return new Response('Not found.',{status:404,headers:{'cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'}});
   }
   const headers=new Headers({location:'/pi-lab/admin-builder.html','cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'});
-  headers.append('set-cookie','clarion_admin_session='+encodeURIComponent(token)+'; Path=/pi-lab; HttpOnly; Secure; SameSite=Strict; Max-Age=3600');
+  headers.append('set-cookie','clarion_admin_session='+encodeURIComponent(token)+'; Path=/pi-lab; HttpOnly; Secure; SameSite=Strict');
   return new Response(null,{status:303,headers});
 }
 

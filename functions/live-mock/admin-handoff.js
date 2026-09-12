@@ -17,7 +17,7 @@ export async function onRequestPost(context){
   const safe=JSON.stringify(session).replace(/</g,'\\u003c');
   const fixed='<!doctype html><meta charset="utf-8"><title>Opening Live Mock</title><script>localStorage.setItem("live_mock_student_session",JSON.stringify('+safe+'));location.replace("/live-mock/interview.html");</script><p>Opening Live Mock…</p>';
   const headers=new Headers({'content-type':'text/html; charset=UTF-8','cache-control':'no-store'});
-  headers.append('set-cookie','clarion_admin_session='+encodeURIComponent(token)+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600');
+  headers.append('set-cookie','clarion_admin_session='+encodeURIComponent(token)+'; Path=/; HttpOnly; Secure; SameSite=Lax');
   return new Response(fixed,{status:200,headers});
 }
 async function valid(token){
