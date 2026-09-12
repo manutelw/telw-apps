@@ -337,6 +337,37 @@
             JSON.stringify(session)
           );
 
+          const browserSessionResponse = await fetch(
+            "/admin/session-start",
+            {
+              method:"POST",
+              credentials:"same-origin",
+              headers:{
+                "Content-Type":"application/json"
+              },
+              body:JSON.stringify({
+                session_token:session.sessionToken
+              })
+            }
+          );
+
+          if (!browserSessionResponse.ok) {
+            throw new Error(
+              "Administrator browser access could not be started. Please try again."
+            );
+          }
+
+          const browserSession =
+            await browserSessionResponse.json().catch(
+              function () { return {}; }
+            );
+
+          if (browserSession.ok !== true) {
+            throw new Error(
+              "Administrator browser access could not be started. Please try again."
+            );
+          }
+
           showStatus(
             "Administrator verified.",
             "success"
@@ -347,7 +378,7 @@
               window.location.href =
                 "./admin-settings.html";
             },
-            350
+            150
           );
         } catch (error) {
           passwordInput.value = "";
