@@ -1,0 +1,17 @@
+name: Admin Card Access Integrity
+on:
+  pull_request:
+    paths:
+      - 'ascent/admin-login.html'
+      - '.github/workflows/admin-card-access-trigger.yml'
+permissions:
+  contents: read
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify admin login bridge is present
+        run: |
+          grep -q '/admin/session-start' ascent/admin-login.html
+          grep -q 'browserSessionResponse.ok' ascent/admin-login.html
