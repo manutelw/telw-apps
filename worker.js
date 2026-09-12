@@ -1,3 +1,5 @@
+import {handleAdminGateway,bridgeAdminHtml} from './admin-browser-gateway.js';
+
 const ORACY_ACCESS='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/oracy-access';
 const ORACY_VOICE='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/oracy-voice';
 const ASCENT_URL='https://vtqatrhwfvzyodiftvkc.supabase.co';
@@ -9,6 +11,9 @@ export default {
   async fetch(request,env){
     const url=new URL(request.url);
     const path=url.pathname;
+
+    const adminGateway=await handleAdminGateway(request);
+    if(adminGateway) return adminGateway;
 
     if(isPrivateSource(path)) return new Response('Not found',{status:404});
 
@@ -84,10 +89,10 @@ export default {
     if(path==='/ascent/admin-settings.html' || path==='/ascent/admin-settings' || path==='/ascent/admin-settings/'){
       const response=await env.ASSETS.fetch(request);
       if(!response.ok) return response;
-      return injectOracyAdminCard(response);
+      return bridgeAdminHtml(request,await injectOracyAdminCard(response));
     }
 
-    return env.ASSETS.fetch(request);
+    return bridgeAdminHtml(request,await env.ASSETS.fetch(request));
   }
 };
 
