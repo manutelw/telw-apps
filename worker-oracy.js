@@ -1,13 +1,9 @@
 import base from './worker.js';
-import {handleAdminGateway,bridgeAdminHtml} from './admin-browser-gateway.js';
 
 const ORACY_ACCESS='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/oracy-access';
 
 export default {
   async fetch(request,env){
-    const gateway=await handleAdminGateway(request);
-    if(gateway)return gateway;
-
     const url=new URL(request.url);
     const path=url.pathname;
 
@@ -21,15 +17,15 @@ export default {
       return patchSpeakingGymVocabularySource(response);
     }
     if(isAdminSettingsPath(path) && response.ok){
-      response=await ensureOracyCard(response);
+      return ensureOracyCard(response);
     }
 
     const unitNo=oracyUnitNumber(path);
     if(unitNo && response.ok){
       if(unitNo===1) response=await ensureUnit1MarkerGuidance(response);
-      response=await applyTelwLevelBranding(response,unitNo);
+      return applyTelwLevelBranding(response,unitNo);
     }
-    return bridgeAdminHtml(request,response);
+    return response;
   }
 };
 
