@@ -106,6 +106,8 @@ export async function onRequest(context) {
   }
   const live=document.getElementById('liveMockAppButton');
   if(live)live.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();launch('../live-mock/admin-handoff');},true);
+  const pcl=document.getElementById('pclAdminAppButton');
+  if(pcl)pcl.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();launch('https://pcl-professional-communication-lab.pages.dev/admin-handoff');},true);
   const pi=document.getElementById('piLabAppButton');
   if(pi)pi.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();launch('../pi-lab/admin-handoff');},true);
 })();
