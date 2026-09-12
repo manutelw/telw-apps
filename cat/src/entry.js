@@ -14,8 +14,8 @@ export default {
     const paidDevice=String(url.searchParams.get('clarion_device')||'').trim();
     if(paidToken&&paidDevice&&request.method==='GET'){
       if(!env.GEMINI_API_KEY)return plain('CAT paid access is not configured.',503);
-      const ok=await validatePaidAccess(paidToken,paidDevice);
-      if(!ok)return plain('This CAT paid access is not active on this device.',403);
+      const ok=await consumePaidAccess(paidToken,paidDevice);
+      if(!ok)return plain('This CAT paid access is not active on this device or this attempt has already been used.',403);
       const cookie=await makeAdminCookie(env.GEMINI_API_KEY,3600);
       const assetUrl=new URL('/index.html',request.url);
       const assetResponse=await env.ASSETS.fetch(new Request(assetUrl.toString(),{method:'GET'}));
@@ -64,7 +64,7 @@ export default {
   }
 };
 
-async function validatePaidAccess(token,device){try{const r=await fetch(PAID_API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'CHECK',product_code:'CAT_SIMULATOR',entitlement_token:token,device_id:device})});const d=await r.json().catch(()=>({}));return r.ok&&d.ok===true}catch{return false}}
+async function consumePaidAccess(token,device){try{const r=await fetch(PAID_API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'CONSUME',product_code:'CAT_SIMULATOR',entitlement_token:token,device_id:device,minutes:1})});const d=await r.json().catch(()=>({}));return r.ok&&d.ok===true}catch{return false}}
 async function redeemSharePass(token){try{const response=await fetch(SHARE_ACCESS_API,{method:'POST',headers:{apikey:ASCENT_SUPABASE_KEY,authorization:`Bearer ${ASCENT_SUPABASE_KEY}`,'content-type':'application/json'},body:JSON.stringify({action:'REDEEM',product:'CAT_SIMULATOR',token})});const data=await response.json().catch(()=>({}));return response.ok&&data.ok===true?{ok:true,...data}:{ok:false,status:response.status,message:data.message};}catch(error){console.error('CAT share pass validation failed',error?.message||error);return {ok:false,status:503,message:'CAT shared access could not be checked.'};}}
 function shareCookieSeconds(expiresAt){if(!expiresAt)return 3600;const seconds=Math.floor((new Date(expiresAt).getTime()-Date.now())/1000);return Math.max(0,Math.min(3600,seconds));}
 async function validateAscentAdminSession(token){try{const response=await fetch(ASCENT_ADMIN_VALIDATE_RPC,{method:'POST',headers:{apikey:ASCENT_SUPABASE_KEY,authorization:`Bearer ${ASCENT_SUPABASE_KEY}`,'content-type':'application/json'},body:JSON.stringify({p_session_token:token})});if(!response.ok)return false;const payload=await response.json();const result=Array.isArray(payload)?payload[0]:payload;return Boolean(result&&result.ok===true);}catch(error){console.error('CAT admin handoff validation failed',error?.message||error);return false;}}
