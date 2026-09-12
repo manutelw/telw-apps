@@ -1,0 +1,1 @@
+Public access hardening and restored registration fields — 2026-09-12.
