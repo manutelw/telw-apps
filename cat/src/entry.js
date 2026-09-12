@@ -10,6 +10,16 @@ export default {
   async fetch(request,env,ctx){
     const url=new URL(request.url);
 
+    const parentAdmin=readCookie(request.headers.get('cookie')||'','clarion_admin_session');
+    if(parentAdmin&&request.method==='GET'&&['/','/index.html','/test'].includes(url.pathname)&&await validateAscentAdminSession(parentAdmin)){
+      if(!env.GEMINI_API_KEY)return plain('CAT administrator access is not configured.',503);
+      const assetUrl=new URL('/index.html',request.url);
+      const assetResponse=await env.ASSETS.fetch(new Request(assetUrl.toString(),{method:'GET'}));
+      if(!assetResponse.ok)return plain('CAT Simulator could not be opened.',502);
+      const headers=new Headers(assetResponse.headers);headers.set('cache-control','no-store');headers.set('content-location','/test');headers.append('set-cookie',await makeAdminCookie(env.GEMINI_API_KEY,null));
+      return new Response(assetResponse.body,{status:200,headers});
+    }
+
     const paidToken=String(url.searchParams.get('clarion_token')||'').trim();
     const paidDevice=String(url.searchParams.get('clarion_device')||'').trim();
     if(paidToken&&paidDevice&&request.method==='GET'){
@@ -20,10 +30,7 @@ export default {
       const assetUrl=new URL('/index.html',request.url);
       const assetResponse=await env.ASSETS.fetch(new Request(assetUrl.toString(),{method:'GET'}));
       if(!assetResponse.ok)return plain('CAT Simulator could not be opened.',502);
-      const headers=new Headers(assetResponse.headers);
-      headers.set('cache-control','no-store');
-      headers.set('content-location','/test');
-      headers.append('set-cookie',cookie);
+      const headers=new Headers(assetResponse.headers);headers.set('cache-control','no-store');headers.set('content-location','/test');headers.append('set-cookie',cookie);
       return new Response(assetResponse.body,{status:200,headers});
     }
 
@@ -38,10 +45,7 @@ export default {
       const assetUrl=new URL('/index.html',request.url);
       const assetResponse=await env.ASSETS.fetch(new Request(assetUrl.toString(),{method:'GET'}));
       if(!assetResponse.ok) return plain('CAT Simulator could not be opened.',502);
-      const headers=new Headers(assetResponse.headers);
-      headers.set('cache-control','no-store');
-      headers.set('content-location','/test');
-      headers.append('set-cookie',cookie);
+      const headers=new Headers(assetResponse.headers);headers.set('cache-control','no-store');headers.set('content-location','/test');headers.append('set-cookie',cookie);
       return new Response(assetResponse.body,{status:200,headers});
     }
 
@@ -52,12 +56,11 @@ export default {
       const valid=await validateAscentAdminSession(token);
       if(!valid) return plain('Your ASCENT administrator session is not valid or has expired.',403);
       if(!env.GEMINI_API_KEY) return plain('CAT administrator access is not configured.',503);
-      const cookie=await makeAdminCookie(env.GEMINI_API_KEY,3600);
+      const cookie=await makeAdminCookie(env.GEMINI_API_KEY,null);
       const assetUrl=new URL('/index.html',request.url);
       const assetResponse=await env.ASSETS.fetch(new Request(assetUrl.toString(),{method:'GET'}));
       if(!assetResponse.ok) return plain('CAT Simulator could not be opened.',502);
-      const headers=new Headers(assetResponse.headers);
-      headers.set('cache-control','no-store');headers.set('content-location','/test');headers.append('set-cookie',cookie);
+      const headers=new Headers(assetResponse.headers);headers.set('cache-control','no-store');headers.set('content-location','/test');headers.append('set-cookie',cookie);
       return new Response(assetResponse.body,{status:200,headers});
     }
     return app.fetch(request,env,ctx);
@@ -68,6 +71,7 @@ async function consumePaidAccess(token,device){try{const r=await fetch(PAID_API,
 async function redeemSharePass(token){try{const response=await fetch(SHARE_ACCESS_API,{method:'POST',headers:{apikey:ASCENT_SUPABASE_KEY,authorization:`Bearer ${ASCENT_SUPABASE_KEY}`,'content-type':'application/json'},body:JSON.stringify({action:'REDEEM',product:'CAT_SIMULATOR',token})});const data=await response.json().catch(()=>({}));return response.ok&&data.ok===true?{ok:true,...data}:{ok:false,status:response.status,message:data.message};}catch(error){console.error('CAT share pass validation failed',error?.message||error);return {ok:false,status:503,message:'CAT shared access could not be checked.'};}}
 function shareCookieSeconds(expiresAt){if(!expiresAt)return 3600;const seconds=Math.floor((new Date(expiresAt).getTime()-Date.now())/1000);return Math.max(0,Math.min(3600,seconds));}
 async function validateAscentAdminSession(token){try{const response=await fetch(ASCENT_ADMIN_VALIDATE_RPC,{method:'POST',headers:{apikey:ASCENT_SUPABASE_KEY,authorization:`Bearer ${ASCENT_SUPABASE_KEY}`,'content-type':'application/json'},body:JSON.stringify({p_session_token:token})});if(!response.ok)return false;const payload=await response.json();const result=Array.isArray(payload)?payload[0]:payload;return Boolean(result&&result.ok===true);}catch(error){console.error('CAT admin handoff validation failed',error?.message||error);return false;}}
-async function makeAdminCookie(secret,maxAge=3600){const issued=String(Math.floor(Date.now()/1000));const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);const signed=await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(`cat-admin:${issued}`));const sig=base64Url(new Uint8Array(signed));return `cat_admin_session=${issued}.${sig}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${Math.max(1,Math.floor(maxAge))}`;}
+async function makeAdminCookie(secret,maxAge=3600){const issued=String(Math.floor(Date.now()/1000));const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);const signed=await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(`cat-admin:${issued}`));const sig=base64Url(new Uint8Array(signed));const age=maxAge==null?'':`; Max-Age=${Math.max(1,Math.floor(maxAge))}`;return `cat_admin_session=${issued}.${sig}; Path=/; HttpOnly; Secure; SameSite=Lax${age}`;}
+function readCookie(header,name){const m=header.match(new RegExp('(?:^|;\\s*)'+name+'=([^;]+)'));return m?decodeURIComponent(m[1]):''}
 function base64Url(bytes){let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
 function plain(message,status){return new Response(message,{status,headers:{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'}});}
