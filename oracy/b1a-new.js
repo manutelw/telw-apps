@@ -194,7 +194,8 @@ async function sendForFeedback(box,prompt,btn){
   const blob=new Blob(chunks,{type:recorder?.mimeType||'audio/webm'});
   stream?.getTracks().forEach(t=>t.stop());recorder=null;stream=null;chunks=[];activeBtn=null;
   btn.textContent='🎤 Record';btn.classList.remove('live');status.textContent='Getting feedback… The recording is used for this feedback only.';
-  const coaching=`${prompt}\nThis is ORACY B1A New Unit ${displayUnit}, ${unitTitle}. Evaluate mainly on B1 spoken effectiveness: task completion, clarity, correct use of the unit language, connected ideas and natural delivery. Do not reward memorised textbook language. Give concise feedback with: What worked; One next fix; A stronger example using the learner's own idea.`;
+  const coaching=`${prompt}\
+This is ORACY B1A New Unit ${displayUnit}, ${unitTitle}. Evaluate mainly on B1 spoken effectiveness: task completion, clarity, correct use of the unit language, connected ideas and natural delivery. Do not reward memorised textbook language. Give concise feedback with: What worked; One next fix; A stronger example using the learner's own idea.`;
   try{
     const form=new FormData();form.append('action','evaluate');form.append('unit',UNIT_LABEL);form.append('unit_no',String(unitNo));form.append('prompt',coaching);form.append('audio',blob,'answer.webm');
     const res=await fetch(EDGE,{method:'POST',body:form});if(!res.ok)throw new Error('Feedback could not be completed.');
@@ -208,3 +209,5 @@ window.addEventListener('beforeunload',()=>{
   for(const url of audioCache.values())try{URL.revokeObjectURL(url)}catch{}
   audioCache.clear();
 });
+
+import('./b1a-new-guidance.js?v=20260913a').catch(()=>{});
