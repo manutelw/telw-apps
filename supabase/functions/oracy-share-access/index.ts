@@ -4,7 +4,9 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const ORACY_FROM_EMAIL = Deno.env.get("ORACY_FROM_EMAIL") || "ORACY by TELW <manu@telw.co.in>";
+const configuredFrom = Deno.env.get("ORACY_FROM_EMAIL") || "manu@telw.co.in";
+const fromAddress = configuredFrom.match(/<([^>]+)>/)?.[1] || configuredFrom;
+const ORACY_FROM_EMAIL = `Manu Vikraman <${fromAddress}>`;
 const PUBLIC_ORIGIN = "https://clarionprep.com";
 const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
@@ -55,6 +57,22 @@ async function requireAdmin(payload: any) {
   if (!(await validAdmin(clean(payload?.ascent_session_token)))) throw new Error("ADMIN_REQUIRED");
 }
 function scope(payload: any) {
+  const rawSelectedUnits = Array.isArray(payload?.selected_units) ? payload.selected_units.map((x: unknown) => clean(x).toUpperCase()) : [];
+  const includesUnit1A = rawSelectedUnits.includes("1A");
+  const selectedUnits = rawSelectedUnits.map(Number).filter((n: number) => Number.isInteger(n) && n >= 1 && n <= 90);
+  const selectedLevels = Array.isArray(payload?.selected_levels) ? payload.selected_levels.map((x: unknown) => clean(x).toUpperCase()).filter((x: string) => LEVELS[x]) : [];
+  if (selectedUnits.length || selectedLevels.length || includesUnit1A) {
+    const units = new Set<number>(selectedUnits);
+    if (includesUnit1A) units.add(1);
+    for (const level of selectedLevels) {
+      const [from, to] = LEVELS[level];
+      for (let n = from; n <= to; n++) units.add(n);
+    }
+    const sorted = [...units].sort((a, b) => a - b);
+    const parts = [...selectedLevels.map((x: string) => `Level ${x}`), ...(includesUnit1A ? ["Unit 1A"] : []), ...selectedUnits.filter((n: number) => !selectedLevels.some((l: string) => n >= LEVELS[l][0] && n <= LEVELS[l][1])).map((n: number) => `Unit ${n}`)];
+    const label = parts.length <= 5 ? parts.join(", ") : `${selectedLevels.length} level(s) and ${selectedUnits.length} selected unit(s)`;
+    return { type: sorted.length === 1 && parts.length === 1 ? "unit" : "selection", key: selectedLevels.join(",") || rawSelectedUnits.join(","), label, units: sorted, destination: includesUnit1A && parts.length === 1 ? "/oracy/unit-1a.html" : sorted.length === 1 && parts.length === 1 ? `/oracy/unit-${sorted[0]}.html` : "/oracy/" };
+  }
   const type = clean(payload?.scope_type).toLowerCase();
   const key = clean(payload?.scope_key).toUpperCase();
   if (type === "level" && LEVELS[key]) {
@@ -80,16 +98,17 @@ async function createInvites(payload: any, req: Request) {
   const parsed = (Array.isArray(payload?.emails) ? payload.emails : clean(payload?.emails).split(/[\s,;]+/)).map((x: unknown) => clean(x).toLowerCase()).filter(Boolean);
   const emails = [...new Set(parsed)];
   if (!emails.length || emails.some(x => !emailOK(x))) return out(req, { ok: false, message: "Enter valid recipient email addresses." }, 400);
-  if (emails.length > 50) return out(req, { ok: false, message: "Send to no more than 50 recipients at once." }, 400);
+  const durationDays = Number(payload?.duration_days);
+  if (!Number.isInteger(durationDays) || durationDays < 1 || durationDays > 7) return out(req, { ok: false, message: "Choose an access period from 1 to 7 days." }, 400);
   const results: any[] = [];
   for (const email of emails) {
     const raw = new Uint8Array(32); crypto.getRandomValues(raw); const token = b64url(raw);
     const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
-    const ins = await db.from("oracy_share_invites").insert({ email, scope_type: selected.type, scope_key: selected.key, scope_label: selected.label, unit_numbers: selected.units, destination_path: selected.destination, token_hash: await sha256(token), expires_at: expiresAt.toISOString() }).select("id").single();
+    const ins = await db.from("oracy_share_invites").insert({ email, scope_type: selected.type, scope_key: selected.key, scope_label: selected.label, unit_numbers: selected.units, destination_path: selected.destination, token_hash: await sha256(token), expires_at: expiresAt.toISOString(), access_duration_days: durationDays }).select("id").single();
     if (ins.error) { results.push({ email, ok: false, error: "Invite could not be created." }); continue; }
     const link = `${PUBLIC_ORIGIN}/oracy/redeem?token=${encodeURIComponent(token)}`;
     const expiry = expiresAt.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" });
-    const content = `<div style="font-family:Arial,sans-serif;color:#17324f;line-height:1.6;max-width:620px"><h2>ORACY by TELW</h2><p>You have been granted access to <strong>${html(selected.label)}</strong>.</p><p><a href="${link}" style="display:inline-block;background:#17324f;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:bold">Open ORACY</a></p><p>This private, one-time link expires on <strong>${html(expiry)} IST</strong> and is intended only for <strong>${html(email)}</strong>.</p><p style="color:#6b7a89;font-size:13px">If you were not expecting this invitation, you may ignore this email.</p></div>`;
+    const content = `<div style="font-family:Arial,sans-serif;color:#17324f;line-height:1.6;max-width:620px"><h2>ORACY by TELW</h2><p>You have been granted free access to <strong>${html(selected.label)}</strong> for <strong>${durationDays} day${durationDays === 1 ? "" : "s"}</strong>.</p><p><a href="${link}" style="display:inline-block;background:#17324f;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:bold">Open ORACY</a></p><p>This private, one-time link must be opened before <strong>${html(expiry)} IST</strong> and is intended only for <strong>${html(email)}</strong>.</p><p>Your access period begins when you open the link. It will automatically become invalid after ${durationDays} day${durationDays === 1 ? "" : "s"}. To continue using ORACY after that, you will need to purchase access.</p><p style="color:#6b7a89;font-size:13px">Sent by Manu Vikraman · ORACY by TELW</p></div>`;
     const mail = await sendEmail(email, `Your ORACY access: ${selected.label}`, content);
     await db.from("oracy_share_invites").update(mail.ok ? { status: "sent", sent_at: new Date().toISOString(), email_provider_id: mail.id } : { status: "failed", error_message: mail.error }).eq("id", ins.data.id);
     results.push({ email, ok: mail.ok, error: mail.ok ? null : mail.error });
@@ -99,7 +118,7 @@ async function createInvites(payload: any, req: Request) {
 async function listInvites(payload: any, req: Request) {
   await requireAdmin(payload);
   await db.from("oracy_share_invites").update({ status: "expired" }).in("status", ["pending", "sent"]).lt("expires_at", new Date().toISOString());
-  const { data, error } = await db.from("oracy_share_invites").select("id,email,scope_type,scope_key,scope_label,status,expires_at,created_at,sent_at,redeemed_at,revoked_at,error_message").order("created_at", { ascending: false }).limit(200);
+  const { data, error } = await db.from("oracy_share_invites").select("id,email,scope_type,scope_key,scope_label,unit_numbers,access_duration_days,status,expires_at,created_at,sent_at,redeemed_at,revoked_at,error_message").order("created_at", { ascending: false }).limit(200);
   if (error) throw error;
   return out(req, { ok: true, invites: data || [], email_configured: Boolean(RESEND_API_KEY) });
 }
