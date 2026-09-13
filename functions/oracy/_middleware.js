@@ -8,12 +8,12 @@ export async function onRequest(context){
   const path=url.pathname;
 
   // Public learner entry and session endpoints.
-  if(path==='/oracy/'||path==='/oracy/index.html'||path==='/oracy/session'||path==='/oracy/logout'||path==='/oracy/oracy.css'){
+  if(path==='/oracy/'||path==='/oracy/index.html'||path==='/oracy/session'||path==='/oracy/logout'||path==='/oracy/redeem'||path==='/oracy/oracy.css'){
     return noStore(await context.next());
   }
 
   // Administrator page: only an already authenticated ASCENT administrator may enter.
-  if(path==='/oracy/admin.html'){
+  if(path==='/oracy/admin.html'||path==='/oracy/admin-share.html'){
     const adminToken=readCookie(context.request.headers.get('cookie')||'','clarion_admin_session');
     if(!adminToken||!(await validAdmin(adminToken))){
       return redirect('/ascent/admin-login.html');
