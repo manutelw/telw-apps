@@ -57,7 +57,7 @@ function findTeachBox(kp){
 }
 function ensurePlayer(){
   if(guidePlayer)return guidePlayer;
-  guidePlayer=document.createElement('audio');guidePlayer.hidden=true;document.body.appendChild(guidePlayer);return guidePlayer;
+  guidePlayer=document.createElement('audio');guidePlayer.hidden=true;guidePlayer.preload='auto';document.body.appendChild(guidePlayer);return guidePlayer;
 }
 async function fetchGuideAudio(index,text){
   const key=`b1a-new-guide-${unitKey}-kp${index+1}-v2`;
@@ -73,6 +73,7 @@ const FEMALE_NAMES=new Set(['neha','sana','rhea','simran','shazia','ishita','ana
 const MALE_NAMES=new Set(['arjun','vikram','imran','rohan','vivek','sahil','karan','amar','harsh','tarun','manav','arun','neel','aditya','sameer','ajay','aman','omar','rohit','sam','ravi']);
 const ROLE_VOICES={editor:'cedar',reporter:'marin',trainer:'cedar',learner:'marin',traveller:'marin',agent:'cedar',researcher:'marin',passenger:'marin',clerk:'cedar',interviewer:'cedar',coach:'cedar',manager:'cedar'};
 const passageCache=new Map();
+const passageReady=new Map();
 let passageToken=0;
 function speakerSegment(p,index){
   const label=(p.querySelector('b')?.textContent||'').replace(/:$/,'').trim();
@@ -87,10 +88,24 @@ function speakerSegment(p,index){
 }
 async function fetchPassageAudio(id,index,segment){
   const key=`b1a-new-speaker-${unitKey}-${id}-${index}-${segment.voice}-v1`;
-  if(passageCache.has(key))return passageCache.get(key);
-  const res=await fetch(EDGE,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'tts',text:segment.text,voice:segment.voice,instructions:'Sound like a natural adult conversation in clear UK-leaning international English. Speak only the dialogue line. Do not say the speaker name or label aloud.',unit_no:unitNo,passage_id:key})});
-  if(!res.ok)throw new Error('Audio could not be loaded.');
-  const blob=await res.blob();const url=URL.createObjectURL(blob);passageCache.set(key,url);return url;
+  const existing=passageCache.get(key);
+  if(existing)return typeof existing==='string'?existing:await existing;
+  const pending=(async()=>{
+    const res=await fetch(EDGE,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'tts',text:segment.text,voice:segment.voice,instructions:'Sound like a natural adult conversation in clear UK-leaning international English. Speak only the dialogue line. Do not say the speaker name or label aloud.',unit_no:unitNo,passage_id:key})});
+    if(!res.ok)throw new Error('Audio could not be loaded.');
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);passageCache.set(key,url);return url;
+  })();
+  passageCache.set(key,pending);
+  try{return await pending;}catch(e){passageCache.delete(key);throw e;}
+}
+function preparePassage(id,segments){
+  const readyKey=`${unitKey}:${id}`;
+  if(passageReady.has(readyKey))return passageReady.get(readyKey);
+  const pending=Promise.all(segments.map((segment,index)=>fetchPassageAudio(id,index,segment)));
+  passageReady.set(readyKey,pending);
+  pending.catch(()=>passageReady.delete(readyKey));
+  return pending;
 }
 async function playPassage(btn){
   const id=btn.dataset.id;const passage=document.querySelector(`.passage[data-audio-id="${CSS.escape(id)}"]`);
@@ -99,10 +114,12 @@ async function playPassage(btn){
   if(!segments.length)return false;
   const token=++passageToken;const a=ensurePlayer();
   try{
-    btn.disabled=true;if(status)status.textContent='Preparing audio…';
-    for(let i=0;i<segments.length;i++){
+    btn.disabled=true;if(status)status.textContent='Opening audio…';
+    const urls=await preparePassage(id,segments);
+    if(token!==passageToken)return true;
+    for(let i=0;i<urls.length;i++){
       if(token!==passageToken)return true;
-      a.src=await fetchPassageAudio(id,i,segments[i]);await a.play();await waitForEnd(a);
+      a.src=urls[i];a.load();await a.play();await waitForEnd(a);
     }
     if(status)status.textContent='Finished. Listen again if you want to notice the language.';
   }catch(e){if(status)status.textContent=e.message||'Audio could not be played.';}finally{btn.disabled=false;}
@@ -116,6 +133,14 @@ document.addEventListener('click',e=>{
   const hasSpeaker=passage.querySelector('p b');if(!hasSpeaker)return;
   e.preventDefault();e.stopImmediatePropagation();playPassage(btn);
 },true);
+
+const speakerPassages=[...document.querySelectorAll('.passage[data-audio-id]')].filter(p=>p.querySelector('p b'));
+speakerPassages.forEach((passage,index)=>{
+  const id=passage.dataset.audioId;const segments=[...passage.querySelectorAll('p')].map(speakerSegment).filter(s=>s.text);
+  const warm=()=>preparePassage(id,segments).catch(()=>{});
+  if(index===0)setTimeout(warm,100);
+  else setTimeout(()=>{if('requestIdleCallback' in window)requestIdleCallback(warm,{timeout:1500});else warm();},400+index*350);
+});
 
 const guides=GUIDES[unitKey];
 if(!guides)return;
@@ -141,5 +166,5 @@ kps.forEach((kp,index)=>{
   });
 });
 
-window.addEventListener('beforeunload',()=>{for(const url of cache.values())try{URL.revokeObjectURL(url)}catch{}cache.clear();for(const url of passageCache.values())try{URL.revokeObjectURL(url)}catch{}passageCache.clear();});
+window.addEventListener('beforeunload',()=>{for(const url of cache.values())try{URL.revokeObjectURL(url)}catch{}cache.clear();for(const value of passageCache.values())if(typeof value==='string')try{URL.revokeObjectURL(value)}catch{}passageCache.clear();passageReady.clear();});
 })();
