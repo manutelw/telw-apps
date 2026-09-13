@@ -1,0 +1,36 @@
+name: Restore exact Placement Readiness Pass image
+on:
+  push:
+    branches: [restore-exact-placement-pass-20260913]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: restore-exact-placement-pass-20260913
+      - name: Replace only the Placement Readiness Pass image source
+        shell: bash
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          pat=r'(<section id="bundle" class="bundle-image-wrap">.*?<img src=")data:image/jpeg;base64,[^"]+(" alt="Placement Readiness Pass — ₹3,999")'
+          ns,n=re.subn(pat,r'\1/assets/landing/placement-readiness-pass-exact.png\2',s,count=1,flags=re.S)
+          if n != 1:
+              raise SystemExit(f'Expected exactly one Placement Pass image replacement, got {n}')
+          p.write_text(ns,encoding='utf-8')
+          PY
+      - name: Remove one-off workflow
+        run: rm .github/workflows/restore-exact-placement-pass-oneoff.yml
+      - name: Commit exact landing-only change
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add index.html .github/workflows/restore-exact-placement-pass-oneoff.yml assets/landing/placement-readiness-pass-exact.png
+          git commit -m "Use exact supplied Placement Readiness Pass image on landing page"
+          git push origin HEAD:restore-exact-placement-pass-20260913
