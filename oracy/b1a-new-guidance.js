@@ -69,13 +69,60 @@ async function fetchGuideAudio(index,text){
 }
 function waitForEnd(a){return new Promise((resolve,reject)=>{a.onended=resolve;a.onerror=()=>reject(new Error('Audio could not be played.'));});}
 
+const FEMALE_NAMES=new Set(['neha','sana','rhea','simran','shazia','ishita','ananya','maya','leena','naina','priya','amla','tara','zoya','sara','farah','aditi','nat','natasha','amanda','ritu','pooja']);
+const MALE_NAMES=new Set(['arjun','vikram','imran','rohan','vivek','sahil','karan','amar','harsh','tarun','manav','arun','neel','aditya','sameer','ajay','aman','omar','rohit','sam','ravi']);
+const ROLE_VOICES={editor:'cedar',reporter:'marin',trainer:'cedar',learner:'marin',traveller:'marin',agent:'cedar',researcher:'marin',passenger:'marin',clerk:'cedar',interviewer:'cedar',coach:'cedar',manager:'cedar'};
+const passageCache=new Map();
+let passageToken=0;
+function speakerSegment(p,index){
+  const label=(p.querySelector('b')?.textContent||'').replace(/:$/,'').trim();
+  let text=p.textContent.trim();
+  if(label&&text.toLowerCase().startsWith(label.toLowerCase()+':'))text=text.slice(label.length+1).trim();
+  const key=label.toLowerCase();
+  let voice=ROLE_VOICES[key];
+  if(!voice&&FEMALE_NAMES.has(key))voice='marin';
+  if(!voice&&MALE_NAMES.has(key))voice='cedar';
+  if(!voice)voice=index%2?'cedar':'marin';
+  return {label,text,voice};
+}
+async function fetchPassageAudio(id,index,segment){
+  const key=`b1a-new-speaker-${unitKey}-${id}-${index}-${segment.voice}-v1`;
+  if(passageCache.has(key))return passageCache.get(key);
+  const res=await fetch(EDGE,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'tts',text:segment.text,voice:segment.voice,instructions:'Sound like a natural adult conversation in clear UK-leaning international English. Speak only the dialogue line. Do not say the speaker name or label aloud.',unit_no:unitNo,passage_id:key})});
+  if(!res.ok)throw new Error('Audio could not be loaded.');
+  const blob=await res.blob();const url=URL.createObjectURL(blob);passageCache.set(key,url);return url;
+}
+async function playPassage(btn){
+  const id=btn.dataset.id;const passage=document.querySelector(`.passage[data-audio-id="${CSS.escape(id)}"]`);
+  if(!passage)return false;
+  const status=btn.nextElementSibling;const segments=[...passage.querySelectorAll('p')].map(speakerSegment).filter(s=>s.text);
+  if(!segments.length)return false;
+  const token=++passageToken;const a=ensurePlayer();
+  try{
+    btn.disabled=true;if(status)status.textContent='Preparing audio…';
+    for(let i=0;i<segments.length;i++){
+      if(token!==passageToken)return true;
+      a.src=await fetchPassageAudio(id,i,segments[i]);await a.play();await waitForEnd(a);
+    }
+    if(status)status.textContent='Finished. Listen again if you want to notice the language.';
+  }catch(e){if(status)status.textContent=e.message||'Audio could not be played.';}finally{btn.disabled=false;}
+  return true;
+}
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('button.audio');
+  if(!btn||btn.classList.contains('guide-audio'))return;
+  const id=btn.dataset.id;if(!id)return;
+  const passage=document.querySelector(`.passage[data-audio-id="${CSS.escape(id)}"]`);if(!passage)return;
+  const hasSpeaker=passage.querySelector('p b');if(!hasSpeaker)return;
+  e.preventDefault();e.stopImmediatePropagation();playPassage(btn);
+},true);
+
 const guides=GUIDES[unitKey];
 if(!guides)return;
 const kps=[...document.querySelectorAll('.kp')];
 kps.forEach((kp,index)=>{
   const html=guides[index];if(!html)return;
   const box=findTeachBox(kp);if(!box)return;
-  const heading=box.querySelector('h3');
   box.innerHTML='';
   const h=document.createElement('h3');h.textContent='3 · Notice the language';box.appendChild(h);
   const body=document.createElement('div');body.className='plain-teaching';body.innerHTML=html;box.appendChild(body);
@@ -94,5 +141,5 @@ kps.forEach((kp,index)=>{
   });
 });
 
-window.addEventListener('beforeunload',()=>{for(const url of cache.values())try{URL.revokeObjectURL(url)}catch{}cache.clear();});
+window.addEventListener('beforeunload',()=>{for(const url of cache.values())try{URL.revokeObjectURL(url)}catch{}cache.clear();for(const url of passageCache.values())try{URL.revokeObjectURL(url)}catch{}passageCache.clear();});
 })();
