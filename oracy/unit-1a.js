@@ -129,4 +129,4 @@ async function sendForFeedback(box,prompt,btn){
   }catch(e){feedback.textContent=e.message||'Feedback could not be completed.';status.textContent='You can try the rep again.';}
 }
 
-function safe(value){return String(value||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[ch]));}
+function safe(value){return String(value||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
