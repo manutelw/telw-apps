@@ -3,6 +3,7 @@ const UNIT_NO=1;
 const UNIT_LABEL='TELW Level B Unit 1A · First Connections';
 const player=document.getElementById('player');
 const PASSAGE_STYLE='Sound like a natural adult conversation at a professional or learning event. Keep the pace B1-friendly but not slow. Use warm, spontaneous reactions, natural sentence stress and clear UK-leaning international English. Do not sound like a textbook recording.';
+const NOTES_STYLE='Read as clear learner-facing spoken notes in natural UK-leaning international English. Use a calm, warm teaching voice, natural pauses, and slightly slower pacing for clarity. Do not sound mechanical.';
 
 const passages={
   kp1:[
@@ -14,6 +15,16 @@ const passages={
     {voice:'cedar',text:"That's good to know. Is this your first session today?"},
     {voice:'marin',text:'It is. I just arrived a few minutes ago.'},
     {voice:'cedar',text:'Me too. Looks like we picked the right room.'}
+  ],
+  kp1notes:[
+    {voice:'cedar',instructions:NOTES_STYLE,text:'Warm-up. How do you normally greet a new classmate, a visiting speaker, and a senior manager? Would you use exactly the same words with all three?'},
+    {voice:'cedar',instructions:NOTES_STYLE,text:'Hello. It doesn’t matter if you’re giving a president a handshake or buying a milkshake, this greeting is good for all situations, formal and informal.'},
+    {voice:'cedar',instructions:NOTES_STYLE,text:'Hi. In the past, this was a more informal greeting. Now, it’s used much more generally — for example, in stores, for buying food and drink, and quite often in business. But in very formal situations, it’s better to use Hello.'},
+    {voice:'cedar',instructions:NOTES_STYLE,text:'Nice to meet you. This is a very common greeting between people meeting for the first time. It’s fine for all situations, formal and informal.'},
+    {voice:'cedar',instructions:NOTES_STYLE,text:'Pleased to meet you. This is a slightly more formal greeting for meeting people for the first time.'},
+    {voice:'cedar',instructions:NOTES_STYLE,text:'How do you do? This is a very formal greeting for first meetings. It’s less common nowadays. People learning English often reply Fine, thanks or Very well, thanks. But you should reply with a greeting. Say How do you do?, Nice to meet you, or Pleased to meet you.'},
+    {voice:'cedar',instructions:NOTES_STYLE,text:'How are you? This can be formal or informal. We use it when we see people we know or have met before. Common replies are Fine, thanks and Very well, thanks. Sometimes, this greeting is used when people meet for the first time. In this case, repeat How are you? or say Nice to meet you.'},
+    {voice:'cedar',instructions:NOTES_STYLE,text:'Nice to see you. Good to see you. Great to see you. These greetings can be formal or informal. They’re normally used when you see someone you’ve met before, but haven’t seen for some time.'}
   ],
   kp2:[
     {voice:'marin',text:'So, what do you do?'},
@@ -52,12 +63,21 @@ document.querySelectorAll('.check').forEach(btn=>btn.addEventListener('click',()
   else{out.textContent='Try again. Look at how the speakers connect one turn to the next.';out.className='answer bad';}
 }));
 
+const greetingNotes=Array.from(document.querySelectorAll('details.activity')).find(d=>d.textContent.includes('Greeting notes'));
+if(greetingNotes){
+  const btn=document.createElement('button');
+  btn.className='audio';btn.dataset.id='kp1notes';btn.textContent='▶ Play warm-up + greeting notes';
+  const status=document.createElement('div');status.className='audio-note status';status.setAttribute('aria-live','polite');
+  greetingNotes.insertAdjacentElement('afterend',status);
+  greetingNotes.insertAdjacentElement('afterend',btn);
+}
+
 const audioCache=new Map();
 let playToken=0;
 async function getAudio(id,index,segment){
-  const key=`b-u1a-${id}-${index}-${segment.voice}-v1`;
+  const key=`b-u1a-${id}-${index}-${segment.voice}-v2`;
   if(audioCache.has(key))return audioCache.get(key);
-  const res=await fetch(EDGE,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'tts',text:segment.text,voice:segment.voice,instructions:PASSAGE_STYLE,unit_no:UNIT_NO,passage_id:key})});
+  const res=await fetch(EDGE,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'tts',text:segment.text,voice:segment.voice,instructions:segment.instructions||PASSAGE_STYLE,unit_no:UNIT_NO,passage_id:key})});
   if(!res.ok)throw new Error('Audio could not be loaded.');
   const blob=await res.blob();
   const url=URL.createObjectURL(blob);audioCache.set(key,url);return url;
