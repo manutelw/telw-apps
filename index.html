@@ -40,12 +40,44 @@
   if(!touchpoint)return;
   let clickCount=0;
   let resetTimer=null;
+
+  function getAdminSession(){
+    for(const key of ["ascent_admin_master_session","ascent_trainer_session"]){
+      try{
+        const s=JSON.parse(localStorage.getItem(key)||"null");
+        const expiry=new Date((s&&s.expiresAt)||(s&&s.expires_at)||0).getTime();
+        if(s&&s.sessionToken&&String(s.role||"").toUpperCase()==="ADMIN"&&Number.isFinite(expiry)&&expiry>Date.now())return s;
+      }catch(_){}
+    }
+    return null;
+  }
+
+  async function openAdmin(){
+    const s=getAdminSession();
+    if(!s){
+      window.location.replace("/ascent/admin-login.html");
+      return;
+    }
+    try{
+      const r=await fetch("/admin/session-start",{
+        method:"POST",
+        headers:{"content-type":"application/json"},
+        body:JSON.stringify({session_token:s.sessionToken})
+      });
+      if(r.ok){
+        window.location.replace("/ascent/admin-settings.html");
+        return;
+      }
+    }catch(_){}
+    window.location.replace("/ascent/admin-login.html");
+  }
+
   touchpoint.addEventListener("click",function(){
     clickCount+=1;
     window.clearTimeout(resetTimer);
     if(clickCount>=5){
       clickCount=0;
-      window.location.href="/ascent/admin-settings.html";
+      void openAdmin();
       return;
     }
     resetTimer=window.setTimeout(function(){clickCount=0;},5000);
