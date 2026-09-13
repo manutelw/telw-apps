@@ -9,10 +9,10 @@ function safe(v){return String(v||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'
 function segmentsFor(id){
   const p=document.querySelector(`.passage[data-audio-id="${id}"]`);
   if(!p)return[];
-  return Array.from(p.querySelectorAll('p')).map((x,i)=>({voice:i%2?'cedar':'marin',text:x.textContent.replace(/\s+/g,' ').trim()})).filter(x=>x.text);
+  return Array.from(p.querySelectorAll('p')).map((x,i)=>({voice:i%2?'cedar':'marin',text:x.textContent.replace(/\s+/g,' ').trim().replace(/^Blank\b/i,'Dash')})).filter(x=>x.text);
 }
 async function getAudio(id,index,segment){
-  const key=`b1anew-91-${id}-${index}-${segment.voice}-redraft2`;
+  const key=`b1anew-91-${id}-${index}-${segment.voice}-redraft3`;
   if(audioCache.has(key))return audioCache.get(key);
   const res=await fetch(EDGE,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'tts',text:segment.text,voice:segment.voice,instructions:PASSAGE_STYLE,unit_no:UNIT_NO,passage_id:key})});
   if(!res.ok){const e=new Error('Secure audio is unavailable.');e.status=res.status;throw e;}
