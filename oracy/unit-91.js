@@ -133,7 +133,7 @@ async function sendForFeedback(box,prompt,btn,heardSpeech){
   btn.textContent=btn.dataset.idleLabel||'🎤 Record';btn.classList.remove('live');
   if(!heardSpeech){
     feedback.innerHTML='';
-    if(status)status.textContent='No answer detected. Please try again.';
+    if(status)status.textContent='No answer detected.';
     return;
   }
   if(status)status.textContent='Checking your answer… This recording is used for feedback only.';
@@ -148,12 +148,12 @@ async function sendForFeedback(box,prompt,btn,heardSpeech){
       const transcript=normaliseAnswer(data.transcript);
       const answer=normaliseAnswer(btn.dataset.answer);
       const expected=normaliseAnswer(btn.dataset.expected);
-      if(!transcript){feedback.innerHTML='';if(status)status.textContent='No answer detected. Please try again.';return;}
+      if(!transcript){feedback.innerHTML='';if(status)status.textContent='No answer detected.';return;}
       const correct=transcript===answer||transcript===expected||transcript.includes(expected);
       if(correct){
         feedback.innerHTML=`<b>Correct.</b> ${safe(btn.dataset.expected)} is the right phrase.`;
       }else{
-        feedback.innerHTML=`<b>Try again.</b> The missing verb is <b>${safe(btn.dataset.answer)}</b>. Say: <b>${safe(btn.dataset.expected)}</b>.`;
+        feedback.innerHTML=`<span aria-label="Incorrect" style="font-size:22px;font-weight:800;color:#b42318;margin-right:8px">✖</span><span style="display:inline-block;background:#e7f6ea;color:#166534;border:1px solid #b7dfbf;border-radius:8px;padding:7px 12px;font-weight:800">${safe(btn.dataset.answer)}</span>`;
       }
       if(status)status.textContent='Answer checked. ORACY has not saved your recording.';
       return;
