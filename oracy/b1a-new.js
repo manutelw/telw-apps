@@ -13,7 +13,7 @@ document.querySelectorAll('.check').forEach(btn=>btn.addEventListener('click',()
   const box=btn.closest('.activity'),choice=box.querySelector(`input[name="${btn.dataset.question}"]:checked`),out=box.querySelector('.answer');
   if(!choice){out.textContent='Choose one answer.';out.className='answer bad';return}
   if(choice.value===btn.dataset.answer){out.textContent='Correct. Say the idea aloud once before you move on.';out.className='answer ok'}
-  else{out.textContent='Try again. Look at the language focus and the conversation above.';out.className='answer bad'}
+  else{out.textContent='Try again. Go back to the listening and language-noticing step, then choose again.';out.className='answer bad'}
 }));
 
 function segmentsFor(id){
@@ -22,7 +22,7 @@ function segmentsFor(id){
   return Array.from(p.querySelectorAll('p')).map((x,i)=>({voice:i%2?'cedar':'marin',text:x.textContent.replace(/\s+/g,' ').trim()}));
 }
 async function getAudio(id,index,segment){
-  const key=`b1anew-${unitNo}-${id}-${index}-${segment.voice}-v1`;
+  const key=`b1anew-${unitNo}-${id}-${index}-${segment.voice}-v2`;
   if(audioCache.has(key))return audioCache.get(key);
   const res=await fetch(EDGE,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'tts',text:segment.text,voice:segment.voice,instructions:PASSAGE_STYLE,unit_no:unitNo,passage_id:key})});
   if(!res.ok)throw new Error('Audio could not be loaded.');
@@ -33,7 +33,7 @@ document.querySelectorAll('.audio').forEach(btn=>btn.addEventListener('click',as
   const id=btn.dataset.id,status=btn.nextElementSibling,token=++playToken,segments=segmentsFor(id);
   try{btn.disabled=true;status.textContent='Preparing audio…';
     for(let i=0;i<segments.length;i++){if(token!==playToken)return;player.src=await getAudio(id,i,segments[i]);await player.play();await waitForAudio()}
-    status.textContent='Finished. Listen again if you want to notice the language.'
+    status.textContent='Finished. Listen again and notice the useful language before you speak.'
   }catch(e){status.textContent=e.message||'Audio could not be played.'}finally{btn.disabled=false}
 }));
 
@@ -46,18 +46,25 @@ document.querySelectorAll('.record').forEach(btn=>btn.addEventListener('click',a
     stream=await navigator.mediaDevices.getUserMedia({audio:true});chunks=[];activeBtn=btn;recorder=new MediaRecorder(stream);
     recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
     recorder.onstop=()=>sendForFeedback(box,btn.dataset.prompt,btn);
-    recorder.start();btn.textContent='■ Stop & get feedback';btn.classList.add('live');status.textContent='Recording… Speak naturally.'
+    recorder.start();btn.textContent='■ Stop & get feedback';btn.classList.add('live');status.textContent='Recording… ORACY does not save this recording.'
   }catch{status.textContent='Please allow microphone access.';recorder=null;activeBtn=null}
 }));
 async function sendForFeedback(box,prompt,btn){
   const status=box.querySelector('.status'),feedback=box.querySelector('.feedback');
   const blob=new Blob(chunks,{type:recorder?.mimeType||'audio/webm'});
   stream?.getTracks().forEach(t=>t.stop());recorder=null;stream=null;chunks=[];activeBtn=null;
-  btn.textContent='🎤 Record';btn.classList.remove('live');status.textContent='Getting feedback…';
+  btn.textContent='🎤 Record';btn.classList.remove('live');status.textContent='Getting feedback… The recording is used for this feedback only.';
   const coaching=`${prompt}\nThis is ORACY B1A New Unit ${displayUnit}, ${unitTitle}. Evaluate mainly on B1 spoken effectiveness: task completion, clarity, correct use of the unit language, connected ideas and natural delivery. Do not reward memorised textbook language. Give concise feedback with: What worked; One next fix; A stronger example using the learner's own idea.`;
   try{
     const form=new FormData();form.append('action','evaluate');form.append('unit',UNIT_LABEL);form.append('unit_no',String(unitNo));form.append('prompt',coaching);form.append('audio',blob,'answer.webm');
     const res=await fetch(EDGE,{method:'POST',body:form});if(!res.ok)throw new Error('Feedback could not be completed.');
-    const data=await res.json();feedback.innerHTML=`<b>Coach feedback</b><div>${safe(data.feedback||'Good attempt. Keep the answer connected and natural.')}</div>${data.improved?`<div style="margin-top:8px"><b>Try:</b> ${safe(data.improved)}</div>`:''}`;status.textContent='Recording discarded after feedback.'
-  }catch(e){feedback.textContent=e.message||'Feedback could not be completed.';status.textContent='You can try the rep again.'}
+    const data=await res.json();feedback.innerHTML=`<b>Coach feedback</b><div>${safe(data.feedback||'Good attempt. Keep the answer connected and natural.')}</div>${data.improved?`<div style="margin-top:8px"><b>Try:</b> ${safe(data.improved)}</div>`:''}`;status.textContent='Feedback complete. ORACY has not saved your recording.'
+  }catch(e){feedback.textContent=e.message||'Feedback could not be completed.';status.textContent='The recording was not saved. You can try the rep again.'}
 }
+
+window.addEventListener('beforeunload',()=>{
+  try{stream?.getTracks().forEach(t=>t.stop())}catch{}
+  chunks=[];recorder=null;activeBtn=null;
+  for(const url of audioCache.values())try{URL.revokeObjectURL(url)}catch{}
+  audioCache.clear();
+});
