@@ -68,8 +68,8 @@ if(greetingNotes){
   const btn=document.createElement('button');
   btn.className='audio';btn.dataset.id='kp1notes';btn.textContent='▶ Play warm-up + greeting notes';
   const status=document.createElement('div');status.className='audio-note status';status.setAttribute('aria-live','polite');
-  greetingNotes.insertAdjacentElement('afterend',status);
-  greetingNotes.insertAdjacentElement('afterend',btn);
+  greetingNotes.insertAdjacentElement('beforebegin',btn);
+  greetingNotes.insertAdjacentElement('beforebegin',status);
 }
 
 const audioCache=new Map();
