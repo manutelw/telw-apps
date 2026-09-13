@@ -39,6 +39,22 @@ function configureQ5Drill(){
 }
 configureQ5Drill();
 
+function applyPlainEnglishUnit2(){
+  const kps=[...document.querySelectorAll('.kp')];
+  if(kps[1]){
+    kps[1].querySelectorAll('.chips span').forEach(s=>{
+      const t=s.textContent.trim().toLowerCase();
+      if(t==='past simple')s.textContent='finished past words';
+      if(t==='regular verbs')s.textContent='-ed past words';
+      if(t==='irregular verbs')s.textContent='changed past words';
+    });
+    const notice=[...kps[1].querySelectorAll('.activity')].find(a=>(a.querySelector('h3')?.textContent||'').toLowerCase().includes('notice the language'));
+    const p=notice?.querySelector('p');
+    if(p)p.innerHTML='When an event is finished, use the past word: <b>worked, stayed, went, took, met, saw, bought, made, found, came</b>. Some words simply add <b>-ed</b>. Other common words change more. Listen to the whole word and learn it with the event: <b>went home, took a bus, met a friend</b>.';
+  }
+}
+applyPlainEnglishUnit2();
+
 function segmentsFor(id){
   const p=document.querySelector(`.passage[data-audio-id="${id}"]`);
   if(!p)return[];
@@ -153,7 +169,7 @@ async function sendForFeedback(box,prompt,btn,heardSpeech){
       if(correct){
         feedback.innerHTML=`<b>Correct.</b> ${safe(btn.dataset.expected)} is the right phrase.`;
       }else{
-        feedback.innerHTML=`<span aria-label="Incorrect" style="font-size:22px;font-weight:800;color:#b42318;margin-right:8px">✖</span><span style="display:inline-block;background:#e7f6ea;color:#166534;border:1px solid #b7dfbf;border-radius:8px;padding:7px 12px;font-weight:800">${safe(btn.dataset.answer)}</span>`;
+        feedback.innerHTML=`<span style="font-size:24px;color:#b42318;font-weight:800;vertical-align:middle">✖</span> <span style="display:inline-block;margin-left:8px;padding:6px 12px;border-radius:8px;background:#dcfce7;color:#166534;font-weight:800">${safe(btn.dataset.answer)}</span>`;
       }
       if(status)status.textContent='Answer checked. ORACY has not saved your recording.';
       return;
