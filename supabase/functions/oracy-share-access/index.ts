@@ -97,9 +97,8 @@ async function createInvites(payload: any, req: Request) {
   if (!selected) return out(req, { ok: false, message: "Choose a valid ORACY unit or level." }, 400);
   const delivery = clean(payload?.delivery).toLowerCase() === "whatsapp" ? "whatsapp" : "email";
   const parsed = (Array.isArray(payload?.emails) ? payload.emails : clean(payload?.emails).split(/[\s,;]+/)).map((x: unknown) => clean(x).toLowerCase()).filter(Boolean);
-  const emails = [...new Set(parsed)];
-  if (!emails.length || emails.some(x => !emailOK(x))) return out(req, { ok: false, message: "Enter valid recipient email addresses." }, 400);
-  if (delivery === "whatsapp" && emails.length !== 1) return out(req, { ok: false, message: "Enter one recipient email address for WhatsApp sharing." }, 400);
+  const emails = delivery === "whatsapp" ? [`whatsapp-${crypto.randomUUID()}@oracy.invalid`] : [...new Set(parsed)];
+  if (delivery === "email" && (!emails.length || emails.some(x => !emailOK(x)))) return out(req, { ok: false, message: "Enter valid recipient email addresses." }, 400);
   const durationDays = Number(payload?.duration_days);
   if (!Number.isInteger(durationDays) || durationDays < 1 || durationDays > 7) return out(req, { ok: false, message: "Choose an access period from 1 to 7 days." }, 400);
   const results: any[] = [];
@@ -111,7 +110,7 @@ async function createInvites(payload: any, req: Request) {
     const link = `${PUBLIC_ORIGIN}/oracy/redeem?token=${encodeURIComponent(token)}`;
     const expiry = expiresAt.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" });
     if (delivery === "whatsapp") {
-      results.push({ email, ok: true, share_url: link, scope_label: selected.label, expires_at: expiresAt.toISOString(), access_duration_days: durationDays });
+      results.push({ ok: true, share_url: link, scope_label: selected.label, expires_at: expiresAt.toISOString(), access_duration_days: durationDays });
       continue;
     }
     const content = `<div style="font-family:Arial,sans-serif;color:#17324f;line-height:1.6;max-width:620px"><h2>ORACY by TELW</h2><p>You have been granted free access to <strong>${html(selected.label)}</strong> for <strong>${durationDays} day${durationDays === 1 ? "" : "s"}</strong>.</p><p><a href="${link}" style="display:inline-block;background:#17324f;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:bold">Open ORACY</a></p><p>This private, one-time link must be opened before <strong>${html(expiry)} IST</strong> and is intended only for <strong>${html(email)}</strong>.</p><p>Your access period begins when you open the link. It will automatically become invalid after ${durationDays} day${durationDays === 1 ? "" : "s"}. To continue using ORACY after that, you will need to purchase access.</p><p style="color:#6b7a89;font-size:13px">Sent by Manu Vikraman · ORACY by TELW</p></div>`;
