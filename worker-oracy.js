@@ -1,6 +1,7 @@
 import base from './worker.js';
 
 const ORACY_ACCESS='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/oracy-access';
+const ORACY_SHARE_ACCESS='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/oracy-share-access';
 
 export default {
   async fetch(request,env){
@@ -10,6 +11,11 @@ export default {
     if(path==='/oracy/admin-preview'){
       if(request.method!=='POST') return json({ok:false,message:'POST required.'},405);
       return handleAdminPreview(request);
+    }
+
+    if(path==='/oracy/share-api'){
+      if(request.method!=='POST') return json({ok:false,message:'POST required.'},405);
+      return handleShareApi(request);
     }
 
     let response=await base.fetch(request,env);
@@ -59,6 +65,23 @@ async function handleAdminPreview(request){
     return new Response(JSON.stringify({ok:true,url:'/oracy/unit-1.html'}),{status:200,headers});
   }catch(e){
     return json({ok:false,message:'Preview could not be opened.',detail:String(e?.message||e).slice(0,200)},400);
+  }
+}
+
+async function handleShareApi(request){
+  try{
+    const payload=await request.json().catch(()=>({}));
+    const adminToken=readCookie(request.headers.get('cookie')||'','clarion_admin_session');
+    if(!adminToken) return json({ok:false,message:'Administrator session not found. Please sign in again.'},401);
+    payload.ascent_session_token=adminToken;
+    const r=await fetch(ORACY_SHARE_ACCESS,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+    const text=await r.text();
+    let data;
+    try{data=JSON.parse(text)}catch{data={ok:false,message:text||`Share service returned HTTP ${r.status}.`}}
+    if(!r.ok && !data.message) data.message=`Share service returned HTTP ${r.status}.`;
+    return json(data,r.status);
+  }catch(e){
+    return json({ok:false,message:'Share service could not be reached.',detail:String(e?.message||e).slice(0,240)},502);
   }
 }
 
@@ -151,6 +174,11 @@ async function ensureUnit1MarkerGuidance(response){
   headers.set('pragma','no-cache');
   headers.set('expires','0');
   return new Response(html,{status:response.status,statusText:response.statusText,headers});
+}
+
+function readCookie(header,name){
+  const match=header.match(new RegExp('(?:^|;\\s*)'+name+'=([^;]+)'));
+  return match?decodeURIComponent(match[1]):'';
 }
 
 function json(body,status=200){

@@ -69,7 +69,7 @@ b3e3f3f414c374bf35d0d1230e4d83326d684743 oracy/unit-speaking-gym-v2.js
 b1be3829710180eab60510dfe206b213e0a2f1e7 oracy/unit-speaking-model-coherent.js
 f88137509338fe2e2c29d1586c091bafa7c363de oracy/unit-speaking-model-target-cued.js
 4539269f1a229a5cc129f4cbbc19512277ad0707 oracy/unit-speaking-model-quality.js
-5a97a1a26b89256f9e5be2138f1d414ea409e1cc worker-oracy.js
+c660599e1154b96a87708adbe5f5ffc8e89f61fb worker-oracy.js
 3a13f161be3a7791dde424019caa326c2b306ebc functions/oracy/session.js
 d4db16ee54572ed85bbea84640078e5a1ae10f65 functions/oracy/voice.js
 907c4baba0ebfccc62caa53cdb4d9db61820de94 functions/oracy/_middleware.js

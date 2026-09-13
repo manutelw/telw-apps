@@ -14,7 +14,7 @@ f418ad1795b80807172642a22c224a13a2b9281e oracy/unit-21-content.js
 0c67bc22fdcc1374f64c109e360831c6da80a272 oracy/unit-22.html
 53f83d9b93a7fd3f09882b99fb5c21b4c0a7244f oracy/unit-22-content.js
 # Shared approved speaking/runtime layer
-5a97a1a26b89256f9e5be2138f1d414ea409e1cc worker-oracy.js
+c660599e1154b96a87708adbe5f5ffc8e89f61fb worker-oracy.js
 b3e3f3f414c374bf35d0d1230e4d83326d684743 oracy/unit-speaking-gym-v2.js
 39632f374070d6c522ee821289df9a5e561f538d oracy/unit-speaking-model-natural.js
 b1be3829710180eab60510dfe206b213e0a2f1e7 oracy/unit-speaking-model-coherent.js
