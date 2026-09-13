@@ -81,7 +81,7 @@ export async function onRequest(context) {
   if (isAdminSettingsPage) {
     const oracyShareCard = `
         <a id="oracyShareHubCard" class="app-card dialogue" href="/oracy/admin-share.html"><strong>SHARE ORACY</strong><span>Choose units or levels, set free access for up to seven days, and email secure links</span></a>`;
-    if (!html.includes('id="oracyShareHubCard"')) html = html.replace('        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>',oracyShareCard+'\n        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>');
+    if (!html.includes('id="oracyShareHubCard"')) html = html.replace('        <a class="app-card mapper" href="./jd-interview-trainer.html"',oracyShareCard+'\n        <a class="app-card mapper" href="./jd-interview-trainer.html"');
     html = html.replace('<a class="app-card gd" href="./learner-access.html"><strong>GD Practice</strong>','<a class="app-card gd" href="./practice-access.html?feature=GD_BANK"><strong>GD Practice</strong>');
     html = html.replace('<a class="app-card pi" href="./learner-access.html"><strong>PI Practice</strong>','<a class="app-card pi" href="./practice-access.html?feature=PI_BANK"><strong>PI Practice</strong>');
     const adminPracticeCards = `\n        <a class="app-card gd" href="./practice-access.html?feature=GD_BANK"><strong>GD Practice</strong><span>Review learner applications and grant GD practice access after the 24-hour wait</span></a>\n        <a class="app-card pi" href="./practice-access.html?feature=PI_BANK"><strong>PI Practice</strong><span>Review learner applications and grant PI practice access after the 24-hour wait</span></a>`;
