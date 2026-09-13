@@ -35,7 +35,7 @@
 </section>
 </main>
 <script>
-const API='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/oracy-share-access';
+const API='/oracy/share-api';
 const MAP=[['B1A',1,7,true],['B1B',8,15],['B2A',16,22],['B2B',23,30],['C1A',31,37],['C1B',38,45],['C2A',46,52],['C2B',53,60],['D1A',61,67],['D1B',68,75],['D2A',76,82],['D2B',83,90]];
 function admin(){for(const k of ['ascent_admin_master_session','ascent_trainer_session']){try{const s=JSON.parse(localStorage.getItem(k)||'null');if(s&&s.sessionToken&&String(s.role||'').toUpperCase()==='ADMIN')return s}catch{}}return null}
 const session=admin();if(!session)location.replace('/ascent/admin-login.html');
