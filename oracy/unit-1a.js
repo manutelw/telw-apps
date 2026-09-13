@@ -181,3 +181,5 @@ async function sendForFeedback(box,prompt,btn){
 }
 
 function safe(value){return String(value||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+
+import('./b1a-new-guidance.js?v=20260913a').catch(()=>{});

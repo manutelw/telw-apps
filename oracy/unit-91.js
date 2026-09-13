@@ -184,3 +184,5 @@ window.addEventListener('beforeunload',()=>{
   for(const url of audioCache.values())try{URL.revokeObjectURL(url)}catch{}
   audioCache.clear();
 });
+
+import('./b1a-new-guidance.js?v=20260913a').catch(()=>{});
