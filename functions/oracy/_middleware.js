@@ -22,10 +22,16 @@ export async function onRequest(context){
   }
 
   // Protect every unit page and its unit-specific JS/assets. A URL alone is never enough.
+  // Unit 1A is deliberately bound to the existing Level B Unit 1 entitlement.
   // A valid ASCENT administrator has permanent ORACY access and does not need learner assignments.
-  const match=path.match(/^\/oracy\/unit-(\d+)(?:\.[a-z0-9]+)?$/i);
+  const match=path.match(/^\/oracy\/unit-(\d+)(a)?(?:\.[a-z0-9]+)?$/i);
   if(match){
-    const unitNo=Number(match[1]);
+    const numericUnit=Number(match[1]);
+    const isUnit1A=Boolean(match[2])&&numericUnit===1;
+    if(match[2]&&!isUnit1A){
+      return redirect('/oracy/?locked=1');
+    }
+    const unitNo=isUnit1A?1:numericUnit;
     const cookies=context.request.headers.get('cookie')||'';
     const adminToken=readCookie(cookies,'clarion_admin_session');
     if(adminToken&&await validAdmin(adminToken)){
