@@ -50,9 +50,27 @@ const passages={
 
 const notes={
   q1:'A strong opener makes the first response easy. The speaker gives a name, checks the connection, then uses the shared situation as the first topic.',
-  q2:'Present simple describes what is normal, regular or generally true. Present continuous is useful for something current, changing or temporary.',
+  q2:'Use a simple statement for what is normal or regular: “I work in operations.” Use am, is or are plus an -ing word for something happening now, changing now or temporary: “I’m working on a short project this month.”',
   q3:'A natural first conversation is not a list of questions. React to what you hear, connect your next question to it, and signal your exit when you need to leave.'
 };
+
+function applyPlainEnglishUnit1A(){
+  document.querySelectorAll('.chips span').forEach(s=>{
+    const t=s.textContent.trim().toLowerCase();
+    if(t==='present simple')s.textContent='normal or regular action';
+    if(t==='present continuous')s.textContent='action happening now';
+  });
+  document.querySelectorAll('.activity p').forEach(p=>{
+    const t=p.textContent.trim();
+    if(t.includes('Use the present simple for a normal or regular situation')){
+      p.innerHTML='<b>For something normal or regular:</b> say <b>I work in finance. I travel twice a month.</b>';
+    }
+    if(t.includes('Use the present continuous for something current or temporary')){
+      p.innerHTML='<b>For something happening now, changing now or temporary:</b> use <b>am / is / are</b> with an <b>-ing</b> word: <b>I’m working on a short project. We’re testing a new dashboard this month.</b>';
+    }
+  });
+}
+applyPlainEnglishUnit1A();
 
 document.querySelectorAll('.check').forEach(btn=>btn.addEventListener('click',()=>{
   const box=btn.closest('.activity');

@@ -106,6 +106,49 @@ function applyHybridScaffold(){
 }
 applyHybridScaffold();
 
+function applyPlainEnglishRules(){
+  const kps=[...document.querySelectorAll('.kp')];
+  const setChip=(kpIndex,from,to)=>kps[kpIndex]?.querySelectorAll('.chips span').forEach(s=>{if(s.textContent.trim().toLowerCase()===from.toLowerCase())s.textContent=to});
+  const findActivity=(kpIndex,needle)=>[...(kps[kpIndex]?.querySelectorAll(':scope > .activity')||[])].find(a=>(a.querySelector('h3')?.textContent||'').toLowerCase().includes(needle.toLowerCase()));
+  const setNotice=(kpIndex,html)=>{const a=findActivity(kpIndex,'notice the language');const p=a?.querySelector('p');if(p)p.innerHTML=html};
+  const setBefore=(kpIndex,html)=>{const a=findActivity(kpIndex,'before you listen');const p=a?.querySelector('p');if(p)p.innerHTML=html};
+  const setClarify=(kpIndex,html)=>{const a=findActivity(kpIndex,'correction / clarification');const p=a?.querySelector('p');if(p)p.innerHTML=html};
+
+  if(unitNo===92){
+    setChip(0,'present perfect','have / has for experience');
+    setBefore(0,'Listen for the word <b>have</b> or <b>has</b> when someone talks about an experience and the exact time is not important. Then notice what happens when the speaker gives a finished time such as <b>yesterday</b>, <b>last year</b> or <b>two years ago</b>.');
+    setNotice(0,'Use <b>have / has</b> when you talk about an experience and the exact time is not important: <b>I have tried rafting.</b> When you add a finished time, use the simple past word instead: <b>I went two years ago.</b> <b>Been to</b> means the person went and came back. <b>Gone to</b> means the person is still there or on the way.');
+    setClarify(0,'If you give a finished time such as <b>yesterday</b>, <b>last year</b> or <b>in 2025</b>, use the simple past word: <b>went, did, saw, tried</b>. If the exact time is not important, use <b>have / has</b>: <b>I have been there twice.</b>');
+  }
+  if(unitNo===93){
+    setChip(2,'past continuous','was / were + -ing');
+    setBefore(1,'Listen for words such as <b>recently, lately, just</b> and <b>in the last few days</b>. Notice that the speaker may start with <b>have</b> for recent news, then use simple past words such as <b>went, met</b> or <b>visited</b> when giving a finished detail.');
+    setNotice(1,'Use words such as <b>recently, lately, just</b> and <b>in the last few days</b> to introduce recent news. You can say <b>I have just started a new job.</b> When you then give a finished time such as <b>on Monday</b> or <b>yesterday</b>, use the simple past word: <b>I started on Monday.</b>');
+    setClarify(1,'Start with the recent news. Then, when you give a finished day or time, use the simple past word for that detail. For example: <b>I have just started a new job. I started on Monday.</b>');
+    setBefore(2,'Listen for two things in a strong memory: what was already happening, and the shorter event that happened during it. Example: <b>I was travelling home when my sister called.</b>');
+    setNotice(2,'Use <b>was / were + -ing</b> for the action that was already happening: <b>I was travelling home.</b> Use the simple past word for the shorter event: <b>my sister called.</b> Put them together: <b>I was travelling home when my sister called.</b>');
+  }
+  if(unitNo===94){
+    setNotice(0,'Use <b>to</b> or <b>in order to</b> before the action: <b>I save a copy to protect my work.</b> Use <b>for + -ing</b> to say what something is used for: <b>Cloud storage is for keeping copies online.</b> Use <b>so that</b> before the result you want: <b>I back up my files so that I do not lose them.</b> Use <b>because</b> before the reason: <b>I keep two copies because one system can fail.</b>');
+    setClarify(0,'Look at the words after each choice. Say <b>to store</b>, <b>for storing</b>, <b>so that I can store</b>, or <b>because I need a copy</b>. Learn each one as a useful speaking pattern.');
+  }
+  if(unitNo===95){
+    setBefore(1,'Listen for words that show how often something happens: <b>always, usually, often, sometimes, occasionally, rarely</b> and <b>never</b>. Notice where the speaker puts these words.');
+    setNotice(1,'Use words such as <b>always, usually, often, sometimes, occasionally, rarely</b> and <b>never</b> to show how often something happens. Put them before the action word in most sentences: <b>I usually take the train.</b> With <b>am / is / are</b>, put them after: <b>I am usually early.</b>');
+  }
+  if(unitNo===96){
+    setBefore(0,'Listen for <b>when, as soon as</b> and <b>until</b> when people connect two future actions. Also notice how <b>Shall I...?</b> is used to offer help and <b>I’ll...</b> is used for a decision or promise.');
+    setNotice(0,'Use <b>when, as soon as</b> and <b>until</b> to connect future actions. After these words, normally do not use <b>will</b>: say <b>I’ll call when I arrive</b>, not <b>when I will arrive</b>. Use <b>Shall I...?</b> to offer help and <b>I’ll...</b> when you decide or promise to do something.');
+    setClarify(0,'If you say <b>will</b> after <b>when, as soon as</b> or <b>until</b>, correct only that small part and continue: <b>when I arrive</b>, <b>as soon as I get</b>, <b>until you confirm</b>.');
+    setChip(1,'present continuous','personal arrangement');
+    setChip(1,'present simple','fixed timetable');
+    setNotice(1,'For a personal arrangement, say what you are doing: <b>I’m meeting a client at 2:30.</b> For a fixed timetable or schedule, use the normal schedule wording: <b>The train leaves at 11:15.</b> Ask yourself: <b>Did people arrange this for themselves, or is it a fixed schedule?</b>');
+    setClarify(1,'Ask yourself one simple question: <b>Is this my personal arrangement, or is it a fixed timetable?</b> Say <b>I’m meeting her at 2:30</b> for the personal arrangement, but <b>The train leaves at 11:15</b> for the timetable.');
+    setClarify(2,'Before you choose <b>will</b> or <b>going to</b>, ask when the decision was made. If you decide now, use <b>I’ll...</b>. If you decided earlier, use <b>I’m going to...</b>. Then explain the reason or next action.');
+  }
+}
+applyPlainEnglishRules();
+
 document.querySelectorAll('.check').forEach(btn=>btn.addEventListener('click',()=>{
   const box=btn.closest('.activity'),choice=box.querySelector(`input[name="${btn.dataset.question}"]:checked`),out=box.querySelector('.answer');
   if(!choice){out.textContent='Choose one answer.';out.className='answer bad';return}
