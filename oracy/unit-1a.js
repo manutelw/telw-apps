@@ -75,14 +75,36 @@ if(greetingNotes){
 const audioCache=new Map();
 let playToken=0;
 async function getAudio(id,index,segment){
-  const key=`b-u1a-${id}-${index}-${segment.voice}-v2`;
+  const key=`b-u1a-${id}-${index}-${segment.voice}-v3`;
   if(audioCache.has(key))return audioCache.get(key);
   const res=await fetch(EDGE,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'tts',text:segment.text,voice:segment.voice,instructions:segment.instructions||PASSAGE_STYLE,unit_no:UNIT_NO,passage_id:key})});
-  if(!res.ok)throw new Error('Audio could not be loaded.');
+  if(!res.ok){
+    const err=new Error('Audio could not be loaded.');
+    err.status=res.status;
+    throw err;
+  }
   const blob=await res.blob();
   const url=URL.createObjectURL(blob);audioCache.set(key,url);return url;
 }
 function waitForAudio(){return new Promise((resolve,reject)=>{player.onended=resolve;player.onerror=()=>reject(new Error('Audio playback failed.'));});}
+function speakWithDeviceVoice(segments,token){
+  return new Promise((resolve,reject)=>{
+    if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){
+      reject(new Error('Audio could not be played.'));return;
+    }
+    let i=0;
+    const next=()=>{
+      if(token!==playToken){window.speechSynthesis.cancel();resolve();return;}
+      if(i>=segments.length){resolve();return;}
+      const utterance=new SpeechSynthesisUtterance(segments[i++].text);
+      utterance.lang='en-GB';utterance.rate=.9;utterance.pitch=1;
+      utterance.onend=next;
+      utterance.onerror=()=>reject(new Error('Audio could not be played.'));
+      window.speechSynthesis.speak(utterance);
+    };
+    window.speechSynthesis.cancel();next();
+  });
+}
 
 document.querySelectorAll('.audio').forEach(btn=>btn.addEventListener('click',async()=>{
   const id=btn.dataset.id, status=btn.nextElementSibling, token=++playToken;
@@ -94,8 +116,19 @@ document.querySelectorAll('.audio').forEach(btn=>btn.addEventListener('click',as
       player.src=url;await player.play();await waitForAudio();
     }
     status.textContent='Finished. Listen again if you want to notice the language.';
-  }catch(e){status.textContent=e.message||'Audio could not be played.';}
-  finally{btn.disabled=false;}
+  }catch(e){
+    if(id==='kp1notes'&&'speechSynthesis' in window){
+      try{
+        status.textContent='Playing the greeting notes…';
+        await speakWithDeviceVoice(passages[id],token);
+        status.textContent='Finished. Listen again if you want to notice the language.';
+      }catch{
+        status.textContent='Audio could not be played.';
+      }
+    }else{
+      status.textContent=e.message||'Audio could not be played.';
+    }
+  }finally{btn.disabled=false;}
 }));
 
 let recorder=null,stream=null,chunks=[],activeBtn=null;
