@@ -86,8 +86,41 @@ function speakerSegment(p,index){
   if(!voice)voice=index%2?'cedar':'marin';
   return {label,text,voice};
 }
+function naturaliseDialogueText(text){
+  let out=String(text||'');
+  const rules=[
+    [/\bI am\b/g,'I’m'],[/\bI will\b/g,'I’ll'],[/\bI would\b/g,'I’d'],
+    [/\byou are\b/gi,'you’re'],[/\byou will\b/gi,'you’ll'],[/\byou would\b/gi,'you’d'],
+    [/\bwe are\b/gi,'we’re'],[/\bwe will\b/gi,'we’ll'],[/\bwe would\b/gi,'we’d'],
+    [/\bthey are\b/gi,'they’re'],[/\bthey will\b/gi,'they’ll'],[/\bthey would\b/gi,'they’d'],
+    [/\bhe is\b/gi,'he’s'],[/\bhe will\b/gi,'he’ll'],[/\bhe would\b/gi,'he’d'],
+    [/\bshe is\b/gi,'she’s'],[/\bshe will\b/gi,'she’ll'],[/\bshe would\b/gi,'she’d'],
+    [/\bit is\b/gi,'it’s'],[/\bit will\b/gi,'it’ll'],[/\bit would\b/gi,'it’d'],
+    [/\bthat is\b/gi,'that’s'],[/\bthere is\b/gi,'there’s'],[/\bwhat is\b/gi,'what’s'],[/\bwho is\b/gi,'who’s'],[/\bwhere is\b/gi,'where’s'],[/\bhow is\b/gi,'how’s'],
+    [/\bdo not\b/gi,'don’t'],[/\bdoes not\b/gi,'doesn’t'],[/\bdid not\b/gi,'didn’t'],
+    [/\bis not\b/gi,'isn’t'],[/\bare not\b/gi,'aren’t'],[/\bwas not\b/gi,'wasn’t'],[/\bwere not\b/gi,'weren’t'],
+    [/\bhave not\b/gi,'haven’t'],[/\bhas not\b/gi,'hasn’t'],[/\bhad not\b/gi,'hadn’t'],
+    [/\bcannot\b/gi,'can’t'],[/\bcould not\b/gi,'couldn’t'],[/\bwould not\b/gi,'wouldn’t'],[/\bshould not\b/gi,'shouldn’t'],[/\bwill not\b/gi,'won’t'],[/\bmust not\b/gi,'mustn’t'],
+    [/\bI have (?=(?:already|always|just|never|recently|been|got)\b)/g,'I’ve '],
+    [/\byou have (?=(?:already|always|just|never|recently|been|got)\b)/gi,'you’ve '],
+    [/\bwe have (?=(?:already|always|just|never|recently|been|got)\b)/gi,'we’ve '],
+    [/\bthey have (?=(?:already|always|just|never|recently|been|got)\b)/gi,'they’ve ']
+  ];
+  for(const [pattern,replacement] of rules)out=out.replace(pattern,replacement);
+  return out;
+}
+function naturaliseSpeakerPassages(){
+  document.querySelectorAll('.passage[data-audio-id] p').forEach(p=>{
+    const label=p.querySelector(':scope > b:first-child');
+    if(!label)return;
+    let node=label.nextSibling;
+    while(node&&node.nodeType!==Node.TEXT_NODE)node=node.nextSibling;
+    if(!node)return;
+    node.nodeValue=naturaliseDialogueText(node.nodeValue);
+  });
+}
 async function fetchPassageAudio(id,index,segment){
-  const key=`b1a-new-speaker-${unitKey}-${id}-${index}-${segment.voice}-v1`;
+  const key=`b1a-new-speaker-${unitKey}-${id}-${index}-${segment.voice}-v2`;
   const existing=passageCache.get(key);
   if(existing)return typeof existing==='string'?existing:await existing;
   const pending=(async()=>{
@@ -134,6 +167,7 @@ document.addEventListener('click',e=>{
   e.preventDefault();e.stopImmediatePropagation();playPassage(btn);
 },true);
 
+naturaliseSpeakerPassages();
 const speakerPassages=[...document.querySelectorAll('.passage[data-audio-id]')].filter(p=>p.querySelector('p b'));
 speakerPassages.forEach((passage,index)=>{
   const id=passage.dataset.audioId;const segments=[...passage.querySelectorAll('p')].map(speakerSegment).filter(s=>s.text);
