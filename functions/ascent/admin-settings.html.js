@@ -18,7 +18,7 @@ export async function onRequest(context){
   }
   if(!html.includes('id="oracyShareHubCard"')){
     const share=`<a id="oracyShareHubCard" class="app-card dialogue" href="/oracy/admin-share.html"><strong>SHARE ORACY</strong><span>Choose units or levels, set free access for up to seven days, and email secure links</span></a>`;
-    html=html.replace('<button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>',share+'\n        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>');
+    html=html.replace('<a class="app-card mapper" href="./jd-interview-trainer.html"',share+'\n        <a class="app-card mapper" href="./jd-interview-trainer.html"');
   }
   const headers=new Headers(response.headers);
   headers.set('content-type','text/html; charset=UTF-8');
