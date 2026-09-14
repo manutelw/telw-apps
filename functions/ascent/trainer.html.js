@@ -9,24 +9,9 @@ export async function onRequest(context) {
   let html = await response.text();
 
   const bridge = `
-<script data-ascent-trainer-session-bridge="2026-09-14.3">
+<script data-ascent-trainer-session-bridge="2026-09-14.4">
 (function(){
   const key='ascent_trainer_session';
-  try {
-    const prefix='#ascent-trainer-session=';
-    if (window.location.hash && window.location.hash.startsWith(prefix)) {
-      const raw = decodeURIComponent(window.location.hash.slice(prefix.length));
-      const session = JSON.parse(raw);
-      if (session && typeof session === 'object') {
-        localStorage.setItem(key, JSON.stringify(session));
-        sessionStorage.setItem(key, JSON.stringify(session));
-      }
-      history.replaceState(null, '', window.location.pathname + window.location.search);
-    }
-  } catch (_) {
-    try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (_) {}
-  }
-
   try {
     const payload = JSON.parse(window.name || 'null');
     const session = payload && payload.__ascentTrainerSession;
@@ -124,7 +109,7 @@ export async function onRequest(context) {
   const notice = document.createElement("div");
   notice.id = "trainerSessionError";
   notice.style.cssText = "position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:#102b47;padding:24px;font-family:Arial,sans-serif";
-  notice.innerHTML = '<div style="max-width:560px;background:#fff;border-radius:16px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.3)"><h2 style="margin:0 0 12px;color:#143a60">Trainer session did not arrive</h2><p style="margin:0 0 18px;color:#40586e;line-height:1.5">Your login was accepted, but the Trainer Workspace did not receive the session. You have not been sent back to the Access Point. Please use Trainer Login again while this handoff is being corrected.</p><a href="./" style="display:inline-block;padding:11px 16px;border-radius:10px;background:#143a60;color:#fff;text-decoration:none;font-weight:700">Trainer Login</a></div>';
+  notice.innerHTML = '<div style="max-width:560px;background:#fff;border-radius:16px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.3)"><h2 style="margin:0 0 12px;color:#143a60">Trainer session did not arrive</h2><p style="margin:0 0 18px;color:#40586e;line-height:1.5">ASCENT reached the Trainer Workspace, but no usable trainer session was available in this browser tab. The page has been kept here instead of sending you back to the Access Point.</p><a href="./" style="display:inline-block;padding:11px 16px;border-radius:10px;background:#143a60;color:#fff;text-decoration:none;font-weight:700">Return to Trainer Login</a></div>';
   document.body.appendChild(notice);
   return null;
 }`;
