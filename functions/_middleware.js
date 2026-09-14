@@ -51,7 +51,15 @@ export async function onRequest(context) {
 
   // Public visitors go from ClarionPrep -> product access/payment -> product.
   // Existing institutional/admin entry routes remain separate and unchanged.
+  if (!html.includes('id="publicTrainerLogin"')) {
+    html = html.replace(
+      '<a class="navbtn" href="/account/">Register / Log in</a>',
+      '<a id="publicTrainerLogin" class="navbtn" href="/ascent/trainer-login.html">Trainer Login</a><a class="navbtn" href="/account/">Register / Log in</a>'
+    );
+  }
+
   const servicesMenu = `<div class="services-menu">
+    <a href="./ascent/trainer-login.html"><strong>Trainer Login</strong></a>
     <a href="./quick-jd/">JD Mapper</a>
     <a href="./ascent/jd-builder.html">JD Builder</a>
     <a href="./ascent/cv-builder.html">CV Builder &amp; Evaluator</a>
