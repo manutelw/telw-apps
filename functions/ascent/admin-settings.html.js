@@ -20,6 +20,10 @@ export async function onRequest(context){
     const share=`<a id="oracyShareHubCard" class="app-card dialogue" href="/oracy/admin-share.html"><strong>SHARE ORACY</strong><span>Choose units or levels, set free access for up to seven days, and email secure links</span></a>`;
     html=html.replace('<a class="app-card mapper" href="./jd-interview-trainer.html"',share+'\n        <a class="app-card mapper" href="./jd-interview-trainer.html"');
   }
+  if(!html.includes('id="careerTrackFitAdminCard"')){
+    const careerTrackFit=`<a id="careerTrackFitAdminCard" class="app-card dialogue" href="/career-track-fit/"><strong>Career Track Fit</strong><span>Assess second-year placement readiness and prescribe targeted development modules</span></a>`;
+    html=html.replace('<button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>',careerTrackFit+'\n        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>');
+  }
   const headers=new Headers(response.headers);
   headers.set('content-type','text/html; charset=UTF-8');
   headers.set('cache-control','no-store, max-age=0');
