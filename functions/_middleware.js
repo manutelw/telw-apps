@@ -4,8 +4,9 @@ export async function onRequest(context) {
   const isLanding = url.pathname === '/' || url.pathname === '/index.html';
   const isTrainerPortal = url.pathname === '/portal/trainer/' || url.pathname === '/portal/trainer/index.html';
   const isAdminSettings = url.pathname === '/ascent/admin-settings.html';
+  const isAscentTrainer = url.pathname === '/ascent/trainer.html';
 
-  if (!response.ok || (!isLanding && !isTrainerPortal && !isAdminSettings)) return response;
+  if (!response.ok || (!isLanding && !isTrainerPortal && !isAdminSettings && !isAscentTrainer)) return response;
 
   const host = url.hostname.toLowerCase();
   const supportedHost = host === 'clarionprep.com' || host === 'www.clarionprep.com' || host === 'manuvikraman.com' || host === 'www.manuvikraman.com';
@@ -25,6 +26,18 @@ export async function onRequest(context) {
       const wctCard = `<a id="wctAdminHubCard" class="app-card cv" href="/workplace-communication-test/access.html"><strong>Workplace Communication Test</strong><span>Open the WCT, evaluator dashboard and access controls for trainers and students</span></a>`;
       html = html.replace('<button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>', wctCard + '\n        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>');
     }
+    return finish();
+  }
+
+  if (isAscentTrainer) {
+    if (!html.includes('id="ldTrainingPlanTrainerButton"')) {
+      html = html.replace(
+        '<button class="nav-item" type="button" data-section="leaderboard">Placement Readiness Board</button>',
+        '<button class="nav-item" type="button" data-section="leaderboard">Placement Readiness Board</button>\n          <button id="ldTrainingPlanTrainerButton" class="nav-item" type="button">L&amp;D Training Plan</button>'
+      );
+    }
+    const launch = `<script data-ld-plan-trainer-launch="2026-09-14.1">(function(){function token(){for(const key of ['ascent_trainer_session','ascent_admin_master_session']){try{const s=JSON.parse(localStorage.getItem(key)||'null');const exp=new Date(s?.expiresAt||s?.expires_at||0).getTime();const t=s?.sessionToken||s?.session_token;if(t&&Number.isFinite(exp)&&exp>Date.now())return t;}catch(_){}}return '';}function openPlan(){const t=token();if(!t){location.href='./admin-login.html';return;}const f=document.createElement('form');f.method='POST';f.action='./ld-training-plan';f.style.display='none';const i=document.createElement('input');i.type='hidden';i.name='ascent_session_token';i.value=t;f.appendChild(i);document.body.appendChild(f);f.submit();}const b=document.getElementById('ldTrainingPlanTrainerButton');if(b)b.addEventListener('click',openPlan);})();</script>`;
+    if (!html.includes('data-ld-plan-trainer-launch')) html = html.replace('</body>', launch + '\n</body>');
     return finish();
   }
 
