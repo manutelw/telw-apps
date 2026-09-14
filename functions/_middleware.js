@@ -23,10 +23,6 @@ export async function onRequest(context) {
   };
 
   if (isAccessPoint) {
-    if (!html.includes('id="trainerDirectEntry"')) {
-      const trainerEntry = `\n<div id="trainerDirectEntry" style="margin:24px 0 8px;text-align:center">\n  <a href="/ascent/trainer-login.html" style="display:inline-block;min-width:220px;padding:13px 24px;border-radius:12px;background:#143a60;color:#fff;font-weight:700;text-decoration:none">Trainer Login</a>\n</div>`;
-      html = html.replace(/(<form\s+id="accessForm"[\s\S]*?<\/form>)/, '$1' + trainerEntry);
-    }
     if (!html.includes('data-access-hidden-fix="1"')) {
       html = html.replace('</head>', '<style data-access-hidden-fix="1">[hidden]{display:none!important}</style>\n</head>');
     }
