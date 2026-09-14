@@ -24,6 +24,14 @@ export async function onRequest(context){
     const careerTrackFit=`<a id="careerTrackFitAdminCard" class="app-card dialogue" href="/career-track-fit/"><strong>Career Track Fit</strong><span>Assess second-year placement readiness and prescribe targeted development modules</span></a>`;
     html=html.replace('<button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>',careerTrackFit+'\n        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>');
   }
+  if(!html.includes('id="ldTrainingPlanAdminCard"')){
+    const ld=`<button id="ldTrainingPlanAdminCard" class="app-card dialogue" type="button"><strong>L&amp;D Training Plan</strong><span>Trainer-only six-session placement-readiness plan for Learning &amp; Development roles</span></button>`;
+    html=html.replace('<a id="careerTrackFitAdminCard"',ld+'\n        <a id="careerTrackFitAdminCard"');
+  }
+
+  const ldLaunch=`<script data-ld-plan-admin-launch="2026-09-14.1">(function(){function token(){for(const key of ['ascent_admin_master_session','ascent_trainer_session']){try{const s=JSON.parse(localStorage.getItem(key)||'null');const exp=new Date(s?.expiresAt||s?.expires_at||0).getTime();const t=s?.sessionToken||s?.session_token;if(t&&Number.isFinite(exp)&&exp>Date.now())return t;}catch(_){}}return '';}function openPlan(){const t=token();if(!t){location.href='./admin-login.html';return;}const f=document.createElement('form');f.method='POST';f.action='./ld-training-plan';f.style.display='none';const i=document.createElement('input');i.type='hidden';i.name='ascent_session_token';i.value=t;f.appendChild(i);document.body.appendChild(f);f.submit();}const b=document.getElementById('ldTrainingPlanAdminCard');if(b)b.addEventListener('click',openPlan);})();</script>`;
+  if(!html.includes('data-ld-plan-admin-launch'))html=html.replace('</body>',ldLaunch+'\n</body>');
+
   const headers=new Headers(response.headers);
   headers.set('content-type','text/html; charset=UTF-8');
   headers.set('cache-control','no-store, max-age=0');
