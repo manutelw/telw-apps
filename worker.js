@@ -17,6 +17,17 @@ export default {
 
     if(isPrivateSource(path)) return new Response('Not found',{status:404});
 
+    if(path==='/career-track-fit' || path==='/career-track-fit/'){
+      const assetUrl=new URL(request.url);
+      assetUrl.pathname='/career-track-fit-app/index.html';
+      return noStore(await env.ASSETS.fetch(new Request(assetUrl.toString(),request)));
+    }
+    if(path.startsWith('/career-track-fit/')){
+      const assetUrl=new URL(request.url);
+      assetUrl.pathname=path.replace('/career-track-fit/','/career-track-fit-app/');
+      return noStore(await env.ASSETS.fetch(new Request(assetUrl.toString(),request)));
+    }
+
     if(path==='/presentation-skills/session'){
       if(request.method!=='POST') return json({ok:false,message:'Use the Presentation Skills access form.'},405);
       return handlePresentationSession(request);
@@ -234,6 +245,10 @@ async function injectOracyAdminCard(response){
   if(!html.includes('id="careerTrackFitAdminCard"')){
     const card='<a id="careerTrackFitAdminCard" class="app-card dialogue" href="/career-track-fit/"><strong>Career Track Fit</strong><span>Assess second-year placement readiness and prescribe targeted development modules</span></a>';
     html=html.replace('<button id="catSimulatorAdminButton"',card+'\n        <button id="catSimulatorAdminButton"');
+  }
+  if(!html.includes('id="adminGrid4Style"')){
+    const style='<style id="adminGrid4Style">.app-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important}.app-card{min-height:96px!important;padding:14px!important;border-radius:13px!important}.app-card strong{font-size:15px!important}.app-card span{margin-top:8px!important;font-size:10px!important;line-height:1.3!important}@media(max-width:1080px){.app-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}@media(max-width:760px){.app-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}@media(max-width:520px){.app-grid{grid-template-columns:1fr!important}}</style>';
+    html=html.replace('</head>',style+'</head>');
   }
   const headers=new Headers(response.headers);
   headers.set('content-type','text/html; charset=UTF-8');
