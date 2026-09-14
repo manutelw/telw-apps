@@ -231,6 +231,10 @@ async function injectOracyAdminCard(response){
     const script=`<script id="presentationSkillsAdminScript">(function(){var b=document.getElementById('presentationSkillsAdminCard');if(!b)return;b.addEventListener('click',function(){var s=null;for(const k of ['ascent_admin_master_session','ascent_trainer_session']){try{var x=JSON.parse(localStorage.getItem(k)||'null');if(x&&x.sessionToken&&String(x.role||'').toUpperCase()==='ADMIN'){s=x;break}}catch(e){}}if(!s){location.href='/ascent/admin-login.html';return}var f=document.createElement('form');f.method='POST';f.action='/presentation-skills/admin-handoff';var i=document.createElement('input');i.type='hidden';i.name='ascent_session_token';i.value=s.sessionToken;f.appendChild(i);document.body.appendChild(f);f.submit();});})();</script>`;
     html=html.replace('</body>',script+'</body>');
   }
+  if(!html.includes('id="careerTrackFitAdminCard"')){
+    const card='<a id="careerTrackFitAdminCard" class="app-card dialogue" href="/career-track-fit/"><strong>Career Track Fit</strong><span>Assess second-year placement readiness and prescribe targeted development modules</span></a>';
+    html=html.replace('<button id="catSimulatorAdminButton"',card+'\n        <button id="catSimulatorAdminButton"');
+  }
   const headers=new Headers(response.headers);
   headers.set('content-type','text/html; charset=UTF-8');
   headers.set('cache-control','no-store');
