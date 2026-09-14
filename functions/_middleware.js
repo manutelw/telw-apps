@@ -38,6 +38,39 @@ export async function onRequest(context) {
   }
 
   if (isAscentTrainer) {
+    html = html.replace(
+`    if (
+      !session.sessionToken ||
+      !session.email ||
+      !Number.isFinite(expiryTime) ||
+      expiryTime <= Date.now()
+    ) {
+      throw new Error(
+        "Incomplete or expired staff session"
+      );
+    }
+
+    if (
+      role !== "ADMIN" &&
+      !session.trainerUuid
+    ) {
+      throw new Error(
+        "Trainer identity is missing"
+      );
+    }`,
+`    if (!session.sessionToken) {
+      throw new Error(
+        "Staff session token is missing"
+      );
+    }
+
+    if (Number.isFinite(expiryTime) && expiryTime <= Date.now()) {
+      throw new Error(
+        "Staff session has expired"
+      );
+    }`
+    );
+
     if (!html.includes('id="ldTrainingPlanTrainerButton"')) {
       html = html.replace(
         '<button class="nav-item" type="button" data-section="leaderboard">Placement Readiness Board</button>',
