@@ -138,7 +138,11 @@ export async function onRequest(context) {
     }
   }
 
-  window.location.href = "./";
+  const notice = document.createElement("div");
+  notice.id = "trainerSessionError";
+  notice.style.cssText = "position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:#102b47;padding:24px;font-family:Arial,sans-serif";
+  notice.innerHTML = '<div style="max-width:560px;background:#fff;border-radius:16px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.3)"><h2 style="margin:0 0 12px;color:#143a60">Trainer session did not arrive</h2><p style="margin:0 0 18px;color:#40586e;line-height:1.5">ASCENT reached the Trainer Workspace, but no usable trainer session was available in this browser tab. The page has been kept here instead of sending you back to the Access Point.</p><a href="./" style="display:inline-block;padding:11px 16px;border-radius:10px;background:#143a60;color:#fff;text-decoration:none;font-weight:700">Return to Trainer Login</a></div>';
+  document.body.appendChild(notice);
   return null;
 }`;
 
