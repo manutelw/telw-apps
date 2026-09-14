@@ -28,6 +28,10 @@ export async function onRequest(context){
     const ld=`<button id="ldTrainingPlanAdminCard" class="app-card dialogue" type="button"><strong>L&amp;D Training Plan</strong><span>Trainer-only six-session placement-readiness plan for Learning &amp; Development roles</span></button>`;
     html=html.replace('<a id="careerTrackFitAdminCard"',ld+'\n        <a id="careerTrackFitAdminCard"');
   }
+  if(!html.includes('id="trainerLoginAdminCard"')){
+    const trainerLogin=`<a id="trainerLoginAdminCard" class="app-card ascent" href="/ascent/trainer-login.html"><strong>Trainer Login</strong><span>Open the ASCENT Trainer sign-in page for Manu, Sandeep and authorised trainers</span></a>`;
+    html=html.replace('<button id="ldTrainingPlanAdminCard"',trainerLogin+'\n        <button id="ldTrainingPlanAdminCard"');
+  }
 
   const ldLaunch=`<script data-ld-plan-admin-launch="2026-09-14.1">(function(){function token(){for(const key of ['ascent_admin_master_session','ascent_trainer_session']){try{const s=JSON.parse(localStorage.getItem(key)||'null');const exp=new Date(s?.expiresAt||s?.expires_at||0).getTime();const t=s?.sessionToken||s?.session_token;if(t&&Number.isFinite(exp)&&exp>Date.now())return t;}catch(_){}}return '';}function openPlan(){const t=token();if(!t){location.href='./admin-login.html';return;}const f=document.createElement('form');f.method='POST';f.action='./ld-training-plan';f.style.display='none';const i=document.createElement('input');i.type='hidden';i.name='ascent_session_token';i.value=t;f.appendChild(i);document.body.appendChild(f);f.submit();}const b=document.getElementById('ldTrainingPlanAdminCard');if(b)b.addEventListener('click',openPlan);})();</script>`;
   if(!html.includes('data-ld-plan-admin-launch'))html=html.replace('</body>',ldLaunch+'\n</body>');
