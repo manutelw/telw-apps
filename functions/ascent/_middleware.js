@@ -7,7 +7,7 @@ export async function onRequest(context) {
   if (url.pathname.endsWith('/ascent/professional-communication-trainer-preview.html')) {
     return new Response(null,{status:302,headers:{location:'https://pcl-professional-communication-lab.pages.dev/','cache-control':'no-store'}});
   }
-  const isTrainerPage = url.pathname.endsWith('/ascent/trainer.html');
+  const isTrainerPage = url.pathname.endsWith('/ascent/trainer.html') || url.pathname.endsWith('/ascent/trainer') || url.pathname.endsWith('/ascent/trainer/');
   const isAdminSettingsPage = url.pathname.endsWith('/ascent/admin-settings.html');
   const isProtectedAdminPage =
     url.pathname.endsWith('/ascent/pcl.html') ||
@@ -27,6 +27,56 @@ export async function onRequest(context) {
   let html = await response.text();
 
   if (isTrainerPage) {
+    const trainerButtons = `\n          <button id="ldTrainingPlanTrainerButton" class="nav-item" type="button">L&amp;D Training Plan</button>\n          <button id="normalTrainerPortalButton" class="nav-item" type="button">CLARION Trainer Portal</button>`;
+    if (!html.includes('id="ldTrainingPlanTrainerButton"')) {
+      html = html.replace(
+        /(<button class="nav-item" type="button" data-section="leaderboard">Placement Readiness Board<\/button>)/,
+        '$1' + trainerButtons
+      );
+    } else if (!html.includes('id="normalTrainerPortalButton"')) {
+      html = html.replace('id="ldTrainingPlanTrainerButton" class="nav-item" type="button">L&amp;D Training Plan</button>','id="ldTrainingPlanTrainerButton" class="nav-item" type="button">L&amp;D Training Plan</button>\n          <button id="normalTrainerPortalButton" class="nav-item" type="button">CLARION Trainer Portal</button>');
+    }
+
+    const trainerResourceLaunch = `
+<script data-trainer-resource-launch="2026-09-14.2">
+(function(){
+  function currentSession(){
+    for(const key of ['ascent_trainer_session','ascent_admin_master_session']){
+      try{
+        const s=JSON.parse(localStorage.getItem(key)||'null');
+        const exp=new Date(s?.expiresAt||s?.expires_at||0).getTime();
+        const token=s?.sessionToken||s?.session_token;
+        if(token&&Number.isFinite(exp)&&exp>Date.now())return {session:s,token};
+      }catch(_){ }
+    }
+    return null;
+  }
+  function openLdPlan(){
+    const found=currentSession();
+    if(!found){location.href='/ascent/trainer-login.html';return;}
+    const form=document.createElement('form');form.method='POST';form.action='/ascent/ld-training-plan';form.style.display='none';
+    const input=document.createElement('input');input.type='hidden';input.name='ascent_session_token';input.value=found.token;form.appendChild(input);document.body.appendChild(form);form.submit();
+  }
+  async function openNormalTrainer(){
+    const found=currentSession();
+    if(!found){location.href='/ascent/trainer-login.html';return;}
+    const button=document.getElementById('normalTrainerPortalButton');
+    if(button){button.disabled=true;button.textContent='Opening trainer portal…';}
+    try{
+      const response=await fetch('/portal/trainer/ascent-session',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify({sessionToken:found.token})});
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok)throw new Error(data.error||'Trainer portal access could not be opened.');
+      location.href='/portal/trainer/';
+    }catch(error){
+      if(button){button.disabled=false;button.textContent='CLARION Trainer Portal';}
+      alert(error?.message||'Trainer portal access could not be opened.');
+    }
+  }
+  document.getElementById('ldTrainingPlanTrainerButton')?.addEventListener('click',openLdPlan);
+  document.getElementById('normalTrainerPortalButton')?.addEventListener('click',openNormalTrainer);
+})();
+</script>`;
+
     const script = `
 <script data-ascent-results-task-filter="2026-09-07.2">
 (function () {
@@ -75,9 +125,9 @@ export async function onRequest(context) {
 })();
 </script>`;
     html = html.replace(/<script data-ascent-results-task-filter="[^"]+">[\s\S]*?<\/script>/, "");
-    html = html.replace('</body>', script + '\n</body>');
+    html = html.replace(/<script data-trainer-resource-launch="[^"]+">[\s\S]*?<\/script>/, "");
+    html = html.replace('</body>', script + '\n' + trainerResourceLaunch + '\n</body>');
   }
-
   if (isAdminSettingsPage) {
     const oracyShareCard = `
         <a id="oracyShareHubCard" class="app-card dialogue" href="/oracy/admin-share.html"><strong>SHARE ORACY</strong><span>Choose units or levels, set free access for up to seven days, and email secure links</span></a>`;
