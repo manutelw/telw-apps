@@ -27,8 +27,13 @@ export async function renderNativeAccessPoint(context) {
   html = html.replace(
 `      const account =
         loginResult[0];`,
-`      const rawAccount =
+`      const rawLogin =
         loginResult[0] || {};
+      const rawAccount =
+        (rawLogin.data && typeof rawLogin.data === "object" ? rawLogin.data : null) ||
+        (rawLogin.result && typeof rawLogin.result === "object" ? rawLogin.result : null) ||
+        (rawLogin.account && typeof rawLogin.account === "object" ? rawLogin.account : null) ||
+        rawLogin;
 
       const account = {
         ...rawAccount,
@@ -36,6 +41,8 @@ export async function renderNativeAccessPoint(context) {
           rawAccount.session_token ||
           rawAccount.sessionToken ||
           rawAccount.token ||
+          rawAccount.access_token ||
+          rawAccount.accessToken ||
           "",
         trainer_uuid:
           rawAccount.trainer_uuid ||
@@ -104,7 +111,12 @@ export async function renderNativeAccessPoint(context) {
         sessionStorage.setItem(
           "ascent_trainer_session",
           JSON.stringify(trainerSession)
-        );`
+        );
+        try {
+          window.name = JSON.stringify({
+            __ascentTrainerSession: trainerSession
+          });
+        } catch (_) {}`
   );
 
   const headers = new Headers(response.headers);
