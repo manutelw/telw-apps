@@ -2,6 +2,8 @@
 
 Standalone static web app for second-year students entering placement season.
 
+Live route after deployment: `https://clarionprep.com/career-track-fit/`
+
 ## Purpose
 Students choose the career track they are targeting, complete a common core diagnostic, then complete a track-family module. The app returns a weighted readiness score, capability profile, strengths, development gaps, and a training prescription.
 
