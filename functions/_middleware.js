@@ -5,8 +5,9 @@ export async function onRequest(context) {
   const isTrainerPortal = url.pathname === '/portal/trainer/' || url.pathname === '/portal/trainer/index.html';
   const isAdminSettings = url.pathname === '/ascent/admin-settings.html';
   const isAscentTrainer = url.pathname === '/ascent/trainer.html';
+  const isAccessPoint = url.pathname === '/ascent/' || url.pathname === '/ascent/index.html';
 
-  if (!response.ok || (!isLanding && !isTrainerPortal && !isAdminSettings && !isAscentTrainer)) return response;
+  if (!response.ok || (!isLanding && !isTrainerPortal && !isAdminSettings && !isAscentTrainer && !isAccessPoint)) return response;
 
   const host = url.hostname.toLowerCase();
   const supportedHost = host === 'clarionprep.com' || host === 'www.clarionprep.com' || host === 'manuvikraman.com' || host === 'www.manuvikraman.com';
@@ -17,10 +18,21 @@ export async function onRequest(context) {
     const headers = new Headers(response.headers);
     headers.set('content-type', 'text/html; charset=UTF-8');
     headers.set('cache-control', 'no-store, max-age=0');
+    headers.delete('content-length');
     return new Response(html,{status:response.status,statusText:response.statusText,headers});
   };
 
-  // Keep existing administrator routes intact.
+  if (isAccessPoint) {
+    if (!html.includes('id="trainerDirectEntry"')) {
+      const trainerEntry = `\n<div id="trainerDirectEntry" style="margin:24px 0 8px;text-align:center">\n  <a href="/ascent/trainer-login.html" style="display:inline-block;min-width:220px;padding:13px 24px;border-radius:12px;background:#143a60;color:#fff;font-weight:700;text-decoration:none">Trainer Login</a>\n</div>`;
+      html = html.replace(/(<form\s+id="accessForm"[\s\S]*?<\/form>)/, '$1' + trainerEntry);
+    }
+    if (!html.includes('data-access-hidden-fix="1"')) {
+      html = html.replace('</head>', '<style data-access-hidden-fix="1">[hidden]{display:none!important}</style>\n</head>');
+    }
+    return finish();
+  }
+
   if (isAdminSettings) {
     if (!html.includes('id="wctAdminHubCard"')) {
       const wctCard = `<a id="wctAdminHubCard" class="app-card cv" href="/workplace-communication-test/access.html"><strong>Workplace Communication Test</strong><span>Open the WCT, evaluator dashboard and access controls for trainers and students</span></a>`;
@@ -49,17 +61,23 @@ export async function onRequest(context) {
     return finish();
   }
 
-  // Public visitors go from ClarionPrep -> product access/payment -> product.
-  // Existing institutional/admin entry routes remain separate and unchanged.
+  html = html.replace(
+    '<a class="navbtn" href="/ascent/trainer-login.html">Trainer Login</a>',
+    '<a id="publicTrainerLogin" class="navbtn" href="/ascent/">Trainer Login</a>'
+  );
+  html = html.replace(
+    '<a id="publicTrainerLogin" class="navbtn" href="/ascent/trainer-login.html">Trainer Login</a>',
+    '<a id="publicTrainerLogin" class="navbtn" href="/ascent/">Trainer Login</a>'
+  );
   if (!html.includes('id="publicTrainerLogin"')) {
     html = html.replace(
       '<a class="navbtn" href="/account/">Register / Log in</a>',
-      '<a id="publicTrainerLogin" class="navbtn" href="/ascent/trainer-login.html">Trainer Login</a><a class="navbtn" href="/account/">Register / Log in</a>'
+      '<a id="publicTrainerLogin" class="navbtn" href="/ascent/">Trainer Login</a><a class="navbtn" href="/account/">Register / Log in</a>'
     );
   }
 
   const servicesMenu = `<div class="services-menu">
-    <a href="./ascent/trainer-login.html"><strong>Trainer Login</strong></a>
+    <a href="./ascent/"><strong>Trainer Login</strong></a>
     <a href="./quick-jd/">JD Mapper</a>
     <a href="./ascent/jd-builder.html">JD Builder</a>
     <a href="./ascent/cv-builder.html">CV Builder &amp; Evaluator</a>
@@ -101,7 +119,6 @@ export async function onRequest(context) {
 
   if (!html.includes('id="public-product-access"')) html = html.replace('<section class="cta">', accessSection + '<section class="cta">');
 
-  // Remove public-only lock styling from product cards/menu; admin security remains unchanged.
   html = html.replace(/data-admin-only="1"\s*/g,'').replace(/admin-locked/g,'');
   return finish();
 }
