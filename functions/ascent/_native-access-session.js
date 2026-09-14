@@ -104,7 +104,17 @@ export async function renderNativeAccessPoint(context) {
           "ascent_trainer_session",
           JSON.stringify(trainerSession)
         );`,
-`        localStorage.setItem(
+`        if (!trainerSession.sessionToken) {
+          showStatus(
+            "Trainer login was accepted, but ASCENT did not return a trainer session token. The workspace was not opened.",
+            "error"
+          );
+          loginButton.disabled = false;
+          loginButton.textContent = "Log in as Trainer";
+          return;
+        }
+
+        localStorage.setItem(
           "ascent_trainer_session",
           JSON.stringify(trainerSession)
         );
@@ -112,19 +122,31 @@ export async function renderNativeAccessPoint(context) {
           "ascent_trainer_session",
           JSON.stringify(trainerSession)
         );
+
+        let persistedTrainerSession = null;
+        try {
+          persistedTrainerSession = JSON.parse(
+            localStorage.getItem("ascent_trainer_session") ||
+            sessionStorage.getItem("ascent_trainer_session") ||
+            "null"
+          );
+        } catch (_) {}
+
+        if (!persistedTrainerSession || !persistedTrainerSession.sessionToken) {
+          showStatus(
+            "Trainer login was accepted, but the browser could not keep the trainer session. The workspace was not opened.",
+            "error"
+          );
+          loginButton.disabled = false;
+          loginButton.textContent = "Log in as Trainer";
+          return;
+        }
+
         try {
           window.name = JSON.stringify({
             __ascentTrainerSession: trainerSession
           });
         } catch (_) {}`
-  );
-
-  html = html.replace(
-`          destination =
-            "./trainer.html";`,
-`          destination =
-            "./trainer.html#ascent-trainer-session=" +
-            encodeURIComponent(JSON.stringify(trainerSession));`
   );
 
   const headers = new Headers(response.headers);
