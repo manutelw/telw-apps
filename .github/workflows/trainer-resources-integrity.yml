@@ -1,0 +1,25 @@
+name: Trainer Resources Integrity
+on:
+  pull_request:
+    paths:
+      - 'portal/trainer/**'
+      - 'functions/portal/trainer/**'
+      - '.github/workflows/trainer-resources-integrity.yml'
+permissions:
+  contents: read
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: |
+          node --check portal/trainer/ld-plan-ui.js
+          node --check functions/portal/trainer/ld-plan.js
+          node --check functions/portal/trainer/_middleware.js
+      - name: Check protected resource wiring
+        run: |
+          grep -q "trainer','admin" functions/portal/trainer/ld-plan.js
+          grep -q "/auth/v1/user" functions/portal/trainer/ld-plan.js
+          grep -q "getSession" portal/trainer/ld-plan-ui.js
+          grep -q "/portal/trainer/ld-plan" portal/trainer/ld-plan-ui.js
