@@ -119,6 +119,14 @@ export async function renderNativeAccessPoint(context) {
         } catch (_) {}`
   );
 
+  html = html.replace(
+`          destination =
+            "./trainer.html";`,
+`          destination =
+            "./trainer.html#ascent-trainer-session=" +
+            encodeURIComponent(JSON.stringify(trainerSession));`
+  );
+
   const headers = new Headers(response.headers);
   headers.set('content-type', 'text/html; charset=UTF-8');
   headers.set('cache-control', 'no-store, max-age=0');
