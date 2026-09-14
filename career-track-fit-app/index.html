@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Career Track Fit | Placement Readiness Diagnostic</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles-60.css" />
 </head>
 <body>
   <header class="topbar">
@@ -15,7 +16,7 @@
         <div class="brand-sub">Placement Readiness Diagnostic</div>
       </div>
     </div>
-    <button id="restartBtn" class="ghost hidden">Start again</button>
+    <div class="top-actions"><div id="globalTimer" class="timer hidden" aria-live="polite">60:00</div><button id="restartBtn" class="ghost hidden">Start again</button></div>
   </header>
 
   <main id="app" class="shell"></main>
@@ -24,22 +25,24 @@
     <section class="hero card">
       <span class="eyebrow">For second-year placement preparation</span>
       <h1>How ready are you for the career track you are targeting?</h1>
-      <p class="lead">This diagnostic checks how you think, analyse, decide and communicate, then tests the abilities that matter more for your chosen track.</p>
+      <p class="lead">A strict 60-minute diagnostic of reasoning, role-fit, communication and work-style alignment.</p>
       <div class="callout">
-        <strong>This is not a personality label or a promise of placement success.</strong>
-        <span>It is a current-readiness diagnostic. It shows what you already do well and what to improve before interviews and selection rounds.</span>
+        <strong>The clock starts only after you choose your target career track.</strong>
+        <span>The assessment auto-submits at 60:00. Each section also has its own fixed time limit, so move steadily and do not leave the browser.</span>
       </div>
       <div class="flow-grid">
-        <div><b>1</b><span>Choose your target track</span></div>
-        <div><b>2</b><span>Take the common core</span></div>
-        <div><b>3</b><span>Complete the track module</span></div>
-        <div><b>4</b><span>Get a training prescription</span></div>
+        <div><b>30</b><span>min · Common core</span></div>
+        <div><b>10</b><span>min · Track module</span></div>
+        <div><b>12</b><span>min · Writing tasks</span></div>
+        <div><b>8</b><span>min · Work-style</span></div>
       </div>
-      <button id="beginBtn" class="primary">Begin diagnostic</button>
+      <p class="fineprint"><strong>Communication:</strong> the writing tasks test TELW 1.0 structure and TELW 2.0 adaptation when new information changes the situation.</p>
+      <button id="beginBtn" class="primary">Choose my target track</button>
     </section>
   </template>
 
   <script src="data.js"></script>
-  <script src="app.js"></script>
+  <script src="expanded-data.js"></script>
+  <script src="app-60.js"></script>
 </body>
 </html>

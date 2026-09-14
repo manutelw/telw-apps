@@ -1,0 +1,31 @@
+name: Career Track Fit Integrity
+on:
+  pull_request:
+    paths:
+      - 'career-track-fit-app/**'
+      - '.github/workflows/career-track-fit-integrity.yml'
+permissions:
+  contents: read
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: |
+          node --check career-track-fit-app/app-60.js
+          node --check career-track-fit-app/expanded-data.js
+      - name: Verify 60-minute architecture
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          app=Path('career-track-fit-app/app-60.js').read_text()
+          index=Path('career-track-fit-app/index.html').read_text()
+          extra=Path('career-track-fit-app/expanded-data.js').read_text()
+          for token in ['TOTAL=3600000','core:1800000','track:600000',"'writing-email':360000","'writing-rec':240000","'writing-revise':120000",'workstyle:480000']:
+              assert token in app, f'Missing timed architecture token: {token}'
+          assert 'expanded-data.js' in index and 'app-60.js' in index, 'Timed assessment assets are not wired into index.html'
+          assert extra.count("id:'w") >= 16, 'Work-style section must contain at least 16 items'
+          assert extra.count("cap:'") >= 60, 'Expanded core/track bank appears incomplete'
+          print('Career Track Fit 60-minute architecture intact')
+          PY
