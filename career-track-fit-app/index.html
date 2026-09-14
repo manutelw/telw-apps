@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Career Track Fit | Placement Readiness Diagnostic</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">CT</div>
+      <div>
+        <div class="brand-name">Career Track Fit</div>
+        <div class="brand-sub">Placement Readiness Diagnostic</div>
+      </div>
+    </div>
+    <button id="restartBtn" class="ghost hidden">Start again</button>
+  </header>
+
+  <main id="app" class="shell"></main>
+
+  <template id="welcomeTemplate">
+    <section class="hero card">
+      <span class="eyebrow">For second-year placement preparation</span>
+      <h1>How ready are you for the career track you are targeting?</h1>
+      <p class="lead">This diagnostic checks how you think, analyse, decide and communicate, then tests the abilities that matter more for your chosen track.</p>
+      <div class="callout">
+        <strong>This is not a personality label or a promise of placement success.</strong>
+        <span>It is a current-readiness diagnostic. It shows what you already do well and what to improve before interviews and selection rounds.</span>
+      </div>
+      <div class="flow-grid">
+        <div><b>1</b><span>Choose your target track</span></div>
+        <div><b>2</b><span>Take the common core</span></div>
+        <div><b>3</b><span>Complete the track module</span></div>
+        <div><b>4</b><span>Get a training prescription</span></div>
+      </div>
+      <button id="beginBtn" class="primary">Begin diagnostic</button>
+    </section>
+  </template>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
