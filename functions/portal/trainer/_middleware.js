@@ -7,7 +7,8 @@ export async function onRequest(context){
   let html=await response.text();
   const scripts=[
     '/portal/trainer/access-bridge.js',
-    '/portal/trainer/ld-plan-ui.js'
+    '/portal/trainer/ld-plan-ui.js',
+    '/portal/trainer/ld-plan-ascent-bridge.js'
   ];
   const missing=scripts.filter(src=>!html.includes(src)).map(src=>`<script src="${src}"></script>`).join('');
   if(missing)html=html.replace('</body>',missing+'</body>');
