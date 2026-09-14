@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trainer Login</title>
+  <meta name="robots" content="noindex,nofollow">
+  <style>
+    :root {
+      --navy:#143a60;
+      --blue:#27679d;
+      --text:#24364a;
+      --muted:#6c7b8d;
+      --border:#cfdbe6;
+      --danger:#b42318;
+      --danger-soft:#fff0ee;
+      --success:#18794e;
+      --success-soft:#eaf8f1;
+    }
+    * { box-sizing:border-box; }
+    html,body { min-height:100%; }
+    body {
+      margin:0;
+      min-height:100vh;
+      padding:20px;
+      font-family:Arial,Helvetica,sans-serif;
+      color:var(--text);
+      background:#f4f7fa;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+    }
+    button,input { font:inherit; }
+    .login-box {
+      width:100%;
+      max-width:330px;
+      padding:20px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      box-shadow:0 10px 28px rgba(20,58,96,.12);
+      margin-top:40px;
+    }
+    h1 {
+      margin:0 0 5px;
+      color:var(--navy);
+      font-size:20px;
+    }
+    .intro {
+      margin:0 0 17px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+    .form-group { margin-bottom:13px; }
+    label {
+      display:block;
+      margin-bottom:6px;
+      font-size:12px;
+      font-weight:700;
+    }
+    .password-wrap { position:relative; }
+    input {
+      width:100%;
+      min-height:42px;
+      padding:9px 11px;
+      border:1px solid #aec2d3;
+      border-radius:8px;
+      color:var(--text);
+      background:#fff;
+    }
+    .password-wrap input { padding-right:60px; }
+    input:focus {
+      outline:3px solid rgba(39,103,157,.14);
+      border-color:var(--blue);
+    }
+    .show-password {
+      position:absolute;
+      top:6px;
+      right:6px;
+      min-height:30px;
+      padding:0 8px;
+      border:0;
+      border-radius:6px;
+      color:var(--navy);
+      background:#e8f0f7;
+      font-size:11px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .login-button {
+      width:100%;
+      min-height:43px;
+      border:0;
+      border-radius:8px;
+      color:#fff;
+      background:var(--navy);
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .login-button:disabled { opacity:.65; cursor:wait; }
+    .status {
+      display:none;
+      margin-top:12px;
+      padding:9px 10px;
+      border-radius:7px;
+      font-size:12px;
+      line-height:1.4;
+    }
+    .status.error {
+      display:block;
+      color:var(--danger);
+      background:var(--danger-soft);
+    }
+    .status.success {
+      display:block;
+      color:var(--success);
+      background:var(--success-soft);
+    }
+    .back-link {
+      display:inline-block;
+      margin-top:13px;
+      color:var(--muted);
+      font-size:11px;
+      text-decoration:none;
+    }
+    .back-link:hover { color:var(--navy); }
+  </style>
+</head>
+<body>
+  <main class="login-box">
+    <h1>Trainer Login</h1>
+    <p class="intro">Use the login details provided by your institution.</p>
+
+    <form id="loginForm" novalidate>
+      <div class="form-group">
+        <label for="trainerEmail">Email address</label>
+        <input
+          id="trainerEmail"
+          type="email"
+          autocomplete="username"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="trainerPassword">Password</label>
+        <div class="password-wrap">
+          <input
+            id="trainerPassword"
+            type="password"
+            autocomplete="current-password"
+            required
+          >
+          <button
+            id="showPasswordButton"
+            class="show-password"
+            type="button"
+          >
+            Show
+          </button>
+        </div>
+      </div>
+
+      <button
+        id="loginButton"
+        class="login-button"
+        type="submit"
+      >
+        Log in
+      </button>
+
+      <div
+        id="statusMessage"
+        class="status"
+        role="status"
+        aria-live="polite"
+      ></div>
+    </form>
+
+    <a class="back-link" href="./forgot-password.html?type=TRAINER">Forgot password?</a><br>
+    <a class="back-link" href="./">Return to Access Point</a>
+  </main>
+
+  <script>
+    const SUPABASE_URL =
+      "https://vtqatrhwfvzyodiftvkc.supabase.co";
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643";
+
+    const LOGIN_RPC_URL =
+      SUPABASE_URL +
+      "/rest/v1/rpc/ascent_trainer_login";
+
+    const SESSION_STORAGE_KEY =
+      "ascent_trainer_session";
+
+    const form =
+      document.getElementById("loginForm");
+
+    const emailInput =
+      document.getElementById("trainerEmail");
+
+    const passwordInput =
+      document.getElementById("trainerPassword");
+
+    const loginButton =
+      document.getElementById("loginButton");
+
+    const statusMessage =
+      document.getElementById("statusMessage");
+
+    const showPasswordButton =
+      document.getElementById("showPasswordButton");
+
+    function showStatus(message, type) {
+      statusMessage.className =
+        "status" + (type ? " " + type : "");
+      statusMessage.textContent = message || "";
+    }
+
+    showPasswordButton.addEventListener(
+      "click",
+      function () {
+        const hidden = passwordInput.type === "password";
+        passwordInput.type = hidden ? "text" : "password";
+        showPasswordButton.textContent = hidden ? "Hide" : "Show";
+      }
+    );
+
+    form.addEventListener(
+      "submit",
+      async function (event) {
+        event.preventDefault();
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+
+        showStatus("", "");
+
+        if (!email || !password) {
+          showStatus(
+            "Enter your trainer email and password.",
+            "error"
+          );
+          return;
+        }
+
+        loginButton.disabled = true;
+        loginButton.textContent = "Checkingâ¦";
+
+        try {
+          const response = await fetch(LOGIN_RPC_URL, {
+            method: "POST",
+            headers: {
+              "apikey": SUPABASE_PUBLISHABLE_KEY,
+              "Authorization": "Bearer " + SUPABASE_PUBLISHABLE_KEY,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              p_email: email,
+              p_password: password
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(
+              "Trainer login could not be checked."
+            );
+          }
+
+          const payload = await response.json();
+
+          if (!Array.isArray(payload) || payload.length === 0) {
+            throw new Error(
+              "Incorrect trainer email or password."
+            );
+          }
+
+          const account = payload[0];
+
+          const role = String(account.role || "").toUpperCase();
+
+          if (role !== "TRAINER" && role !== "ADMIN") {
+            throw new Error(
+              "This account does not have trainer access."
+            );
+          }
+
+          const session = {
+            sessionToken: account.session_token,
+            trainerUuid: account.trainer_uuid,
+            fullName: account.full_name,
+            email: account.email,
+            role: account.role,
+            expiresAt: account.expires_at
+          };
+
+          localStorage.setItem(
+            SESSION_STORAGE_KEY,
+            JSON.stringify(session)
+          );
+
+          showStatus("Login successful.", "success");
+
+          window.setTimeout(function () {
+            window.location.href = "./trainer.html";
+          }, 150);
+        } catch (error) {
+          passwordInput.value = "";
+          passwordInput.focus();
+          showStatus(
+            error.message || "Trainer login failed.",
+            "error"
+          );
+        } finally {
+          loginButton.disabled = false;
+          loginButton.textContent = "Log in";
+        }
+      }
+    );
+  </script>
+</body>
+</html>
