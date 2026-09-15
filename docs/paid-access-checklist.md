@@ -1,0 +1,4 @@
+- Public paid course applications go to checkout.
+- No approval request is emailed to FIIB addresses.
+- Payment confirmation controls paid access.
+- Restricted trainer-assigned institutional tools stay on their separate controlled path.
