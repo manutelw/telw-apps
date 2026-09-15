@@ -1,0 +1,1 @@
+This function handles legacy PI/GD practice application calls by returning the relevant ClarionPrep paid-product checkout URL. It intentionally does not create trainer approval requests and does not send approval emails to FIIB addresses. Trainer-assigned institutional labs remain separate from this public paid-product route.
