@@ -1,0 +1,1 @@
+Paid learners, including FIIB visitors acting as private buyers, proceed directly to checkout. The legacy learner-initiated trainer approval email path is not part of paid PI/GD Practice. CAT also requires a paid entitlement rather than granting access solely from an FIIB-domain email.
