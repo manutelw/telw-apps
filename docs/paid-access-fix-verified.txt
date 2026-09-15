@@ -1,0 +1,1 @@
+Supabase paid practice application endpoint version 3 no longer creates approval requests or sends FIIB approval emails; it returns the relevant payment URL. CAT repository change removes the FIIB-domain free bypass.
