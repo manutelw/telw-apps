@@ -303,6 +303,28 @@
             JSON.stringify(session)
           );
 
+          if (role === "ADMIN") {
+            localStorage.setItem(
+              "ascent_admin_master_session",
+              JSON.stringify(session)
+            );
+
+            try {
+              await fetch("/admin/session-start", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  session_token: session.sessionToken
+                })
+              });
+            } catch (_) {
+              // Non-fatal: trainer session still works without the
+              // admin browser cookie, it just won't unlock admin-only
+              // shortcuts elsewhere on the site.
+            }
+          }
+
           showStatus("Login successful.", "success");
 
           window.setTimeout(function () {
