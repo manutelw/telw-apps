@@ -2607,6 +2607,28 @@ loginForm.addEventListener(
           JSON.stringify(trainerSession)
         );
 
+        if (String(trainerSession.role || "").toUpperCase() === "ADMIN") {
+          localStorage.setItem(
+            "ascent_admin_master_session",
+            JSON.stringify(trainerSession)
+          );
+
+          try {
+            await fetch("/admin/session-start", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                session_token: trainerSession.sessionToken
+              })
+            });
+          } catch (_) {
+            // Non-fatal: the trainer session still works without the
+            // admin browser cookie, it just won't unlock admin-only
+            // shortcuts elsewhere on the site.
+          }
+        }
+
         if (selectedLoginRole === "INSTITUTION") {
           const portalSlug = String(
             account.access_point_slug ||
