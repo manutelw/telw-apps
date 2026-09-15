@@ -1,0 +1,1 @@
+For public paid courses, the purchase path is direct checkout and entitlement. FIIB-domain visitors do not trigger approval emails. Trainer-controlled institutional assignments remain separate and deliberate.
