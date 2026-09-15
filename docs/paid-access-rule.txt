@@ -1,0 +1,1 @@
+Paid public courses route directly to payment. Do not email FIIB addresses for approval, permission, or payment links. Restricted trainer-assigned institutional tools remain separate.
