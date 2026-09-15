@@ -16,7 +16,6 @@ export async function checkCatAccess(token){
   const user=verified.user;
   const email=String(user.email||'').toLowerCase();
   if(OWNER_EMAILS.has(email)) return {ok:true,user,accessType:'owner'};
-  if(email.endsWith('@fiib.edu.in')) return {ok:true,user,accessType:'institutional_free'};
 
   try{
     const q=new URL(`${SUPABASE_URL}/rest/v1/product_entitlements`);
