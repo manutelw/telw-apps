@@ -37,6 +37,7 @@ function emailOK(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.l
 function html(v: unknown) { return clean(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!)); }
 function b64url(bytes: Uint8Array) { let s = ""; for (const x of bytes) s += String.fromCharCode(x); return btoa(s).replace(/=+$/g, "").replace(/\+/g, "-").replace(/\//g, "_"); }
 function b64(bytes: Uint8Array) { let s = ""; for (const x of bytes) s += String.fromCharCode(x); return btoa(s); }
+function validUnitNo(n: number) { return Number.isInteger(n) && ((n >= 1 && n <= 90) || (n >= 97 && n <= 103)); }
 async function sha256(text: string) { const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)); return b64url(new Uint8Array(b)); }
 async function passwordHash(password: string, saltB64: string) {
   const raw = Uint8Array.from(atob(saltB64), c => c.charCodeAt(0));
@@ -59,7 +60,7 @@ async function requireAdmin(payload: any) {
 function scope(payload: any) {
   const rawSelectedUnits = Array.isArray(payload?.selected_units) ? payload.selected_units.map((x: unknown) => clean(x).toUpperCase()) : [];
   const includesUnit1A = rawSelectedUnits.includes("1A");
-  const selectedUnits = rawSelectedUnits.map(Number).filter((n: number) => Number.isInteger(n) && n >= 1 && n <= 90);
+  const selectedUnits = rawSelectedUnits.map(Number).filter((n: number) => validUnitNo(n));
   const selectedLevels = Array.isArray(payload?.selected_levels) ? payload.selected_levels.map((x: unknown) => clean(x).toUpperCase()).filter((x: string) => LEVELS[x]) : [];
   if (selectedUnits.length || selectedLevels.length || includesUnit1A) {
     const units = new Set<number>(selectedUnits);
@@ -81,7 +82,7 @@ function scope(payload: any) {
   }
   if (type === "unit" && key === "1A") return { type, key, label: "Unit 1A", units: [1], destination: "/oracy/unit-1a.html" };
   const n = Number(key);
-  if (type === "unit" && Number.isInteger(n) && n >= 1 && n <= 90) return { type, key: String(n), label: `Unit ${n}`, units: [n], destination: `/oracy/unit-${n}.html` };
+  if (type === "unit" && validUnitNo(n)) return { type, key: String(n), label: `Unit ${n}`, units: [n], destination: `/oracy/unit-${n}.html` };
   return null;
 }
 async function sendEmail(to: string, subject: string, content: string) {
