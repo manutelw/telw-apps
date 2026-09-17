@@ -1978,6 +1978,8 @@
     function renderStudentRoster() {
       const data = studentPerformanceData;
       const students = (cohortData.students.length ? cohortData.students : (data && Array.isArray(data.students) ? data.students : [])).slice();
+      const activeAccessPoint = selectedDashboardAccessPoint();
+      const isPrivateAccessPoint = activeAccessPoint && activeAccessPoint.accessType === "PRIVATE_LEARNERS";
       const collator = new Intl.Collator(undefined,{numeric:true,sensitivity:"base"});
       const sortStudents = list => list.slice().sort((left,right) => {
         const rollComparison = collator.compare(rollNumberValue(left),rollNumberValue(right));
@@ -2032,6 +2034,7 @@
       });
       const liveStudentCount = Array.from(folders.values()).reduce((total,folderStudents) => total + folderStudents.length,0);
       byId("studentRosterCount").textContent = `${students.length} students · ${liveStudentCount} in live batches · ${invalidRollStudents.length} need roll-number correction · viewer ${STUDENT_PERFORMANCE_VIEWER_BUILD}`;
+      if (isPrivateAccessPoint) byId("studentRosterCount").textContent = `${students.length} private learner${students.length === 1 ? "" : "s"} · viewer ${STUDENT_PERFORMANCE_VIEWER_BUILD}`;
       byId("studentRosterSort").value = studentRosterSort;
       const groupStudents = groupUuid => cohortData.students.filter(student => (student.groups || []).some(group => group.groupUuid === groupUuid));
       const groupsForBatch = batch => cohortData.groups.filter(group => {
@@ -2069,7 +2072,7 @@
           return `<details class="batch-folder" ${folderOpen ? "open" : ""}><summary><span>${escapeHtml(folder)}</span><span class="batch-folder-count">${folderStudents.length} student${folderStudents.length === 1 ? "" : "s"}</span></summary><div class="batch-folder-body">${creatingStudentGroupName ? "" : `<div class="batch-folder-actions"><button class="secondary-button create-batch-group-button" type="button" data-batch="${escapeHtml(folder)}">Create subgroup</button></div>`}${batchStudents.length ? tableForStudents(batchStudents,folder) : `<div class="empty-state">No students with a completed roll number in this batch yet.</div>`}${correctionList}<div style="margin-top:14px"><strong style="color:var(--navy);font-size:13px">Named subgroups</strong>${subgroupFolders}</div></div></details>`;
         })
         .join("");
-      byId("studentRosterTableWrap").innerHTML = batchFoldersHtml;
+      byId("studentRosterTableWrap").innerHTML = isPrivateAccessPoint ? tableForStudents(students,"Private learners") : batchFoldersHtml;
       document.querySelectorAll(".student-profile-button").forEach(button => {
         button.disabled = false;
         button.removeAttribute("disabled");
