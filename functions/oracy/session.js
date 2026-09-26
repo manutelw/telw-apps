@@ -47,7 +47,9 @@ export async function onRequestPost(context){
     const data=await r.json().catch(()=>({ok:false,message:'Login failed.'}));
     if(!r.ok||data.ok!==true||!data.session_token)return json(data,r.status||401);
     const headers=new Headers({'content-type':'application/json','cache-control':'no-store'});
-    headers.append('set-cookie',cookie('oracy_session',data.session_token,12*60*60));
+    const hostname=new URL(context.request.url).hostname.toLowerCase();
+    headers.append('set-cookie',expireHostCookie('oracy_session'));
+    headers.append('set-cookie',cookie('oracy_session',data.session_token,12*60*60,hostname));
     return new Response(JSON.stringify({ok:true,learner:data.learner,units:data.units||[],expires_at:data.expires_at}),{status:200,headers});
   }catch(e){return json({ok:false,message:'Request could not be completed.',detail:String(e&&e.message||e).slice(0,300)},400)}
 }
@@ -86,5 +88,10 @@ async function proxy(r){
   return new Response(r.body,{status:r.status,statusText:r.statusText,headers});
 }
 
-function cookie(name,value,maxAge){return `${name}=${encodeURIComponent(value)}; Path=/oracy; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`}
+function isClarionHost(hostname){return hostname==='clarionprep.com'||hostname.endsWith('.clarionprep.com')}
+function cookie(name,value,maxAge,hostname){
+  const domain=isClarionHost(hostname)?'; Domain=.clarionprep.com':'';
+  return `${name}=${encodeURIComponent(value)}; Path=/oracy${domain}; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
+}
+function expireHostCookie(name){return `${name}=; Path=/oracy; HttpOnly; Secure; SameSite=Lax; Max-Age=0`}
 function json(body,status){return new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json','cache-control':'no-store'}})}
