@@ -173,7 +173,16 @@ async function sendForFeedback(box,prompt,btn){
   try{
     const form=new FormData();form.append('action','evaluate');form.append('unit',UNIT_LABEL);form.append('unit_no',String(UNIT_NO));form.append('prompt',coaching);form.append('audio',blob,'answer.webm');
     const res=await fetch(EDGE,{method:'POST',body:form});
-    if(!res.ok)throw new Error('Feedback could not be completed.');
+    if(!res.ok){
+      let detail='';
+      try{
+        const payload=await res.clone().json();
+        detail=String(payload?.detail||payload?.error||payload?.message||'').trim();
+      }catch{
+        try{detail=String(await res.text()).trim();}catch{}
+      }
+      throw new Error(`Feedback failed — HTTP ${res.status}${detail?`: ${detail.slice(0,180)}`:''}.`);
+    }
     const data=await res.json();
     feedback.innerHTML=`<b>Coach feedback</b><div>${safe(data.feedback||'Good attempt. Keep the interaction connected and natural.')}</div>${data.improved?`<div style="margin-top:8px"><b>Try:</b> ${safe(data.improved)}</div>`:''}`;
     status.textContent='Recording discarded after feedback.';

@@ -158,7 +158,16 @@ async function sendForFeedback(box,prompt,btn,heardSpeech){
   const coaching=`${prompt}\nThis is ORACY B1A New Unit 2: Background. Evaluate mainly on B1 spoken effectiveness: task completion, clarity, correct use of the unit language, connected ideas and natural delivery. ${feedbackRule}`;
   try{
     const form=new FormData();form.append('action','evaluate');form.append('unit',UNIT_LABEL);form.append('unit_no',String(UNIT_NO));form.append('prompt',coaching);form.append('audio',blob,'answer.webm');
-    const res=await fetch(EDGE,{method:'POST',body:form});if(!res.ok)throw new Error('Feedback could not be completed.');
+    const res=await fetch(EDGE,{method:'POST',body:form});if(!res.ok){
+      let detail='';
+      try{
+        const payload=await res.clone().json();
+        detail=String(payload?.detail||payload?.error||payload?.message||'').trim();
+      }catch{
+        try{detail=String(await res.text()).trim();}catch{}
+      }
+      throw new Error(`Feedback failed — HTTP ${res.status}${detail?`: ${detail.slice(0,180)}`:''}.`);
+    }
     const data=await res.json();
     if(mode==='drill'){
       const transcript=normaliseAnswer(data.transcript);
