@@ -70,7 +70,7 @@ b1be3829710180eab60510dfe206b213e0a2f1e7 oracy/unit-speaking-model-coherent.js
 f88137509338fe2e2c29d1586c091bafa7c363de oracy/unit-speaking-model-target-cued.js
 4539269f1a229a5cc129f4cbbc19512277ad0707 oracy/unit-speaking-model-quality.js
 c660599e1154b96a87708adbe5f5ffc8e89f61fb worker-oracy.js
-22534b1117f484b89ce3a24be6b571a4b0af777e functions/oracy/session.js
+3a13f161be3a7791dde424019caa326c2b306ebc functions/oracy/session.js
 d4db16ee54572ed85bbea84640078e5a1ae10f65 functions/oracy/voice.js
 907c4baba0ebfccc62caa53cdb4d9db61820de94 functions/oracy/_middleware.js
 4f538771c0130087099f37cbdfb8f761c51ee551 supabase/functions/oracy-voice/index.ts

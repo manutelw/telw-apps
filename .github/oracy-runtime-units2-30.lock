@@ -16,7 +16,7 @@ f88137509338fe2e2c29d1586c091bafa7c363de  oracy/unit-speaking-model-target-cued.
 85d62756f1a7c04d81269001140f9b8b0241f98c  oracy/conversation-shared.js
 2c4115b8d90bf5eacc9ad7dc1bba043cb9eb914d  oracy/level-system.js
 10b694ec825d8bf2a02ee738d2df7aa87816623c  oracy/oracy.css
-22534b1117f484b89ce3a24be6b571a4b0af777e  functions/oracy/session.js
+3a13f161be3a7791dde424019caa326c2b306ebc  functions/oracy/session.js
 d4db16ee54572ed85bbea84640078e5a1ae10f65  functions/oracy/voice.js
 907c4baba0ebfccc62caa53cdb4d9db61820de94  functions/oracy/_middleware.js
 4f538771c0130087099f37cbdfb8f761c51ee551  supabase/functions/oracy-voice/index.ts
