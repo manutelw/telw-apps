@@ -25,6 +25,9 @@ export default {
     if(url.hostname==='manuvikraman.com'){
       const slug=path.replace(/^\/+|\/+$/g,'');
       const programme=TELW_PROGRAMMES.has(slug);
+      if(programme && path===`/${slug}`){
+        return new Response(null,{status:308,headers:{location:`https://manuvikraman.com/${slug}/${url.search}`,'cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'}});
+      }
       if(path==='/' || path==='/index.html' || programme){
         if(request.method!=='GET' && request.method!=='HEAD') return new Response('Method not allowed',{status:405});
         const assetUrl=new URL(request.url);
