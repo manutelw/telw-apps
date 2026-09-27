@@ -153,7 +153,12 @@ jobs:
           for x in ['/oracy/admin-preview','admin_preview','oracy_session','oracyDirectIndexScript','/oracy/admin-handoff','<strong>ORACY</strong>']:
               assert x in wrapper, x
           assert not Path('oracy/admin-open.html').exists(), 'Obsolete ORACY admin launcher must stay removed'
-          assert cfg['main']=='worker-oracy.js'
+          assert cfg['main']=='worker-host-router.js'
+          host_router=Path('worker-host-router.js').read_text()
+          assert "import clarion from './worker-oracy.js'" in host_router
+          assert "import base from './worker.js'" in host_router
+          assert "host==='manuvikraman.com'" in host_router and "host==='www.manuvikraman.com'" in host_router
+          assert 'return clarion.fetch(request,env)' in host_router
           assert cfg['assets']['binding']=='ASSETS'
           assert cfg['assets']['run_worker_first'] is True
           for x in ['Level B','Level C','Level D','currentAdmin','openAdminPreview']:
