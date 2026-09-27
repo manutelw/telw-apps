@@ -18,7 +18,7 @@ export default {
       if(path==='/' || path==='/index.html'){
         if(request.method!=='GET' && request.method!=='HEAD') return new Response('Method not allowed',{status:405});
         const assetUrl=new URL(request.url);
-        assetUrl.pathname='/telw-site/landing-page.html';
+        assetUrl.pathname='/telw-site/landing-page';
         const response=await env.ASSETS.fetch(new Request(assetUrl.toString(),request));
         const headers=new Headers(response.headers);
         headers.set('cache-control','private, no-store, max-age=0');
