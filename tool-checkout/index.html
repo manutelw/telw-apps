@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ClarionPrep · Secure tool payment</title><script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>:root{--n:#17395d;--g:#d4a24c;--m:#6f7f8f;--l:#dfe7ee;--bg:#f7f9fb;--bad:#a43d3d;--ok:#176b44}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#243b53}.shell{width:min(720px,calc(100% - 28px));margin:30px auto}.card{background:#fff;border:1px solid var(--l);border-radius:18px;padding:28px;box-shadow:0 16px 42px rgba(23,57,93,.08)}h1{color:var(--n);margin:5px 0}.price{font-size:38px;font-weight:900;color:var(--n);margin:14px 0}.meta{color:var(--m);line-height:1.6}.field{margin-top:14px}label{display:block;font-size:12px;font-weight:800;margin-bottom:6px}input{width:100%;padding:12px;border:1px solid var(--l);border-radius:10px;font:inherit}.btn{margin-top:18px;width:100%;border:0;border-radius:10px;padding:13px;background:linear-gradient(135deg,#e0b35c,#c99234);color:#17283c;font-weight:900;cursor:pointer}.btn:disabled{opacity:.55}.status{min-height:20px;margin-top:12px;font-size:13px}.error{color:var(--bad)}.success{color:var(--ok)}.back{display:inline-block;margin-top:14px;color:var(--n);font-weight:700;text-decoration:none}</style></head>
+<body><main class="shell"><section class="card"><div style="font-size:12px;font-weight:900;color:var(--g);letter-spacing:1px;text-transform:uppercase">Secure access</div><h1 id="name">Loading…</h1><div id="price" class="price">—</div><div id="meta" class="meta"></div>
+<div class="field"><label>Full name</label><input id="fullName" autocomplete="name"></div>
+<div class="field"><label>Email address</label><input id="email" type="email" autocomplete="email"></div>
+<div class="field"><label>Mobile number</label><input id="mobile" autocomplete="tel"></div>
+<button id="pay" class="btn" type="button">Continue to Razorpay</button><div id="status" class="status"></div><a class="back" href="/">← Back to ClarionPrep</a></section></main>
+<script>
+const API='https://vtqatrhwfvzyodiftvkc.supabase.co/functions/v1/clarion-tool-commerce';
+const products={
+ JD_BUILDER:{name:'JD Builder',price:499,meta:'One Job Description briefing project.'},
+ CV_BUILDER:{name:'CV Builder & Evaluator',price:599,meta:'One CV review project.'},
+ JD_MAPPER:{name:'JD Mapper',price:1499,meta:'One complete CV–JD mapping project.'}
+};
+const $=id=>document.getElementById(id),code=(new URLSearchParams(location.search).get('product')||'').toUpperCase(),p=products[code];
+function status(m,t=''){const e=$('status');e.textContent=m||'';e.className='status'+(t?' '+t:'')}
+async function call(action,body={}){const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action,...body})});const d=await r.json().catch(()=>({}));if(!r.ok||d.ok===false)throw Error(d.message||'Request failed.');return d}
+if(!p){$('name').textContent='Product unavailable';$('pay').disabled=true;status('This paid tool could not be identified.','error')}else{$('name').textContent=p.name;$('price').textContent='₹'+p.price.toLocaleString('en-IN');$('meta').textContent=p.meta}
+$('pay').onclick=async()=>{
+ if(!p)return;
+ const full_name=$('fullName').value.trim(),email=$('email').value.trim(),mobile=$('mobile').value.trim();
+ if(full_name.length<2||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){status('Enter your full name and a valid email address.','error');return}
+ $('pay').disabled=true;status('Preparing secure payment…');
+ try{
+  const o=await call('CREATE_ORDER',{product_code:code,full_name,email,mobile});
+  const rz=new Razorpay({key:o.razorpay_key_id,amount:o.amount_paise,currency:o.currency,name:'ClarionPrep',description:o.display_name,order_id:o.razorpay_order_id,prefill:{name:full_name,email,contact:mobile},handler:async x=>{
+   try{status('Verifying payment…');const v=await call('VERIFY',{payment_order_uuid:o.payment_order_uuid,razorpay_payment_id:x.razorpay_payment_id,razorpay_order_id:x.razorpay_order_id,razorpay_signature:x.razorpay_signature});localStorage.setItem('clarion_tool_'+code,v.entitlement_token);const u=new URL(v.launch_url,location.origin);u.searchParams.set('access',v.entitlement_token);location.href=u.toString()}catch(e){status(e.message,'error');$('pay').disabled=false}
+  }});
+  rz.on('payment.failed',()=>{status('Payment was not completed.','error');$('pay').disabled=false});rz.open();
+ }catch(e){status(e.message,'error');$('pay').disabled=false}
+};
+</script></body></html>
