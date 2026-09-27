@@ -10,6 +10,10 @@ const TELW_PROGRAMMES=new Set([
   'general-english-program','presentation-skills','interview-skills',
   'email-writing-skills','voice-quality-pronunciation-skills','placement-readiness'
 ]);
+const TELW_CORE=new Set([
+  'about-us','what-we-do-at-telw','why-telw','trainer-profile',
+  'programs-2','career-development-programs'
+]);
 
 export default {
   async fetch(request,env){
@@ -26,16 +30,17 @@ export default {
       const slug=path.replace(/^\/+|\/+$/g,'');
       const programme=TELW_PROGRAMMES.has(slug);
       const contact=slug==='contact';
+      const localPage=programme || contact || TELW_CORE.has(slug);
       if(path==='/index.html'){
         return new Response(null,{status:308,headers:{location:'https://manuvikraman.com/'+url.search,'cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'}});
       }
-      if((programme || contact) && path===`/${slug}`){
+      if(localPage && path===`/${slug}`){
         return new Response(null,{status:308,headers:{location:`https://manuvikraman.com/${slug}/${url.search}`,'cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'}});
       }
-      if(path==='/' || programme || contact){
+      if(path==='/' || localPage){
         if(request.method!=='GET' && request.method!=='HEAD') return new Response('Method not allowed',{status:405});
         const assetUrl=new URL(request.url);
-        assetUrl.pathname=(programme || contact) ? `/telw-site/${slug}/` : '/telw-site/landing-page';
+        assetUrl.pathname=localPage ? `/telw-site/${slug}/` : '/telw-site/landing-page';
         const response=await env.ASSETS.fetch(new Request(assetUrl.toString(),request));
         const headers=new Headers(response.headers);
         headers.set('cache-control','private, no-store, max-age=0');
