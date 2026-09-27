@@ -12,6 +12,10 @@ export default {
     const url=new URL(request.url);
     const path=url.pathname;
 
+    if(url.hostname==='www.manuvikraman.com'){
+      return new Response(null,{status:308,headers:{location:'https://manuvikraman.com'+path+url.search,'cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'}});
+    }
+
     // Cloudflare Access protects this hostname before requests reach the Worker.
     // Route its TELW landing independently of the ClarionPrep host.
     if(url.hostname==='manuvikraman.com'){
