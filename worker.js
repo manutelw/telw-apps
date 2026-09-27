@@ -31,6 +31,9 @@ export default {
       const programme=TELW_PROGRAMMES.has(slug);
       const contact=slug==='contact';
       const localPage=programme || contact || TELW_CORE.has(slug);
+      if(slug==='contact-us'){
+        return new Response(null,{status:308,headers:{location:'https://manuvikraman.com/contact/'+url.search,'cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'}});
+      }
       if(path==='/index.html'){
         return new Response(null,{status:308,headers:{location:'https://manuvikraman.com/'+url.search,'cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'}});
       }
