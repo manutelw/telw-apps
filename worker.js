@@ -6,6 +6,10 @@ const ASCENT_URL='https://vtqatrhwfvzyodiftvkc.supabase.co';
 const ASCENT_KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
 const ADMIN_VALIDATE=ASCENT_URL+'/rest/v1/rpc/ascent_admin_trainer_entry_list';
 const PRESENTATION_ACCESS=ASCENT_URL+'/functions/v1/presentation-skills-access';
+const TELW_PROGRAMMES=new Set([
+  'general-english-program','presentation-skills','interview-skills',
+  'email-writing-skills','voice-quality-pronunciation-skills','placement-readiness'
+]);
 
 export default {
   async fetch(request,env){
@@ -19,10 +23,12 @@ export default {
     // Cloudflare Access protects this hostname before requests reach the Worker.
     // Route its TELW landing independently of the ClarionPrep host.
     if(url.hostname==='manuvikraman.com'){
-      if(path==='/' || path==='/index.html'){
+      const slug=path.replace(/^\/+|\/+$/g,'');
+      const programme=TELW_PROGRAMMES.has(slug);
+      if(path==='/' || path==='/index.html' || programme){
         if(request.method!=='GET' && request.method!=='HEAD') return new Response('Method not allowed',{status:405});
         const assetUrl=new URL(request.url);
-        assetUrl.pathname='/telw-site/landing-page';
+        assetUrl.pathname=programme ? `/telw-site/${slug}/` : '/telw-site/landing-page';
         const response=await env.ASSETS.fetch(new Request(assetUrl.toString(),request));
         const headers=new Headers(response.headers);
         headers.set('cache-control','private, no-store, max-age=0');
