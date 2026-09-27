@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASCENT Diagnostic · ₹499</title>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+:root{--navy:#143a60;--gold:#d6a13b;--ink:#24364a;--muted:#6c7b8d;--line:#d7e1eb;--bg:#f4f7fa;--bad:#b42318;--ok:#18794e}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(145deg,#102a46,#214d79);color:var(--ink);min-height:100vh;padding:18px}
+.shell{width:min(760px,100%);margin:auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.25)}
+.hero{padding:24px 28px;background:var(--navy);color:#fff}.hero h1{margin:0;font-size:34px}.hero p{margin:7px 0 0;color:#f4c96b;font-weight:700}
+.main{padding:26px 28px}.price{font-size:38px;font-weight:900;color:var(--navy);margin:4px 0}.meta{color:var(--muted);line-height:1.5;margin-bottom:18px}
+.tabs{display:flex;gap:8px;margin:18px 0}.tab{flex:1;padding:11px;border:1px solid var(--line);background:#fff;border-radius:9px;color:var(--navy);font-weight:800;cursor:pointer}.tab.active{background:var(--navy);color:#fff}
+.pane{display:none}.pane.active{display:block}.field{margin-bottom:13px}label{display:block;font-size:12px;font-weight:800;margin-bottom:6px}input{width:100%;min-height:46px;padding:0 12px;border:1px solid var(--line);border-radius:9px;font:inherit}
+button,.btn{width:100%;min-height:47px;border:0;border-radius:9px;background:var(--navy);color:#fff;font-weight:800;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center}.gold{background:linear-gradient(135deg,#e3b95b,#c99131);color:#17283c}.secondary{margin-top:9px;background:#fff;color:var(--navy);border:1px solid var(--navy)}
+.status{min-height:20px;margin-top:12px;font-size:13px}.error{color:var(--bad)}.success{color:var(--ok)}.hidden{display:none!important}
+.note{padding:12px 13px;background:#fff8e8;border-left:4px solid var(--gold);font-size:12px;line-height:1.5;margin-bottom:16px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:560px){body{padding:8px}.main{padding:21px 18px}.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="shell">
+<section class="hero"><h1>ASCENT Diagnostic</h1><p>One complete attempt · ₹499</p></section>
+<section class="main">
+<div class="price">₹499</div>
+<div class="meta">Complete the ASCENT Diagnostic once and receive your result. A new Diagnostic attempt requires a new ₹499 purchase.</div>
+<div class="note">The free Google Play review build remains separate. This page is the paid ClarionPrep web Diagnostic.</div>
+
+<div id="entry">
+<div class="tabs"><button id="loginTab" class="tab active" type="button">I already have ASCENT</button><button id="registerTab" class="tab" type="button">New learner</button></div>
+
+<div id="loginPane" class="pane active">
+<div class="field"><label>Email address or ASCENT ID</label><input id="loginIdentity" autocomplete="username"></div>
+<div class="field"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password"></div>
+<button id="loginButton" type="button">Log in and continue</button>
+</div>
+
+<div id="registerPane" class="pane">
+<div class="field"><label>Choose an ASCENT ID</label><input id="studentId" autocomplete="username"></div>
+<div class="field"><label>Full name</label><input id="fullName" autocomplete="name"></div>
+<div class="field"><label>Email address</label><input id="email" type="email" autocomplete="email"></div>
+<div class="field"><label>Mobile number</label><input id="mobile" inputmode="numeric" autocomplete="tel-national"></div>
+<div class="row"><div class="field"><label>Password</label><input id="password" type="password" autocomplete="new-password"></div><div class="field"><label>Confirm password</label><input id="confirm" type="password" autocomplete="new-password"></div></div>
+<button id="registerButton" type="button">Create account</button>
+</div>
+<div id="entryStatus" class="status"></div>
+</div>
+
+<div id="verifyPane" class="hidden">
+<h2>Verify your email</h2>
+<div class="field"><label>Six-digit verification code</label><input id="verifyCode" inputmode="numeric" maxlength="6"></div>
+<button id="verifyButton" type="button">Verify and continue to payment</button>
+<div id="verifyStatus" class="status"></div>
+</div>
+
+<div id="paymentPane" class="hidden">
+<h2>Secure payment</h2>
+<p id="signedInAs" class="meta"></p>
+<button id="payButton" class="gold" type="button">Pay ₹499 with Razorpay</button>
+<div id="payStatus" class="status"></div>
+</div>
+</section>
+</main>
+
+<script>
+const U='https://vtqatrhwfvzyodiftvkc.supabase.co';
+const K='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
+const REG=U+'/functions/v1/ascent-diagnostic-registration';
+const VER=U+'/functions/v1/ascent-student-email-verification';
+const CREATE=U+'/functions/v1/ascent-create-private-pass-order';
+const VERIFY=U+'/functions/v1/ascent-verify-private-pass-payment';
+const RESOLVE=U+'/rest/v1/rpc/ascent_resolve_access_point';
+const LOGIN=U+'/rest/v1/rpc/ascent_student_login_for_access_point';
+const headers={'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json'};
+const $=id=>document.getElementById(id);
+let access=null,pendingStudent=null,regPayload=null,session=null;
+
+function st(id,msg,type=''){const e=$(id);e.textContent=msg||'';e.className='status'+(type?' '+type:'')}
+function tab(which){$('loginTab').classList.toggle('active',which==='login');$('registerTab').classList.toggle('active',which==='register');$('loginPane').classList.toggle('active',which==='login');$('registerPane').classList.toggle('active',which==='register');st('entryStatus','')}
+$('loginTab').onclick=()=>tab('login');$('registerTab').onclick=()=>tab('register');
+
+async function post(url,body){
+  const r=await fetch(url,{method:'POST',headers,body:JSON.stringify(body)});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok||d.ok===false)throw new Error(d.message||'The request could not be completed.');
+  return d;
+}
+async function resolveAccess(){
+  const r=await fetch(RESOLVE,{method:'POST',headers,body:JSON.stringify({p_search_value:'TELW-PRIVATE'})});
+  const d=await r.json();
+  if(!r.ok||!Array.isArray(d)||!d.length)throw new Error('ASCENT private access is unavailable.');
+  access=d[0];
+}
+async function doLogin(identity,password){
+  if(!access)await resolveAccess();
+  const r=await fetch(LOGIN,{method:'POST',headers,body:JSON.stringify({p_access_point_uuid:access.access_point_uuid,p_identity:identity,p_password:password})});
+  const d=await r.json();
+  if(!r.ok||!Array.isArray(d)||!d.length)throw new Error('Login details were not accepted.');
+  const a=d[0];
+  session={sessionToken:a.session_token,studentUuid:a.student_uuid,studentId:a.student_id,fullName:a.full_name,email:a.email,batch:a.batch_name,batchUuid:a.batch_uuid,accessPointUuid:a.access_point_uuid,accessPointName:a.access_point_name,accessPointSlug:a.access_point_slug,expiresAt:a.expires_at};
+  localStorage.setItem('ascent_student_session',JSON.stringify(session));
+  return session;
+}
+function showPayment(){
+  $('entry').classList.add('hidden');$('verifyPane').classList.add('hidden');$('paymentPane').classList.remove('hidden');
+  $('signedInAs').textContent='Signed in as '+session.fullName+' · '+session.email;
+}
+$('loginButton').onclick=async()=>{
+  $('loginButton').disabled=true;st('entryStatus','Signing in…');
+  try{await doLogin($('loginIdentity').value.trim(),$('loginPassword').value);showPayment();st('entryStatus','')}
+  catch(e){st('entryStatus',e.message,'error')}finally{$('loginButton').disabled=false}
+};
+
+$('registerButton').onclick=async()=>{
+  const studentId=$('studentId').value.trim().toUpperCase().replace(/\s+/g,'');
+  const fullName=$('fullName').value.trim(),email=$('email').value.trim().toLowerCase();
+  const digits=$('mobile').value.replace(/\D/g,''),mobile=digits.length===12&&digits.startsWith('91')?digits.slice(2):digits;
+  const password=$('password').value,confirm=$('confirm').value;
+  if(!studentId||!fullName||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){st('entryStatus','Enter a valid ASCENT ID, name and email.','error');return}
+  if(!/^[6-9][0-9]{9}$/.test(mobile)){st('entryStatus','Enter a valid 10-digit Indian mobile number.','error');return}
+  if(password.length<8||password!==confirm){st('entryStatus','Use at least 8 characters and make sure the passwords match.','error');return}
+  regPayload={studentId,fullName,email,mobileNumber:mobile,password};
+  $('registerButton').disabled=true;st('entryStatus','Sending verification code…');
+  try{
+    const d=await post(REG,regPayload);pendingStudent=d.student_uuid;
+    $('entry').classList.add('hidden');$('verifyPane').classList.remove('hidden');$('verifyCode').focus();
+  }catch(e){st('entryStatus',e.message,'error')}finally{$('registerButton').disabled=false}
+};
+
+$('verifyButton').onclick=async()=>{
+  const code=$('verifyCode').value.replace(/\D/g,'').slice(0,6);
+  if(!pendingStudent||!/^\d{6}$/.test(code)){st('verifyStatus','Enter the six-digit verification code.','error');return}
+  $('verifyButton').disabled=true;st('verifyStatus','Verifying…');
+  try{
+    await post(VER,{student_uuid:pendingStudent,code});
+    await doLogin(regPayload.email,regPayload.password);
+    showPayment();
+  }catch(e){st('verifyStatus',e.message,'error')}finally{$('verifyButton').disabled=false}
+};
+
+$('payButton').onclick=async()=>{
+  if(!session)return;
+  $('payButton').disabled=true;st('payStatus','Preparing secure payment…');
+  try{
+    const order=await post(CREATE,{buyerName:session.fullName,buyerEmail:session.email,buyerPhone:'',productCode:'ASCENT_DIAGNOSTIC_SINGLE'});
+    if(typeof Razorpay==='undefined')throw new Error('The secure payment window could not be loaded.');
+    const rz=new Razorpay({key:order.razorpay_key_id,amount:order.amount_paise,currency:order.currency,name:'ClarionPrep',description:'ASCENT Diagnostic · One Use',order_id:order.razorpay_order_id,prefill:{name:session.fullName,email:session.email},handler:async p=>{
+      try{
+        st('payStatus','Confirming payment…');
+        await post(VERIFY,{payment_order_uuid:order.payment_order_uuid,razorpay_payment_id:p.razorpay_payment_id,razorpay_order_id:p.razorpay_order_id,razorpay_signature:p.razorpay_signature});
+        st('payStatus','Payment confirmed. Opening your Diagnostic…','success');
+        setTimeout(()=>location.href='/ascent-play/home.html',500);
+      }catch(e){st('payStatus',e.message,'error');$('payButton').disabled=false}
+    }});
+    rz.on('payment.failed',()=>{st('payStatus','Payment was not completed. You can try again.','error');$('payButton').disabled=false});
+    rz.open();
+  }catch(e){st('payStatus',e.message,'error');$('payButton').disabled=false}
+};
+
+(async()=>{
+  try{await resolveAccess();const s=JSON.parse(localStorage.getItem('ascent_student_session')||'null');if(s?.sessionToken&&new Date(s.expiresAt).getTime()>Date.now()){session=s;showPayment()}}
+  catch(e){st('entryStatus',e.message,'error')}
+})();
+</script>
+</body>
+</html>
