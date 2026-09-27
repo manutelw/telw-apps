@@ -12,6 +12,23 @@ export default {
     const url=new URL(request.url);
     const path=url.pathname;
 
+    // Cloudflare Access protects this hostname before requests reach the Worker.
+    // Route its TELW landing independently of the ClarionPrep host.
+    if(url.hostname==='manuvikraman.com'){
+      if(path==='/' || path==='/index.html'){
+        if(request.method!=='GET' && request.method!=='HEAD') return new Response('Method not allowed',{status:405});
+        const assetUrl=new URL(request.url);
+        assetUrl.pathname='/telw-site/landing-page.html';
+        const response=await env.ASSETS.fetch(new Request(assetUrl.toString(),request));
+        const headers=new Headers(response.headers);
+        headers.set('cache-control','private, no-store, max-age=0');
+        headers.set('x-robots-tag','noindex, nofollow, noarchive');
+        return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+      }
+      return new Response('Not found',{status:404,headers:{'cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'}});
+    }
+    if(path.startsWith('/telw-site/')) return new Response('Not found',{status:404});
+
     const adminGateway=await handleAdminGateway(request);
     if(adminGateway) return adminGateway;
 
