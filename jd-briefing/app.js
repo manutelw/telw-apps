@@ -42,8 +42,13 @@
   }
 
   const authorisedTrainerSession = loadAuthorisedTrainerSession();
-  if (!authorisedTrainerSession) {
-    window.location.replace("../ascent/");
+  const paidToolToken = (new URLSearchParams(window.location.search).get("access") || localStorage.getItem("clarion_tool_JD_BUILDER") || "").trim();
+  if (paidToolToken) {
+    localStorage.setItem("clarion_tool_JD_BUILDER", paidToolToken);
+    history.replaceState(null,"",window.location.pathname);
+  }
+  if (!authorisedTrainerSession && !paidToolToken) {
+    window.location.replace("../tool-checkout/?product=JD_BUILDER");
     return;
   }
 
@@ -72,6 +77,11 @@
   const downloadJsonButton = document.getElementById("downloadJsonButton");
   const printButton = document.getElementById("printButton");
   const newBriefingButton = document.getElementById("newBriefingButton");
+
+  if (paidToolToken && appPassword) {
+    const label = appPassword.closest("label");
+    if (label) label.style.display = "none";
+  }
 
   let currentEnvelope = null;
   let activeTab = "overview";
@@ -448,6 +458,8 @@
         headers: {
           "Content-Type": "application/json",
           "x-app-password": appPassword.value,
+          "x-tool-token": paidToolToken,
+          "x-trainer-session": authorisedTrainerSession?.sessionToken || "",
         },
         body: JSON.stringify({
           file_name: file.name,
