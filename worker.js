@@ -25,6 +25,9 @@ export default {
     if(url.hostname==='manuvikraman.com'){
       const slug=path.replace(/^\/+|\/+$/g,'');
       const programme=TELW_PROGRAMMES.has(slug);
+      if(path==='/index.html'){
+        return new Response(null,{status:308,headers:{location:'https://manuvikraman.com/'+url.search,'cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'}});
+      }
       if(programme && path===`/${slug}`){
         return new Response(null,{status:308,headers:{location:`https://manuvikraman.com/${slug}/${url.search}`,'cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'}});
       }
