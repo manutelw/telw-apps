@@ -1,0 +1,35 @@
+name: Position Training Payments handler
+on:
+  push:
+    branches: [clarion-admin-training-payment-static-fix]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: clarion-admin-training-payment-static-fix
+      - shell: python
+        run: |
+          from pathlib import Path
+          p=Path('ascent/admin-settings.html')
+          s=p.read_text(encoding='utf-8')
+          line='    document.getElementById("trainingPaymentsAppButton").addEventListener("click",()=>{window.location.href="/ascent/training-payments.html";});\n'
+          s=s.replace(line,'')
+          marker='      document.getElementById("catSimulatorAdminButton").addEventListener("click",openCatSimulatorAdmin);'
+          if marker not in s: raise SystemExit('CAT init handler marker not found')
+          handler='      document.getElementById("trainingPaymentsAppButton").addEventListener("click",()=>{window.location.href="/ascent/training-payments.html";});\n'
+          s=s.replace(marker,handler+marker,1)
+          p.write_text(s,encoding='utf-8')
+      - shell: bash
+        run: |
+          rm .github/workflows/patch-training-payments-handler.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ascent/admin-settings.html .github/workflows/patch-training-payments-handler.yml
+          git diff --cached --check
+          git commit -m 'Position Training Payments Admin handler in initialization'
+          git push origin HEAD:clarion-admin-training-payment-static-fix
