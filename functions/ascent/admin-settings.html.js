@@ -3,14 +3,7 @@ export async function onRequest(context){
   if(!response.ok)return response;
   let html=await response.text();
 
-  // A missing or expired Admin Hub browser session used to send the
-  // administrator to ./, which is the learner Access Point. Keep the
-  // administrator route separate and send those cases to the dedicated
-  // administrator login page instead.
-  html=html.replaceAll(
-    'window.location.replace("./");',
-    'window.location.replace("./admin-login.html");'
-  );
+  html=html.replaceAll('window.location.replace("./");','window.location.replace("./admin-login.html");');
 
   if(!html.includes('id="oracyAdminHubCard"')){
     const card=`<a id="oracyAdminHubCard" class="app-card dialogue" href="/oracy/admin.html"><strong>ORACY</strong><span>Manage spoken-English learners, passwords and assigned units</span></a>`;
@@ -31,6 +24,10 @@ export async function onRequest(context){
   if(!html.includes('id="trainerLoginAdminCard"')){
     const trainerLogin=`<a id="trainerLoginAdminCard" class="app-card ascent" href="/ascent/trainer-login.html"><strong>Trainer Login</strong><span>Open the ASCENT Trainer sign-in page for Manu, Sandeep and authorised trainers</span></a>`;
     html=html.replace('<button id="ldTrainingPlanAdminCard"',trainerLogin+'\n        <button id="ldTrainingPlanAdminCard"');
+  }
+  if(!html.includes('id="trainingPaymentsAdminCard"')){
+    const payments=`<a id="trainingPaymentsAdminCard" class="app-card ascent" href="/ascent/training-payments.html"><strong>Training Payments</strong><span>Create locked learner payment links and review verified Razorpay training payments</span></a>`;
+    html=html.replace('<a id="trainerLoginAdminCard"',payments+'\n        <a id="trainerLoginAdminCard"');
   }
 
   const ldLaunch=`<script data-ld-plan-admin-launch="2026-09-14.1">(function(){function token(){for(const key of ['ascent_admin_master_session','ascent_trainer_session']){try{const s=JSON.parse(localStorage.getItem(key)||'null');const exp=new Date(s?.expiresAt||s?.expires_at||0).getTime();const t=s?.sessionToken||s?.session_token;if(t&&Number.isFinite(exp)&&exp>Date.now())return t;}catch(_){}}return '';}function openPlan(){const t=token();if(!t){location.href='./admin-login.html';return;}const f=document.createElement('form');f.method='POST';f.action='./ld-training-plan';f.style.display='none';const i=document.createElement('input');i.type='hidden';i.name='ascent_session_token';i.value=t;f.appendChild(i);document.body.appendChild(f);f.submit();}const b=document.getElementById('ldTrainingPlanAdminCard');if(b)b.addEventListener('click',openPlan);})();</script>`;
