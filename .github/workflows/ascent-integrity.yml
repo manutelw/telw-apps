@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - 'index.html'
+      - 'pay/**'
       - 'ascent/**'
       - 'ascent-play/**'
       - 'android-ascent-play/**'
@@ -24,6 +25,7 @@ on:
     branches: [main, ascent-staging]
     paths:
       - 'index.html'
+      - 'pay/**'
       - 'ascent/**'
       - 'ascent-play/**'
       - 'android-ascent-play/**'
