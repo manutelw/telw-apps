@@ -26,8 +26,9 @@ export async function onRequest(context){
     html=html.replace('<button id="ldTrainingPlanAdminCard"',trainerLogin+'\n        <button id="ldTrainingPlanAdminCard"');
   }
   if(!html.includes('id="trainingPaymentsAdminCard"')){
-    const payments=`<a id="trainingPaymentsAdminCard" class="app-card ascent" href="/ascent/training-payments.html"><strong>Training Payments</strong><span>Create locked learner payment links and review verified Razorpay training payments</span></a>`;
-    html=html.replace('<a id="trainerLoginAdminCard"',payments+'\n        <a id="trainerLoginAdminCard"');
+    const payments=`<a id="trainingPaymentsAdminCard" class="app-card ascent" href="/ascent/training-payments.html"><strong>Training Payments</strong><span>Create locked learner payment links for agreed programmes and fees</span></a>`;
+    const cat='<button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>';
+    html=html.replace(cat,payments+'\n        '+cat);
   }
 
   const ldLaunch=`<script data-ld-plan-admin-launch="2026-09-14.1">(function(){function token(){for(const key of ['ascent_admin_master_session','ascent_trainer_session']){try{const s=JSON.parse(localStorage.getItem(key)||'null');const exp=new Date(s?.expiresAt||s?.expires_at||0).getTime();const t=s?.sessionToken||s?.session_token;if(t&&Number.isFinite(exp)&&exp>Date.now())return t;}catch(_){}}return '';}function openPlan(){const t=token();if(!t){location.href='./admin-login.html';return;}const f=document.createElement('form');f.method='POST';f.action='./ld-training-plan';f.style.display='none';const i=document.createElement('input');i.type='hidden';i.name='ascent_session_token';i.value=t;f.appendChild(i);document.body.appendChild(f);f.submit();}const b=document.getElementById('ldTrainingPlanAdminCard');if(b)b.addEventListener('click',openPlan);})();</script>`;
