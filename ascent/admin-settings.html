@@ -379,7 +379,6 @@
     }
 
     function openCatSimulatorAdmin() {
-    document.getElementById("trainingPaymentsAppButton").addEventListener("click",()=>{window.location.href="/ascent/training-payments.html";});
       const button = document.getElementById("catSimulatorAdminButton");
       if (!session || !session.sessionToken) {
         setAppHubStatus("Your administrator session is not available. Sign in again.","error");
@@ -584,6 +583,7 @@
       document.getElementById("logoutButton").addEventListener("click",()=>{localStorage.removeItem(SESSION_STORAGE_KEY);localStorage.removeItem(ADMIN_MASTER_SESSION_KEY);localStorage.removeItem(LIVE_MOCK_SESSION_KEY);window.location.replace("./");});
       document.getElementById("ascentAppButton").addEventListener("click",()=>{void enterAdminWorkspace("./trainer.html");});
       document.getElementById("liveMockAppButton").addEventListener("click",()=>{void openLiveMockAdmin();});
+      document.getElementById("trainingPaymentsAppButton").addEventListener("click",()=>{window.location.href="/ascent/training-payments.html";});
       document.getElementById("catSimulatorAdminButton").addEventListener("click",openCatSimulatorAdmin);
       document.getElementById("adminPrivateDemoButton").addEventListener("click",()=>{void enterDemoStudent("PRIVATE");});
       document.getElementById("adminInstitutionalDemoButton").addEventListener("click",()=>{void enterDemoStudent("INSTITUTIONAL");});
