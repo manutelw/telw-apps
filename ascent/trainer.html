@@ -2091,34 +2091,36 @@
       const allAdminStudents = isAdmin() ? (adminStudentRegisterData.students || []) : [];
       const activeAdminStudents = allAdminStudents.filter(student => student.isActive === true && String(student.registrationStatus || "").toUpperCase() === "ACTIVE");
       const pendingAdminStudents = allAdminStudents.filter(student => String(student.registrationStatus || "").toUpperCase() !== "ACTIVE");
-      const fiibName = value => /fortune institute of international business|\\bfiib\\b/i.test(String(value || ""));
       const isPrivateStudent = student => String(student.accessType || "").toUpperCase() === "PRIVATE_LEARNERS" || String(student.batch || "").toUpperCase() === "PRIVATE";
-      const extraActive = activeAdminStudents.filter(student => !knownStudentUuids.has(String(student.studentUuid || "")));
-      const privateStudents = extraActive.filter(isPrivateStudent);
-      const otherInstitutionStudents = extraActive.filter(student => !isPrivateStudent(student) && !fiibName(student.institutionName));
-      const uncategorisedFiibStudents = extraActive.filter(student => !isPrivateStudent(student) && fiibName(student.institutionName));
+      const institutionalStudents = activeAdminStudents.filter(student => !isPrivateStudent(student));
+      const privateStudents = activeAdminStudents.filter(isPrivateStudent);
 
-      const simpleRegisterTable = list => list.length ? `<table><thead><tr><th>ASCENT ID</th><th>Name</th><th>Email</th><th>Institution</th><th>Batch</th><th>Status</th><th>Date Joined</th><th>Last Access</th></tr></thead><tbody>${sortStudents(list).map(student => `<tr><td>${escapeHtml(student.studentId || "—")}</td><td>${escapeHtml(student.fullName || "—")}</td><td>${escapeHtml(student.email || "—")}</td><td>${escapeHtml(student.institutionName || student.requestedInstitutionName || "—")}</td><td>${escapeHtml(student.batch || "—")}</td><td>${escapeHtml(student.registrationStatus || "—")}</td><td>${escapeHtml(formatDate(student.dateJoined))}</td><td>${escapeHtml(formatDate(student.lastAccessedAt))}</td></tr>`).join("")}</tbody></table>` : `<div class="empty-state">No learners in this section.</div>`;
+      const simpleRegisterTable = list => list.length ? `<table><thead><tr><th>ASCENT ID</th><th>Name</th><th>Email</th><th>Mobile</th><th>Institution</th><th>Batch</th><th>Status</th><th>Date Joined</th><th>Last Access</th></tr></thead><tbody>${sortStudents(list).map(student => `<tr><td>${escapeHtml(student.studentId || "—")}</td><td>${escapeHtml(student.fullName || "—")}</td><td>${escapeHtml(student.email || "—")}</td><td>${escapeHtml(student.mobileNumber || "—")}</td><td>${escapeHtml(student.institutionName || student.requestedInstitutionName || "—")}</td><td>${escapeHtml(student.batch || "—")}</td><td>${escapeHtml(student.registrationStatus || "—")}</td><td>${escapeHtml(formatDate(student.dateJoined))}</td><td>${escapeHtml(formatDate(student.lastAccessedAt))}</td></tr>`).join("")}</tbody></table>` : `<div class="empty-state">No learners in this section.</div>`;
 
-      const otherByInstitution = new Map();
-      otherInstitutionStudents.forEach(student => {
-        const institution = student.institutionName || student.requestedInstitutionName || "Other / unassigned";
-        if (!otherByInstitution.has(institution)) otherByInstitution.set(institution,[]);
-        otherByInstitution.get(institution).push(student);
+      const institutionalByName = new Map();
+      institutionalStudents.forEach(student => {
+        const institution = student.institutionName || student.requestedInstitutionName || "Institution not specified";
+        if (!institutionalByName.has(institution)) institutionalByName.set(institution,[]);
+        institutionalByName.get(institution).push(student);
       });
-      const otherInstitutionsHtml = Array.from(otherByInstitution.entries()).sort((a,b) => a[0].localeCompare(b[0])).map(([institution,list]) => {
+      const institutionsHtml = Array.from(institutionalByName.entries()).sort((a,b) => a[0].localeCompare(b[0])).map(([institution,list]) => {
         const byBatch = new Map();
-        list.forEach(student => { const batch = student.batch || "No batch"; if (!byBatch.has(batch)) byBatch.set(batch,[]); byBatch.get(batch).push(student); });
-        return `<details class="batch-folder"><summary><span>${escapeHtml(institution)}</span><span class="batch-folder-count">${list.length} student${list.length === 1 ? "" : "s"}</span></summary><div class="batch-folder-body">${Array.from(byBatch.entries()).map(([batch,batchStudents]) => `<details class="subgroup-folder"><summary><span>${escapeHtml(batch)}</span><span class="batch-folder-count">${batchStudents.length} student${batchStudents.length === 1 ? "" : "s"}</span></summary><div class="subgroup-members">${simpleRegisterTable(batchStudents)}</div></details>`).join("")}</div></details>`;
+        list.forEach(student => {
+          const batch = student.batch || "No batch specified";
+          if (!byBatch.has(batch)) byBatch.set(batch,[]);
+          byBatch.get(batch).push(student);
+        });
+        const batchesHtml = Array.from(byBatch.entries()).sort((a,b) => a[0].localeCompare(b[0])).map(([batch,batchStudents]) =>
+          `<details class="subgroup-folder"><summary><span>${escapeHtml(batch)}</span><span class="batch-folder-count">${batchStudents.length} learner${batchStudents.length === 1 ? "" : "s"}</span></summary><div class="subgroup-members">${simpleRegisterTable(batchStudents)}</div></details>`
+        ).join("");
+        return `<details class="batch-folder"><summary><span>${escapeHtml(institution)}</span><span class="batch-folder-count">${list.length} learner${list.length === 1 ? "" : "s"}</span></summary><div class="batch-folder-body">${batchesHtml}</div></details>`;
       }).join("");
 
       const adminExpandedHtml = isAdmin() ? `
-        <div style="margin-bottom:14px"><strong style="color:var(--navy);font-size:15px">All Students (active)</strong><div class="panel-subtitle">${activeAdminStudents.length} active learners across ASCENT</div></div>
-        <details class="batch-folder" open><summary><span>FIIB</span><span class="batch-folder-count">${students.length + uncategorisedFiibStudents.length} students</span></summary><div class="batch-folder-body">${batchFoldersHtml}${uncategorisedFiibStudents.length ? simpleRegisterTable(uncategorisedFiibStudents) : ""}</div></details>
-        <details class="batch-folder"><summary><span>Other Institutions</span><span class="batch-folder-count">${otherInstitutionStudents.length} students</span></summary><div class="batch-folder-body">${otherInstitutionsHtml || '<div class="empty-state">No other institutional learners yet.</div>'}</div></details>
-        <details class="batch-folder"><summary><span>Private Learners</span><span class="batch-folder-count">${privateStudents.length} students</span></summary><div class="batch-folder-body">${simpleRegisterTable(privateStudents)}</div></details>
-        <details class="batch-folder"><summary><span>Pending Registrations</span><span class="batch-folder-count">${pendingAdminStudents.length} registrations</span></summary><div class="batch-folder-body">${simpleRegisterTable(pendingAdminStudents)}</div></details>` : "";
-      if (isAdmin()) byId("studentRosterCount").textContent = `${activeAdminStudents.length} active students · ${pendingAdminStudents.length} pending registrations · viewer ${STUDENT_PERFORMANCE_VIEWER_BUILD}`;
+        <details class="batch-folder"><summary><span>Institutional Learners</span><span class="batch-folder-count">${institutionalStudents.length} learners · ${institutionalByName.size} institutions</span></summary><div class="batch-folder-body">${institutionsHtml || '<div class="empty-state">No institutional learners yet.</div>'}</div></details>
+        <details class="batch-folder"><summary><span>Private Learners</span><span class="batch-folder-count">${privateStudents.length} learners</span></summary><div class="batch-folder-body">${simpleRegisterTable(privateStudents)}</div></details>
+        <details class="batch-folder"><summary><span>Pending Registrations / Applications</span><span class="batch-folder-count">${pendingAdminStudents.length} people</span></summary><div class="batch-folder-body">${simpleRegisterTable(pendingAdminStudents)}</div></details>` : "";
+      if (isAdmin()) byId("studentRosterCount").textContent = `${activeAdminStudents.length} active learners · ${institutionalByName.size} institutions · ${privateStudents.length} private · ${pendingAdminStudents.length} pending · viewer ${STUDENT_PERFORMANCE_VIEWER_BUILD}`;
       byId("studentRosterTableWrap").innerHTML = isAdmin() ? adminExpandedHtml : (isPrivateAccessPoint ? tableForStudents(students,"Private learners") : batchFoldersHtml);
       document.querySelectorAll(".student-profile-button").forEach(button => {
         button.disabled = false;
