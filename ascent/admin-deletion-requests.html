@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASCENT · Account Deletion Requests</title>
+<style>
+:root{--navy:#143a60;--blue:#27679d;--soft:#edf4fb;--text:#24364a;--muted:#6c7b8d;--border:#d7e1eb;--gold:#c67b00;--success:#18794e}
+*{box-sizing:border-box}body{margin:0;padding:20px;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(145deg,#102a46,#214d79);min-height:100vh}
+.shell{max-width:1180px;margin:auto;background:#fff;border-radius:20px;padding:28px}.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
+h1{margin:0;color:var(--navy);font-size:28px}p{line-height:1.55}.muted{color:var(--muted)}a,button{font:inherit}.back,.refresh{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 15px;border-radius:10px;font-weight:700;text-decoration:none}
+.back{border:1px solid var(--border);color:var(--navy);background:#fff}.refresh{border:0;color:#fff;background:var(--navy);cursor:pointer}.notice{margin:20px 0;padding:14px 16px;border:1px solid #e5c16c;border-radius:11px;background:#fff8e8;color:#754d00}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}.card{padding:16px;border:1px solid var(--border);border-radius:12px;background:#fbfdff}.card b{display:block;font-size:26px;color:var(--navy);margin-top:5px}
+.tablewrap{overflow:auto;border:1px solid var(--border);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:12px;border-bottom:1px solid #e7edf3;text-align:left;vertical-align:top;font-size:13px}th{background:var(--soft);color:var(--navy);font-size:11px;text-transform:uppercase}tr:last-child td{border-bottom:0}.pill{display:inline-block;padding:5px 8px;border-radius:999px;background:#eaf8f1;color:var(--success);font-size:11px;font-weight:800}.status{margin:16px 0;color:var(--muted);font-weight:700}.empty{padding:30px;text-align:center;color:var(--muted)}
+@media(max-width:700px){body{padding:10px}.shell{padding:18px}.cards{grid-template-columns:1fr}h1{font-size:23px}}
+</style></head><body><main class="shell">
+<div class="top"><div><h1>Account Deletion Requests</h1><p class="muted">Administrator review of verified ASCENT deletion requests.</p></div><div><a class="back" href="./trainer.html">Back to Admin</a> <button id="refresh" class="refresh" type="button">Refresh</button></div></div>
+<div class="notice"><strong>Review-only control.</strong> This page cannot delete, approve, archive or alter a learner account. Verified requests remain pending until a separate controlled deletion procedure is approved.</div>
+<div class="cards"><div class="card">Pending review<b id="pendingCount">—</b></div><div class="card">Completed<b id="completedCount">—</b></div><div class="card">Total shown<b id="totalCount">—</b></div></div>
+<div id="status" class="status" role="status" aria-live="polite">Loading…</div>
+<div class="tablewrap"><table><thead><tr><th>Learner</th><th>ASCENT ID</th><th>Email</th><th>Institution / Batch</th><th>Requested</th><th>Verified</th><th>Status</th><th>Account state</th></tr></thead><tbody id="rows"></tbody></table><div id="empty" class="empty" hidden>No verified deletion requests are waiting for review.</div></div>
+</main><script>
+const SUPABASE_URL="https://vtqatrhwfvzyodiftvkc.supabase.co",KEY="sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643",ENDPOINT=SUPABASE_URL+"/functions/v1/ascent-admin-deletion-requests";
+const SESSION_KEYS=["ascent_admin_master_session","ascent_trainer_session"],$=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+const fmt=v=>v?new Date(v).toLocaleString():"—";
+function adminSession(){for(const key of SESSION_KEYS){try{const s=JSON.parse(localStorage.getItem(key)||"null");const token=s?.sessionToken||s?.session_token||s?.token;const role=String(s?.role||"").toUpperCase();const exp=new Date(s?.expiresAt||s?.expires_at||"").getTime();if(token&&role==="ADMIN"&&(!Number.isFinite(exp)||exp>Date.now()))return{token}}catch{}}return null}
+async function load(){const s=adminSession();if(!s){$("status").textContent="Administrator session required. Open this page from the ASCENT Admin portal.";return}
+$("refresh").disabled=true;$("status").textContent="Loading verified requests…";
+try{const r=await fetch(ENDPOINT,{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"},body:JSON.stringify({session_token:s.token})});const d=await r.json().catch(()=>({}));if(!r.ok||d.ok!==true)throw new Error(d.message||"Requests could not be loaded.");
+const rows=Array.isArray(d.requests)?d.requests:[];$("pendingCount").textContent=rows.filter(x=>x.status==="VERIFIED_PENDING_REVIEW").length;$("completedCount").textContent=rows.filter(x=>x.status==="COMPLETED").length;$("totalCount").textContent=rows.length;
+$("rows").innerHTML=rows.map(x=>{const l=x.learner||{};const state=l.archived_at?"Archived":l.is_active===true?"Active":l.is_active===false?"Inactive":"—";return `<tr><td><strong>${esc(l.full_name||"—")}</strong></td><td>${esc(l.student_id||"—")}</td><td>${esc(l.email||"—")}</td><td>${esc(l.requested_institution_name||"—")}<br><span class="muted">${esc(l.batch||"")}</span></td><td>${fmt(x.requestedAt)}</td><td>${fmt(x.verifiedAt)}</td><td><span class="pill">${esc(String(x.status||"").replaceAll("_"," "))}</span></td><td>${esc(state)}</td></tr>`}).join("");
+$("empty").hidden=rows.length!==0;$("status").textContent=rows.length?rows.length+" verified request(s) loaded.":"No verified deletion requests found.";
+}catch(e){$("status").textContent=e.message||"Requests could not be loaded."}finally{$("refresh").disabled=false}}
+$("refresh").addEventListener("click",load);load();
+</script></body></html>
