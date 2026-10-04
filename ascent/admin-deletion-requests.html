@@ -8,14 +8,14 @@
 h1{margin:0;color:var(--navy);font-size:28px}p{line-height:1.55}.muted{color:var(--muted)}a,button{font:inherit}.back,.refresh{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 15px;border-radius:10px;font-weight:700;text-decoration:none}
 .back{border:1px solid var(--border);color:var(--navy);background:#fff}.refresh{border:0;color:#fff;background:var(--navy);cursor:pointer}.notice{margin:20px 0;padding:14px 16px;border:1px solid #e5c16c;border-radius:11px;background:#fff8e8;color:#754d00}
 .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}.card{padding:16px;border:1px solid var(--border);border-radius:12px;background:#fbfdff}.card b{display:block;font-size:26px;color:var(--navy);margin-top:5px}
-.tablewrap{overflow:auto;border:1px solid var(--border);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:12px;border-bottom:1px solid #e7edf3;text-align:left;vertical-align:top;font-size:13px}th{background:var(--soft);color:var(--navy);font-size:11px;text-transform:uppercase}tr:last-child td{border-bottom:0}.pill{display:inline-block;padding:5px 8px;border-radius:999px;background:#eaf8f1;color:var(--success);font-size:11px;font-weight:800}.status{margin:16px 0;color:var(--muted);font-weight:700}.empty{padding:30px;text-align:center;color:var(--muted)}
+.tablewrap{overflow:auto;border:1px solid var(--border);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:12px;border-bottom:1px solid #e7edf3;text-align:left;vertical-align:top;font-size:13px}th{background:var(--soft);color:var(--navy);font-size:11px;text-transform:uppercase}tr:last-child td{border-bottom:0}.pill{display:inline-block;padding:5px 8px;border-radius:999px;background:#eaf8f1;color:var(--success);font-size:11px;font-weight:800}.status{margin:16px 0;color:var(--muted);font-weight:700}.empty{padding:30px;text-align:center;color:var(--muted)}.actions{min-width:180px}.action{display:block;width:100%;margin:0 0 6px;padding:8px 10px;border-radius:8px;font-weight:700;cursor:pointer}.keep{background:#fff;color:var(--navy);border:1px solid var(--border)}.approve{background:#8b1e1e;color:#fff;border:1px solid #8b1e1e}
 @media(max-width:700px){body{padding:10px}.shell{padding:18px}.cards{grid-template-columns:1fr}h1{font-size:23px}}
 </style></head><body><main class="shell">
 <div class="top"><div><h1>Account Deletion Requests</h1><p class="muted">Administrator review of verified ASCENT deletion requests.</p></div><div><a class="back" href="./trainer.html">Back to Admin</a> <button id="refresh" class="refresh" type="button">Refresh</button></div></div>
-<div class="notice"><strong>Review-only control.</strong> This page cannot delete, approve, archive or alter a learner account. Verified requests remain pending until a separate controlled deletion procedure is approved.</div>
+<div class="notice"><strong>Administrator review.</strong> Close / Keep Account ends the request without changing the learner account. Approve Deletion permanently deletes the learner account and ASCENT learning data after confirmation.</div>
 <div class="cards"><div class="card">Pending review<b id="pendingCount">—</b></div><div class="card">Completed<b id="completedCount">—</b></div><div class="card">Total shown<b id="totalCount">—</b></div></div>
 <div id="status" class="status" role="status" aria-live="polite">Loading…</div>
-<div class="tablewrap"><table><thead><tr><th>Learner</th><th>ASCENT ID</th><th>Email</th><th>Institution / Batch</th><th>Requested</th><th>Verified</th><th>Status</th><th>Account state</th></tr></thead><tbody id="rows"></tbody></table><div id="empty" class="empty" hidden>No verified deletion requests are waiting for review.</div></div>
+<div class="tablewrap"><table><thead><tr><th>Learner</th><th>ASCENT ID</th><th>Email</th><th>Institution / Batch</th><th>Requested</th><th>Verified</th><th>Status</th><th>Account state</th><th>Review action</th></tr></thead><tbody id="rows"></tbody></table><div id="empty" class="empty" hidden>No verified deletion requests are waiting for review.</div></div>
 </main><script>
 const SUPABASE_URL="https://vtqatrhwfvzyodiftvkc.supabase.co",KEY="sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643",ENDPOINT=SUPABASE_URL+"/functions/v1/ascent-admin-deletion-requests";
 const SESSION_KEYS=["ascent_admin_master_session","ascent_trainer_session"],$=id=>document.getElementById(id);
@@ -26,8 +26,28 @@ async function load(){const s=adminSession();if(!s){$("status").textContent="Adm
 $("refresh").disabled=true;$("status").textContent="Loading verified requests…";
 try{const r=await fetch(ENDPOINT,{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"},body:JSON.stringify({session_token:s.token})});const d=await r.json().catch(()=>({}));if(!r.ok||d.ok!==true)throw new Error(d.message||"Requests could not be loaded.");
 const rows=Array.isArray(d.requests)?d.requests:[];$("pendingCount").textContent=rows.filter(x=>x.status==="VERIFIED_PENDING_REVIEW").length;$("completedCount").textContent=rows.filter(x=>x.status==="COMPLETED").length;$("totalCount").textContent=rows.length;
-$("rows").innerHTML=rows.map(x=>{const l=x.learner||{};const state=l.archived_at?"Archived":l.is_active===true?"Active":l.is_active===false?"Inactive":"—";return `<tr><td><strong>${esc(l.full_name||"—")}</strong></td><td>${esc(l.student_id||"—")}</td><td>${esc(l.email||"—")}</td><td>${esc(l.requested_institution_name||"—")}<br><span class="muted">${esc(l.batch||"")}</span></td><td>${fmt(x.requestedAt)}</td><td>${fmt(x.verifiedAt)}</td><td><span class="pill">${esc(String(x.status||"").replaceAll("_"," "))}</span></td><td>${esc(state)}</td></tr>`}).join("");
+$("rows").innerHTML=rows.map(x=>{const l=x.learner||{};const state=l.archived_at?"Archived":l.is_active===true?"Active":l.is_active===false?"Inactive":"—";const actions=x.status==="VERIFIED_PENDING_REVIEW"&&l.student_id?`<button class="action keep" data-act="cancel" data-id="${esc(x.requestId)}" data-sid="${esc(l.student_id)}">Close / Keep Account</button><button class="action approve" data-act="delete" data-id="${esc(x.requestId)}" data-sid="${esc(l.student_id)}">Approve Deletion</button>`:"—";return `<tr><td><strong>${esc(l.full_name||x.learnerReference||"—")}</strong></td><td>${esc(l.student_id||"—")}</td><td>${esc(l.email||"—")}</td><td>${esc(l.requested_institution_name||"—")}<br><span class="muted">${esc(l.batch||"")}</span></td><td>${fmt(x.requestedAt)}</td><td>${fmt(x.verifiedAt)}</td><td><span class="pill">${esc(String(x.status||"").replaceAll("_"," "))}</span></td><td>${esc(state)}</td><td class="actions">${actions}</td></tr>`}).join("");
 $("empty").hidden=rows.length!==0;$("status").textContent=rows.length?rows.length+" verified request(s) loaded.":"No verified deletion requests found.";
 }catch(e){$("status").textContent=e.message||"Requests could not be loaded."}finally{$("refresh").disabled=false}}
+$("rows").addEventListener("click",async e=>{
+ const b=e.target.closest("button[data-act]"); if(!b)return;
+ const s=adminSession(); if(!s)return;
+ const action=b.dataset.act, requestId=b.dataset.id, sid=b.dataset.sid;
+ if(action==="cancel"&&!confirm("Close this deletion request and keep account "+sid+"?"))return;
+ let confirmation="";
+ if(action==="delete"){
+   confirmation=prompt("Approve permanent deletion for "+sid+"?\n\nType the ASCENT ID exactly to continue:");
+   if(confirmation===null)return;
+   if(confirmation.trim()!==sid){alert("ASCENT ID did not match. Nothing was deleted.");return;}
+   if(!confirm("Final confirmation: permanently delete "+sid+" and its ASCENT learning data?"))return;
+ }
+ b.disabled=true;
+ try{
+   const r=await fetch(ENDPOINT,{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"},body:JSON.stringify({session_token:s.token,action,request_id:requestId,confirmation:confirmation.trim()})});
+   const d=await r.json().catch(()=>({}));
+   if(!r.ok||d.ok!==true)throw new Error(d.message||"Action failed.");
+   alert(d.message); await load();
+ }catch(err){alert(err.message||"Action failed.");}finally{b.disabled=false;}
+});
 $("refresh").addEventListener("click",load);load();
 </script></body></html>
