@@ -266,7 +266,8 @@
           <button class="nav-item" type="button" data-section="archives">Archives</button>
           <button class="nav-item" type="button" data-section="audioFiling">Audio Filing</button>
           <button id="followupsNavItem" class="nav-item" type="button" data-section="followups">Student Follow-ups</button>
-          <button id="trainersNavItem" class="nav-item" type="button" data-section="trainers" hidden>Trainers</button>\n          <a id="deletionRequestsNavItem" class="nav-item" href="./admin-deletion-requests.html" hidden style="text-decoration:none;display:block">Account Deletion Requests</a>
+          <button id="trainersNavItem" class="nav-item" type="button" data-section="trainers" hidden>Trainers</button>
+          <a id="deletionRequestsNavItem" class="nav-item" href="./admin-deletion-requests.html" hidden style="text-decoration:none;display:block">Account Deletion Requests</a>
         </div>
         <a id="jdInterviewMapperLink" class="restricted-tool-link" href="./jd-interview-trainer.html">JD Interview Mapper</a>
         <a id="jdBriefingLink" class="restricted-tool-link" href="../jd-briefing/" target="_blank" rel="noopener noreferrer" hidden>JD Briefing Builder</a>
@@ -730,7 +731,8 @@
 
     function applyRoleAccess() {
       byId("jdBriefingLink").hidden = !canAccessJdBriefing();
-      byId("trainersNavItem").hidden = !isAdmin();\n      byId("deletionRequestsNavItem").hidden = !isAdmin();
+      byId("trainersNavItem").hidden = !isAdmin();
+      byId("deletionRequestsNavItem").hidden = !isAdmin();
       byId("addBankQuestionButton").hidden = !isAdmin();
       byId("bankInactiveFilterGroup").hidden = !isAdmin();
       byId("questionBankReadOnlyNote").hidden = !isCeo();
