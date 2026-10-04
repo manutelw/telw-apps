@@ -5,7 +5,8 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const ALLOWED_ORIGINS = new Set([
   "https://clarionprep.com",
   "https://www.clarionprep.com",
-  "https://secure-ascent-account-deletion.ascent-dialogue-lab-pages.pages.dev",\n  "https://deploy-preview-451--telw-clarion.netlify.app",
+  "https://secure-ascent-account-deletion.ascent-dialogue-lab-pages.pages.dev",
+  "https://deploy-preview-451--telw-clarion.netlify.app",
 ]);
 
 function cors(req: Request) {
