@@ -27,6 +27,8 @@ async function loadShortPreset(){
   country.value=countries.some(x=>x[0]===d.country)?d.country:'Other';
   $('service').value=d.service||$('service').value;
   $('name').value=d.display_name||'';
+  $('email').value=d.email||'';
+  $('mobile').value=d.mobile||'';
 }
 
 function syncCurrency(){const o=country.options[country.selectedIndex];currency.value=o?.dataset.currency||'USD'}
