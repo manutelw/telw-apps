@@ -1,0 +1,1 @@
+Trigger existing integrity guard for Cloudflare Worker route fix PR #463. No runtime changes here.
