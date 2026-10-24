@@ -128,15 +128,12 @@ export default {
     // Every Unit page and Unit-specific runtime asset is server-gated.
     // Learners need a valid ORACY username/password session AND an active assignment
     // for that exact unit. A validated ASCENT administrator may bypass assignments.
-    const unitMatch=path.match(/^\/oracy\/unit-(\d+)(a)?(?:[.-][^/]*)?$/i);
+    const unitMatch=path.match(/^\/oracy\/unit-(\d+)(?:[.-][^/]*)?$/i);
     if(unitMatch){
-      const numericUnit=Number(unitMatch[1]);
-      const isUnit1A=Boolean(unitMatch[2])&&numericUnit===1;
-      if(unitMatch[2]&&!isUnit1A) return redirect('/oracy/?locked=1');
       const cookies=request.headers.get('cookie')||'';
       const learnerToken=readCookie(cookies,'oracy_session');
       const adminToken=readCookie(cookies,'clarion_admin_session');
-      const unitNo=isUnit1A?1:numericUnit;
+      const unitNo=Number(unitMatch[1]);
       const adminOk=adminToken ? await validAdmin(adminToken) : false;
       if(!adminOk && (!learnerToken || !(await validLearnerUnit(learnerToken,unitNo)))) return redirect('/oracy/?locked=1');
       return noStore(await env.ASSETS.fetch(request));
@@ -199,9 +196,7 @@ async function handleOracySession(request){
     const data=await r.json().catch(()=>({ok:false,message:'Login failed.'}));
     if(!r.ok || data.ok!==true || !data.session_token) return json(data,r.status||401);
     const headers=new Headers({'content-type':'application/json','cache-control':'no-store'});
-    const hostname=new URL(request.url).hostname.toLowerCase();
-    headers.append('set-cookie',expireHostCookie('oracy_session','/oracy'));
-    headers.append('set-cookie',oracySessionCookie(data.session_token,12*60*60,hostname));
+    headers.append('set-cookie',cookie('oracy_session',data.session_token,12*60*60,'/oracy'));
     return new Response(JSON.stringify({ok:true,learner:data.learner,units:data.units||[],expires_at:data.expires_at}),{status:200,headers});
   }catch(e){
     return json({ok:false,message:'Request could not be completed.',detail:String(e?.message||e).slice(0,300)},400);
@@ -214,9 +209,7 @@ async function handleOracyLogout(request){
     await fetch(ORACY_ACCESS,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'logout',session_token:token})}).catch(()=>{});
   }
   const headers=new Headers({'content-type':'application/json','cache-control':'no-store'});
-  const hostname=new URL(request.url).hostname.toLowerCase();
-  headers.append('set-cookie',expireHostCookie('oracy_session','/oracy'));
-  if(isClarionHost(hostname)) headers.append('set-cookie','oracy_session=; Path=/oracy; Domain=.clarionprep.com; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
+  headers.append('set-cookie','oracy_session=; Path=/oracy; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
   return new Response(JSON.stringify({ok:true}),{status:200,headers});
 }
 
@@ -316,19 +309,6 @@ function readCookie(header,name){
 
 function cookie(name,value,maxAge,path){
   return `${name}=${encodeURIComponent(value)}; Path=${path}; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
-}
-
-function isClarionHost(hostname){
-  return hostname==='clarionprep.com'||hostname.endsWith('.clarionprep.com');
-}
-
-function oracySessionCookie(value,maxAge,hostname){
-  const domain=isClarionHost(hostname)?'; Domain=.clarionprep.com':'';
-  return `oracy_session=${encodeURIComponent(value)}; Path=/oracy${domain}; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
-}
-
-function expireHostCookie(name,path){
-  return `${name}=; Path=${path}; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
 }
 
 function redirect(location){
