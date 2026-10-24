@@ -1,5 +1,4 @@
 import base from './worker.js';
-import {onRequestPost as evaluatePiPractice} from './functions/api/pi-practice/evaluate.js';
 
 const ORACY_ACCESS='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/oracy-access';
 const ORACY_SHARE_ACCESS='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/oracy-share-access';
@@ -8,12 +7,6 @@ export default {
   async fetch(request,env){
     const url=new URL(request.url);
     const path=url.pathname;
-
-    // This site is deployed as a Cloudflare Worker (wrangler.jsonc), not Pages Functions.
-    if(path==='/api/pi-practice/evaluate'){
-      if(request.method!=='POST') return json({error:'POST required'},405);
-      return evaluatePiPractice({request,env});
-    }
 
     if(path==='/oracy/admin-preview'){
       if(request.method!=='POST') return json({ok:false,message:'POST required.'},405);
