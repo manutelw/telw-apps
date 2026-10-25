@@ -1,5 +1,5 @@
 // Private scoring keys. Never expose this module through the public asset handler.
-const KEYS={"academic":[1,0,1,1,1,0,1,0,1,1,0,1,0,1,1,1,1,0,0,1,0,1,0,1,0,1,1,0,0,0,0,1,0,1,0,1,0,0,0,0],"general":[1,0,0,1,0,1,1,1,0,2,0,1,0,0,1,1,0,1,1,0,1,0,1,0,1,0,0,0,0,0,1,0,1,0,1,0,0,0,0,0]};
+const KEYS={"academic":[1,0,1,1,1,2,1,0,1,1,0,1,0,1,1,2,1,0,0,1,0,1,0,1,0,1,1,0,0,0,0,1,0,1,0,1,0,0,0,0],"general":[1,0,0,1,0,1,1,1,0,2,0,1,0,0,1,1,0,1,1,0,1,0,1,0,1,2,0,0,0,0,1,0,1,0,1,2,0,0,0,0]};
 export async function scoreIeltsReading(request){
  if(request.method!=='POST')return new Response('Method not allowed',{status:405});
  let body;try{body=await request.json()}catch{return new Response('Invalid JSON',{status:400})}
