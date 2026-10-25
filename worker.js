@@ -27,6 +27,15 @@ export default {
     // Cloudflare Access protects this hostname before requests reach the Worker.
     // Route its TELW landing independently of the ClarionPrep host.
     if(url.hostname==='manuvikraman.com'){
+      if(path==='/ielts/reading' || path==='/ielts/reading/' || path==='/ielts/reading/index.html'){
+        if(request.method!=='GET' && request.method!=='HEAD') return new Response('Method not allowed',{status:405});
+        const assetUrl=new URL(request.url);
+        assetUrl.pathname='/ielts/reading/index.html';
+        const response=await env.ASSETS.fetch(new Request(assetUrl.toString(),request));
+        const headers=new Headers(response.headers);
+        headers.set('cache-control','no-store, max-age=0');
+        return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+      }
       const slug=path.replace(/^\/+|\/+$/g,'');
       const programme=TELW_PROGRAMMES.has(slug);
       const contact=slug==='contact';
