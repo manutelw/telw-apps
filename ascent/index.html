@@ -1053,7 +1053,7 @@ body.commercial-entry #panelTitle {
         id="identityLabel"
         for="studentIdentity"
       >
-        Email address or Student ID
+        Email address
       </label>
 
       <input
@@ -2239,7 +2239,7 @@ accessForm.addEventListener(
           document.getElementById("panelTitle").textContent =
             "Existing learner — Log in";
           document.getElementById("panelIntro").textContent =
-            "Already registered? Log in with the email address or ASCENT ID linked to your pass.";
+            "Already registered? Log in with the email address linked to your pass.";
 
           const newStudentRegistrationLink =
             document.getElementById("newStudentRegistrationLink");
@@ -2322,7 +2322,7 @@ accessForm.addEventListener(
       "Open Institution Portal";
   } else {
     identityLabel.textContent =
-      "Email address or Student ID";
+      "Email address";
 
     identityInput.removeAttribute(
       "placeholder"
