@@ -1366,7 +1366,12 @@ const IS_MANUVIKRAMAN_COMMERCIAL =
   window.location.hostname === "manuvikraman.com" ||
   window.location.hostname === "www.manuvikraman.com";
 
-if (IS_MANUVIKRAMAN_COMMERCIAL) {
+const IS_CLARIONPREP_PURCHASE_ENTRY =
+  (window.location.hostname === "clarionprep.com" ||
+   window.location.hostname === "www.clarionprep.com") &&
+  PURCHASE_ENTRY_REQUESTED;
+
+if (IS_MANUVIKRAMAN_COMMERCIAL || IS_CLARIONPREP_PURCHASE_ENTRY) {
   document.body.classList.add("commercial-entry");
 }
 
@@ -1484,7 +1489,7 @@ if (privateBenefitsToggle && privateBenefits) {
   );
 }
 
-if (!IS_MANUVIKRAMAN_COMMERCIAL) {
+if (!IS_MANUVIKRAMAN_COMMERCIAL && !IS_CLARIONPREP_PURCHASE_ENTRY) {
   privatePassCard.hidden = true;
   privatePassCard.style.setProperty(
     "display",
@@ -1498,12 +1503,12 @@ if (!IS_MANUVIKRAMAN_COMMERCIAL) {
   accessSearchInput.placeholder =
     "Enter your institution name";
 } else {
-  document.querySelectorAll(".brand-chip, .small-brand")
+  if (IS_MANUVIKRAMAN_COMMERCIAL) document.querySelectorAll(".brand-chip, .small-brand")
     .forEach(function (brandLabel) {
       brandLabel.textContent = "MANUVIKRAMAN.COM";
     });
 
-  document.querySelector(".footer").innerHTML =
+  if (IS_MANUVIKRAMAN_COMMERCIAL) document.querySelector(".footer").innerHTML =
     "<strong style=\"display:block;font-size:15px\">A Manu Vikraman Career-Readiness Product</strong><span>manuvikraman.com | clarionprep.com</span>";
 }
 
@@ -2752,7 +2757,7 @@ function initialiseDirectInstitutionEntry() {
     String(ENTRY_PARAMETERS.get("continue") || "").trim().toLowerCase();
 
   if (
-    IS_MANUVIKRAMAN_COMMERCIAL &&
+    (IS_MANUVIKRAMAN_COMMERCIAL || IS_CLARIONPREP_PURCHASE_ENTRY) &&
     PURCHASE_ENTRY_REQUESTED
   ) {
     const showPurchaseForm = function () {
