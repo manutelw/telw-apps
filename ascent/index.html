@@ -1140,7 +1140,7 @@ body.commercial-entry #panelTitle {
   aria-labelledby="privatePassTitle"
 >
   <div class="private-pass-label">
-    New Private Learner
+    New Learner
   </div>
 
   <h3 id="privatePassTitle">
@@ -1367,11 +1367,14 @@ const IS_MANUVIKRAMAN_COMMERCIAL =
   window.location.hostname === "www.manuvikraman.com";
 
 const IS_CLARIONPREP_PURCHASE_ENTRY =
-  (window.location.hostname === "clarionprep.com" ||
-   window.location.hostname === "www.clarionprep.com") &&
-  PURCHASE_ENTRY_REQUESTED;
+  window.location.hostname === "clarionprep.com" ||
+  window.location.hostname === "www.clarionprep.com";
 
-if (IS_MANUVIKRAMAN_COMMERCIAL || IS_CLARIONPREP_PURCHASE_ENTRY) {
+// All public ClarionPrep visitors use the existing paid private-learner flow.
+const IS_PUBLIC_LEARNER_ENTRY =
+  IS_MANUVIKRAMAN_COMMERCIAL || IS_CLARIONPREP_PURCHASE_ENTRY;
+
+if (IS_PUBLIC_LEARNER_ENTRY) {
   document.body.classList.add("commercial-entry");
 }
 
@@ -2211,21 +2214,21 @@ accessForm.addEventListener(
 
       institutionRoleButton.hidden =
         accessIdentity.includes("private") ||
-        IS_MANUVIKRAMAN_COMMERCIAL;
+        IS_PUBLIC_LEARNER_ENTRY;
 
       trainerRoleButton.hidden =
-        IS_MANUVIKRAMAN_COMMERCIAL;
+        IS_PUBLIC_LEARNER_ENTRY;
 
       showAccessStatus("", "");
 
       if (
-        IS_MANUVIKRAMAN_COMMERCIAL ||
+        IS_PUBLIC_LEARNER_ENTRY ||
         String(ENTRY_PARAMETERS.get("role") || "").toLowerCase() === "student" ||
         String(ENTRY_PARAMETERS.get("continue") || "").toLowerCase() === "practice"
       ) {
         openLoginForRole("STUDENT");
 
-        if (IS_MANUVIKRAMAN_COMMERCIAL) {
+        if (IS_PUBLIC_LEARNER_ENTRY) {
           roleChoice.hidden = true;
           resolvedAccessPanel.hidden = false;
           resolvedAccessName.hidden = true;
@@ -2757,7 +2760,7 @@ function initialiseDirectInstitutionEntry() {
     String(ENTRY_PARAMETERS.get("continue") || "").trim().toLowerCase();
 
   if (
-    (IS_MANUVIKRAMAN_COMMERCIAL || IS_CLARIONPREP_PURCHASE_ENTRY) &&
+    IS_PUBLIC_LEARNER_ENTRY &&
     PURCHASE_ENTRY_REQUESTED
   ) {
     const showPurchaseForm = function () {
@@ -2781,7 +2784,7 @@ function initialiseDirectInstitutionEntry() {
     return;
   }
 
-  if (IS_MANUVIKRAMAN_COMMERCIAL) {
+  if (IS_PUBLIC_LEARNER_ENTRY) {
     accessSearchInput.value = "TELW-PRIVATE";
     accessForm.requestSubmit();
     return;
@@ -2827,7 +2830,7 @@ async function restoreInstitutionSelectionFromUrl() {
     ENTRY_PARAMETERS.get("institution") || ""
   ).trim();
 
-  if (!requestedInstitution || IS_MANUVIKRAMAN_COMMERCIAL) {
+  if (!requestedInstitution || IS_PUBLIC_LEARNER_ENTRY) {
     return;
   }
 
