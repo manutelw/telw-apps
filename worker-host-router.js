@@ -1,3 +1,4 @@
+import {scoreIeltsReading} from './ielts-reading-scoring-private.js';
 import clarion from './worker-oracy.js';
 import base from './worker.js';
 import {onRequestPost as evaluatePiPractice} from './functions/api/pi-practice/evaluate.js';
@@ -7,6 +8,11 @@ export default {
   fetch(request,env){
     const url=new URL(request.url);
     const host=url.hostname;
+    if(url.pathname==='/api/ielts-reading/score'){
+      if(host!=='manuvikraman.com')return new Response('Not found',{status:404});
+      return scoreIeltsReading(request);
+    }
+    if(url.pathname==='/ielts-reading-scoring-private.js')return new Response('Not found',{status:404});
     if(url.pathname==='/api/pi-studio/coach'){
       if(host!=='clarionprep.com'&&host!=='www.clarionprep.com')return new Response('Not found',{status:404});
       if(request.method!=='POST')return new Response(JSON.stringify({error:'POST required'}),{status:405,headers:{'content-type':'application/json'}});
