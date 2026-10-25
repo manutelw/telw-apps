@@ -26,6 +26,7 @@ export default {
 
     // Cloudflare Access protects this hostname before requests reach the Worker.
     // Route its TELW landing independently of the ClarionPrep host.
+    if(path==='/ielts-reading-scoring-private.js')return new Response('Not found',{status:404});
     if(url.hostname==='manuvikraman.com'){
       if(path==='/ielts/reading' || path==='/ielts/reading/' || path==='/ielts/reading/index.html'){
         if(request.method!=='GET' && request.method!=='HEAD') return new Response('Method not allowed',{status:405});
