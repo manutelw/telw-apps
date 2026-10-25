@@ -33,8 +33,29 @@ export default {
         const assetUrl=new URL(request.url);
         assetUrl.pathname='/ielts-reading-diagnostic.html';
         const response=await env.ASSETS.fetch(new Request(assetUrl.toString(),request));
+        // Asset serving may canonicalize .html to an extensionless path.
+        // Keep that redirect internal: the public IELTS URL must not change.
+        if(response.status>=300 && response.status<400){
+          const location=response.headers.get('location');
+          if(location){
+            const target=new URL(location,assetUrl);
+            if(target.origin===assetUrl.origin && target.pathname==='/ielts-reading-diagnostic'){
+              const canonical=await env.ASSETS.fetch(new Request(target.toString(),request));
+              if(canonical.ok){
+                const headers=new Headers(canonical.headers);
+                headers.set('cache-control','no-store, max-age=0');
+                headers.set('x-robots-tag','noindex, nofollow, noarchive');
+                headers.delete('location');
+                return new Response(canonical.body,{status:200,headers});
+              }
+            }
+          }
+        }
         const headers=new Headers(response.headers);
         headers.set('cache-control','no-store, max-age=0');
+        headers.set('x-robots-tag','noindex, nofollow, noarchive');
+        headers.delete('location');
+        if(response.status>=300 && response.status<400) return new Response('IELTS asset unavailable',{status:502,headers});
         return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
       }
       const slug=path.replace(/^\/+|\/+$/g,'');
