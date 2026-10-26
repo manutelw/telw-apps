@@ -1,4 +1,4 @@
-import {scoreIeltsReading,sendIeltsReadingEnquiry} from './ielts-reading-scoring-private.js';
+import {scoreIeltsReading,sendIeltsReadingEnquiry,emailIeltsReadingFeedback} from './ielts-reading-scoring-private.js';
 import clarion from './worker-oracy.js';
 import base from './worker.js';
 import {onRequestPost as evaluatePiPractice} from './functions/api/pi-practice/evaluate.js';
@@ -11,6 +11,10 @@ export default {
     if(url.pathname==='/api/ielts-reading/score'){
       if(host!=='manuvikraman.com')return new Response('Not found',{status:404});
       return scoreIeltsReading(request);
+    }
+    if(url.pathname==='/api/ielts-reading/feedback-email'){
+      if(host!=='manuvikraman.com')return new Response('Not found',{status:404});
+      return emailIeltsReadingFeedback(request,env);
     }
     if(url.pathname==='/api/ielts-reading/enquire'){
       if(host!=='manuvikraman.com')return new Response('Not found',{status:404});
