@@ -73,7 +73,7 @@ export async function emailIeltsReadingFeedback(request,env){
  let data;try{data=await request.json()}catch{return jsonReply({ok:false,error:'Invalid request'},400)}
  if(!data||!Object.hasOwn(KEYS,data.track)||!data.answers||typeof data.answers!=='object'||Array.isArray(data.answers))return jsonReply({ok:false,error:'Invalid diagnostic'},400);
  const email=String(data.email||'').trim();
- if(!/^\\S+@\\S+\\.\\S+$/.test(email)||email.length>254||data.consent!==true||data.website)return jsonReply({ok:false,error:'Enter a valid email address and confirm your consent.'},400);
+ if(!/^\S+@\S+\.\S+$/.test(email)||email.length>254||data.consent!==true||data.website)return jsonReply({ok:false,error:'Enter a valid email address and confirm your consent.'},400);
  if(Object.keys(data.answers).length>40)return jsonReply({ok:false,error:'Invalid answers'},400);
  let result;try{result=countAnswers(data.track,data.answers)}catch{return jsonReply({ok:false,error:'Invalid answers'},400)}
  if(result.answered!==40)return jsonReply({ok:false,error:'Complete all 40 questions to request emailed feedback.'},400);
