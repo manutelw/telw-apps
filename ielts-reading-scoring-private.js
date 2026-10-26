@@ -4,7 +4,7 @@ export async function scoreIeltsReading(request){
  if(request.method!=='POST')return new Response('Method not allowed',{status:405});
  let body;try{body=await request.json()}catch{return new Response('Invalid JSON',{status:400})}
  if(!body||!Object.hasOwn(KEYS,body.track)||!body.answers||typeof body.answers!=='object'||Array.isArray(body.answers))return new Response('Invalid request',{status:400});
- const key=KEYS[body.track];let correct=0;const parts=[0,0,0,0];
- for(let i=0;i<key.length;i++){const answer=body.answers[String(i)];if(Number.isInteger(answer)&&answer===key[i]){correct++;parts[Math.floor(i/10)]++}}
- return new Response(JSON.stringify({correct,parts,total:40}),{headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'}});
+ const key=KEYS[body.track];let correct=0;const parts=[0,0,0,0];const types=[{label:"TRUE / FALSE / NOT GIVEN",correct:0,total:24},{label:"Multiple choice",correct:0,total:16}];
+ for(let i=0;i<key.length;i++){const answer=body.answers[String(i)];if(Number.isInteger(answer)&&answer===key[i]){correct++;parts[Math.floor(i/10)]++;types[i%10<6?0:1].correct++}}
+ return new Response(JSON.stringify({correct,parts,total:40,types}),{headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'}});
 }
