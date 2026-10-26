@@ -5,6 +5,9 @@ on:
   pull_request:
     paths:
       - 'index.html'
+      - 'ielts/reading/**'
+      - 'ielts-reading-diagnostic.html'
+      - 'ielts-reading-scoring-private.js'
       - 'pay/**'
       - 'ascent/**'
       - 'ascent-play/**'
