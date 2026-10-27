@@ -3,3 +3,6 @@ workers/ielts/**
 migrations/ielts/**
 tests/ielts/**
 tools/IELTS-IDENTITY-SETUP.md
+ielts-reading-drafts/**
+private-ielts-banks/**
+ielts-reading-scoring-private.js
