@@ -26,7 +26,7 @@ export function validateVersion(version) {
   });
  });
  if(ng<8)errors.push('At least eight NOT GIVEN answers required');
- for(let i=0;i<4;i++){const subset=keys.slice(i*10,i*10+6);if(![0,1,2].every(x=>subset.includes(x)))errors.push('Passage '+(i+1)+': must include TRUE, FALSE and NOT GIVEN');}
+ for(let i=0;i<4;i++){const subset=keys.slice(i*10,i*10+6);if(![0,1,2].every(x=>subset.includes(x)))errors.push('Passage '+(i+1)+': must include TRUE, FALSE and NOT GIVEN');if(subset.filter(x=>x===2).length<2)errors.push('Passage '+(i+1)+': requires at least two NOT GIVEN answers');}
  if(version.approved!==false)errors.push('New versions must start unapproved');
  if(!Array.isArray(version.evidence)||version.evidence.length!==40)errors.push('40 evidence explanations required');
  else version.evidence.forEach((e,i)=>{
