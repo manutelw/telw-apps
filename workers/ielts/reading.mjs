@@ -71,15 +71,49 @@ async function submit(env,learner,body,now) {
  return reply({...result,ok:true,attemptId:row.id});
 }
 function candidateReport(row) {
- const result=JSON.parse(row.score_json);
- return `<h2>Your TELW IELTS Reading diagnostic feedback</h2><p>${escape(row.track)} · ${result.correct}/40</p>`+
- result.types.map(t=>`<p>${escape(t.label)}: ${t.correct}/${t.total}</p>`).join('')+
- `<p>For TRUE / FALSE / NOT GIVEN, find the evidence and check whether the claim is supported, contradicted or unstated. For multiple choice, compare all options with the passage.</p><p>This original, uncalibrated diagnostic does not predict an official IELTS band.</p><p>TELW The English Workshop</p>`;
+ const result=JSON.parse(row.score_json),answers=JSON.parse(row.response_json),key=JSON.parse(row.private_key_json).keys;
+ const groups=[{label:'TRUE / FALSE / NOT GIVEN',total:24,answered:0,correct:0},{label:'Multiple choice',total:16,answered:0,correct:0}];
+ const patterns={unstatedMarkedTrue:0,unstatedMarkedFalse:0,statedMarkedUnstated:0};
+ for(let i=0;i<40;i++){
+  if(!Object.hasOwn(answers,String(i)))continue;
+  const group=groups[i%10<6?0:1];group.answered++;
+  if(answers[i]===key[i])group.correct++;
+  else if(i%10<6){
+   if(key[i]===2&&answers[i]===0)patterns.unstatedMarkedTrue++;
+   else if(key[i]===2&&answers[i]===1)patterns.unstatedMarkedFalse++;
+   else if(key[i]!==2&&answers[i]===2)patterns.statedMarkedUnstated++;
+  }
+ }
+ const answered=groups.reduce((n,g)=>n+g.answered,0),unanswered=40-answered;
+ const ranked=groups.filter(g=>g.answered>0).sort((a,b)=>a.correct/a.answered-b.correct/b.answered);
+ let focus='<p>You did not answer any questions, so we cannot identify a reading priority from this attempt.</p>';
+ if(ranked.length===1||ranked.some(g=>g.answered<5)){
+  focus='<p>You answered too few questions in at least one type to make a reliable comparison. Practise both types and complete more questions next time.</p>';
+ } else if(ranked.length){
+  const first=ranked[0];
+  const tied=ranked.length===2&&ranked[0].correct*ranked[1].answered===ranked[1].correct*ranked[0].answered;
+  focus=tied?'<p>Your accuracy was similar across the two question types you answered. Practise both.</p>':`<p>Your first practice priority is <strong>${escape(first.label)}</strong>: you got ${first.correct} of ${first.answered} attempted questions correct in this group. This comparison is based only on this test.</p>`;
+ }
+ const notes=[];
+ if(patterns.unstatedMarkedTrue)notes.push(`You marked ${patterns.unstatedMarkedTrue} unstated ${patterns.unstatedMarkedTrue===1?'claim':'claims'} TRUE. Look for information that directly supports the whole claim before choosing TRUE.`);
+ if(patterns.unstatedMarkedFalse)notes.push(`You marked ${patterns.unstatedMarkedFalse} unstated ${patterns.unstatedMarkedFalse===1?'claim':'claims'} FALSE. Choose FALSE only when the text contradicts the claim.`);
+ if(patterns.statedMarkedUnstated)notes.push(`You marked ${patterns.statedMarkedUnstated} ${patterns.statedMarkedUnstated===1?'claim':'claims'} NOT GIVEN when the passage stated enough to judge ${patterns.statedMarkedUnstated===1?'it':'them'}. Check the relevant lines again for support or contradiction.`);
+ const exercises={
+  'TRUE / FALSE / NOT GIVEN':'Take a short practice passage. For each statement, underline the words that support or contradict it. If neither is present, write “not stated”. Check the answer, then explain why the other two labels do not fit.',
+  'Multiple choice':'Take five practice questions. Find the relevant lines first. For each option, say why the text supports it or rules it out. Check the key and note any distractor that looked tempting.'
+ };
+ const ordered=ranked.length?ranked:groups;
+ return `<h2>Your TELW IELTS Reading diagnostic feedback</h2><p>${escape(row.track)} · ${result.correct}/40 correct · ${answered}/40 answered</p>`+
+ (unanswered?`<p>You left ${unanswered} ${unanswered===1?'question':'questions'} unanswered. These count as incorrect in the score; the accuracy comparison below uses questions you answered.</p>`:'')+
+ '<h3>Your results</h3>'+groups.map(g=>`<p>${escape(g.label)}: ${g.correct} correct out of ${g.answered} answered (${g.total} questions in the test).</p>`).join('')+
+ `<h3>What to work on</h3>${focus}`+notes.map(n=>`<p>${escape(n)}</p>`).join('')+
+ '<h3>Practice for your next attempt</h3>'+ordered.map((g,i)=>`<p><strong>${i+1}. ${escape(g.label)}:</strong> ${escape(exercises[g.label])}</p>`).join('')+
+ '<p>This original, uncalibrated diagnostic does not predict an official IELTS band. Your next completed Reading diagnostic is available 15 days after this one.</p><p>TELW The English Workshop</p>';
 }
 function trainerReport(row,learner,body) {
  const content=JSON.parse(row.content_json),key=JSON.parse(row.private_key_json),answers=JSON.parse(row.response_json),result=JSON.parse(row.score_json);
  const fields=['name','mobile','targetBand','testDate','studyHours'];
- return `<h2>Confidential TELW trainer evidence</h2><p>Verified learner: ${escape(learner.email)}<br>Attempt: ${escape(row.id)}<br>Version: ${escape(row.version_id)}<br>Score: ${result.correct}/40</p>`+
+ return `<h2>Confidential TELW trainer evidence</h2><p>Prepare this learner’s complete TELW IELTS Reading trainer resource pack.</p><p>Verified learner: ${escape(learner.email)}<br>Attempt: ${escape(row.id)}<br>Version: ${escape(row.version_id)}<br>Score: ${result.correct}/40</p>`+
  fields.map(f=>`<p>${escape(f)}: ${escape(String(body[f]||'').slice(0,200))}</p>`).join('')+
  content.passages.map((p,i)=>`<h3>${escape(p.title)}</h3>`+p.paragraphs.map(t=>`<p>${escape(t)}</p>`).join('')+p.questions.map((q,j)=>{const n=i*10+j;return `<p><strong>${n+1}. ${escape(q[1])}</strong><br>Options: ${escape(JSON.stringify(q[0]==='tf'?['TRUE','FALSE','NOT GIVEN']:q[2]))}<br>Selected index: ${escape(answers[n]??'unanswered')}<br>Correct index: ${key.keys[n]}<br>Evidence: ${escape(key.evidence?.[n]?.explanation||'Not supplied')}</p>`;}).join('')).join('');
 }

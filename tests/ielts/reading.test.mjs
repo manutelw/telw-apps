@@ -75,7 +75,7 @@ test('feedback and confidential trainer report use stored evidence and fixed rec
   assert.equal((await f.api(action,body)).status,200);assert.equal(f.messages.length,count);
  }
  const [candidate,trainer]=f.messages.slice(-2);assert.deepEqual(candidate.to,['learner@example.com']);assert.deepEqual(trainer.to,['manutelw@gmail.com']);
- assert.doesNotMatch(candidate.html,/Correct index|Synthetic test evidence/);assert.match(trainer.html,/Correct index|Synthetic test evidence/);assert.doesNotMatch(trainer.html,/<script>/);assert.match(trainer.html,/&lt;script&gt;/);
+ assert.doesNotMatch(candidate.html,/Correct index|Synthetic test evidence/);assert.match(trainer.html,/Correct index|Synthetic test evidence/);assert.doesNotMatch(trainer.html,/<script>/);assert.match(trainer.html,/&lt;script&gt;/);assert.match(trainer.html,/Prepare this learner’s complete TELW IELTS Reading trainer resource pack/);
 }));
 test('database itself rejects cooldown bypass and changes to a completed result',()=>setup(async f=>{
  f.version('version-a');f.version('version-b');const first=await (await f.api('start',{track:'academic'})).json();await f.api('submit',{attemptId:first.attemptId,answers:{0:0}});
@@ -101,4 +101,18 @@ test('uncertain mail retries keep identical payload and idempotency key; old unc
   globalThis.fetch=original;f.advance(23*3600);await f.relogin();
   assert.equal((await f.api('feedback-email',{attemptId:first.attemptId,consent:true})).status,409);
  }finally{globalThis.fetch=original;}
+}));
+test('feedback explains actual NOT GIVEN confusions without leaking individual keys',()=>setup(async f=>{
+ f.version('version-a');const first=await (await f.api('start',{track:'academic'})).json();
+ // Fixture q3 is NOT GIVEN; q1 is TRUE. Miss both in different directions.
+ await f.api('submit',{attemptId:first.attemptId,answers:{0:2,2:0,6:0}});
+ assert.equal((await f.api('feedback-email',{attemptId:first.attemptId,consent:true})).status,200);
+ const html=f.messages.at(-1).html;
+ assert.match(html,/1 unstated claim TRUE/);assert.match(html,/1 claim NOT GIVEN/);assert.match(html,/37 questions unanswered/);
+ assert.match(html,/too few questions/i);assert.doesNotMatch(html,/Correct index|Synthetic test evidence|Fixture statement/);
+}));
+test('empty attempt feedback avoids inventing a priority or a mistake pattern',()=>setup(async f=>{
+ f.version('version-a');const first=await (await f.api('start',{track:'academic'})).json();
+ await f.api('submit',{attemptId:first.attemptId,answers:{}});await f.api('feedback-email',{attemptId:first.attemptId,consent:true});
+ const html=f.messages.at(-1).html;assert.match(html,/cannot identify a reading priority/);assert.doesNotMatch(html,/You marked/);
 }));
