@@ -109,7 +109,7 @@ async function requestCode(request, env, now) {
       method:'POST', signal:AbortSignal.timeout(15000),
       headers:{authorization:'Bearer '+env.RESEND_API_KEY,'content-type':'application/json','idempotency-key':'ielts-code-'+id},
       body:JSON.stringify({from:env.TELW_FROM_EMAIL,to:[email],subject:'Your TELW IELTS verification code',
-        text:`Your code is ${code}. It expires in 10 minutes and can be used once. Enter it only at ${ORIGIN}. If you did not request this, ignore this email.\n\nTELW The English Workshop`})
+        text:`Your code is ${code}. It expires in 10 minutes and can be used once. Enter it only at ${env.IELTS_VERIFICATION_PUBLIC_ORIGIN || ORIGIN}. If you did not request this, ignore this email.\n\nTELW The English Workshop`})
     }); sent = response.ok;
   } catch { /* Never expose provider responses or secrets. */ }
   if (!sent) {
