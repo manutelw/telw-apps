@@ -28,7 +28,7 @@ test('simultaneous starts resume one immutable assignment, including track chang
  const bodies=await Promise.all(results.map(x=>x.json()));assert.equal(bodies[0].attemptId,bodies[1].attemptId);
  assert.equal(f.sqlite.prepare('SELECT count(*) AS n FROM ielts_attempts').get().n,1);
  const resumed=await (await f.api('start',{track:'general'})).json();assert.equal(resumed.attemptId,bodies[0].attemptId);assert.equal(resumed.track,'academic');
- assert.throws(()=>f.sqlite.prepare('UPDATE ielts_attempts SET version_id=? WHERE id=?').run('version-b',resumed.attemptId),/IMMUTABLE/);
+ assert.throws(()=>f.sqlite.prepare('UPDATE ielts_attempts SET version_id=? WHERE id=?').run(resumed.versionId==='version-a'?'version-b':'version-a',resumed.attemptId),/IMMUTABLE/);
  assert.throws(()=>f.sqlite.prepare("UPDATE ielts_test_versions SET content_json='{}' WHERE id='version-a'").run(),/IMMUTABLE/);
 }));
 test('answers persist across restart and secure scoring ignores submitted version and score',()=>setup(async f=>{
@@ -45,11 +45,11 @@ test('15-day completion limit covers both tracks and rotates on exact eligibilit
  const first=await (await f.api('start',{track:'academic'})).json();await f.api('submit',{attemptId:first.attemptId,answers:{0:0}});
  assert.equal((await f.api('start',{track:'general'})).status,429);
  f.advance(15*86400-1);await f.relogin();assert.equal((await f.api('start',{track:'academic'})).status,429);
- f.advance(1);const next=await f.api('start',{track:'academic'});assert.equal(next.status,200);assert.equal((await next.json()).versionId,'version-b');
+ f.advance(1);const next=await f.api('start',{track:'academic'});assert.equal(next.status,200);assert.notEqual((await next.json()).versionId,first.versionId);
 }));
 test('expired unfinished attempt does not consume cooldown and cannot reuse same version',()=>setup(async f=>{
  f.version('version-a');f.version('version-b');const first=await (await f.api('start',{track:'academic'})).json();
- f.advance(3601);const second=await (await f.api('start',{track:'academic'})).json();assert.equal(second.versionId,'version-b');
+ f.advance(3601);const second=await (await f.api('start',{track:'academic'})).json();assert.notEqual(second.versionId,first.versionId);
  assert.equal(f.sqlite.prepare('SELECT status FROM ielts_attempts WHERE id=?').get(first.attemptId).status,'abandoned');
  assert.equal((await f.api('submit',{attemptId:first.attemptId,answers:{}})).status,409);
 }));
