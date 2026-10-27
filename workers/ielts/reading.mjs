@@ -36,7 +36,7 @@ async function start(env,learner,body,now) {
  const current=await sql(env,`SELECT a.*,v.content_json FROM ielts_attempts a JOIN ielts_test_versions v ON v.id=a.version_id WHERE a.learner_id=?1 AND a.skill='reading' AND a.status='active'`,learner.id).first();
  if(current && current.deadline>now)return reply(activePayload(current));
  if(current)await sql(env,`UPDATE ielts_attempts SET status='abandoned' WHERE id=?1 AND status='active'`,current.id).run();
- const version=await sql(env,`SELECT id,content_json FROM ielts_test_versions v WHERE skill='reading' AND track=?1 AND approved_at IS NOT NULL AND approved_at<=?2 AND NOT EXISTS(SELECT 1 FROM ielts_attempts a WHERE a.version_id=v.id AND a.learner_id=?3) ORDER BY approved_at,id LIMIT 1`,body.track,now,learner.id).first();
+ const version=await sql(env,`SELECT id,content_json FROM ielts_test_versions v WHERE skill='reading' AND track=?1 AND approved_at IS NOT NULL AND approved_at<=?2 AND NOT EXISTS(SELECT 1 FROM ielts_attempts a WHERE a.version_id=v.id AND a.learner_id=?3) ORDER BY RANDOM() LIMIT 1`,body.track,now,learner.id).first();
  if(!version)throw fail('No fresh approved Reading test is available. Please contact TELW.',503);
  // A unique active-attempt index and cooldown trigger arbitrate simultaneous starts.
  publicPassages(JSON.parse(version.content_json));
