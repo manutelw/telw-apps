@@ -1,3 +1,4 @@
+import {handleAdmin} from './workers/ielts/admin.mjs';
 import {handleReading} from './workers/ielts/reading.mjs';
 import {handleAuth,reply} from './workers/ielts/auth.mjs';
 import clarion from './worker-oracy.js';
@@ -10,6 +11,8 @@ export default {
     const url=new URL(request.url);
     const host=url.hostname;
     if(url.pathname.startsWith('/workers/ielts/') || url.pathname.startsWith('/tests/ielts/') || url.pathname.startsWith('/migrations/ielts/')) return new Response('Not found',{status:404});
+    const admin=await handleAdmin(request,env);
+    if(admin) return admin;
     const auth=await handleAuth(request,env);
     if(auth) return auth;
     const reading=await handleReading(request,env);
