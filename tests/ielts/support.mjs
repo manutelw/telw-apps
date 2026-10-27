@@ -3,11 +3,12 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {handleAuth} from '../../workers/ielts/auth.mjs';
 const base = 'https://manuvikraman.com';
-export function fixture() {
+export function fixture(reading = false) {
   const sqlite = new DatabaseSync(':memory:');
   sqlite.exec('PRAGMA foreign_keys=ON');
   for (const name of ['0001_diagnostic_state.sql','0002_verified_identity.sql'])
     sqlite.exec(readFileSync(new URL('../../migrations/ielts/'+name,import.meta.url),'utf8'));
+  if(reading) sqlite.exec(readFileSync(new URL('../../migrations/ielts/0003_reading_attempts.sql',import.meta.url),'utf8'));
   const db = {
     prepare(sql) {
       const statement = {args:[], bind(...args) { this.args=args; return this; },
