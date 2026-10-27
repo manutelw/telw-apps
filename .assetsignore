@@ -1,0 +1,5 @@
+# Server-only additions for IELTS. These must never enter the static asset upload.
+workers/ielts/**
+migrations/ielts/**
+tests/ielts/**
+tools/IELTS-IDENTITY-SETUP.md

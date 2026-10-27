@@ -1,0 +1,30 @@
+name: IELTS Diagnostic Tests
+on:
+  pull_request:
+    paths:
+      - 'workers/ielts/**'
+      - 'tests/ielts/**'
+      - 'migrations/ielts/**'
+      - 'worker-host-router.js'
+      - 'ielts/reading/**'
+      - 'ielts-reading-diagnostic.html'
+      - 'ielts-reading-scoring-private.js'
+      - '.assetsignore'
+      - '.github/workflows/ielts-diagnostic-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  identity-and-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: IELTS database and API tests
+        run: node --test tests/ielts/*.test.mjs
+      - name: Existing application integrity
+        run: |
+          python .github/scripts/ascent_integrity_check.py
+          python .github/scripts/ascent_trainer_integrity_check.py
