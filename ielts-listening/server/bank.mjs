@@ -26,7 +26,7 @@ export function validateBank(bank){
 }
 export function splitBank(bank){
  const result=validateBank(bank);if(!result.ok)throw Error(result.errors.join(' '));
- return {public:{id:bank.id,title:bank.title,parts:bank.parts.map(({number,title,questions,groups,visual})=>({number,title,questions,groups,...(visual?{visual}:{})}))},private:{parts:bank.parts.map(({number,title,turns,key})=>({number,title,turns,key})),reviewStatus:bank.reviewStatus||'review-pending'}};
+ return {public:{id:bank.id,title:bank.title,parts:bank.parts.map(({number,title,questions,groups,visual})=>({number,title,questions:questions.map(q=>({id:q.id,type:q.type,prompt:q.prompt,...(q.type==='completion'?{maxWords:q.maxWords,allowNumber:q.allowNumber}:{options:q.options})})),groups:groups.map(g=>({from:g.from,to:g.to,instruction:g.instruction,...(g.options?{options:g.options}:{})})),...(visual?{visual}:{})}))},private:{parts:bank.parts.map(({number,title,turns,key})=>({number,title,turns,key})),reviewStatus:bank.reviewStatus||'review-pending'}};
 }
 const clean=value=>String(value).normalize('NFKC').normalize('NFD').replace(/\p{M}/gu,'').toLowerCase().trim().replace(/[‐‑–—]/g,'-').replace(/[.!?]+$/,'').replace(/\s+/g,' ');
 export function normalise(value,kind){

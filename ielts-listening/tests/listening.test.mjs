@@ -93,3 +93,9 @@ test('missing bindings fail closed and invalid audio ranges do not expose audio'
  await f.install();const user=await f.login(),a=await (await f.api('start',{},user.cookie)).json();f.advance(30);await f.api('playback',{attemptId:a.attemptId,part:1,action:'play'},user.cookie);
  for(const range of ['bytes=256-','bytes=10-2','bytes=1-2,5-8'])assert.equal((await f.worker.fetch(new Request(origin+a.audio[0].url,{headers:{cookie:user.cookie,range}}),f.env)).status,416);
 }));
+
+test('candidate root explicitly requests index.html and public splitting discards unexpected private fields',()=>fixture(async f=>{
+ let path;f.env.ASSETS.fetch=async req=>{path=new URL(req.url).pathname;return new Response('Listening page');};
+ assert.equal((await f.worker.fetch(new Request(origin+'/ielts/listening/'),f.env)).status,200);assert.equal(path,'/index.html');
+ const bank=syntheticBank();bank.parts[0].questions[0].accepted=['secret'];bank.parts[0].groups[0].turns=['secret'];const split=splitBank(bank);assert.doesNotMatch(JSON.stringify(split.public),/secret|accepted|turns/);
+}));
