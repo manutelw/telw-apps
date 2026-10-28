@@ -23,7 +23,7 @@ export default {
   if(request.method!=='GET')headers.set('origin',CANONICAL_ORIGIN);
   const target=new URL(request.url);target.host='manuvikraman.com';
   const mapped=new Request(target.toString(),{method:request.method,headers,...(request.body?{body:request.body,duplex:'half'}:{})});
-  const previewEnv={...env,IELTS_VERIFICATION_PUBLIC_ORIGIN:PREVIEW_ORIGIN};
+  const previewEnv={...env,IELTS_VERIFICATION_PUBLIC_ORIGIN:PREVIEW_ORIGIN,IELTS_PREVIEW_BANK_IMPORT:PREVIEW_ORIGIN};
   return await handleAdmin(mapped,previewEnv) || await handleAuth(mapped,previewEnv) || await handleReading(mapped,previewEnv) || new Response('Not found',{status:404});
  }
 };
