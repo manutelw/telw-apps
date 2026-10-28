@@ -13,7 +13,7 @@ export async function onRequest(context){
   }
 
   // Administrator page: only an already authenticated ASCENT administrator may enter.
-  if(path==='/oracy/admin.html'||path==='/oracy/admin-share.html'){
+  if(path==='/oracy/admin.html'||path==='/oracy/admin-share.html'||path==='/oracy/audio-studio.html'){
     const adminToken=readCookie(context.request.headers.get('cookie')||'','clarion_admin_session');
     if(!adminToken||!(await validAdmin(adminToken))){
       return redirect('/ascent/admin-login.html');
