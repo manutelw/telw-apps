@@ -6,6 +6,8 @@ on:
     paths:
       - 'index.html'
       - 'telw-site/**'
+      - 'workers/ielts/**'
+      - 'tests/ielts/**'
       - 'ielts/reading/**'
       - 'ielts-reading-diagnostic.html'
       - 'ielts-reading-scoring-private.js'
@@ -33,6 +35,8 @@ on:
     paths:
       - 'index.html'
       - 'telw-site/**'
+      - 'workers/ielts/**'
+      - 'tests/ielts/**'
       - 'pay/**'
       - 'ascent/**'
       - 'ascent-play/**'

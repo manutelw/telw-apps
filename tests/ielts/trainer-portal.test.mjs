@@ -13,14 +13,14 @@ test('TELW routes are isolated from ClarionPrep and existing learner routes',asy
  const old=await handleTrainerPortal(req('/ielts/reading/admin'));assert.equal(old.status,303);assert.equal(old.headers.get('location'),'/ielts/admin/');
 });
 test('trainer login page and all login requests remain on manuvikraman.com',async()=>{
- const response=await handleTrainerPortal(req('/ielts/admin/'));assert.equal(response.status,200);assert.match(response.headers.get('cache-control'),/no-store/);assert.match(response.headers.get('content-security-policy'),/script-src 'nonce-/);
+ const response=await handleTrainerPortal(req('/ielts/admin/'));assert.equal(response.status,200);assert.match(response.headers.get('cache-control'),/no-store/);assert.match(response.headers.get('content-security-policy'),/script-src 'nonce-/);assert.equal(response.headers.get('referrer-policy'),'same-origin');
  const html=await response.text();assert.match(html,/IELTS administration/);assert.match(html,/autocomplete="one-time-code"/);assert.doesNotMatch(html,/clarionprep\.com|workers\.dev|localStorage/);new vm.Script(html.match(/<script nonce="[^"]+">([\s\S]*?)<\/script>/)[1]);
 });
 test('POST requires same origin and every action enforces its method before contacting the service',async()=>{
  let called=0;const backend=env(()=>{called++;throw Error('should not run');});
  assert.equal((await handleTrainerPortal(req(prefix+'auth/request-code','POST',{email:'manutelw@gmail.com'},{origin:'https://evil.example'}),backend)).status,403);
  assert.equal((await handleTrainerPortal(req(prefix+'auth/request-code'),backend)).status,405);
- assert.equal((await handleTrainerPortal(req(prefix+'admin','POST',{}),backend)).status,405);assert.equal(called,0);
+ assert.equal((await handleTrainerPortal(req(prefix+'admin','POST',{}),backend)).status,405);for(const origin of ['null',''])assert.equal((await handleTrainerPortal(req(prefix+'admin/import','POST','upload',{origin}),backend)).status,403);assert.equal(called,0);
 });
 test('code sending accepts only the TELW trainer email and bounds input',async()=>{
  let called=0;const backend=env(()=>{called++;return new Response('{}');});
@@ -41,8 +41,8 @@ test('session response uses a separate secure cookie on the main site',async()=>
 });
 test('question dashboard and import form keep all admin navigation on the main site',async()=>{
  const html='<main><nav><a href="/ielts/reading/">Learner app</a></nav><h1>IELTS Reading admin</h1><a href="/api/ielts/reading/admin">Back</a><form action="/api/ielts/reading/admin/import" method="post">Collection</form></main>';
- const response=await handleTrainerPortal(req(prefix+'admin','GET',undefined,{cookie}),env(async request=>{assert.equal(request.url,service+'/api/ielts/reading/admin');return new Response(html,{headers:{'content-type':'text/html','content-security-policy':"default-src 'none'; form-action 'self'"}});}));
- const body=await response.text();assert.match(body,/action="\/api\/ielts\/trainer\/admin\/import"/);assert.match(body,/href="\/api\/ielts\/trainer\/admin"/);assert.match(body,/Sign out of IELTS admin/);assert.doesNotMatch(body,/workers\.dev|clarionprep\.com/);assert.match(response.headers.get('cache-control'),/no-store/);
+ const response=await handleTrainerPortal(req(prefix+'admin','GET',undefined,{cookie}),env(async request=>{assert.equal(request.url,service+'/api/ielts/reading/admin');return new Response(html,{headers:{'content-type':'text/html','referrer-policy':'no-referrer','content-security-policy':"default-src 'none'; form-action 'self'"}});}));
+ const body=await response.text();assert.match(body,/action="\/api\/ielts\/trainer\/admin\/import"/);assert.match(body,/href="\/api\/ielts\/trainer\/admin"/);assert.match(body,/Sign out of IELTS admin/);assert.doesNotMatch(body,/workers\.dev|clarionprep\.com/);assert.match(response.headers.get('cache-control'),/no-store/);assert.equal(response.headers.get('referrer-policy'),'same-origin');
  const expired=await handleTrainerPortal(req(prefix+'admin'),env(async()=>new Response('sign in',{status:401})));assert.equal(expired.status,303);assert.equal(expired.headers.get('location'),'/ielts/admin/');
  const denied=await handleTrainerPortal(req(prefix+'admin','GET',undefined,{cookie}),env(async()=>new Response('Access denied',{status:403})));assert.equal(denied.status,403);
 });
