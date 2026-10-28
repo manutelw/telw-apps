@@ -1,0 +1,7 @@
+wrangler.local.jsonc
+.dev.vars
+.wrangler/
+node_modules/
+*.private.json
+*.mp3
+*.wav

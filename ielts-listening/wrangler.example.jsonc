@@ -1,0 +1,26 @@
+{
+  // Separate Worker. Copy to wrangler.local.jsonc after provision approval.
+  "name": "telw-ielts-listening",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-28",
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "html_handling": "none",
+    "not_found_handling": "none"
+  },
+  "routes": [
+    {"pattern": "manuvikraman.com/ielts/listening", "zone_name": "manuvikraman.com"},
+    {"pattern": "manuvikraman.com/ielts/listening/*", "zone_name": "manuvikraman.com"}
+  ],
+  "d1_databases": [{
+    "binding": "LISTENING_DB",
+    "database_name": "telw-ielts-listening",
+    "database_id": "REPLACE_WITH_NEW_LISTENING_DATABASE_ID",
+    "migrations_dir": "./migrations"
+  }],
+  "r2_buckets": [{"binding": "LISTENING_AUDIO", "bucket_name": "telw-ielts-listening-audio"}]
+}

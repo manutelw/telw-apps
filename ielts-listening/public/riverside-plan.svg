@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+<title id="title">Riverside Discovery Centre plan</title><desc id="desc">North is at the top. Eight buildings labelled A to H surround a central courtyard. The main gate is on the south side between G and H. The river is along the east side.</desc>
+<rect width="900" height="520" fill="#fff"/><path d="M810 0 Q780 85 820 170T820 340T810 520" fill="none" stroke="#b6deef" stroke-width="45"/><text x="842" y="250" font-family="Arial" font-size="20" transform="rotate(90 842 250)">River</text>
+<path d="M40 25H775V465H570M520 465H40Z" fill="none" stroke="#354c5a" stroke-width="3"/>
+<g fill="#e8eff3" stroke="#354c5a" stroke-width="2"><rect x="70" y="55" width="170" height="75"/><rect x="330" y="55" width="170" height="75"/><rect x="590" y="55" width="170" height="75"/><rect x="70" y="195" width="170" height="75"/><rect x="590" y="195" width="170" height="75"/><rect x="70" y="335" width="170" height="75"/><rect x="330" y="335" width="170" height="75"/><rect x="590" y="335" width="170" height="75"/></g>
+<rect x="300" y="180" width="235" height="130" rx="10" fill="#f3f6e9" stroke="#354c5a"/><text x="417" y="250" font-family="Arial" font-size="21" text-anchor="middle">Courtyard</text>
+<g font-family="Arial" font-size="30" font-weight="bold" text-anchor="middle" fill="#142e40"><text x="155" y="104">A</text><text x="415" y="104">B</text><text x="675" y="104">C</text><text x="155" y="244">D</text><text x="675" y="244">E</text><text x="155" y="384">F</text><text x="415" y="384">G</text><text x="675" y="384">H</text></g>
+<path d="M545 480V450M545 450L535 462M545 450L555 462" stroke="#142e40" stroke-width="3" fill="none"/><text x="545" y="506" font-family="Arial" font-size="18" text-anchor="middle">Main gate</text>
+<path d="M25 105V50M25 50L17 63M25 50L33 63" stroke="#142e40" stroke-width="3" fill="none"/><text x="25" y="35" font-family="Arial" font-size="20" text-anchor="middle">N</text>
+</svg>
