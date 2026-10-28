@@ -10,5 +10,11 @@
     "directory": ".",
     "binding": "ASSETS",
     "run_worker_first": true
-  }
+  },
+  "services": [
+    {
+      "binding": "IELTS_ADMIN_SERVICE",
+      "service": "telw-ielts-preview-worker"
+    }
+  ]
 }
