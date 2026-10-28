@@ -13,6 +13,7 @@ export function fixture(reading = false) {
     prepare(sql) {
       const statement = {args:[], bind(...args) { this.args=args; return this; },
         async first() { return sqlite.prepare(sql).get(...this.args) ?? null; },
+        async all() { return {results:sqlite.prepare(sql).all(...this.args)}; },
         async run() { const r=sqlite.prepare(sql).run(...this.args); return {success:true,meta:{changes:r.changes}}; }
       }; return statement;
     },
