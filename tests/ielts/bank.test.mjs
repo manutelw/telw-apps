@@ -24,3 +24,8 @@ test('private import SQL executes once, separates public content and preserves r
  assert.doesNotMatch(row.content_json,/keys|evidence|Fixture Reviewer/);assert.equal(JSON.parse(row.private_key_json).review.reviewer,'Fixture Reviewer');
  assert.throws(()=>db.exec(sql),/UNIQUE/);db.close();
 });
+
+test('each passage must contain at least two NOT GIVEN answers even when the total is eight',()=>{
+ const x=draft();x.keys[2]=0;x.evidence[2].verdict='supported';x.keys[12]=2;x.evidence[12].verdict='unstated';
+ const result=validateVersion(x);assert.equal(result.ok,false);assert.match(result.errors.join(' '),/Passage 1: requires at least two NOT GIVEN/);
+});
