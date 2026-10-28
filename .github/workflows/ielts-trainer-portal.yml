@@ -3,7 +3,9 @@ on:
   pull_request:
     paths:
       - 'workers/ielts/trainer-portal.mjs'
+      - 'workers/ielts/learner-portal.mjs'
       - 'tests/ielts/trainer-portal.test.mjs'
+      - 'tests/ielts/learner-portal.test.mjs'
       - 'worker-host-router.js'
       - 'telw-site/landing-page.html'
       - 'wrangler.jsonc'
@@ -20,4 +22,5 @@ jobs:
         with:
           node-version: '24'
       - run: node --check workers/ielts/trainer-portal.mjs
-      - run: node --test tests/ielts/trainer-portal.test.mjs
+      - run: node --check workers/ielts/learner-portal.mjs
+      - run: node --test tests/ielts/trainer-portal.test.mjs tests/ielts/learner-portal.test.mjs
