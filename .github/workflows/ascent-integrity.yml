@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - 'index.html'
+      - 'telw-site/**'
       - 'ielts/reading/**'
       - 'ielts-reading-diagnostic.html'
       - 'ielts-reading-scoring-private.js'
@@ -31,6 +32,7 @@ on:
     branches: [main, ascent-staging]
     paths:
       - 'index.html'
+      - 'telw-site/**'
       - 'pay/**'
       - 'ascent/**'
       - 'ascent-play/**'
