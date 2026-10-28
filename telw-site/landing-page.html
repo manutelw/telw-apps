@@ -639,7 +639,7 @@ footer a{text-underline-offset:3px}
     window.clearTimeout(resetTimer);
     if(clicks===5){
       clicks=0;
-      window.location.assign("https://telw-ielts-preview-worker.manutelw.workers.dev/api/ielts/reading/admin");
+      window.location.assign("/ielts/admin/");
       return;
     }
     resetTimer=window.setTimeout(function(){clicks=0;},5000);
