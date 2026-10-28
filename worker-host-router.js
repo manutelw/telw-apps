@@ -1,6 +1,7 @@
 import {handleTrainerPortal} from './workers/ielts/trainer-portal.mjs';
 import {handleLearnerPortal} from './workers/ielts/learner-portal.mjs';
 import clarion from './worker-oracy.js';
+import {onRequestPost as narrateAudioStudio} from './functions/oracy/audio-studio-narrator.js';
 import base from './worker.js';
 import {onRequestPost as evaluatePiPractice} from './functions/api/pi-practice/evaluate.js';
 import {onRequestPost as coachPiStudio} from './functions/api/pi-studio/coach.js';
@@ -15,6 +16,11 @@ export default {
     const learnerPortal=await handleLearnerPortal(request,env);
     if(learnerPortal)return learnerPortal;
     if(url.pathname==='/ielts-reading-scoring-private.js')return new Response('Not found',{status:404});
+    if(url.pathname==='/oracy/audio-studio-narrator'){
+      if(host!=='clarionprep.com'&&host!=='www.clarionprep.com')return new Response('Not found',{status:404});
+      if(request.method!=='POST')return new Response('POST required',{status:405});
+      return narrateAudioStudio({request,env});
+    }
     if(url.pathname==='/api/pi-studio/coach'){
       if(host!=='clarionprep.com'&&host!=='www.clarionprep.com')return new Response('Not found',{status:404});
       if(request.method!=='POST')return new Response(JSON.stringify({error:'POST required'}),{status:405,headers:{'content-type':'application/json'}});

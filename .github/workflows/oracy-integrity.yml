@@ -8,6 +8,7 @@ on:
       - 'functions/ascent/admin-settings.html.js'
       - 'worker.js'
       - 'worker-oracy.js'
+      - 'worker-host-router.js'
       - 'wrangler.jsonc'
       - '.github/oracy-unit1.lock'
       - '.github/oracy-unit2.lock'
