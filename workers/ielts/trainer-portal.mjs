@@ -8,7 +8,7 @@ const ADMIN=PREFIX+'admin';
 const COOKIE='__Secure-telw_ielts_admin';
 const UPSTREAM_COOKIE='__Secure-telw_ielts';
 const TRAINER='manutelw@gmail.com';
-const privateHeaders={'cache-control':'private, no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','x-frame-options':'DENY','x-robots-tag':'noindex, nofollow, noarchive'};
+const privateHeaders={'cache-control':'private, no-store','x-content-type-options':'nosniff','referrer-policy':'same-origin','x-frame-options':'DENY','x-robots-tag':'noindex, nofollow, noarchive'};
 const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{...privateHeaders,'content-type':'application/json; charset=utf-8'}});
 const redirect=path=>new Response(null,{status:303,headers:{...privateHeaders,location:path}});
 async function readBounded(request,max){
