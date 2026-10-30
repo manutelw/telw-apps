@@ -1,0 +1,86 @@
+name: IELTS Listening - create isolated storage
+on:
+  workflow_dispatch:
+  push:
+    branches: [telw-listening-provision]
+    paths: ['.github/workflows/ielts-listening-provision.yml']
+permissions:
+  contents: read
+concurrency:
+  group: listening-provision
+  cancel-in-progress: false
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Create only the approved Listening database and private bucket
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: python
+        run: |
+          import json, os, sys, urllib.request, urllib.error
+          token = os.environ.get('CLOUDFLARE_API_TOKEN', '')
+          if not token:
+              sys.exit('Cloudflare credential missing.')
+          account = None
+          database_name = 'telw-ielts-listening'
+          bucket_name = 'telw-ielts-listening-audio'
+          def api(method, path, body=None):
+              if method != 'GET':
+                  allowed = {
+                      ('POST', '/accounts/' + account + '/d1/database'): {'name': database_name},
+                      ('POST', '/accounts/' + account + '/r2/buckets'): {'name': bucket_name}
+                  }
+                  if allowed.get((method, path)) != body:
+                      sys.exit('Write outside approved Listening resource creation was blocked.')
+              request = urllib.request.Request('https://api.cloudflare.com/client/v4' + path,
+                  data=None if body is None else json.dumps(body).encode(), method=method,
+                  headers={'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'})
+              try:
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      data = json.load(response)
+              except Exception:
+                  sys.exit('Cloudflare request failed. No automatic retry or deletion; inspect resources before retrying.')
+              if data.get('success') is not True:
+                  sys.exit('Cloudflare rejected the request; inspect resources before retrying.')
+              return data
+          def items(path):
+              result, page = [], 1
+              while page <= 100:
+                  data = api('GET', path + ('&' if '?' in path else '?') + 'page=' + str(page) + '&per_page=50')
+                  if not isinstance(data.get('result'), list):
+                      sys.exit('Unexpected inventory shape; stopped.')
+                  result.extend(data['result'])
+                  if page >= data.get('result_info', {}).get('total_pages', 1):
+                      return result
+                  page += 1
+              sys.exit('Inventory pagination exceeded safe bound; stopped.')
+          zones = [z for z in items('/zones?name=manuvikraman.com') if z.get('name') == 'manuvikraman.com']
+          if len(zones) != 1:
+              sys.exit('Expected exactly one target zone; stopped.')
+          account = zones[0]['account']['id']
+          existing_databases = [d for d in items('/accounts/' + account + '/d1/database') if d.get('name') == database_name]
+          existing_buckets = api('GET', '/accounts/' + account + '/r2/buckets')['result']['buckets']
+          bucket_exists = any(b.get('name') == bucket_name for b in existing_buckets)
+          # Refuse existing names instead of adopting unknown production data.
+          if existing_databases or bucket_exists:
+              sys.exit('A target resource already exists. No changes made; inspect it before continuing.')
+          database = api('POST', '/accounts/' + account + '/d1/database', {'name': database_name})['result']
+          print('Created empty Listening database: ' + database_name, flush=True)
+          api('POST', '/accounts/' + account + '/r2/buckets', {'name': bucket_name})
+          print('Created Listening audio bucket; public access was not enabled.', flush=True)
+          confirmed = [d for d in items('/accounts/' + account + '/d1/database') if d.get('name') == database_name]
+          bucket = api('GET', '/accounts/' + account + '/r2/buckets/' + bucket_name)['result']
+          public = api('GET', '/accounts/' + account + '/r2/buckets/' + bucket_name + '/domains/managed')['result']
+          custom = api('GET', '/accounts/' + account + '/r2/buckets/' + bucket_name + '/domains/custom')['result']
+          custom_domains = custom.get('domains', []) if isinstance(custom, dict) else custom
+          if len(confirmed) != 1 or bucket.get('name') != bucket_name or public.get('enabled') is not False or custom_domains:
+              sys.exit('Resources created, but verification needs review. Nothing was published or deleted.')
+          report = {'databaseName': database_name, 'databaseId': database.get('uuid'),
+                    'bucketName': bucket_name, 'publicAccess': False,
+                    'databaseEmpty': True, 'workerDeployed': False, 'websiteChanged': False}
+          output = json.dumps(report, indent=2)
+          print(output)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('## Listening storage created\n```json\n' + output + '\n```\n')
