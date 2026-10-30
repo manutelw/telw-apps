@@ -122,3 +122,29 @@ jobs:
           print(output)
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
               summary.write('## Listening Cloudflare inspection\n```json\n' + output + '\n```\n')
+
+      - uses: actions/checkout@v4
+        with:
+          ref: 7e015efc64323c7d3c5f37826672f7d759e58c3d
+          path: source
+          sparse-checkout: ielts-listening
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Test and bundle Listening without deployment
+        working-directory: source/ielts-listening
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          node --test tests/*.test.mjs
+          node --check public/app.js
+          node --check public/admin.js
+          python - <<'PY'
+          import json, pathlib
+          p = pathlib.Path('wrangler.example.jsonc')
+          config = json.loads('\n'.join(line for line in p.read_text().splitlines() if not line.lstrip().startswith('//')))
+          config['d1_databases'][0]['database_id'] = '9a4570fd-7691-4d9d-abe2-7dbd9b0bbbaf'
+          pathlib.Path('wrangler.local.jsonc').write_text(json.dumps(config))
+          PY
+          npx --yes wrangler@4.156.0 deploy --dry-run --config wrangler.local.jsonc --outdir /tmp/telw-listening-build
