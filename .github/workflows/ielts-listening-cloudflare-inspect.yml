@@ -17,6 +17,8 @@ jobs:
       - name: Inspect Listening infrastructure without changing Cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          LISTENING_RESEND_API_KEY: ${{ secrets.LISTENING_RESEND_API_KEY }}
         shell: python
         run: |
           import json, os, sys, urllib.request, urllib.error
@@ -81,6 +83,8 @@ jobs:
               'mode': 'READ ONLY - all Cloudflare requests were GET',
               'zone': 'manuvikraman.com',
               'accountResolved': True,
+              'githubResendSecretConfigured': bool(os.environ.get('RESEND_API_KEY')),
+              'githubListeningResendSecretConfigured': bool(os.environ.get('LISTENING_RESEND_API_KEY')),
               'listeningWorkerExists': any(w.get('id') == 'telw-ielts-listening' for w in workers),
               'listeningDatabaseMatches': len([d for d in databases if d.get('name') == 'telw-ielts-listening']),
               'r2InspectionStatus': bucket_data.get('inspectionStatus', 'available'),
