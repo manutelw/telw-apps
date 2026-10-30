@@ -1,9 +1,6 @@
 name: IELTS Listening - read-only Cloudflare inspection
 on:
   workflow_dispatch:
-  push:
-    branches: [telw-listening-cloudflare-inspect]
-    paths: ['.github/workflows/ielts-listening-cloudflare-inspect.yml']
 permissions:
   contents: read
 concurrency:
@@ -149,41 +146,3 @@ jobs:
           PY
           npx --yes wrangler@4.156.0 deploy --dry-run --config wrangler.local.jsonc --outdir /tmp/telw-listening-build
 
-      - name: Prepare encrypted task credential for private content import
-        env:
-          CF_TASK_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        shell: python
-        run: |
-          import base64, os, pathlib, subprocess
-          public_key = "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAl+u/lr4DKZ4VBkaqhTf/\n18mz0aVW1L9hzRjcS9zVZyt7CL+3aYeLy8ZOC8WsWghdrH11FZmrw0NRnEa6kRSD\ni9KnxXgtJeBdXfS2NGmWev0zUI372zpQK6ulZ0MHuWZBmfJatAvUg+2kk5jL9OwP\nzsUitdiO4FQo0/NdEAhORY9z7+9JiXTQcOmy4mFAFnAHMuq4mcqlAa+tKqNt1M+9\nkJsbVgXmR8JKRwdXaES2pffrv9SHDut7VTyFF7n1GxXmvi6OR7fdcYRDPJUxOZd2\nrvscQgbPLZrCcFXo7aB80bYUBgDi6ORd3cV1G1A9uM5i55YNLpPlssm7UcqmN4SR\nWbkTHYXS2fkwmItA9tIiTIxMn6Y4xMZRk2gPLw2P6NCEXP2C+wiczcmHNko5erCx\nkPFWhYF2MKn1C31KLr8bRd5OxmXa6wsz2Mz3UeqyF7XXb7ydKvDl7kfNgk0bJLuz\nliLXhA7IYcbEGq0yLC0o7a+XW2Ame0UJEIrrddT45/crAgMBAAE=\n-----END PUBLIC KEY-----\n"
-          key = pathlib.Path('/tmp/listening-import-public.pem')
-          key.write_text(public_key)
-          encrypted = subprocess.run(['openssl', 'pkeyutl', '-encrypt', '-pubin', '-inkey', str(key),
-              '-pkeyopt', 'rsa_padding_mode:oaep', '-pkeyopt', 'rsa_oaep_md:sha256'],
-              input=os.environ['CF_TASK_TOKEN'].strip().encode(), capture_output=True, check=True).stdout
-          print('LISTENING_ENCRYPTED_TASK_CREDENTIAL=' + base64.b64encode(encrypted).decode())
-
-      - name: Test email delivery only to the approved TELW owner address
-        env:
-          LISTENING_RESEND_API_KEY: ${{ secrets.LISTENING_RESEND_API_KEY }}
-        shell: python
-        run: |
-          import json, os, sys, urllib.request, urllib.error
-          payload = {'from':'TELW IELTS <ielts@mail.clarionprep.com>', 'to':['manutelw@gmail.com'],
-              'subject':'TELW Listening setup - email delivery test',
-              'text':'This is the authorised email delivery test for your separate TELW IELTS Listening diagnostic. The app has been deployed; its five sets are being imported and checked before candidate access opens. No action is needed for this test email.'}
-          req = urllib.request.Request('https://api.resend.com/emails',method='POST',data=json.dumps(payload).encode(),
-              headers={'Authorization':'Bearer '+os.environ['LISTENING_RESEND_API_KEY'].strip(),
-                       'Content-Type':'application/json','User-Agent':'TELW-Listening-Setup',
-                       'Idempotency-Key':'telw-listening-owner-mail-test-20261030-v1'})
-          try:
-              with urllib.request.urlopen(req,timeout=30) as response:
-                  result=json.load(response)
-              print('Owner email test accepted by Resend: '+str(bool(result.get('id'))))
-          except urllib.error.HTTPError as error:
-              try:
-                  result=json.load(error)
-                  print('Owner email test failed: '+str(result.get('name','unknown'))+'; '+str(result.get('message','unknown')))
-              except Exception:
-                  print('Owner email test failed: HTTP '+str(error.code))
-              sys.exit(1)
