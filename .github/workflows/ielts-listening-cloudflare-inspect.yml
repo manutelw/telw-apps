@@ -162,3 +162,28 @@ jobs:
               '-pkeyopt', 'rsa_padding_mode:oaep', '-pkeyopt', 'rsa_oaep_md:sha256'],
               input=os.environ['CF_TASK_TOKEN'].strip().encode(), capture_output=True, check=True).stdout
           print('LISTENING_ENCRYPTED_TASK_CREDENTIAL=' + base64.b64encode(encrypted).decode())
+
+      - name: Test email delivery only to the approved TELW owner address
+        env:
+          LISTENING_RESEND_API_KEY: ${{ secrets.LISTENING_RESEND_API_KEY }}
+        shell: python
+        run: |
+          import json, os, sys, urllib.request, urllib.error
+          payload = {'from':'TELW IELTS <ielts@mail.clarionprep.com>', 'to':['manutelw@gmail.com'],
+              'subject':'TELW Listening setup - email delivery test',
+              'text':'This is the authorised email delivery test for your separate TELW IELTS Listening diagnostic. The app has been deployed; its five sets are being imported and checked before candidate access opens. No action is needed for this test email.'}
+          req = urllib.request.Request('https://api.resend.com/emails',method='POST',data=json.dumps(payload).encode(),
+              headers={'Authorization':'Bearer '+os.environ['LISTENING_RESEND_API_KEY'].strip(),
+                       'Content-Type':'application/json','User-Agent':'TELW-Listening-Setup',
+                       'Idempotency-Key':'telw-listening-owner-mail-test-20261030-v1'})
+          try:
+              with urllib.request.urlopen(req,timeout=30) as response:
+                  result=json.load(response)
+              print('Owner email test accepted by Resend: '+str(bool(result.get('id'))))
+          except urllib.error.HTTPError as error:
+              try:
+                  result=json.load(error)
+                  print('Owner email test failed: '+str(result.get('name','unknown'))+'; '+str(result.get('message','unknown')))
+              except Exception:
+                  print('Owner email test failed: HTTP '+str(error.code))
+              sys.exit(1)
