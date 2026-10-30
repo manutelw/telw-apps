@@ -24,6 +24,13 @@ jobs:
           if not token:
               sys.exit('CLOUDFLARE_API_TOKEN is missing. No Cloudflare request was sent.')
           def get(path):
+              label = ('zone lookup' if path.startswith('/zones?') else
+                       'Worker routes' if '/workers/routes' in path else
+                       'Worker inventory' if '/workers/scripts' in path else
+                       'D1 inventory' if '/d1/database' in path else
+                       'R2 inventory' if '/r2/buckets' in path else
+                       'Worker custom domains')
+              print('Reading: ' + label, flush=True)
               request = urllib.request.Request(
                   'https://api.cloudflare.com/client/v4' + path,
                   headers={'Authorization': 'Bearer ' + token, 'Accept': 'application/json'},
@@ -32,7 +39,12 @@ jobs:
                   with urllib.request.urlopen(request, timeout=30) as response:
                       data = json.load(response)
               except urllib.error.HTTPError as error:
-                  sys.exit('Cloudflare inspection stopped: HTTP ' + str(error.code) + '. No resources changed.')
+                  try:
+                      details = json.load(error)
+                      codes = [e.get('code') for e in details.get('errors', []) if isinstance(e.get('code'), int)]
+                  except Exception:
+                      codes = []
+                  sys.exit('Cloudflare rejected ' + label + ': HTTP ' + str(error.code) + '; error codes ' + str(codes) + '. No resources changed.')
               except Exception:
                   sys.exit('Cloudflare inspection stopped: network or response error. No resources changed.')
               if data.get('success') is not True:
