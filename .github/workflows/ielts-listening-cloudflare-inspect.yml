@@ -79,7 +79,7 @@ jobs:
           domains = get('/accounts/' + account + '/workers/domains')['result']
           if not isinstance(workers, list) or not isinstance(domains, list) or not isinstance(bucket_data, dict) or not isinstance(bucket_data.get('buckets'), list):
               sys.exit('Unexpected inventory shape. No resources changed.')
-          email_key = os.environ.get('LISTENING_RESEND_API_KEY', '')
+          email_key = os.environ.get('LISTENING_RESEND_API_KEY', '').strip()
           email_probe = 'missing'
           if email_key:
               request = urllib.request.Request('https://api.resend.com/domains',
@@ -96,8 +96,8 @@ jobs:
                       error_name = ''
                   email_probe = 'recognised-sending-only-key' if error_name == 'restricted_api_key' else 'unverified-http-' + str(error.code)
                   sender_verified = None
-              except Exception:
-                  email_probe = 'unverified-network-error'
+              except Exception as error:
+                  email_probe = 'unverified-' + type(error).__name__
                   sender_verified = None
           else:
               sender_verified = None
@@ -106,6 +106,7 @@ jobs:
               'zone': 'manuvikraman.com',
               'accountResolved': True,
               'emailKeyProbe': email_probe,
+              'emailKeyFormatPlausible': email_key.startswith('re_') and not any(c.isspace() for c in email_key),
               'existingSenderDomainVerified': sender_verified,
               'githubResendSecretConfigured': bool(os.environ.get('RESEND_API_KEY')),
               'githubListeningResendSecretConfigured': bool(os.environ.get('LISTENING_RESEND_API_KEY')),
