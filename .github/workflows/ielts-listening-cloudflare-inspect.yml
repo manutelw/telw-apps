@@ -1,0 +1,80 @@
+name: IELTS Listening - read-only Cloudflare inspection
+on:
+  workflow_dispatch:
+  push:
+    branches: [telw-listening-cloudflare-inspect]
+    paths: ['.github/workflows/ielts-listening-cloudflare-inspect.yml']
+permissions:
+  contents: read
+concurrency:
+  group: listening-cloudflare-inspection
+  cancel-in-progress: false
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect Listening infrastructure without changing Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: python
+        run: |
+          import json, os, sys, urllib.request, urllib.error
+          token = os.environ.get('CLOUDFLARE_API_TOKEN', '')
+          if not token:
+              sys.exit('CLOUDFLARE_API_TOKEN is missing. No Cloudflare request was sent.')
+          def get(path):
+              request = urllib.request.Request(
+                  'https://api.cloudflare.com/client/v4' + path,
+                  headers={'Authorization': 'Bearer ' + token, 'Accept': 'application/json'},
+                  method='GET')
+              try:
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      data = json.load(response)
+              except urllib.error.HTTPError as error:
+                  sys.exit('Cloudflare inspection stopped: HTTP ' + str(error.code) + '. No resources changed.')
+              except Exception:
+                  sys.exit('Cloudflare inspection stopped: network or response error. No resources changed.')
+              if data.get('success') is not True:
+                  sys.exit('Cloudflare rejected a read-only inspection request. No resources changed.')
+              return data
+          def items(path):
+              result, page = [], 1
+              while True:
+                  data = get(path + ('&' if '?' in path else '?') + 'page=' + str(page) + '&per_page=50')
+                  if not isinstance(data.get('result'), list):
+                      sys.exit('Unexpected Cloudflare inventory response. No resources changed.')
+                  result.extend(data['result'])
+                  if page >= data.get('result_info', {}).get('total_pages', 1):
+                      return result
+                  page += 1
+                  if page > 100:
+                      sys.exit('Inventory too large; inspection stopped without changes.')
+          zones = items('/zones?name=manuvikraman.com')
+          zones = [z for z in zones if z.get('name') == 'manuvikraman.com']
+          if len(zones) != 1:
+              sys.exit('Expected exactly one manuvikraman.com zone. No resources changed.')
+          zone = zones[0]
+          account = zone['account']['id']
+          routes = items('/zones/' + zone['id'] + '/workers/routes')
+          workers = get('/accounts/' + account + '/workers/scripts')['result']
+          databases = items('/accounts/' + account + '/d1/database')
+          bucket_data = get('/accounts/' + account + '/r2/buckets')['result']
+          domains = get('/accounts/' + account + '/workers/domains')['result']
+          if not isinstance(workers, list) or not isinstance(domains, list) or not isinstance(bucket_data, dict) or not isinstance(bucket_data.get('buckets'), list):
+              sys.exit('Unexpected inventory shape. No resources changed.')
+          report = {
+              'mode': 'READ ONLY - all Cloudflare requests were GET',
+              'zone': 'manuvikraman.com',
+              'accountResolved': True,
+              'listeningWorkerExists': any(w.get('id') == 'telw-ielts-listening' for w in workers),
+              'listeningDatabaseMatches': len([d for d in databases if d.get('name') == 'telw-ielts-listening']),
+              'listeningBucketExists': any(b.get('name') == 'telw-ielts-listening-audio' for b in bucket_data['buckets']),
+              'zoneRoutes': [{'pattern': r.get('pattern'), 'script': r.get('script')} for r in routes],
+              'hostCustomDomains': [{'hostname': d.get('hostname'), 'service': d.get('service')} for d in domains if d.get('hostname') == 'manuvikraman.com'],
+              'note': 'Inventory only. Do not infer route compatibility or permission to deploy. Reading and ORACY were not modified.'
+          }
+          output = json.dumps(report, indent=2)
+          print(output)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('## Listening Cloudflare inspection\n```json\n' + output + '\n```\n')
