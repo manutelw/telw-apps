@@ -1,4 +1,4 @@
-name: Listening voice correction preflight
+name: Clear only the identified Listening QA attempt
 on:
   push:
     branches: [telw-listening-deploy]
@@ -18,12 +18,9 @@ jobs:
           import json,os,urllib.request
           print('Existing OpenAI Actions key configured: '+str(bool(os.environ.get('OPENAI_API_KEY','').strip())))
           token=os.environ['CLOUDFLARE_API_TOKEN'].strip()
-          req=urllib.request.Request('https://api.cloudflare.com/client/v4/accounts/b71ca81dd57b4ede28dfe80b68a3d9ba/d1/database/9a4570fd-7691-4d9d-abe2-7dbd9b0bbbaf/query',headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'},data=json.dumps({'sql':"SELECT a.id,a.status,a.set_id,a.answers_json,a.playback_json,a.deadline FROM listening_attempts a JOIN listening_learners l ON l.id=a.learner_id WHERE l.email=? ORDER BY a.started_at DESC LIMIT 3",'params':['manutelw@gmail.com']}).encode())
+          req=urllib.request.Request('https://api.cloudflare.com/client/v4/accounts/b71ca81dd57b4ede28dfe80b68a3d9ba/d1/database/9a4570fd-7691-4d9d-abe2-7dbd9b0bbbaf/query',headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'},data=json.dumps({'sql':"UPDATE listening_attempts SET status='abandoned' WHERE id='056059e5-78c0-4c61-b7be-c11a654acbd0' AND status='active' AND answers_json='{\"1\":\"QA preview\"}' AND learner_id IN (SELECT id FROM listening_learners WHERE email=?) RETURNING id,status,set_id",'params':['manutelw@gmail.com']}).encode())
           with urllib.request.urlopen(req,timeout=30) as r: data=json.load(r)
           if not data.get('success'): raise RuntimeError('Listening inspection failed')
           for result in data['result']:
               for row in result.get('results',[]):
-                  answers=json.loads(row.pop('answers_json'))
-                  row['is_exact_QA_attempt']=answers=={'1':'QA preview'}
-                  row['answer_count']=len(answers)
                   print(json.dumps(row))
