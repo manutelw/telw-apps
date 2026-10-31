@@ -1,85 +1,22 @@
-name: IELTS Listening - private preview update
+name: Repair only incomplete unpublished Listening upload
 on:
   push:
     branches: [telw-listening-deploy]
     paths: ['.github/workflows/ielts-listening-deploy.yml']
 permissions:
   contents: read
-concurrency:
-  group: listening-live-deployment
-  cancel-in-progress: false
 jobs:
-  deploy:
+  repair:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: acc8fa69d5a42a8526fd5664e840dc0e2c33c52d
-          path: source
-          sparse-checkout: ielts-listening
-          persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-      - name: Verify Listening source
-        working-directory: source/ielts-listening
-        run: |
-          node --test tests/*.test.mjs
-          node --check public/admin.js
-      - name: Verify existing isolated target
+      - name: Remove only the verified truncated draft audio metadata
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         shell: python
         run: |
-          import json, os, pathlib, sys, urllib.request
-          token = os.environ['CLOUDFLARE_API_TOKEN'].strip()
-          def get(path):
-              req = urllib.request.Request('https://api.cloudflare.com/client/v4'+path, headers={'Authorization':'Bearer '+token})
-              with urllib.request.urlopen(req,timeout=30) as r: data=json.load(r)
-              if not data.get('success'): sys.exit('Cloudflare preflight failed.')
-              return data['result']
-          zones=get('/zones?name=manuvikraman.com')
-          if len(zones)!=1: sys.exit('Zone mismatch.')
-          account=zones[0]['account']['id']
-          db_id='9a4570fd-7691-4d9d-abe2-7dbd9b0bbbaf'
-          if get('/accounts/'+account+'/d1/database/'+db_id).get('name')!='telw-ielts-listening': sys.exit('Database mismatch.')
-          bucket='/accounts/'+account+'/r2/buckets/telw-ielts-listening-audio'
-          if get(bucket+'/domains/managed').get('enabled') is not False: sys.exit('Audio bucket must remain private.')
-          routes=get('/zones/'+zones[0]['id']+'/workers/routes')
-          target=[r['pattern'] for r in routes if r.get('script')=='telw-ielts-listening']
-          expected=['manuvikraman.com/ielts/listening','manuvikraman.com/ielts/listening/*']
-          if sorted(target)!=sorted(expected): sys.exit('Existing Listening routes mismatch.')
-          root=get('/accounts/'+account+'/workers/scripts/telw-apps/deployments')
-          pathlib.Path('/tmp/listening-root-before.json').write_text(json.dumps(root,sort_keys=True))
-          p=pathlib.Path('source/ielts-listening')
-          config=json.loads('\n'.join(l for l in (p/'wrangler.example.jsonc').read_text().splitlines() if not l.lstrip().startswith('//')))
-          config['account_id']=account
-          config['d1_databases'][0]['database_id']=db_id
-          if config['name']!='telw-ielts-listening' or [r['pattern'] for r in config['routes']]!=expected: sys.exit('Config scope mismatch.')
-          (p/'wrangler.local.jsonc').write_text(json.dumps(config))
-          with open(os.environ['GITHUB_ENV'],'a') as out: out.write('CLOUDFLARE_ACCOUNT_ID='+account+'\n')
-      - name: Deploy only existing Listening Worker, preserving secrets and data
-        working-directory: source/ielts-listening
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          WRANGLER_SEND_METRICS: 'false'
-        run: |
-          npx --yes wrangler@4.156.0 d1 migrations apply LISTENING_DB --remote --config wrangler.local.jsonc
-          npx --yes wrangler@4.156.0 deploy --config wrangler.local.jsonc
-      - name: Verify preview asset and root isolation
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        shell: python
-        run: |
-          import json,os,pathlib,sys,urllib.request,urllib.error
-          try:
-              with urllib.request.urlopen('https://manuvikraman.com/ielts/listening/admin.js',timeout=30) as r: js=r.read().decode()
-              if 'Submit preview answers' not in js: sys.exit('Live preview asset missing.')
-          except urllib.error.HTTPError as e:
-              if e.code != 403: raise
-              print('Runner website access returned 403; signed-in browser verification is required.')
-          req=urllib.request.Request('https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/telw-apps/deployments',headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN'].strip()})
-          with urllib.request.urlopen(req,timeout=30) as r: root=json.load(r)
-          if not root.get('success') or json.dumps(root['result'],sort_keys=True)!=pathlib.Path('/tmp/listening-root-before.json').read_text(): sys.exit('Root deployment changed during verification; investigate.')
-          print('Private Listening preview deployed. Root Worker unchanged. No bank publication, schema or secret changes.')
+          import json,os,urllib.request
+          sql="DELETE FROM listening_audio WHERE set_id=? AND part=1 AND size=2097152 AND EXISTS(SELECT 1 FROM listening_sets s WHERE s.id=listening_audio.set_id AND s.published_at IS NULL) RETURNING set_id,part,size"
+          req=urllib.request.Request('https://api.cloudflare.com/client/v4/accounts/b71ca81dd57b4ede28dfe80b68a3d9ba/d1/database/9a4570fd-7691-4d9d-abe2-7dbd9b0bbbaf/query',headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN'].strip(),'Content-Type':'application/json'},data=json.dumps({'sql':sql,'params':['listening-production-04-v2']}).encode())
+          with urllib.request.urlopen(req,timeout=30) as r: data=json.load(r)
+          if not data.get('success'): raise RuntimeError('Draft repair failed')
+          print(json.dumps(data['result']))
