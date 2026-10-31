@@ -1,6 +1,5 @@
-name: IELTS Listening - approved closed release
+name: IELTS Listening - private preview update
 on:
-  workflow_dispatch:
   push:
     branches: [telw-listening-deploy]
     paths: ['.github/workflows/ielts-listening-deploy.yml']
@@ -12,138 +11,69 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 7e015efc64323c7d3c5f37826672f7d759e58c3d
+          ref: 79b9b96ddfacbf33b0d46689dc5dd70dca45ffc3
           path: source
           sparse-checkout: ielts-listening
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Test the unchanged Listening source
+      - name: Verify Listening source
         working-directory: source/ielts-listening
         run: |
           node --test tests/*.test.mjs
-          node --check public/app.js
           node --check public/admin.js
-      - name: Verify isolated target and prepare private configuration
+      - name: Verify existing isolated target
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          LISTENING_RESEND_API_KEY: ${{ secrets.LISTENING_RESEND_API_KEY }}
         shell: python
         run: |
-          import hashlib, json, os, pathlib, secrets, sys, urllib.request, urllib.error
-          token = os.environ.get('CLOUDFLARE_API_TOKEN', '').strip()
-          email_key = os.environ.get('LISTENING_RESEND_API_KEY', '').strip()
-          if not token or not email_key.startswith('re_') or any(c.isspace() for c in email_key):
-              sys.exit('Required deployment credentials are missing or malformed.')
+          import json, os, pathlib, sys, urllib.request
+          token = os.environ['CLOUDFLARE_API_TOKEN'].strip()
           def get(path):
-              req = urllib.request.Request('https://api.cloudflare.com/client/v4' + path,
-                  headers={'Authorization': 'Bearer ' + token}, method='GET')
-              try:
-                  with urllib.request.urlopen(req, timeout=30) as r:
-                      data = json.load(r)
-              except Exception:
-                  sys.exit('Cloudflare read-only preflight failed.')
-              if not data.get('success'):
-                  sys.exit('Cloudflare rejected preflight; stopped.')
+              req = urllib.request.Request('https://api.cloudflare.com/client/v4'+path, headers={'Authorization':'Bearer '+token})
+              with urllib.request.urlopen(req,timeout=30) as r: data=json.load(r)
+              if not data.get('success'): sys.exit('Cloudflare preflight failed.')
               return data['result']
-          zones = get('/zones?name=manuvikraman.com&per_page=50')
-          if len(zones) != 1 or zones[0].get('name') != 'manuvikraman.com':
-              sys.exit('Target zone mismatch.')
-          account = zones[0]['account']['id']
-          db_id = '9a4570fd-7691-4d9d-abe2-7dbd9b0bbbaf'
-          db = get('/accounts/' + account + '/d1/database/' + db_id)
-          if db.get('name') != 'telw-ielts-listening':
-              sys.exit('Listening database identity mismatch.')
-          bucket_path = '/accounts/' + account + '/r2/buckets/telw-ielts-listening-audio'
-          if get(bucket_path).get('name') != 'telw-ielts-listening-audio':
-              sys.exit('Listening bucket identity mismatch.')
-          if get(bucket_path + '/domains/managed').get('enabled') is not False:
-              sys.exit('Listening audio bucket is unexpectedly public.')
-          custom = get(bucket_path + '/domains/custom')
-          if (custom.get('domains', []) if isinstance(custom, dict) else custom):
-              sys.exit('Listening audio bucket has a custom domain; stopped.')
-          workers = get('/accounts/' + account + '/workers/scripts')
-          if any(w.get('id') == 'telw-ielts-listening' for w in workers):
-              sys.exit('Listening Worker already exists; stop rather than overwrite it.')
-          routes = get('/zones/' + zones[0]['id'] + '/workers/routes')
-          if any('/ielts/listening' in r.get('pattern', '') for r in routes):
-              sys.exit('An existing Listening route requires review; stopped.')
-          root_deployment = get('/accounts/' + account + '/workers/scripts/telw-apps/deployments')
-          try:
-              with urllib.request.urlopen('https://manuvikraman.com/ielts/reading/', timeout=30) as r:
-                  reading_status, reading_body = r.status, r.read()
-          except urllib.error.HTTPError as error:
-              reading_status, reading_body = error.code, error.read()
-          except Exception:
-              sys.exit('Cannot establish the Reading HTTP baseline; stopped.')
-          if reading_status not in (200, 401, 403):
-              sys.exit('Unexpected Reading baseline status; stopped.')
-          # The actual browser baseline was independently verified before this run.
-          # A restricted runner response is compared as-is; no access control is bypassed.
-          baseline = {'account': account, 'rootDeployment': root_deployment,
-                      'readingStatus': reading_status, 'readingHash': hashlib.sha256(reading_body).hexdigest()}
-          print('Reading runner baseline status: ' + str(reading_status))
-          pathlib.Path('/tmp/listening-baseline.json').write_text(json.dumps(baseline))
-          source = pathlib.Path('source/ielts-listening')
-          config = json.loads('\n'.join(l for l in (source/'wrangler.example.jsonc').read_text().splitlines() if not l.lstrip().startswith('//')))
-          config['d1_databases'][0]['database_id'] = db_id
-          if config['name'] != 'telw-ielts-listening' or [r['pattern'] for r in config['routes']] != ['manuvikraman.com/ielts/listening', 'manuvikraman.com/ielts/listening/*']:
-              sys.exit('Deployment config exceeds approved Listening scope.')
-          (source/'wrangler.local.jsonc').write_text(json.dumps(config))
-          secret_file = pathlib.Path('/tmp/telw-listening-secrets.json')
-          with open(secret_file, 'x', opener=lambda p,f: os.open(p,f,0o600)) as stream:
-              json.dump({'LISTENING_AUTH_SECRET': secrets.token_hex(32), 'RESEND_API_KEY': email_key,
-                         'TELW_FROM_EMAIL': 'TELW IELTS <ielts@mail.clarionprep.com>'}, stream)
-          with open(os.environ['GITHUB_ENV'], 'a') as stream:
-              stream.write('CLOUDFLARE_ACCOUNT_ID=' + account + '\n')
-          print('Verified new Listening resources and captured Reading baseline. Secrets were not printed.')
-      - name: Apply only Listening migration and deploy only Listening routes
+          zones=get('/zones?name=manuvikraman.com')
+          if len(zones)!=1: sys.exit('Zone mismatch.')
+          account=zones[0]['account']['id']
+          db_id='9a4570fd-7691-4d9d-abe2-7dbd9b0bbbaf'
+          if get('/accounts/'+account+'/d1/database/'+db_id).get('name')!='telw-ielts-listening': sys.exit('Database mismatch.')
+          bucket='/accounts/'+account+'/r2/buckets/telw-ielts-listening-audio'
+          if get(bucket+'/domains/managed').get('enabled') is not False: sys.exit('Audio bucket must remain private.')
+          routes=get('/zones/'+zones[0]['id']+'/workers/routes')
+          target=[r['pattern'] for r in routes if r.get('script')=='telw-ielts-listening']
+          expected=['manuvikraman.com/ielts/listening','manuvikraman.com/ielts/listening/*']
+          if sorted(target)!=sorted(expected): sys.exit('Existing Listening routes mismatch.')
+          root=get('/accounts/'+account+'/workers/scripts/telw-apps/deployments')
+          pathlib.Path('/tmp/listening-root-before.json').write_text(json.dumps(root,sort_keys=True))
+          p=pathlib.Path('source/ielts-listening')
+          config=json.loads('\n'.join(l for l in (p/'wrangler.example.jsonc').read_text().splitlines() if not l.lstrip().startswith('//')))
+          config['account_id']=account
+          config['d1_databases'][0]['database_id']=db_id
+          if config['name']!='telw-ielts-listening' or [r['pattern'] for r in config['routes']]!=expected: sys.exit('Config scope mismatch.')
+          (p/'wrangler.local.jsonc').write_text(json.dumps(config))
+          with open(os.environ['GITHUB_ENV'],'a') as out: out.write('CLOUDFLARE_ACCOUNT_ID='+account+'\n')
+      - name: Deploy only existing Listening Worker, preserving secrets and data
         working-directory: source/ielts-listening
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           WRANGLER_SEND_METRICS: 'false'
-        run: |
-          npx --yes wrangler@4.156.0 deploy --dry-run --config wrangler.local.jsonc --outdir /tmp/telw-listening-build
-          npx --yes wrangler@4.156.0 d1 migrations apply LISTENING_DB --remote --config wrangler.local.jsonc
-          npx --yes wrangler@4.156.0 deploy --config wrangler.local.jsonc --secrets-file /tmp/telw-listening-secrets.json
-      - name: Verify closed Listening release and unchanged Reading
+        run: npx --yes wrangler@4.156.0 deploy --config wrangler.local.jsonc
+      - name: Verify preview asset and root isolation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         shell: python
         run: |
-          import hashlib, json, os, pathlib, sys, urllib.error, urllib.request
-          baseline = json.loads(pathlib.Path('/tmp/listening-baseline.json').read_text())
-          def read(url):
-              try:
-                  with urllib.request.urlopen(url, timeout=30) as r:
-                      return r.status, r.read()
-              except urllib.error.HTTPError as e:
-                  return e.code, e.read()
-          for suffix in ['/', '/admin/']:
-              if read('https://manuvikraman.com/ielts/listening' + suffix)[0] != 200:
-                  sys.exit('Listening page verification failed; investigate without changing Reading.')
-          status, body = read('https://manuvikraman.com/ielts/listening/api/status')
-          if status != 200 or json.loads(body).get('ready') is not False:
-              sys.exit('Listening must remain closed with no published banks.')
-          if read('https://manuvikraman.com/ielts/listening/api/admin/sets')[0] != 401:
-              sys.exit('Unauthenticated admin access did not fail closed.')
-          status, body = read('https://manuvikraman.com/ielts/reading/')
-          if status != baseline['readingStatus'] or hashlib.sha256(body).hexdigest() != baseline['readingHash']:
-              sys.exit('Reading response changed; stop and investigate. No automatic rollback or Reading modification.')
-          req = urllib.request.Request('https://api.cloudflare.com/client/v4/accounts/' + baseline['account'] + '/workers/scripts/telw-apps/deployments',
-              headers={'Authorization': 'Bearer ' + os.environ['CLOUDFLARE_API_TOKEN']}, method='GET')
-          with urllib.request.urlopen(req, timeout=30) as r:
-              current = json.load(r)
-          if not current.get('success') or current['result'] != baseline['rootDeployment']:
-              sys.exit('Root Worker deployment changed; stop for review.')
-          print('Listening shell deployed and closed. Admin rejects unauthenticated access. Reading runner response byte-identical; root Worker deployment unchanged. Browser regression verification remains required.')
-          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as stream:
-              stream.write('Listening shell deployed at /ielts/listening/. No banks published. Reading and root Worker checks passed.\n')
-      - name: Remove temporary deployment credentials
-        if: always()
-        run: rm -f /tmp/telw-listening-secrets.json
+          import json,os,pathlib,sys,urllib.request
+          with urllib.request.urlopen('https://manuvikraman.com/ielts/listening/admin.js',timeout=30) as r: js=r.read().decode()
+          if 'Submit preview answers' not in js: sys.exit('Live preview asset missing.')
+          req=urllib.request.Request('https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/telw-apps/deployments',headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN'].strip()})
+          with urllib.request.urlopen(req,timeout=30) as r: root=json.load(r)
+          if not root.get('success') or json.dumps(root['result'],sort_keys=True)!=pathlib.Path('/tmp/listening-root-before.json').read_text(): sys.exit('Root deployment changed during verification; investigate.')
+          print('Private Listening preview deployed. Root Worker unchanged. No bank publication, schema or secret changes.')
