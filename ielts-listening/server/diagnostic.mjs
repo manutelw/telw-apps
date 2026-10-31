@@ -55,6 +55,9 @@ async function audio(request,env,learner){
  const part=Number(u.searchParams.get('part')),state=JSON.parse(row.playback_json);
  if(row.status!=='active'||Math.floor(Date.now()/1000)>=row.deadline||part!==state.part||!state.playStartedAt)throw fail('Audio is available only for the current active part.',403);
  const meta=await sql(env,'SELECT * FROM listening_audio WHERE set_id=?1 AND part=?2',row.set_id,part).first();if(!meta||!env.LISTENING_AUDIO)throw fail('The recording is unavailable.',503);
+ return recordingResponse(request,env,meta);
+}
+async function recordingResponse(request,env,meta){
  let offset=0,length=meta.size,status=200;const range=request.headers.get('range');
  if(range){const m=range.match(/^bytes=(\d+)-(\d*)$/);if(!m)return new Response(null,{status:416,headers:{'content-range':'bytes */'+meta.size}});offset=Number(m[1]);const end=m[2]?Number(m[2]):meta.size-1;if(offset>=meta.size||end<offset)return new Response(null,{status:416,headers:{'content-range':'bytes */'+meta.size}});length=Math.min(end,meta.size-1)-offset+1;status=206;}
  const object=await env.LISTENING_AUDIO.get(meta.object_key,{range:{offset,length}});if(!object)throw fail('The recording is unavailable. Your saved answers are retained.',503);
@@ -83,7 +86,22 @@ async function sendReport(env,row,learner,body,now,trainer){
 async function admin(request,env,learner,action,now){
  if(learner.email!=='manutelw@gmail.com')throw fail('TELW trainer access required.',403);
  if(action==='admin/sets'&&request.method==='GET'){const rows=(await sql(env,'SELECT * FROM listening_sets ORDER BY created_at,id').all()).results;for(const r of rows)r.audio=(await sql(env,'SELECT part,duration,size,sha256 FROM listening_audio WHERE set_id=?1 ORDER BY part',r.id).all()).results;return reply({ok:true,sets:rows});}
+ if(action==='admin/preview-audio'&&request.method==='GET'){
+  const u=new URL(request.url),id=u.searchParams.get('set'),part=Number(u.searchParams.get('part'));
+  if(!/^listening-[a-z0-9-]{3,60}$/.test(id||'')||!Number.isInteger(part)||part<1||part>4)throw fail('Invalid set or part.');
+  const meta=await sql(env,'SELECT * FROM listening_audio WHERE set_id=?1 AND part=?2',id,part).first();
+  if(!meta||!env.LISTENING_AUDIO)throw fail('The recording is unavailable.',404);
+  return recordingResponse(request,env,meta);
+ }
  requireSameOrigin(request);if(request.method!=='POST')throw fail('POST required.',405);
+ if(action==='admin/preview-submit'){
+  const body=await readJson(request,16384);
+  if(typeof body.setId!=='string'||!/^listening-[a-z0-9-]{3,60}$/.test(body.setId))throw fail('Invalid set ID.');
+  const row=await sql(env,'SELECT public_json,private_json FROM listening_sets WHERE id=?1',body.setId).first();
+  if(!row)throw fail('Set not found.',404);
+  const answers=validAnswers(row,body.answers);
+  return reply({ok:true,preview:true,...scoreAnswers(JSON.parse(row.public_json),JSON.parse(row.private_json),answers)});
+ }
  if(action==='admin/bank'){
   const bundle=await readJson(request,256*1024);let split;try{split=splitBank(bundle);}catch(error){throw fail(error.message);}
   const pub=JSON.stringify(split.public),priv=JSON.stringify(split.private);const existing=await sql(env,'SELECT public_json,private_json FROM listening_sets WHERE id=?1',bundle.id).first();
