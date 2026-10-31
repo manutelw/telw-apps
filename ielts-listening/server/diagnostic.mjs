@@ -10,7 +10,7 @@ async function payload(env,row){const audio=(await sql(env,'SELECT part,duration
 async function start(env,learner,now){
  const last=await sql(env,"SELECT MAX(completed_at) AS ended FROM listening_attempts WHERE learner_id=?1",learner.id).first();if(last?.ended&&last.ended+GAP>now)return reply({error:'You can complete one Listening diagnostic every 15 days.',eligibleAt:last.ended+GAP},429);
  const active=await sql(env,"SELECT id,deadline FROM listening_attempts WHERE learner_id=?1 AND status='active'",learner.id).first();if(active)return reply(await payload(env,await own(env,learner,active.id)));
- const set=await sql(env,"SELECT s.id FROM listening_sets s WHERE s.published_at IS NOT NULL AND (SELECT count(*) FROM listening_audio au WHERE au.set_id=s.id)=4 AND NOT EXISTS(SELECT 1 FROM listening_attempts a WHERE a.learner_id=?1 AND a.set_id=s.id) ORDER BY RANDOM() LIMIT 1",learner.id).first();if(!set)throw fail('No fresh Listening set is available yet. Please contact TELW.',503);
+ const set=await sql(env,"SELECT s.id FROM listening_sets s WHERE s.published_at IS NOT NULL AND NOT EXISTS(SELECT 1 FROM listening_set_replacements r WHERE r.old_set_id=s.id) AND (SELECT count(*) FROM listening_audio au WHERE au.set_id=s.id)=4 AND NOT EXISTS(SELECT 1 FROM listening_attempts a WHERE a.learner_id=?1 AND a.set_id=s.id) ORDER BY RANDOM() LIMIT 1",learner.id).first();if(!set)throw fail('No fresh Listening set is available yet. Please contact TELW.',503);
  const audio=(await sql(env,'SELECT duration FROM listening_audio WHERE set_id=?1',set.id).all()).results;const seconds=Math.ceil(audio.reduce((n,a)=>n+a.duration,0));
  const id=crypto.randomUUID(),state={part:1,readyAt:now+30,playStartedAt:0,positions:[0,0,0,0],done:[false,false,false,false],reviewUntil:0};
  try{await sql(env,'INSERT INTO listening_attempts(id,learner_id,set_id,started_at,deadline,playback_json) VALUES(?1,?2,?3,?4,?5,?6)',id,learner.id,set.id,now,now+seconds+540,JSON.stringify(state)).run();}catch(error){const winner=await sql(env,"SELECT id FROM listening_attempts WHERE learner_id=?1 AND status='active'",learner.id).first();if(winner)return reply(await payload(env,await own(env,learner,winner.id)));throw error;}
@@ -85,7 +85,7 @@ async function sendReport(env,row,learner,body,now,trainer){
 }
 async function admin(request,env,learner,action,now){
  if(learner.email!=='manutelw@gmail.com')throw fail('TELW trainer access required.',403);
- if(action==='admin/sets'&&request.method==='GET'){const rows=(await sql(env,'SELECT * FROM listening_sets ORDER BY created_at,id').all()).results;for(const r of rows)r.audio=(await sql(env,'SELECT part,duration,size,sha256 FROM listening_audio WHERE set_id=?1 ORDER BY part',r.id).all()).results;return reply({ok:true,sets:rows});}
+ if(action==='admin/sets'&&request.method==='GET'){const rows=(await sql(env,'SELECT s.* FROM listening_sets s WHERE NOT EXISTS(SELECT 1 FROM listening_set_replacements r WHERE r.old_set_id=s.id) ORDER BY s.created_at,s.id').all()).results;for(const r of rows)r.audio=(await sql(env,'SELECT part,duration,size,sha256 FROM listening_audio WHERE set_id=?1 ORDER BY part',r.id).all()).results;return reply({ok:true,sets:rows});}
  if(action==='admin/preview-audio'&&request.method==='GET'){
   const u=new URL(request.url),id=u.searchParams.get('set'),part=Number(u.searchParams.get('part'));
   if(!/^listening-[a-z0-9-]{3,60}$/.test(id||'')||!Number.isInteger(part)||part<1||part>4)throw fail('Invalid set or part.');
@@ -134,7 +134,7 @@ async function admin(request,env,learner,action,now){
 export async function handleDiagnostic(request,env){
  const u=new URL(request.url);if(!u.pathname.startsWith(BASE))return null;const action=u.pathname.slice(BASE.length),now=Math.floor(Date.now()/1000);
  try{
-  if(action==='status'&&request.method==='GET'){if(!env.LISTENING_DB||!env.LISTENING_AUDIO)return reply({ready:false});const set=await sql(env,"SELECT id FROM listening_sets WHERE published_at IS NOT NULL LIMIT 1").first();return reply({ready:!!set});}
+  if(action==='status'&&request.method==='GET'){if(!env.LISTENING_DB||!env.LISTENING_AUDIO)return reply({ready:false});const set=await sql(env,"SELECT s.id FROM listening_sets s WHERE s.published_at IS NOT NULL AND NOT EXISTS(SELECT 1 FROM listening_set_replacements r WHERE r.old_set_id=s.id) LIMIT 1").first();return reply({ready:!!set});}
   const learner=await getLearner(request,env);if(!learner)throw fail('Verify your email first.',401);
   if(action.startsWith('admin/'))return await admin(request,env,learner,action,now);
   if(action==='audio'&&request.method==='GET')return await audio(request,env,learner);
