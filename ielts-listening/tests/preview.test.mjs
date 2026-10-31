@@ -1,0 +1,22 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {fixture} from './support.mjs';
+test('draft preview audio and submission require trainer identity and do not publish or store candidate attempts',()=>fixture(async({api,install,login,db,env})=>{
+ const {admin,bank}=await install('listening-fixture-01',60,false);
+ const learner=await login();
+ const audio='admin/preview-audio?set='+bank.id+'&part=1';
+ assert.equal((await api(audio)).status,401);
+ assert.equal((await api(audio,undefined,learner.cookie)).status,403);
+ const full=await api(audio,undefined,admin.cookie);assert.equal(full.status,200);assert.equal((await full.arrayBuffer()).byteLength,256);
+ const range=await api(audio,undefined,admin.cookie,{range:'bytes=0-9'});assert.equal(range.status,206);assert.equal((await range.arrayBuffer()).byteLength,10);
+ assert.equal((await api(audio,undefined,admin.cookie,{range:'bytes=999-'})).status,416);
+ assert.equal((await api('admin/preview-audio?set='+bank.id+'&part=9',undefined,admin.cookie)).status,400);
+ const answers=Object.fromEntries(bank.parts.flatMap(p=>p.key.map(k=>[k.id,k.accepted[0]])));
+ assert.equal((await api('admin/preview-submit',{setId:bank.id,answers},learner.cookie)).status,403);
+ const result=await (await api('admin/preview-submit',{setId:bank.id,answers},admin.cookie)).json();assert.equal(result.correct,40);assert.equal(result.preview,true);
+ answers[1]='wrong';const wrong=await(await api('admin/preview-submit',{setId:bank.id,answers},admin.cookie)).json();assert.equal(wrong.correct,39);
+ assert.equal((await api('admin/preview-submit',{setId:bank.id,answers:{99:'forged'}},admin.cookie)).status,400);
+ assert.equal((await api('admin/preview-submit',{setId:bank.id,answers},admin.cookie,{origin:'https://example.com'})).status,403);
+ assert.equal(db.prepare('SELECT count(*) AS n FROM listening_attempts').get().n,0);
+ assert.equal(db.prepare('SELECT published_at FROM listening_sets').get().published_at,null);
+}));
