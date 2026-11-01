@@ -1,0 +1,66 @@
+name: TELW main-site Listening admin navigation
+on:
+  push:
+    branches: [telw-listening-deploy]
+    paths: ['.github/workflows/ielts-admin-link-deploy.yml']
+permissions:
+  contents: read
+concurrency:
+  group: main-site-admin-navigation
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: a49fabe910e87ec413dfbe91c62fa0b22319949f
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify portal isolation
+        run: |
+          node --check workers/ielts/trainer-portal.mjs
+          node --test tests/ielts/trainer-portal.test.mjs tests/ielts/learner-portal.test.mjs
+      - name: Verify root identity and preserve Listening baseline
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: python
+        run: |
+          import json,os,pathlib,urllib.request
+          token=os.environ['CLOUDFLARE_API_TOKEN'].strip()
+          def get(path):
+              req=urllib.request.Request('https://api.cloudflare.com/client/v4'+path,headers={'Authorization':'Bearer '+token})
+              with urllib.request.urlopen(req,timeout=30) as r:d=json.load(r)
+              if not d.get('success'):raise RuntimeError('Cloudflare inspection failed')
+              return d['result']
+          zones=get('/zones?name=manuvikraman.com')
+          if len(zones)!=1:raise RuntimeError('Zone mismatch')
+          account=zones[0]['account']['id']
+          config=json.loads(pathlib.Path('wrangler.jsonc').read_text())
+          if config['name']!='telw-apps' or config['main']!='worker-host-router.js':raise RuntimeError('Root identity mismatch')
+          settings=get('/accounts/'+account+'/workers/scripts/telw-apps/settings')
+          actual=sorted((b['name'],b['service']) for b in settings.get('bindings',[]) if b['type']=='service')
+          planned=sorted((b['binding'],b['service']) for b in config.get('services',[]))
+          if actual!=planned:raise RuntimeError('Existing service bindings differ; stop')
+          if any(b['type'] in ['d1','r2_bucket'] for b in settings.get('bindings',[])):raise RuntimeError('Unexpected root storage binding; stop')
+          listening=get('/accounts/'+account+'/workers/scripts/telw-ielts-listening/deployments')
+          pathlib.Path('/tmp/listening-before-nav.json').write_text(json.dumps(listening,sort_keys=True))
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write('CLOUDFLARE_ACCOUNT_ID='+account+'\n')
+      - name: Deploy main-site admin navigation preserving variables and secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          WRANGLER_SEND_METRICS: 'false'
+        run: npx --yes wrangler@4.156.0 deploy --config wrangler.jsonc --keep-vars
+      - name: Verify Listening deployment unchanged
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: python
+        run: |
+          import json,os,pathlib,urllib.request
+          req=urllib.request.Request('https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/telw-ielts-listening/deployments',headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN'].strip()})
+          with urllib.request.urlopen(req,timeout=30) as r:d=json.load(r)
+          if not d.get('success') or json.dumps(d['result'],sort_keys=True)!=pathlib.Path('/tmp/listening-before-nav.json').read_text():raise RuntimeError('Listening deployment changed')
+          print('Main-site admin navigation deployed; Listening deployment unchanged. Reading code and data not edited.')
