@@ -63,3 +63,8 @@ test('missing service and provider errors fail closed without exposing internal 
  assert.equal((await handleTrainerPortal(req(prefix+'admin'))).status,503);
  const error=await handleTrainerPortal(req(prefix+'admin'),env(async()=>{throw Error('private provider details');}));assert.equal(error.status,503);assert.doesNotMatch(await error.text(),/private provider details/);
 });
+
+test('IELTS Diagnostics admin link opens separate Reading and Listening diagnostic links',async()=>{
+ const login=await (await handleTrainerPortal(req('/ielts/admin/'))).text();assert.match(login,/href="\/ielts\/admin\/diagnostics\/">IELTS Diagnostics/);assert.doesNotMatch(login,/Open Listening diagnostic as trainer/);
+ const page=await handleTrainerPortal(req('/ielts/admin/diagnostics/'));assert.equal(page.status,200);const html=await page.text();assert.match(html,/href="\/ielts\/reading\/">Reading Diagnostic/);assert.match(html,/href="\/ielts\/listening\/\?admin=1">Listening Diagnostic/);assert.match(page.headers.get('cache-control'),/no-store/);assert.equal((await handleTrainerPortal(req('/ielts/admin/diagnostics/','POST',{}))).status,405);assert.equal((await handleTrainerPortal(new Request('https://clarionprep.com/ielts/admin/diagnostics/'))).status,404);assert.equal((await handleTrainerPortal(req('/ielts/admin/diagnostics'))).headers.get('location'),'/ielts/admin/diagnostics/');
+});
