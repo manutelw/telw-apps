@@ -1,3 +1,4 @@
+import {groupRows,initialGroups,publicGroups,groupedPlayback,groupedAudio} from './grouped.mjs';
 import {getLearner,requireSameOrigin,readJson,reply,limit,digest} from './auth.mjs';
 import {splitBank,scoreAnswers} from './bank.mjs';
 const BASE='/ielts/listening/api/';
@@ -6,14 +7,15 @@ const fail=(message,status=400)=>Object.assign(Error(message),{status});
 const sql=(env,text,...args)=>env.LISTENING_DB.prepare(text).bind(...args);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function own(env,learner,id){if(typeof id!=='string'||!/^[a-f0-9-]{36}$/.test(id))throw fail('Invalid attempt.');const row=await sql(env,'SELECT a.*,s.public_json,s.private_json FROM listening_attempts a JOIN listening_sets s ON s.id=a.set_id WHERE a.id=?1 AND a.learner_id=?2',id,learner.id).first();if(!row)throw fail('Attempt not found.',404);return row;}
-async function payload(env,row){const audio=(await sql(env,'SELECT part,duration FROM listening_audio WHERE set_id=?1 ORDER BY part',row.set_id).all()).results;return {ok:true,attemptId:row.id,setId:row.set_id,deadline:row.deadline,status:row.status,answers:JSON.parse(row.answers_json),revision:row.answers_revision,playback:JSON.parse(row.playback_json),test:JSON.parse(row.public_json),audio:audio.map(x=>({...x,url:BASE+'audio?attempt='+row.id+'&part='+x.part})),...(row.score_json?{result:JSON.parse(row.score_json)}:{})};}
+async function payload(env,row){const state=JSON.parse(row.playback_json),groups=state.timingVersion===2?await groupRows(env,row.set_id):[];const audio=(await sql(env,'SELECT part,duration FROM listening_audio WHERE set_id=?1 ORDER BY part',row.set_id).all()).results;return {ok:true,serverNow:Math.floor(Date.now()/1000),...(groups.length?{groups:publicGroups(groups,row.id)}:{}),attemptId:row.id,setId:row.set_id,deadline:row.deadline,status:row.status,answers:JSON.parse(row.answers_json),revision:row.answers_revision,playback:JSON.parse(row.playback_json),test:JSON.parse(row.public_json),audio:audio.map(x=>({...x,url:BASE+'audio?attempt='+row.id+'&part='+x.part})),...(row.score_json?{result:JSON.parse(row.score_json)}:{})};}
 async function start(env,learner,now){
- const last=await sql(env,"SELECT MAX(completed_at) AS ended FROM listening_attempts WHERE learner_id=?1",learner.id).first();if(last?.ended&&last.ended+GAP>now)return reply({error:'You can complete one Listening diagnostic every 15 days.',eligibleAt:last.ended+GAP},429);
+ const last=await sql(env,"SELECT MAX(a.completed_at) AS ended FROM listening_attempts a WHERE a.learner_id=?1 AND NOT EXISTS(SELECT 1 FROM listening_timing_relief r WHERE r.attempt_id=a.id)",learner.id).first();if(last?.ended&&last.ended+GAP>now)return reply({error:'You can complete one Listening diagnostic every 15 days.',eligibleAt:last.ended+GAP},429);
  const active=await sql(env,"SELECT id,deadline FROM listening_attempts WHERE learner_id=?1 AND status='active'",learner.id).first();if(active)return reply(await payload(env,await own(env,learner,active.id)));
  const set=await sql(env,"SELECT s.id FROM listening_sets s WHERE s.published_at IS NOT NULL AND NOT EXISTS(SELECT 1 FROM listening_set_replacements r WHERE r.old_set_id=s.id) AND (SELECT count(*) FROM listening_audio au WHERE au.set_id=s.id)=4 AND NOT EXISTS(SELECT 1 FROM listening_attempts a WHERE a.learner_id=?1 AND a.set_id=s.id) ORDER BY RANDOM() LIMIT 1",learner.id).first();if(!set)throw fail('No fresh Listening set is available yet. Please contact TELW.',503);
  const audio=(await sql(env,'SELECT duration FROM listening_audio WHERE set_id=?1',set.id).all()).results;const seconds=Math.ceil(audio.reduce((n,a)=>n+a.duration,0));
- const id=crypto.randomUUID(),state={part:1,readyAt:now+30,playStartedAt:0,positions:[0,0,0,0],done:[false,false,false,false],reviewUntil:0};
- try{await sql(env,'INSERT INTO listening_attempts(id,learner_id,set_id,started_at,deadline,playback_json) VALUES(?1,?2,?3,?4,?5,?6)',id,learner.id,set.id,now,now+seconds+540,JSON.stringify(state)).run();}catch(error){const winner=await sql(env,"SELECT id FROM listening_attempts WHERE learner_id=?1 AND status='active'",learner.id).first();if(winner)return reply(await payload(env,await own(env,learner,winner.id)));throw error;}
+ const groups=await groupRows(env,set.id);
+ const id=crypto.randomUUID(),legacyState={part:1,readyAt:now+30,playStartedAt:0,positions:[0,0,0,0],done:[false,false,false,false],reviewUntil:0},state=groups.length?initialGroups(groups):legacyState;
+ try{await sql(env,'INSERT INTO listening_attempts(id,learner_id,set_id,started_at,deadline,playback_json) VALUES(?1,?2,?3,?4,?5,?6)',id,learner.id,set.id,now,groups.length?now+86400:now+seconds+540,JSON.stringify(state)).run();}catch(error){const winner=await sql(env,"SELECT id FROM listening_attempts WHERE learner_id=?1 AND status='active'",learner.id).first();if(winner)return reply(await payload(env,await own(env,learner,winner.id)));throw error;}
  return reply(await payload(env,await own(env,learner,id)));
 }
 function validAnswers(row,input){try{scoreAnswers(JSON.parse(row.public_json),JSON.parse(row.private_json),input);return input;}catch{throw fail('Invalid answers.');}}
@@ -23,6 +25,7 @@ async function save(env,row,body,now){
  const answers=validAnswers(row,body.answers);const changed=await sql(env,"UPDATE listening_attempts SET answers_json=?1,answers_revision=answers_revision+1 WHERE id=?2 AND status='active' AND answers_revision=?3 AND deadline>?4 RETURNING answers_revision",JSON.stringify(answers),row.id,body.revision,now).first();if(!changed)throw fail('Please reload your saved attempt.',409);return reply({ok:true,revision:changed.answers_revision});
 }
 async function playback(env,row,body,now){
+ if(JSON.parse(row.playback_json).timingVersion===2)return groupedPlayback(env,row,body,now);
  if(row.status!=='active'||now>=row.deadline)throw fail('This attempt has ended.',409);
  const state=JSON.parse(row.playback_json),part=state.part;if(part>4||body.part!==part)throw fail('This is not the current listening part.',409);
  const audio=await sql(env,'SELECT duration FROM listening_audio WHERE set_id=?1 AND part=?2',row.set_id,part).first();
@@ -43,6 +46,7 @@ async function playback(env,row,body,now){
 async function submit(env,row,body,now){
  if(row.status==='completed')return reply({ok:true,attemptId:row.id,...JSON.parse(row.score_json)});
  if(row.status!=='active')throw fail('This attempt is no longer active.',409);
+ const playbackState=JSON.parse(row.playback_json);if(playbackState.timingVersion===2&&playbackState.part<=4&&now<row.deadline)throw fail('Finish all recording groups before submitting.',409);
  if(now<row.deadline&&body.revision!==row.answers_revision)throw fail('Reload to submit the latest saved answers.',409);
  const answers=now>=row.deadline?JSON.parse(row.answers_json):validAnswers(row,body.answers);
  const result=scoreAnswers(JSON.parse(row.public_json),JSON.parse(row.private_json),answers);
@@ -52,7 +56,8 @@ async function submit(env,row,body,now){
 }
 async function audio(request,env,learner){
  const u=new URL(request.url),row=await own(env,learner,u.searchParams.get('attempt'));
- const part=Number(u.searchParams.get('part')),state=JSON.parse(row.playback_json);
+ const state=JSON.parse(row.playback_json);if(state.timingVersion===2)return groupedAudio(request,env,row,recordingResponse);
+ const part=Number(u.searchParams.get('part'));
  if(row.status!=='active'||Math.floor(Date.now()/1000)>=row.deadline||part!==state.part||!state.playStartedAt)throw fail('Audio is available only for the current active part.',403);
  const meta=await sql(env,'SELECT * FROM listening_audio WHERE set_id=?1 AND part=?2',row.set_id,part).first();if(!meta||!env.LISTENING_AUDIO)throw fail('The recording is unavailable.',503);
  return recordingResponse(request,env,meta);
