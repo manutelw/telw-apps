@@ -1,4 +1,4 @@
-name: IELTS Listening - question-group timing release
+name: IELTS Listening - detailed feedback release
 on:
   push:
     branches: [telw-listening-deploy]
@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: b2fe6045fe6a53955591b3aac68966471285d6ca
+          ref: 3a16200680a6093909905d0aac809b3f419a8d74
           path: source
           sparse-checkout: ielts-listening
           persist-credentials: false
@@ -65,12 +65,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           WRANGLER_SEND_METRICS: 'false'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
-          ffmpeg -version
           npx --yes wrangler@4.156.0 --version
-          npx --yes wrangler@4.156.0 d1 migrations apply LISTENING_DB --remote --config wrangler.local.jsonc
-          python scripts/build-group-audio.py
           npx --yes wrangler@4.156.0 deploy --config wrangler.local.jsonc
       - name: Verify preview asset and root isolation
         env:
@@ -79,25 +74,12 @@ jobs:
         run: |
           import json,os,pathlib,sys,urllib.request,urllib.error
           try:
-              with urllib.request.urlopen('https://manuvikraman.com/ielts/listening/admin.js',timeout=30) as r: js=r.read().decode()
-              if 'Submit preview answers' not in js: sys.exit('Live admin asset missing.')
+              with urllib.request.urlopen('https://manuvikraman.com/ielts/listening/app.js',timeout=30) as r: js=r.read().decode()
+              if 'detailedAnalysis' not in js: sys.exit('Live admin asset missing.')
           except urllib.error.HTTPError as e:
               if e.code != 403: raise
               print('Runner website access returned 403; signed-in browser verification is required.')
           req=urllib.request.Request('https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/telw-apps/deployments',headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN'].strip()})
           with urllib.request.urlopen(req,timeout=30) as r: root=json.load(r)
           if not root.get('success') or json.dumps(root['result'],sort_keys=True)!=pathlib.Path('/tmp/listening-root-before.json').read_text(): sys.exit('Root deployment changed during verification; investigate.')
-          print('Question-group Listening playback deployed. Root Worker unchanged. Additive Listening-only schema and private group recordings verified.')
-
-      - name: Permit a retake only for the owner's recorded legacy timer cutoff
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        shell: python
-        run: |
-          import json,os,time,urllib.request
-          endpoint='https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/d1/database/9a4570fd-7691-4d9d-abe2-7dbd9b0bbbaf/query'
-          sql="INSERT INTO listening_timing_relief(attempt_id,reason,created_at) SELECT a.id,?,? FROM listening_attempts a JOIN listening_learners l ON l.id=a.learner_id WHERE l.email=? AND a.status='completed' AND a.completed_at>=a.deadline-2 AND json_extract(a.playback_json,'$.part')<=4 AND coalesce(json_extract(a.playback_json,'$.timingVersion'),1)=1 ON CONFLICT(attempt_id) DO NOTHING RETURNING attempt_id"
-          req=urllib.request.Request(endpoint,headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN'].strip(),'Content-Type':'application/json'},data=json.dumps({'sql':sql,'params':['Legacy overall timer ended before all audio finished',int(time.time()),'manutelw@gmail.com']}).encode())
-          with urllib.request.urlopen(req,timeout=30) as r:data=json.load(r)
-          if not data.get('success'):raise RuntimeError('Timing relief check failed')
-          print('Owner legacy timer cutoff attempts given retake relief: '+str(len(data['result'][0]['results'])))
+          print('Detailed Listening feedback deployed. Root Worker unchanged. No database or audio changes.')
