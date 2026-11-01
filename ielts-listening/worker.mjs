@@ -8,8 +8,8 @@ export default {async fetch(request,env){
  if(!url.pathname.startsWith(ROOT+'/'))return new Response('Not found',{status:404});
  let response=await handleAuth(request,env)||await handleDiagnostic(request,env);
  if(!response){
-  const assets=new Map([[ROOT+'/','/index.html'],[ROOT+'/app.js','/app.js'],[ROOT+'/group-timing.mjs','/group-timing.mjs'],[ROOT+'/style.css','/style.css'],[ROOT+'/riverside-plan.svg','/riverside-plan.svg'],[ROOT+'/admin/','/admin.html'],[ROOT+'/admin.js','/admin.js']]);
-  if(/^\/ielts\/listening\/cues\/(read-\d+-\d+-\d+|listen-\d+-\d+)\.mp3$/.test(url.pathname))assets.set(url.pathname,url.pathname.slice(ROOT.length));
+  const assets=new Map([[ROOT+'/','/index.html'],[ROOT+'/app.js','/app.js'],[ROOT+'/group-timing.mjs','/group-timing.mjs'],[ROOT+'/feedback.mjs','/feedback.mjs'],[ROOT+'/style.css','/style.css'],[ROOT+'/riverside-plan.svg','/riverside-plan.svg'],[ROOT+'/admin/','/admin.html'],[ROOT+'/admin.js','/admin.js']]);
+  if(/^\/ielts\/listening\/cues\/(read-\d+-\d+-\d+|listen-\d+-\d+|end-test)\.mp3$/.test(url.pathname))assets.set(url.pathname,url.pathname.slice(ROOT.length));
   if(!['GET','HEAD'].includes(request.method)||!assets.has(url.pathname))response=new Response('Not found',{status:404});
   else {const asset=new URL(request.url);asset.pathname=assets.get(url.pathname);response=await env.ASSETS.fetch(new Request(asset,request));
    // Static Assets may canonicalise admin.html to /admin. Keep this internal.

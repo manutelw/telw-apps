@@ -1,26 +1,29 @@
+import {compactFeedback} from '../public/feedback.mjs';
 import {completedAnalysis,analysisHtml,analyse} from './analysis.mjs';
 import {groupRows,initialGroups,publicGroups,groupedPlayback,groupedAudio} from './grouped.mjs';
 import {getLearner,requireSameOrigin,readJson,reply,limit,digest} from './auth.mjs';
 import {splitBank,scoreAnswers} from './bank.mjs';
+const candidateHtml=row=>compactFeedback({skill:'Listening',score:JSON.parse(row.score_json),target:JSON.parse(row.playback_json).targetBand});
 const BASE='/ielts/listening/api/';
 const GAP=15*86400;
 const fail=(message,status=400)=>Object.assign(Error(message),{status});
 const sql=(env,text,...args)=>env.LISTENING_DB.prepare(text).bind(...args);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function own(env,learner,id){if(typeof id!=='string'||!/^[a-f0-9-]{36}$/.test(id))throw fail('Invalid attempt.');const row=await sql(env,'SELECT a.*,s.public_json,s.private_json FROM listening_attempts a JOIN listening_sets s ON s.id=a.set_id WHERE a.id=?1 AND a.learner_id=?2',id,learner.id).first();if(!row)throw fail('Attempt not found.',404);return row;}
-async function payload(env,row){const state=JSON.parse(row.playback_json),groups=state.timingVersion===2?await groupRows(env,row.set_id):[];const audio=(await sql(env,'SELECT part,duration FROM listening_audio WHERE set_id=?1 ORDER BY part',row.set_id).all()).results;return {ok:true,serverNow:Math.floor(Date.now()/1000),...(groups.length?{groups:publicGroups(groups,row.id)}:{}),attemptId:row.id,adminTest:!!row.admin_test,setId:row.set_id,deadline:row.deadline,status:row.status,answers:JSON.parse(row.answers_json),revision:row.answers_revision,playback:JSON.parse(row.playback_json),test:JSON.parse(row.public_json),audio:audio.map(x=>({...x,url:BASE+'audio?attempt='+row.id+'&part='+x.part})),...(row.score_json?{result:{...JSON.parse(row.score_json),analysisHtml:analysisHtml(completedAnalysis(row))}}:{})};}
-async function start(env,learner,now,adminTest=false){
+async function payload(env,row){const state=JSON.parse(row.playback_json),groups=state.timingVersion===2?await groupRows(env,row.set_id):[];const audio=(await sql(env,'SELECT part,duration FROM listening_audio WHERE set_id=?1 ORDER BY part',row.set_id).all()).results;return {ok:true,serverNow:Math.floor(Date.now()/1000),...(groups.length?{groups:publicGroups(groups,row.id)}:{}),attemptId:row.id,adminTest:!!row.admin_test,setId:row.set_id,deadline:row.deadline,status:row.status,answers:JSON.parse(row.answers_json),revision:row.answers_revision,playback:JSON.parse(row.playback_json),test:JSON.parse(row.public_json),audio:audio.map(x=>({...x,url:BASE+'audio?attempt='+row.id+'&part='+x.part})),...(row.score_json?{result:{...JSON.parse(row.score_json),analysisHtml:candidateHtml(row)}}:{})};}
+async function start(env,learner,now,adminTest=false,targetBand=''){
  const last=await sql(env,"SELECT MAX(a.completed_at) AS ended FROM listening_attempts a WHERE a.learner_id=?1 AND a.admin_test=0 AND NOT EXISTS(SELECT 1 FROM listening_timing_relief r WHERE r.attempt_id=a.id)",learner.id).first();if(!adminTest&&last?.ended&&last.ended+GAP>now)return reply({error:'You can complete one Listening diagnostic every 15 days.',eligibleAt:last.ended+GAP},429);
  const active=await sql(env,"SELECT id,deadline FROM listening_attempts WHERE learner_id=?1 AND status='active'",learner.id).first();if(active)return reply(await payload(env,await own(env,learner,active.id)));
  const set=await sql(env,"SELECT s.id FROM listening_sets s WHERE s.published_at IS NOT NULL AND NOT EXISTS(SELECT 1 FROM listening_set_replacements r WHERE r.old_set_id=s.id) AND (SELECT count(*) FROM listening_audio au WHERE au.set_id=s.id)=4 AND (?2=1 OR NOT EXISTS(SELECT 1 FROM listening_attempts a WHERE a.learner_id=?1 AND a.set_id=s.id)) ORDER BY coalesce((SELECT MAX(a.started_at) FROM listening_attempts a WHERE a.learner_id=?1 AND a.set_id=s.id),0),RANDOM() LIMIT 1",learner.id,adminTest?1:0).first();if(!set)throw fail('No fresh Listening set is available yet. Please contact TELW.',503);
  const audio=(await sql(env,'SELECT duration FROM listening_audio WHERE set_id=?1',set.id).all()).results;const seconds=Math.ceil(audio.reduce((n,a)=>n+a.duration,0));
  const groups=await groupRows(env,set.id);
- const id=crypto.randomUUID(),legacyState={part:1,readyAt:now+30,playStartedAt:0,positions:[0,0,0,0],done:[false,false,false,false],reviewUntil:0},state=groups.length?initialGroups(groups):legacyState;
+ const id=crypto.randomUUID(),legacyState={part:1,readyAt:now+30,playStartedAt:0,positions:[0,0,0,0],done:[false,false,false,false],reviewUntil:0},state=groups.length?initialGroups(groups):legacyState;state.targetBand=/^(?:[4-8](?:\.0|\.5)?|9(?:\.0)?)$/.test(String(targetBand))?String(targetBand):'';
  try{await sql(env,'INSERT INTO listening_attempts(id,learner_id,set_id,started_at,deadline,playback_json,admin_test) VALUES(?1,?2,?3,?4,?5,?6,?7)',id,learner.id,set.id,now,groups.length?now+86400:now+seconds+540,JSON.stringify(state),adminTest?1:0).run();}catch(error){const winner=await sql(env,"SELECT id FROM listening_attempts WHERE learner_id=?1 AND status='active'",learner.id).first();if(winner)return reply(await payload(env,await own(env,learner,winner.id)));throw error;}
  return reply(await payload(env,await own(env,learner,id)));
 }
 function validAnswers(row,input){try{scoreAnswers(JSON.parse(row.public_json),JSON.parse(row.private_json),input);return input;}catch{throw fail('Invalid answers.');}}
 async function save(env,row,body,now){
+ const p=JSON.parse(row.playback_json);if(p.timingVersion===2&&p.phase==='review'&&now>=p.reviewUntil)throw fail('Answer entry has ended. Submit your saved answers.',409);
  if(row.status!=='active'||now>=row.deadline)throw fail('This attempt has ended. Submit your saved answers.',409);
  if(!Number.isInteger(body.revision)||body.revision!==row.answers_revision)throw fail('Your answers changed in another window. Reload to resume the saved attempt.',409);
  const answers=validAnswers(row,body.answers);const changed=await sql(env,"UPDATE listening_attempts SET answers_json=?1,answers_revision=answers_revision+1 WHERE id=?2 AND status='active' AND answers_revision=?3 AND deadline>?4 RETURNING answers_revision",JSON.stringify(answers),row.id,body.revision,now).first();if(!changed)throw fail('Please reload your saved attempt.',409);return reply({ok:true,revision:changed.answers_revision});
@@ -45,15 +48,16 @@ async function playback(env,row,body,now){
  return reply({ok:true,playback:state});
 }
 async function submit(env,row,body,now){
- if(row.status==='completed')return reply({ok:true,attemptId:row.id,...JSON.parse(row.score_json),analysisHtml:analysisHtml(completedAnalysis(row))});
+ if(row.status==='completed')return reply({ok:true,attemptId:row.id,...JSON.parse(row.score_json),analysisHtml:candidateHtml(row)});
  if(row.status!=='active')throw fail('This attempt is no longer active.',409);
- const playbackState=JSON.parse(row.playback_json);if(playbackState.timingVersion===2&&playbackState.part<=4&&now<row.deadline)throw fail('Finish all recording groups before submitting.',409);
- if(now<row.deadline&&body.revision!==row.answers_revision)throw fail('Reload to submit the latest saved answers.',409);
- const answers=now>=row.deadline?JSON.parse(row.answers_json):validAnswers(row,body.answers);
+ const playbackState=JSON.parse(row.playback_json);if(playbackState.timingVersion===2&&(playbackState.part<=4||playbackState.phase==='closing'||(playbackState.phase==='review'&&now<playbackState.reviewUntil))&&now<row.deadline)throw fail('Finish all recording groups before submitting.',409);
+ const frozen=playbackState.timingVersion===2&&playbackState.phase==='review'&&now>=playbackState.reviewUntil;
+ if(!frozen&&now<row.deadline&&body.revision!==row.answers_revision)throw fail('Reload to submit the latest saved answers.',409);
+ const answers=frozen||now>=row.deadline?JSON.parse(row.answers_json):validAnswers(row,body.answers);
  const result=scoreAnswers(JSON.parse(row.public_json),JSON.parse(row.private_json),answers);
  const updated=await sql(env,"UPDATE listening_attempts SET status='completed',completed_at=?1,answers_json=?2,score_json=?3 WHERE id=?4 AND status='active' AND answers_revision=?5 RETURNING id",now,JSON.stringify(answers),JSON.stringify(result),row.id,row.answers_revision).first();
- if(!updated){const winner=await sql(env,'SELECT score_json FROM listening_attempts WHERE id=?1',row.id).first();if(!winner?.score_json)throw fail('Your saved answers changed. Reload before submitting.',409);return reply({ok:true,attemptId:row.id,...JSON.parse(winner.score_json),analysisHtml:analysisHtml(completedAnalysis(await own(env,{id:row.learner_id},row.id)))});}
- return reply({ok:true,attemptId:row.id,...result,analysisHtml:analysisHtml(analyse(JSON.parse(row.public_json),JSON.parse(row.private_json),answers))});
+ if(!updated){const winner=await sql(env,'SELECT score_json FROM listening_attempts WHERE id=?1',row.id).first();if(!winner?.score_json)throw fail('Your saved answers changed. Reload before submitting.',409);return reply({ok:true,attemptId:row.id,...JSON.parse(winner.score_json),analysisHtml:candidateHtml(await own(env,{id:row.learner_id},row.id))});}
+ return reply({ok:true,attemptId:row.id,...result,analysisHtml:compactFeedback({skill:'Listening',score:result,target:playbackState.targetBand})});
 }
 async function audio(request,env,learner){
  const u=new URL(request.url),row=await own(env,learner,u.searchParams.get('attempt'));
@@ -72,7 +76,7 @@ async function recordingResponse(request,env,meta){
 function report(row,learner,body,trainer){
  let html=`<h2>${trainer?'TELW training interest — Listening report and proposed programme':'Your TELW Listening feedback'}</h2>`;
  if(trainer){html+=`<p>Verified learner: ${esc(learner.email)}<br>Attempt: ${esc(row.id)}<br>Set: ${esc(row.set_id)}</p><p>The learner opted in to TELW contact about their result and training.</p>`;for(const field of ['name','mobile','targetBand','testDate','studyHours'])html+=`<p>${field}: ${esc(String(body[field]||'Not provided').slice(0,200))}</p>`;}
- return html+analysisHtml(completedAnalysis(row),trainer,true);
+ return html+(trainer?analysisHtml(completedAnalysis(row),true,true):candidateHtml(row));
 }
 async function sendReport(env,row,learner,body,now,trainer){
  if(body.consent!==true)throw fail('Confirm your consent to send this report.');if(row.status!=='completed')throw fail('Complete the diagnostic first.',409);
@@ -95,7 +99,7 @@ async function admin(request,env,learner,action,now){
   return recordingResponse(request,env,meta);
  }
  requireSameOrigin(request);if(request.method!=='POST')throw fail('POST required.',405);
- if(action==='admin/start'){await readJson(request);return start(env,learner,now,true);}
+ if(action==='admin/start'){const input=await readJson(request);return start(env,learner,now,true,input.targetBand);}
  if(action==='admin/preview-submit'){
   const body=await readJson(request,16384);
   if(typeof body.setId!=='string'||!/^listening-[a-z0-9-]{3,60}$/.test(body.setId))throw fail('Invalid set ID.');
@@ -143,7 +147,7 @@ export async function handleDiagnostic(request,env){
   if(request.method!=='POST')throw fail('POST required.',405);requireSameOrigin(request);
   if(!['start','state','save','playback','submit','feedback','enquire'].includes(action))throw fail('Not found',404);
   await limit(env,'listening:'+action+':'+learner.id,3600,action==='save'||action==='playback'?2000:60,now);
-  const body=await readJson(request,16384);if(action==='start')return await start(env,learner,now);const row=await own(env,learner,body.attemptId);
+  const body=await readJson(request,16384);if(action==='start')return await start(env,learner,now,false,body.targetBand);const row=await own(env,learner,body.attemptId);
   if(action==='state')return reply(await payload(env,row));if(action==='save')return await save(env,row,body,now);if(action==='playback')return await playback(env,row,body,now);if(action==='submit')return await submit(env,row,body,now);return await sendReport(env,row,learner,body,now,action==='enquire');
  }catch(error){return reply({error:error.status?error.message:'The Listening service is temporarily unavailable.'},error.status||503);}
 }

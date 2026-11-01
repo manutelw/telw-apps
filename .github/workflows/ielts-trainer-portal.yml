@@ -4,6 +4,10 @@ on:
     paths:
       - 'workers/ielts/trainer-portal.mjs'
       - 'workers/ielts/learner-portal.mjs'
+      - 'workers/ielts/reading-feedback.mjs'
+      - 'ielts-listening/public/feedback.mjs'
+      - 'tests/ielts/reading-feedback.test.mjs'
+      - 'tests/ielts/reading-page.fixture.html'
       - 'tests/ielts/trainer-portal.test.mjs'
       - 'tests/ielts/learner-portal.test.mjs'
       - 'worker-host-router.js'
@@ -23,4 +27,4 @@ jobs:
           node-version: '24'
       - run: node --check workers/ielts/trainer-portal.mjs
       - run: node --check workers/ielts/learner-portal.mjs
-      - run: node --test tests/ielts/trainer-portal.test.mjs tests/ielts/learner-portal.test.mjs
+      - run: node --test tests/ielts/trainer-portal.test.mjs tests/ielts/learner-portal.test.mjs tests/ielts/reading-feedback.test.mjs

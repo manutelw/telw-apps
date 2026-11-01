@@ -23,21 +23,22 @@ test('question groups enforce reading pauses, protect each clip and preserve ful
   assert.equal((await act('end',{seconds:g.duration})).status,400);
   // More than the former whole-test allowance can pass without consuming audio.
   advance(700);
-  const left=remainingGroupSeconds(attempt.groups,attempt.playback,0,now());assert.ok(left>=g.duration+120);
+  const left=remainingGroupSeconds(attempt.groups,attempt.playback,0,now());assert.ok(left>=g.duration+8);
   assert.equal((await api('save',{attemptId:id,answers:{1:'alpha'},revision:i},user.cookie)).status,200);
   advance(g.duration);const ended=await act('end',{seconds:g.duration});assert.equal(ended.status,200);attempt.playback=(await ended.json()).playback;
  }
- assert.equal(attempt.playback.part,5);assert.equal(attempt.playback.phase,'review');assert.equal(remainingGroupSeconds(attempt.groups,attempt.playback,0,now()),120);
- advance(119);assert.equal(remainingGroupSeconds(attempt.groups,attempt.playback,0,now()),1);advance(1);assert.equal(remainingGroupSeconds(attempt.groups,attempt.playback,0,now()),0);
- const result=await api('submit',{attemptId:id,answers:{1:'alpha'},revision:5},user.cookie);assert.equal(result.status,200);assert.equal((await result.json()).correct,1);
+ assert.equal(attempt.playback.part,5);assert.equal(attempt.playback.phase,'closing');assert.equal((await api('submit',{attemptId:id,answers:{},revision:5},user.cookie)).status,409);assert.equal((await act('finishCue')).status,409);advance(3);attempt.playback=(await(await act('finishCue')).json()).playback;assert.equal(attempt.playback.phase,'review');assert.equal(remainingGroupSeconds(attempt.groups,attempt.playback,0,now()),5);
+ assert.equal((await api('save',{attemptId:id,answers:{1:'alpha',2:'alpha'},revision:5},user.cookie)).status,200);assert.equal((await api('submit',{attemptId:id,answers:{},revision:6},user.cookie)).status,409);
+ advance(4);assert.equal(remainingGroupSeconds(attempt.groups,attempt.playback,0,now()),1);advance(1);assert.equal(remainingGroupSeconds(attempt.groups,attempt.playback,0,now()),0);
+ assert.equal((await api('save',{attemptId:id,answers:{1:'wrong'},revision:6},user.cookie)).status,409);assert.equal(db.prepare('SELECT status FROM listening_attempts WHERE id=?').get(id).status,'active');const result=await api('submit',{attemptId:id,answers:{1:'wrong'},revision:6},user.cookie);assert.equal(result.status,200);assert.equal((await result.json()).correct,2);
 }));
 
 test('remaining-work timer counts spoken cues, reading pauses, content and final review without wall-clock cutoff',()=>{
  const groups=[{duration:300,readingSeconds:30,readCueSeconds:5,listenCueSeconds:4},{duration:200,readingSeconds:20,readCueSeconds:5,listenCueSeconds:4}];
- const state={groupIndex:0,phase:'readCue',positions:[0,0]};assert.equal(remainingGroupSeconds(groups,state,0,99999),688);
- state.phase='reading';state.readyAt=100030;assert.equal(remainingGroupSeconds(groups,state,0,100010),673);
- state.phase='listening';assert.equal(remainingGroupSeconds(groups,state,100,999999),549);
- state.groupIndex=1;assert.equal(remainingGroupSeconds(groups,state,150,999999),170);
+ const state={groupIndex:0,phase:'readCue',positions:[0,0]};assert.equal(remainingGroupSeconds(groups,state,0,99999),576);
+ state.phase='reading';state.readyAt=100030;assert.equal(remainingGroupSeconds(groups,state,0,100010),561);
+ state.phase='listening';assert.equal(remainingGroupSeconds(groups,state,100,999999),437);
+ state.groupIndex=1;assert.equal(remainingGroupSeconds(groups,state,150,999999),58);
 });
 
 test('recorded technical timing relief preserves the failed result and permits a fresh attempt',()=>fixture(async({api,install,login,db,advance,now})=>{
