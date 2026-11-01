@@ -1,4 +1,4 @@
-name: TELW IELTS Diagnostics admin menu
+name: TELW concise Reading feedback
 on:
   push:
     branches: [telw-listening-deploy]
@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: d08e9c01b1f29b19228dbc62f1ccad49bfaf7f49
+          ref: 70d395ec241d1dff8f24de0f9837fb02bcc11c91
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
@@ -23,7 +23,7 @@ jobs:
       - name: Verify portal isolation
         run: |
           node --check workers/ielts/trainer-portal.mjs
-          node --test tests/ielts/trainer-portal.test.mjs tests/ielts/learner-portal.test.mjs
+          node --test tests/ielts/trainer-portal.test.mjs tests/ielts/learner-portal.test.mjs tests/ielts/reading-feedback.test.mjs
       - name: Verify root identity and preserve Listening baseline
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
