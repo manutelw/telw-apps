@@ -63,7 +63,7 @@ test('all four parts, full score, private trainer email and candidate feedback w
  const answers=Object.fromEntries(bank.parts.flatMap(p=>p.key.map(k=>[k.id,k.accepted[0]])));const result=await (await f.api('submit',{attemptId:a.attemptId,answers,revision:0,score:0},user.cookie)).json();assert.equal(result.correct,40);assert.deepEqual(result.parts,[10,10,10,10]);
  assert.equal((await f.api('feedback',{attemptId:a.attemptId,consent:false},user.cookie)).status,400);
  assert.equal((await f.api('feedback',{attemptId:a.attemptId,consent:true,email:'attacker@example.com'},user.cookie)).status,200);const n=f.messages.length;assert.equal((await f.api('feedback',{attemptId:a.attemptId,consent:true},user.cookie)).status,200);assert.equal(f.messages.length,n);
- const candidate=f.messages.at(-1).payload;assert.deepEqual(candidate.to,['learner@example.com']);assert.match(candidate.html,/Synthetic evidence/);assert.doesNotMatch(candidate.html,/Synthetic-only script|<details>/);
+ const candidate=f.messages.at(-1).payload;assert.deepEqual(candidate.to,['learner@example.com']);assert.match(candidate.html,/Your Listening level/);assert.doesNotMatch(candidate.html,/Synthetic evidence/);assert.doesNotMatch(candidate.html,/Synthetic-only script|<details>/);
  assert.equal((await f.api('enquire',{attemptId:a.attemptId,consent:true,name:'<script>bad</script>'},user.cookie)).status,200);const trainer=f.messages.at(-1).payload;assert.deepEqual(trainer.to,['manutelw@gmail.com']);assert.match(trainer.html,/Synthetic evidence|Accepted answers/);assert.doesNotMatch(trainer.html,/<script>/);
 }));
 test('late answers and forged scores cannot change stored results or another learner’s attempt',()=>fixture(async f=>{

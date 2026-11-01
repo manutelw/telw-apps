@@ -1,0 +1,20 @@
+// Reference conversions, not test equating. Original TELW sets are uncalibrated.
+// Hour ranges are initial TELW planning heuristics, not measured minimum/maximum
+// learning times: per half-band gap 15–25 guided + 20–40 independent hours,
+// widened 25% if at least two parts score below half. Review after five guided hours.
+export function compactFeedback({skill='Listening',track='academic',score,target=''}={}){
+ const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const s=score||{},n=s.correct,answered=s.answered??40,reading=skill==='Reading';
+ const ranges=reading?(track==='general'?[[40,9],[39,8.5],[37,8],[36,7.5],[34,7],[32,6.5],[30,6],[27,5.5],[23,5],[19,4.5],[15,4]]:[[39,9],[37,8.5],[35,8],[33,7.5],[30,7],[27,6.5],[23,6],[19,5.5],[15,5],[13,4.5],[10,4]]):[[39,9],[37,8.5],[35,8],[32,7.5],[30,7],[26,6.5],[23,6],[18,5.5],[16,5],[13,4.5],[11,4]];
+ const reliable=Number.isInteger(n)&&n>=0&&n<=40&&answered>=20,band=reliable?ranges.find(r=>n>=r[0])?.[1]:null;
+ const targetNumber=/^(?:[4-8](?:\.0|\.5)?|9(?:\.0)?)$/.test(String(target))?Number(target):null;
+ const types=(s.types||[]).filter(g=>g.total>0),best=types.slice().sort((a,b)=>b.correct/b.total-a.correct/a.total)[0],worst=types.filter(g=>g.correct<g.total).sort((a,b)=>a.correct/a.total-b.correct/b.total)[0];
+ const names={completion:'recording specific words and details',choice:'selecting answers from several options',matching:'matching speakers or information',map:'following directions and locations','TRUE / FALSE / NOT GIVEN':'distinguishing supported, contradicted and unstated information','Multiple choice':'choosing answers supported by the text'};
+ const key=g=>g?.type||g?.label,label=g=>names[key(g)]||(reading?'finding evidence in the text':'following information in the recording');
+ const strength=!reliable||n===0?'This attempt gives too little evidence to identify a clear strength.':best&&best.correct/best.total>=.6?'Your strongest area in this attempt was '+label(best)+'.':'You identified some correct '+(reading?'information in the text':'information in the recordings')+'; build consistency with short tasks.';
+ const priority=!reliable?'Complete a supported diagnostic with the trainer.':worst?'Practise '+label(worst)+', checking the '+(reading?'exact text evidence':'spoken detail')+' for each answer.':'Maintain accuracy on a fresh timed test.';
+ let plan='Select your target band so we can suggest a provisional learning-hour range.';
+ if(!band)plan='A trainer needs to review this result before estimating your learning hours.';
+ else if(targetNumber){const gap=Math.max(0,targetNumber-band);if(!gap)plan='Your result meets the target reference on this set. Confirm it on fresh material before deciding whether training is needed.';else{const steps=Math.ceil(gap*2),factor=(s.parts||[]).filter(x=>x<5).length>=2?1.25:1,round=x=>Math.ceil(x/5)*5;plan='Plan for approximately '+round(steps*15*factor)+'–'+round(steps*25*factor)+' hours of guided training, plus '+round(steps*20*factor)+'–'+round(steps*40*factor)+' hours of independent practice. Your trainer will confirm this provisional estimate and review progress after 5 guided hours.';}}
+ return '<p><strong>Your '+esc(skill)+' level:</strong> '+(band?'Estimated Band '+band.toFixed(1):reliable?'Below the Band 4 reference — trainer review needed':'Not enough evidence for a band estimate')+'</p><p><strong>Your target:</strong> '+(targetNumber?'Band '+targetNumber.toFixed(1):'Not selected yet')+'</p><p><strong>What you do well:</strong> '+esc(strength)+'</p><p><strong>Your next priority:</strong> '+esc(priority)+'</p><p><strong>Your learning plan:</strong> '+esc(plan)+'</p><p><em>This is an uncalibrated diagnostic estimate, not an official IELTS band. Hour ranges are provisional planning estimates, to be confirmed by your trainer. Your progress depends on regular practice and the skills you need to strengthen.</em></p><p><strong>Interested in training with TELW?</strong> Call TELW at <a href="tel:+919211392003">+919211392003</a> to fix an appointment with the trainer.</p>';
+}

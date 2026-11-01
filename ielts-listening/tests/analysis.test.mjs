@@ -13,7 +13,7 @@ test('analysis agrees with scoring, distinguishes limits and blanks, escapes evi
 test('detailed evidence is withheld until completion and training email requires consent, respects ownership and sends once',()=>fixture(async f=>{
  await f.install();const user=await f.login(),a=await (await f.api('start',{},user.cookie)).json();assert.equal(a.result,undefined);assert.doesNotMatch(JSON.stringify(a),/Synthetic evidence/);
  assert.equal((await f.api('enquire',{attemptId:a.attemptId,consent:true},user.cookie)).status,409);
- const done=await (await f.api('submit',{attemptId:a.attemptId,revision:0,answers:{1:'alpha',2:'alpha extra'}},user.cookie)).json();assert.match(done.analysisHtml,/Question 40/);assert.match(done.analysisHtml,/word or number rule/);
+ const done=await (await f.api('submit',{attemptId:a.attemptId,revision:0,answers:{1:'alpha',2:'alpha extra'}},user.cookie)).json();assert.match(done.analysisHtml,/Your Listening level/);assert.doesNotMatch(done.analysisHtml,/Question 40|Supporting detail/);
  const resumed=await (await f.api('state',{attemptId:a.attemptId},user.cookie)).json();assert.equal(resumed.result.analysisHtml,done.analysisHtml);
  assert.equal((await f.api('enquire',{attemptId:a.attemptId,consent:false},user.cookie)).status,400);
  const other=await f.login('other@example.com');assert.equal((await f.api('enquire',{attemptId:a.attemptId,consent:true},other.cookie)).status,404);

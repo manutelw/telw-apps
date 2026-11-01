@@ -1,7 +1,8 @@
 // Remaining assessment work, rather than an overall wall-clock deadline.
 export function remainingGroupSeconds(groups,state,currentTime,now,cueTime=0,cueStage='none'){
+ if(state.phase==='closing')return 5+Math.max(0,3-cueTime);
  if(state.phase==='review')return Math.max(0,state.reviewUntil-now);
- let total=120;
+ let total=8;
  for(let i=state.groupIndex;i<groups.length;i++){
   const g=groups[i];
   if(i>state.groupIndex){total+=g.duration+g.readingSeconds+g.readCueSeconds+g.listenCueSeconds;continue;}

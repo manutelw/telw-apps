@@ -1,3 +1,4 @@
+import {withReadingFeedback} from './reading-feedback.mjs';
 // Public TELW Reading entry backed by the same private IELTS service as the
 // trainer dashboard. Bank selection, ownership, scoring and cooldown stay there.
 const ORIGIN='https://manuvikraman.com';
@@ -62,9 +63,11 @@ export async function handleLearnerPortal(request,env={}){
   let content=await upstream.text();
   if(page&&upstream.ok){
    if(!content.includes('id="identitySend"')||!content.includes('/api/ielts/reading/start'))throw Error('Unexpected learner page');
+   content=withReadingFeedback(content);
    content=content.replaceAll('href="/api/ielts/reading/admin"','href="/ielts/admin/"')
     .replaceAll('/api/ielts/auth/',PREFIX+'auth/').replaceAll('/api/ielts/reading/',PREFIX+'reading/');
   }
   return new Response(request.method==='HEAD'?null:content,{status:upstream.status,headers:out});
  }catch(error){return json({error:error.status?error.message:'The Reading service is temporarily unavailable. Please try again later.'},error.status||503);}
 }
+
