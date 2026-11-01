@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 554cb533b72162849ab940114c3fd2233972f4f0
+          ref: b2fe6045fe6a53955591b3aac68966471285d6ca
           path: source
           sparse-checkout: ielts-listening
           persist-credentials: false
@@ -65,6 +65,8 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           WRANGLER_SEND_METRICS: 'false'
         run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
           ffmpeg -version
           npx --yes wrangler@4.156.0 --version
           npx --yes wrangler@4.156.0 d1 migrations apply LISTENING_DB --remote --config wrangler.local.jsonc
@@ -85,7 +87,7 @@ jobs:
           req=urllib.request.Request('https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/telw-apps/deployments',headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN'].strip()})
           with urllib.request.urlopen(req,timeout=30) as r: root=json.load(r)
           if not root.get('success') or json.dumps(root['result'],sort_keys=True)!=pathlib.Path('/tmp/listening-root-before.json').read_text(): sys.exit('Root deployment changed during verification; investigate.')
-          print('Private Listening preview deployed. Root Worker unchanged. No bank publication, schema or secret changes.')
+          print('Question-group Listening playback deployed. Root Worker unchanged. Additive Listening-only schema and private group recordings verified.')
 
       - name: Permit a retake only for the owner's recorded legacy timer cutoff
         env:
