@@ -1,4 +1,4 @@
-name: IELTS Listening - admin repeat access
+name: IELTS Listening - approved opening edit
 on:
   push:
     branches: [telw-listening-deploy]
@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 40c334f5ad01d4aa891e812e69f8c6bfcdc4c6a7
+          ref: e6e0b2815f44ab69d3936e4f37207ef8c99ba6c6
           path: source
           sparse-checkout: ielts-listening
           persist-credentials: false
@@ -66,8 +66,9 @@ jobs:
           WRANGLER_SEND_METRICS: 'false'
         run: |
           npx --yes wrangler@4.156.0 --version
-          npx --yes wrangler@4.156.0 d1 migrations apply LISTENING_DB --remote --config wrangler.local.jsonc
-          npx --yes wrangler@4.156.0 deploy --config wrangler.local.jsonc
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python scripts/remove-set3-spoken-disclosure.py
       - name: Verify preview asset and root isolation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -83,4 +84,4 @@ jobs:
           req=urllib.request.Request('https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/telw-apps/deployments',headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN'].strip()})
           with urllib.request.urlopen(req,timeout=30) as r: root=json.load(r)
           if not root.get('success') or json.dumps(root['result'],sort_keys=True)!=pathlib.Path('/tmp/listening-root-before.json').read_text(): sys.exit('Root deployment changed during verification; investigate.')
-          print('Listening trainer repeat access deployed. Root Worker unchanged. Listening-only migration; no audio changes.')
+          print('Approved Listening opening edit published. Root Worker unchanged. No application deployment, scoring or question changes.')
