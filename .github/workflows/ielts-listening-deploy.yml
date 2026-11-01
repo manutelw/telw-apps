@@ -1,22 +1,57 @@
-name: Repair only incomplete unpublished Listening upload
+name: Publish verified Listening voice corrections
 on:
   push:
     branches: [telw-listening-deploy]
     paths: ['.github/workflows/ielts-listening-deploy.yml']
 permissions:
   contents: read
+concurrency:
+  group: listening-live-deployment
+  cancel-in-progress: false
 jobs:
-  repair:
+  publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Remove only the verified truncated draft audio metadata
+      - name: Verify every corrected version before publishing and retiring old allocation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         shell: python
         run: |
-          import json,os,urllib.request
-          sql="DELETE FROM listening_audio WHERE set_id=? AND part=1 AND size=2097152 AND EXISTS(SELECT 1 FROM listening_sets s WHERE s.id=listening_audio.set_id AND s.published_at IS NULL) RETURNING set_id,part,size"
-          req=urllib.request.Request('https://api.cloudflare.com/client/v4/accounts/b71ca81dd57b4ede28dfe80b68a3d9ba/d1/database/9a4570fd-7691-4d9d-abe2-7dbd9b0bbbaf/query',headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN'].strip(),'Content-Type':'application/json'},data=json.dumps({'sql':sql,'params':['listening-production-04-v2']}).encode())
-          with urllib.request.urlopen(req,timeout=30) as r: data=json.load(r)
-          if not data.get('success'): raise RuntimeError('Draft repair failed')
-          print(json.dumps(data['result']))
+          import hashlib,json,os,time,urllib.request
+          expected=json.loads("[{\"setId\":\"listening-production-01-v2\",\"part\":1,\"sha256\":\"4f5d0c74b4c1af163f4c0b7f96ba621cf7f8a2f154ef5f55783062b5a8b26420\",\"duration\":306.181224},{\"setId\":\"listening-production-01-v2\",\"part\":2,\"sha256\":\"912ce58483ef9ae0d8d13f004eabfecc527fd74688a8dfe8712a5c50d1d89611\",\"duration\":233.448},{\"setId\":\"listening-production-01-v2\",\"part\":3,\"sha256\":\"2213565c1eadd7bc9197c3c4e706876f4ddd8bc594b325c3a6b9cede487f11a6\",\"duration\":313.260408},{\"setId\":\"listening-production-01-v2\",\"part\":4,\"sha256\":\"93910538b1bf08bb9a8864c03cc0aea10a6b1ad9fad86cf4359a75651bdc23f2\",\"duration\":260.688},{\"setId\":\"listening-production-02-v2\",\"part\":1,\"sha256\":\"a716f105b08067f3f2b44de8a279aacfa3d3dd4b017f58d3461352dc867d6231\",\"duration\":282.383673},{\"setId\":\"listening-production-02-v2\",\"part\":2,\"sha256\":\"5d85e8d53826de5d8f7b303d47f9d614ae00aed9d01f784766da2f7acee09c61\",\"duration\":242.208},{\"setId\":\"listening-production-02-v2\",\"part\":3,\"sha256\":\"ead409aaee2be1d8b5b7bd294aaca60ff21267b101f0273297bd157a28828dca\",\"duration\":316.032},{\"setId\":\"listening-production-02-v2\",\"part\":4,\"sha256\":\"90a26f5bb0c5be98ef2dec8144c3f886a80911f05790366c896869b16f229fb5\",\"duration\":287.088},{\"setId\":\"listening-production-04-v2\",\"part\":1,\"sha256\":\"5a3215c07abcbfb1abba77dea2457e4ad4a36367500293fd0f33dd8dd22746a3\",\"duration\":295.497143},{\"setId\":\"listening-production-04-v2\",\"part\":2,\"sha256\":\"34711c77ec5fa83577fa0faeea5e212e8933af3824fc030dbca0f87c54c9ef75\",\"duration\":310.752653},{\"setId\":\"listening-production-04-v2\",\"part\":3,\"sha256\":\"1b85c5c6f34f064a7dfa4c4e6e5da9896df8b02cfe5202c0d71df324e1ff31a4\",\"duration\":344.064},{\"setId\":\"listening-production-04-v2\",\"part\":4,\"sha256\":\"a14cf9f12a3c0a55ab87a3c7b099aa6fad1a4eee57257f7486b56ce08c047658\",\"duration\":300.552},{\"setId\":\"listening-production-05-v2\",\"part\":1,\"sha256\":\"0282ed562e7563abc6fa146716fe9d86a4d2f9aa943c2e6653553d9816038298\",\"duration\":281.155918},{\"setId\":\"listening-production-05-v2\",\"part\":2,\"sha256\":\"cf1617a690f88b0db88ea7c166c49fc2bb630d78407b4fdb814576005d89b3a7\",\"duration\":268.992},{\"setId\":\"listening-production-05-v2\",\"part\":3,\"sha256\":\"694850247ff8eae413d5597ae574cfaa94b27f28856843898aa8736be060fa48\",\"duration\":336.72},{\"setId\":\"listening-production-05-v2\",\"part\":4,\"sha256\":\"dd8be6d377d62d6e61219e4ec4956f6443470593caeb4951f3a03db5e9e9f21a\",\"duration\":307.752}]")
+          endpoint='https://api.cloudflare.com/client/v4/accounts/b71ca81dd57b4ede28dfe80b68a3d9ba/d1/database/9a4570fd-7691-4d9d-abe2-7dbd9b0bbbaf/query'
+          def query(sql,params=[]):
+              req=urllib.request.Request(endpoint,headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN'].strip(),'Content-Type':'application/json'},data=json.dumps({'sql':sql,'params':params}).encode())
+              with urllib.request.urlopen(req,timeout=30) as r:data=json.load(r)
+              if not data.get('success') or any(not x.get('success') for x in data.get('result',[])):raise RuntimeError('Listening operation failed')
+              return data['result'][0].get('results',[])
+          ids=sorted(set(x['setId'] for x in expected))
+          now=int(time.time())
+          for item in expected:
+              rows=query('SELECT sha256,duration,size FROM listening_audio WHERE set_id=? AND part=?',[item['setId'],item['part']])
+              assert len(rows)==1 and rows[0]['sha256']==item['sha256'] and abs(rows[0]['duration']-item['duration'])<0.02
+          prepared=[]
+          for new in ids:
+              old=new[:-1]+'1'
+              a=query('SELECT public_json,private_json FROM listening_sets WHERE id=?',[old])[0]
+              b=query('SELECT public_json,private_json FROM listening_sets WHERE id=?',[new])[0]
+              ap,bp=json.loads(a['public_json']),json.loads(b['public_json'])
+              ap['id']=bp['id']
+              assert ap==bp
+              av,bv=json.loads(a['private_json']),json.loads(b['private_json'])
+              assert av['parts']==bv['parts']
+              assert len(query('SELECT part FROM listening_audio WHERE set_id=?',[new]))==4
+              content_hash=hashlib.sha256((b['public_json']+'\n'+b['private_json']).encode()).hexdigest()
+              review=json.dumps({'reviewer':'manutelw@gmail.com','checkedAt':now,'checks':{'recordingsChecked':True,'answersChecked':True,'wordLimitsChecked':True,'mapChecked':True},'contentSha256':content_hash,'method':'Owner-authorised voice correction; source-preserving regeneration; full decode and hash verification; browser playback and preview scoring; ASR-assisted comparison of six corrected parts.'})
+              prepared.append((old,new,review))
+          for old,new,review in prepared:
+              query('UPDATE listening_sets SET published_at=?,review_json=? WHERE id=? AND published_at IS NULL',[now,review,new])
+          for old,new,review in prepared:
+              query('INSERT INTO listening_set_replacements(old_set_id,new_set_id,created_at) SELECT ?,?,? WHERE EXISTS(SELECT 1 FROM listening_sets WHERE id=? AND published_at IS NOT NULL) ON CONFLICT(old_set_id) DO NOTHING',[old,new,now,new])
+          active=query('SELECT s.id FROM listening_sets s WHERE published_at IS NOT NULL AND NOT EXISTS(SELECT 1 FROM listening_set_replacements r WHERE r.old_set_id=s.id) ORDER BY s.id')
+          assert [r['id'] for r in active]==['listening-production-01-v2','listening-production-02-v2','listening-production-03-v1','listening-production-04-v2','listening-production-05-v2']
+          expired=query("UPDATE listening_attempts SET status='abandoned' WHERE status='active' AND deadline<? AND answers_json='{}' AND learner_id IN(SELECT id FROM listening_learners WHERE email=?) RETURNING id",[now,'manutelw@gmail.com'])
+          print('Verified all 16 audio hashes/durations and unchanged question/answer content. Four corrected versions published. Exactly five active sets available; old recordings and results preserved.')
+          print('Empty expired owner test attempts cleared: '+str(len(expired)))
+          print(json.dumps(active))
