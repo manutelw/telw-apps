@@ -1,4 +1,4 @@
-name: IELTS Listening - detailed feedback release
+name: IELTS Listening - admin repeat access
 on:
   push:
     branches: [telw-listening-deploy]
@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 3a16200680a6093909905d0aac809b3f419a8d74
+          ref: 40c334f5ad01d4aa891e812e69f8c6bfcdc4c6a7
           path: source
           sparse-checkout: ielts-listening
           persist-credentials: false
@@ -66,6 +66,7 @@ jobs:
           WRANGLER_SEND_METRICS: 'false'
         run: |
           npx --yes wrangler@4.156.0 --version
+          npx --yes wrangler@4.156.0 d1 migrations apply LISTENING_DB --remote --config wrangler.local.jsonc
           npx --yes wrangler@4.156.0 deploy --config wrangler.local.jsonc
       - name: Verify preview asset and root isolation
         env:
@@ -75,11 +76,11 @@ jobs:
           import json,os,pathlib,sys,urllib.request,urllib.error
           try:
               with urllib.request.urlopen('https://manuvikraman.com/ielts/listening/app.js',timeout=30) as r: js=r.read().decode()
-              if 'detailedAnalysis' not in js: sys.exit('Live admin asset missing.')
+              if 'admin/start' not in js: sys.exit('Live admin asset missing.')
           except urllib.error.HTTPError as e:
               if e.code != 403: raise
               print('Runner website access returned 403; signed-in browser verification is required.')
           req=urllib.request.Request('https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/telw-apps/deployments',headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN'].strip()})
           with urllib.request.urlopen(req,timeout=30) as r: root=json.load(r)
           if not root.get('success') or json.dumps(root['result'],sort_keys=True)!=pathlib.Path('/tmp/listening-root-before.json').read_text(): sys.exit('Root deployment changed during verification; investigate.')
-          print('Detailed Listening feedback deployed. Root Worker unchanged. No database or audio changes.')
+          print('Listening trainer repeat access deployed. Root Worker unchanged. Listening-only migration; no audio changes.')
