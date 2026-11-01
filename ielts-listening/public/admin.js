@@ -23,8 +23,8 @@ function preview(set,pub){
    input.name=String(q.id);fields[q.id]=input;label.append(input);form.append(label);
   }
  }
- const send=el('button','Submit preview answers'),result=el('p');result.setAttribute('role','status');form.append(send,result);
- form.onsubmit=async e=>{e.preventDefault();send.disabled=true;try{const d=await api('admin/preview-submit',{setId:set.id,answers:Object.fromEntries(Object.entries(fields).map(([id,input])=>[id,input.value]))});result.textContent='Preview result: '+d.correct+'/40; '+d.answered+' answered. Part scores: '+d.parts.join(', ')+'. No candidate result was stored.';}catch(error){result.textContent=error.message;}finally{send.disabled=false;}};
+ const send=el('button','Submit preview answers'),result=el('div');result.setAttribute('role','status');form.append(send,result);
+ form.onsubmit=async e=>{e.preventDefault();send.disabled=true;try{const d=await api('admin/preview-submit',{setId:set.id,answers:Object.fromEntries(Object.entries(fields).map(([id,input])=>[id,input.value]))});result.textContent='Preview result: '+d.correct+'/40; '+d.answered+' answered. Part scores: '+d.parts.join(', ')+'. No candidate result was stored.';if(d.analysisHtml){const detail=el('div');detail.innerHTML=d.analysisHtml;result.append(detail);}}catch(error){result.textContent=error.message;}finally{send.disabled=false;}};
  panel.append(form);return panel;
 }
 async function load(){try{const data=await api('admin/sets');const box=$('sets');box.replaceChildren();for(const set of data.sets){const pub=JSON.parse(set.public_json),priv=JSON.parse(set.private_json);const section=el('section');section.append(el('h3',set.title),el('p',set.id+' · 40 questions · '+set.audio.length+'/4 recordings · '+(set.published_at?'Published':'Not published')),preview(set,pub));

@@ -36,7 +36,7 @@ export function normalise(value,kind){
  if(kind==='time'){const m=s.match(/^(\d{1,2})[.:](\d{2})$/)||s.match(/^(\d{2})(\d{2})$/);if(!m||+m[1]>23||+m[2]>59)return null;return m[1].padStart(2,'0')+':'+m[2];}
  return s;
 }
-function withinLimit(answer,q,key){
+export function withinLimit(answer,q,key){
  if(q.type!=='completion')return true;
  if(key.normalizer==='digits'||key.normalizer==='time')return q.allowNumber&&normalise(answer,key.normalizer)!==null;
  const tokens=clean(answer).split(' ').filter(Boolean);let words=0,numbers=0;
@@ -59,3 +59,4 @@ export function scoreAnswers(pub,priv,answers){
  }
  return {correct,total:40,answered,parts,types:Object.values(types)};
 }
+

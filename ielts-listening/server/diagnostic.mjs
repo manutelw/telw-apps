@@ -1,3 +1,4 @@
+import {completedAnalysis,analysisHtml,analyse} from './analysis.mjs';
 import {groupRows,initialGroups,publicGroups,groupedPlayback,groupedAudio} from './grouped.mjs';
 import {getLearner,requireSameOrigin,readJson,reply,limit,digest} from './auth.mjs';
 import {splitBank,scoreAnswers} from './bank.mjs';
@@ -7,7 +8,7 @@ const fail=(message,status=400)=>Object.assign(Error(message),{status});
 const sql=(env,text,...args)=>env.LISTENING_DB.prepare(text).bind(...args);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function own(env,learner,id){if(typeof id!=='string'||!/^[a-f0-9-]{36}$/.test(id))throw fail('Invalid attempt.');const row=await sql(env,'SELECT a.*,s.public_json,s.private_json FROM listening_attempts a JOIN listening_sets s ON s.id=a.set_id WHERE a.id=?1 AND a.learner_id=?2',id,learner.id).first();if(!row)throw fail('Attempt not found.',404);return row;}
-async function payload(env,row){const state=JSON.parse(row.playback_json),groups=state.timingVersion===2?await groupRows(env,row.set_id):[];const audio=(await sql(env,'SELECT part,duration FROM listening_audio WHERE set_id=?1 ORDER BY part',row.set_id).all()).results;return {ok:true,serverNow:Math.floor(Date.now()/1000),...(groups.length?{groups:publicGroups(groups,row.id)}:{}),attemptId:row.id,setId:row.set_id,deadline:row.deadline,status:row.status,answers:JSON.parse(row.answers_json),revision:row.answers_revision,playback:JSON.parse(row.playback_json),test:JSON.parse(row.public_json),audio:audio.map(x=>({...x,url:BASE+'audio?attempt='+row.id+'&part='+x.part})),...(row.score_json?{result:JSON.parse(row.score_json)}:{})};}
+async function payload(env,row){const state=JSON.parse(row.playback_json),groups=state.timingVersion===2?await groupRows(env,row.set_id):[];const audio=(await sql(env,'SELECT part,duration FROM listening_audio WHERE set_id=?1 ORDER BY part',row.set_id).all()).results;return {ok:true,serverNow:Math.floor(Date.now()/1000),...(groups.length?{groups:publicGroups(groups,row.id)}:{}),attemptId:row.id,setId:row.set_id,deadline:row.deadline,status:row.status,answers:JSON.parse(row.answers_json),revision:row.answers_revision,playback:JSON.parse(row.playback_json),test:JSON.parse(row.public_json),audio:audio.map(x=>({...x,url:BASE+'audio?attempt='+row.id+'&part='+x.part})),...(row.score_json?{result:{...JSON.parse(row.score_json),analysisHtml:analysisHtml(completedAnalysis(row))}}:{})};}
 async function start(env,learner,now){
  const last=await sql(env,"SELECT MAX(a.completed_at) AS ended FROM listening_attempts a WHERE a.learner_id=?1 AND NOT EXISTS(SELECT 1 FROM listening_timing_relief r WHERE r.attempt_id=a.id)",learner.id).first();if(last?.ended&&last.ended+GAP>now)return reply({error:'You can complete one Listening diagnostic every 15 days.',eligibleAt:last.ended+GAP},429);
  const active=await sql(env,"SELECT id,deadline FROM listening_attempts WHERE learner_id=?1 AND status='active'",learner.id).first();if(active)return reply(await payload(env,await own(env,learner,active.id)));
@@ -44,15 +45,15 @@ async function playback(env,row,body,now){
  return reply({ok:true,playback:state});
 }
 async function submit(env,row,body,now){
- if(row.status==='completed')return reply({ok:true,attemptId:row.id,...JSON.parse(row.score_json)});
+ if(row.status==='completed')return reply({ok:true,attemptId:row.id,...JSON.parse(row.score_json),analysisHtml:analysisHtml(completedAnalysis(row))});
  if(row.status!=='active')throw fail('This attempt is no longer active.',409);
  const playbackState=JSON.parse(row.playback_json);if(playbackState.timingVersion===2&&playbackState.part<=4&&now<row.deadline)throw fail('Finish all recording groups before submitting.',409);
  if(now<row.deadline&&body.revision!==row.answers_revision)throw fail('Reload to submit the latest saved answers.',409);
  const answers=now>=row.deadline?JSON.parse(row.answers_json):validAnswers(row,body.answers);
  const result=scoreAnswers(JSON.parse(row.public_json),JSON.parse(row.private_json),answers);
  const updated=await sql(env,"UPDATE listening_attempts SET status='completed',completed_at=?1,answers_json=?2,score_json=?3 WHERE id=?4 AND status='active' AND answers_revision=?5 RETURNING id",now,JSON.stringify(answers),JSON.stringify(result),row.id,row.answers_revision).first();
- if(!updated){const winner=await sql(env,'SELECT score_json FROM listening_attempts WHERE id=?1',row.id).first();if(!winner?.score_json)throw fail('Your saved answers changed. Reload before submitting.',409);return reply({ok:true,attemptId:row.id,...JSON.parse(winner.score_json)});}
- return reply({ok:true,attemptId:row.id,...result});
+ if(!updated){const winner=await sql(env,'SELECT score_json FROM listening_attempts WHERE id=?1',row.id).first();if(!winner?.score_json)throw fail('Your saved answers changed. Reload before submitting.',409);return reply({ok:true,attemptId:row.id,...JSON.parse(winner.score_json),analysisHtml:analysisHtml(completedAnalysis(await own(env,{id:row.learner_id},row.id)))});}
+ return reply({ok:true,attemptId:row.id,...result,analysisHtml:analysisHtml(analyse(JSON.parse(row.public_json),JSON.parse(row.private_json),answers))});
 }
 async function audio(request,env,learner){
  const u=new URL(request.url),row=await own(env,learner,u.searchParams.get('attempt'));
@@ -69,19 +70,14 @@ async function recordingResponse(request,env,meta){
  return new Response(object.body,{status,headers:{'content-type':'audio/mpeg','cache-control':'private, no-store','accept-ranges':'bytes','content-length':String(length),...(status===206?{'content-range':`bytes ${offset}-${offset+length-1}/${meta.size}`}:{})}});
 }
 function report(row,learner,body,trainer){
- const score=JSON.parse(row.score_json),pub=JSON.parse(row.public_json),priv=JSON.parse(row.private_json),answers=JSON.parse(row.answers_json);
- let html=`<h2>${trainer?'Confidential TELW Listening trainer report':'Your TELW Listening feedback'}</h2><p>${score.correct}/40 correct; ${score.answered}/40 answered.</p><p>${score.parts.map((x,i)=>`Part ${i+1}: ${x}/10`).join(' · ')}</p>`;
- html+=score.types.map(g=>`<p>${esc(g.type)}: ${g.correct}/${g.total} correct (${g.answered} answered).</p>`).join('');
- if(!trainer){const attempted=score.types.filter(x=>x.answered>0).sort((a,b)=>a.correct/a.answered-b.correct/b.answered);html+=attempted.length?`<p>Practise ${esc(attempted[0].type)} questions first. Review instructions, listen for corrections and check spelling and word limits.</p>`:'<p>No questions were answered, so this attempt cannot establish a listening priority.</p>';return html+'<p>This original TELW screening is not an official IELTS test or a calibrated band prediction. Your next completed Listening diagnostic is available after 15 days.</p>';}
- html+=`<p>Prepare this learner’s complete TELW IELTS Listening trainer resource pack.</p><p>Verified learner: ${esc(learner.email)}<br>Attempt: ${esc(row.id)}<br>Set: ${esc(row.set_id)}</p>`;
- for(const field of ['name','mobile','targetBand','testDate','studyHours'])html+=`<p>${field}: ${esc(String(body[field]||'').slice(0,200))}</p>`;
- for(let p=0;p<4;p++){html+=`<h3>${esc(pub.parts[p].title)}</h3>`+priv.parts[p].turns.map(t=>`<p><strong>${esc(t.speaker)}:</strong> ${esc(t.text)}</p>`).join('');for(let j=0;j<10;j++){const q=pub.parts[p].questions[j],k=priv.parts[p].key[j];html+=`<p>${q.id}. ${esc(q.prompt)}<br>Candidate: ${esc(answers[q.id]||'unanswered')}<br>Accepted answers: ${esc(k.accepted.join(' / '))}<br>Evidence: ${esc(k.evidence)}</p>`;}}
- return html;
+ let html=`<h2>${trainer?'TELW training interest — Listening report and proposed programme':'Your TELW Listening feedback'}</h2>`;
+ if(trainer){html+=`<p>Verified learner: ${esc(learner.email)}<br>Attempt: ${esc(row.id)}<br>Set: ${esc(row.set_id)}</p><p>The learner opted in to TELW contact about their result and training.</p>`;for(const field of ['name','mobile','targetBand','testDate','studyHours'])html+=`<p>${field}: ${esc(String(body[field]||'Not provided').slice(0,200))}</p>`;}
+ return html+analysisHtml(completedAnalysis(row),trainer,true);
 }
 async function sendReport(env,row,learner,body,now,trainer){
  if(body.consent!==true)throw fail('Confirm your consent to send this report.');if(row.status!=='completed')throw fail('Complete the diagnostic first.',409);
  if(!env.RESEND_API_KEY||!env.TELW_FROM_EMAIL)throw fail('Email is not configured. Your saved result remains available.',503);
- const kind=trainer?'trainer':'candidate',id=row.id+':'+kind,payload=JSON.stringify({from:env.TELW_FROM_EMAIL,to:[trainer?'manutelw@gmail.com':learner.email],...(trainer?{reply_to:learner.email}:{}),subject:trainer?'Confidential TELW IELTS Listening report':'Your TELW IELTS Listening feedback',html:'<div style="font-family:Arial,sans-serif;line-height:1.6">'+report(row,learner,body,trainer)+'</div>'});
+ const kind=trainer?'trainer':'candidate',id=row.id+':'+kind,payload=JSON.stringify({from:env.TELW_FROM_EMAIL,to:[trainer?'manutelw@gmail.com':learner.email],...(trainer?{reply_to:learner.email}:{}),subject:trainer?'TELW training interest: Listening analysis and proposed programme':'Your TELW IELTS Listening feedback',html:'<div style="font-family:Arial,sans-serif;line-height:1.6">'+report(row,learner,body,trainer)+'</div>'});
  await sql(env,"INSERT INTO listening_delivery(id,attempt_id,kind,created_at,payload_json) VALUES(?1,?2,?3,?4,?5) ON CONFLICT(attempt_id,kind) DO NOTHING",id,row.id,kind,now,payload).run();
  const delivery=await sql(env,'SELECT * FROM listening_delivery WHERE id=?1',id).first();if(delivery.status==='sent')return reply({ok:true});if(now-delivery.created_at>=23*3600)throw fail('Contact TELW to check delivery before resending.',409);
  const lease=await sql(env,"UPDATE listening_delivery SET status='sending',lease_until=?1 WHERE id=?2 AND status!='sent' AND lease_until<=?3 RETURNING id",now+60,id,now).first();if(!lease)throw fail('Your report is being sent.',409);
@@ -105,7 +101,7 @@ async function admin(request,env,learner,action,now){
   const row=await sql(env,'SELECT public_json,private_json FROM listening_sets WHERE id=?1',body.setId).first();
   if(!row)throw fail('Set not found.',404);
   const answers=validAnswers(row,body.answers);
-  return reply({ok:true,preview:true,...scoreAnswers(JSON.parse(row.public_json),JSON.parse(row.private_json),answers)});
+  return reply({ok:true,preview:true,...scoreAnswers(JSON.parse(row.public_json),JSON.parse(row.private_json),answers),analysisHtml:analysisHtml(analyse(JSON.parse(row.public_json),JSON.parse(row.private_json),answers))});
  }
  if(action==='admin/bank'){
   const bundle=await readJson(request,256*1024);let split;try{split=splitBank(bundle);}catch(error){throw fail(error.message);}
