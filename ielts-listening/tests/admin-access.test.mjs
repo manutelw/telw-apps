@@ -24,3 +24,9 @@ test('ordinary learners cannot use admin launch or forge the exemption, and the 
  const row=f.db.prepare('SELECT * FROM listening_attempts WHERE id=?').get(run.attemptId);
  assert.throws(()=>f.db.prepare('INSERT INTO listening_attempts(id,learner_id,set_id,started_at,deadline,playback_json,admin_test) VALUES(?,?,?,?,?,?,1)').run(crypto.randomUUID(),row.learner_id,row.set_id,f.now(),f.now()+500,row.playback_json),/TRAINER_REQUIRED/);
 }));
+
+test('only the trainer can start a fresh test while preserving an unfinished run',()=>fixture(async f=>{
+ const {admin}=await f.install();const old=await(await f.api('admin/start',{},admin.cookie)).json();await f.api('save',{attemptId:old.attemptId,answers:{1:'alpha'},revision:0},admin.cookie);
+ const next=await(await f.api('admin/start',{fresh:true},admin.cookie)).json();assert.notEqual(next.attemptId,old.attemptId);const kept=f.db.prepare('SELECT status,answers_json FROM listening_attempts WHERE id=?').get(old.attemptId);assert.equal(kept.status,'abandoned');assert.equal(JSON.parse(kept.answers_json)[1],'alpha');
+ const learner=await f.login();assert.equal((await f.api('admin/start',{fresh:true},learner.cookie)).status,403);
+}));
