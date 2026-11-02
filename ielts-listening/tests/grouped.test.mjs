@@ -26,10 +26,11 @@ test('question groups enforce reading pauses, protect each clip and preserve ful
   const left=remainingGroupSeconds(attempt.groups,attempt.playback,0,now());assert.ok(left>=g.duration+8);
   assert.equal((await api('save',{attemptId:id,answers:{1:'alpha'},revision:i},user.cookie)).status,200);
   advance(g.duration);const ended=await act('end',{seconds:g.duration});assert.equal(ended.status,200);attempt.playback=(await ended.json()).playback;
+  if(attempt.playback.phase==='checkCue'){assert.equal((await act('play')).status,409);advance(5);attempt.playback=(await(await act('check')).json()).playback;assert.equal((await act('next')).status,409);advance(30);attempt.playback=(await(await act('next')).json()).playback;}
  }
- assert.equal(attempt.playback.part,5);assert.equal(attempt.playback.phase,'closing');assert.equal((await api('submit',{attemptId:id,answers:{},revision:5},user.cookie)).status,409);assert.equal((await act('finishCue')).status,409);advance(3);attempt.playback=(await(await act('finishCue')).json()).playback;assert.equal(attempt.playback.phase,'review');assert.equal(remainingGroupSeconds(attempt.groups,attempt.playback,0,now()),5);
+ assert.equal(attempt.playback.part,5);assert.equal(attempt.playback.phase,'closing');assert.equal((await api('submit',{attemptId:id,answers:{},revision:5},user.cookie)).status,409);assert.equal((await act('finishCue')).status,409);advance(7);attempt.playback=(await(await act('finishCue')).json()).playback;assert.equal(attempt.playback.phase,'review');assert.equal(remainingGroupSeconds(attempt.groups,attempt.playback,0,now()),120);
  assert.equal((await api('save',{attemptId:id,answers:{1:'alpha',2:'alpha'},revision:5},user.cookie)).status,200);assert.equal((await api('submit',{attemptId:id,answers:{},revision:6},user.cookie)).status,409);
- advance(4);assert.equal(remainingGroupSeconds(attempt.groups,attempt.playback,0,now()),1);advance(1);assert.equal(remainingGroupSeconds(attempt.groups,attempt.playback,0,now()),0);
+ advance(119);assert.equal(remainingGroupSeconds(attempt.groups,attempt.playback,0,now()),1);advance(1);assert.equal(remainingGroupSeconds(attempt.groups,attempt.playback,0,now()),0);
  assert.equal((await api('save',{attemptId:id,answers:{1:'wrong'},revision:6},user.cookie)).status,409);assert.equal(db.prepare('SELECT status FROM listening_attempts WHERE id=?').get(id).status,'active');const result=await api('submit',{attemptId:id,answers:{1:'wrong'},revision:6},user.cookie);assert.equal(result.status,200);assert.equal((await result.json()).correct,2);
 }));
 

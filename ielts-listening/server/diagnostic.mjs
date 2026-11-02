@@ -99,7 +99,7 @@ async function admin(request,env,learner,action,now){
   return recordingResponse(request,env,meta);
  }
  requireSameOrigin(request);if(request.method!=='POST')throw fail('POST required.',405);
- if(action==='admin/start'){const input=await readJson(request);return start(env,learner,now,true,input.targetBand);}
+ if(action==='admin/start'){const input=await readJson(request);if(input.fresh===true)await sql(env,"UPDATE listening_attempts SET status='abandoned' WHERE learner_id=?1 AND status='active'",learner.id).run();return start(env,learner,now,true,input.targetBand);}
  if(action==='admin/preview-submit'){
   const body=await readJson(request,16384);
   if(typeof body.setId!=='string'||!/^listening-[a-z0-9-]{3,60}$/.test(body.setId))throw fail('Invalid set ID.');

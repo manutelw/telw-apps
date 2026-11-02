@@ -1,18 +1,25 @@
+import {REVIEW_SECONDS,PART_CHECK_SECONDS,CHECK_CUE_SECONDS,END_CUE_SECONDS} from '../public/format.mjs';
 import {reply} from './auth.mjs';
 const sql=(env,text,...args)=>env.LISTENING_DB.prepare(text).bind(...args);
 const CLOSING_SECONDS=3;
 const fail=(message,status=400)=>Object.assign(Error(message),{status});
 export async function groupRows(env,setId){return (await sql(env,'SELECT * FROM listening_groups WHERE set_id=?1 ORDER BY part,group_no',setId).all()).results;}
-export function initialGroups(groups){return {timingVersion:2,part:1,groupIndex:0,phase:'readCue',readyAt:0,playStartedAt:0,positions:groups.map(()=>0),done:groups.map(()=>false),reviewUntil:0};}
+export function initialGroups(groups){return {standardFormat:true,timingVersion:2,part:1,groupIndex:0,phase:'readCue',readyAt:0,playStartedAt:0,positions:groups.map(()=>0),done:groups.map(()=>false),reviewUntil:0};}
 export function publicGroups(groups,id){return groups.map((g,i)=>({part:g.part,number:g.group_no,from:g.from_q,to:g.to_q,duration:g.duration,readingSeconds:g.reading_seconds,readCueSeconds:g.read_cue_seconds,listenCueSeconds:g.listen_cue_seconds,readCue:'/ielts/listening/cues/'+g.read_cue,listenCue:'/ielts/listening/cues/'+g.listen_cue,url:'/ielts/listening/api/audio?attempt='+id+'&group='+i}));}
 export async function groupedPlayback(env,row,body,now){
  if(row.status!=='active'||now>=row.deadline)throw fail('This attempt has ended.',409);
  const state=JSON.parse(row.playback_json),groups=await groupRows(env,row.set_id),index=state.groupIndex,g=groups[index];
  if(state.phase==='closing'){
-  if(body.action!=='finishCue'||body.group!==index||body.part!==5||now<state.closingStartedAt+CLOSING_SECONDS-1)throw fail('Finish the closing announcement first.',409);
-  state.phase='review';state.reviewUntil=now+5;
+  if(body.action!=='finishCue'||body.group!==index||body.part!==5||now<state.closingStartedAt+(state.standardFormat?END_CUE_SECONDS:CLOSING_SECONDS)-1)throw fail('Finish the closing announcement first.',409);
+  state.phase='review';state.reviewUntil=now+(state.standardFormat?REVIEW_SECONDS:5);
  }else if(!g||body.group!==index||body.part!==g.part)throw fail('This is not the current question group.',409);
- if(state.phase==='review'&&body.action==='finishCue'){ /* handled above */ }else if(body.action==='read'){
+ if(state.phase==='review'&&body.action==='finishCue'){ /* handled above */ }else if(state.phase==='checkCue'){
+  if(body.action!=='check'||now<state.checkStartedAt+CHECK_CUE_SECONDS-1)throw fail('Finish the checking instruction first.',409);
+  state.phase='checking';state.readyAt=now+PART_CHECK_SECONDS;
+ }else if(state.phase==='checking'){
+  if(body.action!=='next'||now<state.readyAt)throw fail('Use the part checking time first.',409);
+  state.phase='readCue';state.readyAt=0;
+ }else if(body.action==='read'){
   if(state.phase==='readCue'){state.phase='reading';state.readyAt=now+g.reading_seconds;}
   else if(state.phase!=='reading')throw fail('This reading period has already ended.',409);
  }else if(body.action==='play'){
@@ -25,7 +32,7 @@ export async function groupedPlayback(env,row,body,now){
    if(state.positions[index]<g.duration-2||now-state.playStartedAt<g.duration-2)throw fail('This recording group has not finished.',409);
    state.done[index]=true;state.groupIndex++;state.playStartedAt=0;state.readyAt=0;
    if(state.groupIndex===groups.length){state.part=5;state.phase='closing';state.closingStartedAt=now;state.reviewUntil=0;}
-   else{state.part=groups[state.groupIndex].part;state.phase='readCue';}
+   else{state.part=groups[state.groupIndex].part;state.phase=state.standardFormat&&state.part!==g.part?'checkCue':'readCue';if(state.phase==='checkCue'){state.checkStartedAt=now;state.checkPart=g.part;}}
   }
  }else throw fail('Invalid playback action.');
  const changed=await sql(env,"UPDATE listening_attempts SET playback_json=?1 WHERE id=?2 AND playback_json=?3 AND status='active' RETURNING id",JSON.stringify(state),row.id,row.playback_json).first();
