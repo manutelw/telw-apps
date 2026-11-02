@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 838298dfe6a6d7410ea2e3d891e671306b31cb01
+          ref: cc6910cbfe45a30ba1b0aa369005eab2f13fb5f4
           path: source
           sparse-checkout: ielts-listening
           persist-credentials: false
