@@ -28,10 +28,10 @@
 <button id="loginButton" type="button">Log in</button>
 <div id="loginStatus" class="status"></div>
 <div class="row" style="margin-top:12px"><a class="button secondary" href="../ascent/forgot-password.html?type=STUDENT">Forgot password?</a><a class="button" href="./register.html">New learner · Create account</a></div>
-<button id="institutionToggle" class="institution-toggle" type="button">Institution learner? Use your institution access</button>
+<button id="institutionToggle" class="institution-toggle hidden" type="button" hidden aria-hidden="true">Institution access</button>
 </div>
 
-<div id="findPanel" class="hidden">
+<div id="findPanel" class="hidden" hidden aria-hidden="true">
 <div class="field"><label for="accessSearch">Institution name or access code</label><input id="accessSearch" placeholder="Enter your institution name"></div>
 <button id="findButton" type="button">Find institution access</button>
 <div id="findStatus" class="status"></div>
