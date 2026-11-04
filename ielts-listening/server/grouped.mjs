@@ -26,10 +26,10 @@ export async function groupedPlayback(env,row,body,now){
   if(state.phase==='reading'&&now>=state.readyAt){state.phase='listening';state.playStartedAt=now;}
   else if(state.phase!=='listening')throw fail('Use the question-reading time first.',409);
  }else if(['checkpoint','end'].includes(body.action)){
-  if(state.phase!=='listening'||!state.playStartedAt||typeof body.seconds!=='number'||!Number.isFinite(body.seconds)||body.seconds<0||body.seconds>g.duration+1||body.seconds>now-state.playStartedAt+2)throw fail('Invalid playback position.');
+  if(state.phase!=='listening'||!state.playStartedAt||typeof body.seconds!=='number'||!Number.isFinite(body.seconds)||body.seconds<0||body.seconds>g.duration+1||(!row.admin_test&&body.seconds>now-state.playStartedAt+2))throw fail('Invalid playback position.');
   state.positions[index]=Math.max(state.positions[index],Math.min(body.seconds,g.duration));
   if(body.action==='end'){
-   if(state.positions[index]<g.duration-2||now-state.playStartedAt<g.duration-2)throw fail('This recording group has not finished.',409);
+   if(state.positions[index]<g.duration-2||(!row.admin_test&&now-state.playStartedAt<g.duration-2))throw fail('This recording group has not finished.',409);
    state.done[index]=true;state.groupIndex++;state.playStartedAt=0;state.readyAt=0;
    if(state.groupIndex===groups.length){state.part=5;state.phase='closing';state.closingStartedAt=now;state.reviewUntil=0;}
    else{state.part=groups[state.groupIndex].part;state.phase=state.standardFormat&&state.part!==g.part?'checkCue':'readCue';if(state.phase==='checkCue'){state.checkStartedAt=now;state.checkPart=g.part;}}
