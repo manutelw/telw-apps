@@ -93,3 +93,5 @@ jobs:
           with urllib.request.urlopen(req,timeout=30) as r: root=json.load(r)
           if not root.get('success') or json.dumps(root['result'],sort_keys=True)!=pathlib.Path('/tmp/listening-root-before.json').read_text(): sys.exit('Root deployment changed during verification; investigate.')
           print('Trainer audio seeking deployed. Existing recordings and data preserved. Root Worker unchanged.')
+
+# Anna correction: private transfer preparation only; no deployment or database writes.
