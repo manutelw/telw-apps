@@ -1,4 +1,4 @@
-name: IELTS Listening - computer format and persistent review
+name: IELTS Listening - trainer audio fast-forward
 on:
   push:
     branches: [telw-listening-deploy]
@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: cc6910cbfe45a30ba1b0aa369005eab2f13fb5f4
+          ref: 798f02e5dccdcbb364b09c7561c15244c2f87629
           path: source
           sparse-checkout: ielts-listening
           persist-credentials: false
@@ -66,10 +66,7 @@ jobs:
           WRANGLER_SEND_METRICS: 'false'
         run: |
           npx --yes wrangler@4.156.0 --version
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
           npx --yes wrangler@4.156.0 deploy --config wrangler.local.jsonc
-          python scripts/build-computer-format.py
       - name: Verify preview asset and root isolation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -78,11 +75,11 @@ jobs:
           import json,os,pathlib,sys,urllib.request,urllib.error
           try:
               with urllib.request.urlopen('https://manuvikraman.com/ielts/listening/app.js',timeout=30) as r: js=r.read().decode()
-              if 'admin/start' not in js: sys.exit('Live admin asset missing.')
+              if 'forwardAudio' not in js: sys.exit('Live admin asset missing.')
           except urllib.error.HTTPError as e:
               if e.code != 403: raise
               print('Runner website access returned 403; signed-in browser verification is required.')
           req=urllib.request.Request('https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/workers/scripts/telw-apps/deployments',headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN'].strip()})
           with urllib.request.urlopen(req,timeout=30) as r: root=json.load(r)
           if not root.get('success') or json.dumps(root['result'],sort_keys=True)!=pathlib.Path('/tmp/listening-root-before.json').read_text(): sys.exit('Root deployment changed during verification; investigate.')
-          print('Computer-format Listening deployed. Five paced versions, 30–34-minute schedules and two-minute review verified. Root Worker unchanged.')
+          print('Trainer audio seeking deployed. Existing recordings and data preserved. Root Worker unchanged.')
