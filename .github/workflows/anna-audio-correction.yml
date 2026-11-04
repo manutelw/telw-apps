@@ -101,7 +101,7 @@ jobs:
           wrapping=hashlib.sha256(('telw-anna-transfer-v1:'+token).encode()).digest()
           private=serialization.load_pem_private_key(AESGCM(wrapping).decrypt(sealed[:12],sealed[12:],b'telw-anna-transfer-v1'),None)
           audio_key=private.decrypt(base64.b64decode(meta['key']),padding.OAEP(mgf=padding.MGF1(hashes.SHA256()),algorithm=hashes.SHA256(),label=None))
-          raw=AESGCM(audio_key).decrypt(base64.b64decode(meta['nonce']),pathlib.Path('transfer/anna.bin').read_bytes(),None)
+          raw=AESGCM(audio_key).decrypt(base64.b64decode(meta['nonce']),b''.join(p.read_bytes() for p in sorted(pathlib.Path('transfer').glob('anna.bin.*'))),None)
           assert hashlib.sha256(raw).hexdigest()==meta['sha256']
           with tempfile.TemporaryDirectory() as folder:
            tmp=pathlib.Path(folder);replacement=tmp/'anna.mp3';replacement.write_bytes(raw)
