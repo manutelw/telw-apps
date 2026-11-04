@@ -19,3 +19,11 @@ test('resuming and revisiting saved state never revokes the session or drops ans
  for(let i=0;i<4;i++){const state=await(await f.api('state',{attemptId:a.attemptId},user.cookie)).json();assert.equal(state.answers[1],'alpha');assert.equal(state.answers[40],'sample phrase');assert.equal((await f.api('auth/session',undefined,user.cookie)).status,200);}
  assert.equal(f.db.prepare('SELECT count(*) n FROM listening_sessions WHERE revoked_at IS NOT NULL').get().n,0);
 }));
+
+test('completed results reopen after refresh without restarting the test or requiring unexpired playback',()=>{
+ const saved={status:'completed',deadline:Date.now()/1000-100,result:{correct:40}};
+ assert.equal(resumeAttempt(saved,'verified@example.com'),true);
+ assert.equal(resumeAttempt(saved,''),false);
+ assert.equal(resumeAttempt({status:'active',deadline:Date.now()/1000-100},'verified@example.com'),false);
+ assert.equal(resumeAttempt({status:'completed'},'verified@example.com'),false);
+});
