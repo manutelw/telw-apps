@@ -12,7 +12,7 @@ const TELW_PROGRAMMES=new Set([
 ]);
 const TELW_CORE=new Set([
   'about-us','what-we-do-at-telw','why-telw','trainer-profile',
-  'programs-2','career-development-programs'
+    'programs-2','career-development-programs','programs','classes-9-12'
 ]);
 
 export default {
