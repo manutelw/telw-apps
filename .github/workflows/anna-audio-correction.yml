@@ -1,8 +1,8 @@
-name: IELTS Listening - prepare private Anna correction
+name: IELTS Listening - publish verified Anna correction
 on:
   pull_request:
     branches: [main]
-    paths: ['.github/workflows/anna-audio-correction.yml']
+    paths: ['.github/workflows/anna-audio-correction.yml', '.github/anna-transfer/**']
 permissions:
   contents: read
 concurrency:
@@ -11,7 +11,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -59,23 +59,84 @@ jobs:
           if config['name']!='telw-ielts-listening' or [r['pattern'] for r in config['routes']]!=expected: sys.exit('Config scope mismatch.')
           (p/'wrangler.local.jsonc').write_text(json.dumps(config))
           with open(os.environ['GITHUB_ENV'],'a') as out: out.write('CLOUDFLARE_ACCOUNT_ID='+account+'\n')
-      - name: Prepare private audio transfer
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: transfer-source
+          sparse-checkout: .github/anna-transfer
+          persist-credentials: false
+      - name: Publish owner-approved Anna correction
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           python -m pip install cryptography -q
+          cp -r transfer-source/.github/anna-transfer transfer
           python - <<'PY'
-          import os,json,base64,hashlib
-          from cryptography.hazmat.primitives.asymmetric import rsa
-          from cryptography.hazmat.primitives import serialization
+          """Publish the owner-approved Anna replacement only; retain all prior attempts."""
+          import base64,hashlib,json,os,pathlib,subprocess,tempfile,time,urllib.request
+          from cryptography.hazmat.primitives import serialization,hashes
+          from cryptography.hazmat.primitives.asymmetric import padding
           from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-          key=rsa.generate_private_key(public_exponent=65537,key_size=2048)
-          private=key.private_bytes(serialization.Encoding.PEM,serialization.PrivateFormat.PKCS8,serialization.NoEncryption())
-          public=key.public_key().public_bytes(serialization.Encoding.PEM,serialization.PublicFormat.SubjectPublicKeyInfo).decode()
-          nonce=os.urandom(12)
-          wrapping=hashlib.sha256(('telw-anna-transfer-v1:'+os.environ['CLOUDFLARE_API_TOKEN'].strip()).encode()).digest()
-          sealed=AESGCM(wrapping).encrypt(nonce,private,b'telw-anna-transfer-v1')
-          print('ANNA_TRANSFER='+json.dumps({'public':public,'private_sealed':base64.b64encode(nonce+sealed).decode()}))
+          ROOT=pathlib.Path('source/ielts-listening').resolve()
+          cfg=json.loads((ROOT/'wrangler.local.jsonc').read_text());token=os.environ['CLOUDFLARE_API_TOKEN'].strip()
+          endpoint='https://api.cloudflare.com/client/v4/accounts/'+cfg['account_id']+'/d1/database/'+cfg['d1_databases'][0]['database_id']+'/query'
+          def query(sql,params=[]):
+           req=urllib.request.Request(endpoint,headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'},data=json.dumps({'sql':sql,'params':params}).encode())
+           with urllib.request.urlopen(req,timeout=50) as r:d=json.load(r)
+           assert d.get('success') and all(x.get('success') for x in d['result']), 'Listening database operation failed'
+           return d['result'][0].get('results',[])
+          def cli(*args):
+           r=subprocess.run(['npx','--yes','wrangler@4.156.0',*args],cwd=ROOT,capture_output=True,text=True)
+           assert r.returncode==0,'Private audio storage operation failed'
+          def measure(p):return float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',str(p)],text=True))
+          oldid='listening-production-03-v2-computer-v1';newid=oldid+'-anna-v1'
+          old=query('SELECT * FROM listening_sets WHERE id=? AND published_at IS NOT NULL',[oldid]);assert len(old)==1
+          if query('SELECT * FROM listening_set_replacements WHERE old_set_id=?',[oldid]):
+           assert query('SELECT new_set_id FROM listening_set_replacements WHERE old_set_id=?',[oldid])[0]['new_set_id']==newid
+           print('Anna correction already published.');raise SystemExit
+          old=old[0]; audio=query('SELECT * FROM listening_audio WHERE set_id=? ORDER BY part',[oldid]);groups=query('SELECT * FROM listening_groups WHERE set_id=? ORDER BY part,group_no',[oldid]);assert len(audio)==4
+          assert len([g for g in groups if g['part']==1])==1
+          before=query('SELECT count(*) AS n FROM listening_attempts')[0]['n']
+          meta=json.loads(pathlib.Path('transfer/anna-meta.json').read_text());sealed=base64.b64decode(meta['private_sealed'])
+          wrapping=hashlib.sha256(('telw-anna-transfer-v1:'+token).encode()).digest()
+          private=serialization.load_pem_private_key(AESGCM(wrapping).decrypt(sealed[:12],sealed[12:],b'telw-anna-transfer-v1'),None)
+          audio_key=private.decrypt(base64.b64decode(meta['key']),padding.OAEP(mgf=padding.MGF1(hashes.SHA256()),algorithm=hashes.SHA256(),label=None))
+          raw=AESGCM(audio_key).decrypt(base64.b64decode(meta['nonce']),pathlib.Path('transfer/anna.bin').read_bytes(),None)
+          assert hashlib.sha256(raw).hexdigest()==meta['sha256']
+          with tempfile.TemporaryDirectory() as folder:
+           tmp=pathlib.Path(folder);replacement=tmp/'anna.mp3';replacement.write_bytes(raw)
+           decoded=subprocess.run(['ffmpeg','-v','error','-i',str(replacement),'-f','null','-'],capture_output=True,text=True,check=True);assert not decoded.stderr
+           seconds=measure(replacement);assert 300<seconds<350
+           rows=[]
+           for table,items in [('listening_audio',audio),('listening_groups',groups)]:
+            for row in items:
+             out=tmp/(table+'-'+str(row['part'])+'-'+str(row.get('group_no',0))+'.mp3')
+             if row['part']==1:out.write_bytes(raw)
+             else:
+              cli('r2','object','get','telw-ielts-listening-audio/'+row['object_key'],'--file',str(out),'--remote')
+              assert hashlib.sha256(out.read_bytes()).hexdigest()==row['sha256'] and out.stat().st_size==row['size']
+             decoded=subprocess.run(['ffmpeg','-v','error','-i',str(out),'-f','null','-'],capture_output=True,text=True,check=True);assert not decoded.stderr
+             sha=hashlib.sha256(out.read_bytes()).hexdigest();key='anna-v1/'+newid+'/'+out.name+'-'+sha+'.mp3'
+             cli('r2','object','put','telw-ielts-listening-audio/'+key,'--file',str(out),'--remote','--content-type','audio/mpeg')
+             rows.append((table,{**row,'set_id':newid,'object_key':key,'duration':measure(out),'size':out.stat().st_size,'sha256':sha}))
+           pub=json.loads(old['public_json']);pub['id']=newid
+           # Only Part 1 audio changes. Questions, keys and all other audio stay byte-identical.
+           assert len(pub['parts'])==4
+           prior=query('SELECT * FROM listening_sets WHERE id=?',[newid])
+           if not prior:query('INSERT INTO listening_sets(id,title,public_json,private_json,review_json,created_at) VALUES(?,?,?,?,?,?)',[newid,old['title'],json.dumps(pub),old['private_json'],json.dumps({'sourceSet':oldid,'change':'Anna is consistently female in Set 3 Part 1; all questions, answer keys and other recordings unchanged','recordingsChecked':True,'answersChecked':True,'wordLimitsChecked':True,'mapChecked':True}),int(time.time())])
+           else:assert prior[0]['private_json']==old['private_json'] and json.loads(prior[0]['public_json'])==pub
+           for table,row in rows:
+            existing=query('SELECT sha256 FROM '+table+' WHERE set_id=? AND part=?'+(' AND group_no=?' if table=='listening_groups' else ''),[newid,row['part']]+([row['group_no']] if table=='listening_groups' else []))
+            if existing:assert existing[0]['sha256']==row['sha256']
+            else:query('INSERT INTO '+table+'('+','.join(row)+') VALUES('+','.join('?' for _ in row)+')',list(row.values()))
+           assert len(query('SELECT * FROM listening_audio WHERE set_id=?',[newid]))==4
+           coverage=[q for g in sorted([r for t,r in rows if t=='listening_groups'],key=lambda x:(x['part'],x['group_no'])) for q in range(g['from_q'],g['to_q']+1)];assert coverage==list(range(1,41))
+           query('UPDATE listening_sets SET published_at=? WHERE id=? AND published_at IS NULL',[int(time.time()),newid])
+           query('INSERT INTO listening_set_replacements VALUES(?,?,?)',[oldid,newid,int(time.time())])
+           active=query('SELECT id FROM listening_sets s WHERE published_at IS NOT NULL AND NOT EXISTS(SELECT 1 FROM listening_set_replacements r WHERE r.old_set_id=s.id)')
+           assert len(active)==5 and any(x['id']==newid for x in active)
+           assert query('SELECT count(*) AS n FROM listening_attempts')[0]['n']>=before
+           print('Anna correction published. Five active sets. Every audio file fully decoded; all 40 questions covered. Existing attempts and original versions retained.')
           PY
       - name: Verify preview asset and root isolation
         env:
