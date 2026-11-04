@@ -37,10 +37,10 @@ async function playback(env,row,body,now){
   if(now<state.readyAt)throw fail('Use the question-reading time first.',409);
   if(!state.playStartedAt)state.playStartedAt=now;
  }else if(['checkpoint','end'].includes(body.action)){
-  if(!state.playStartedAt||typeof body.seconds!=='number'||!Number.isFinite(body.seconds)||body.seconds<0||body.seconds>audio.duration+1||body.seconds>now-state.playStartedAt+2)throw fail('Invalid playback position.');
+  if(!state.playStartedAt||typeof body.seconds!=='number'||!Number.isFinite(body.seconds)||body.seconds<0||body.seconds>audio.duration+1||(!row.admin_test&&body.seconds>now-state.playStartedAt+2))throw fail('Invalid playback position.');
   state.positions[part-1]=Math.max(state.positions[part-1],Math.min(body.seconds,audio.duration));
   if(body.action==='end'){
-   if(state.positions[part-1]<audio.duration-2||now-state.playStartedAt<audio.duration-2)throw fail('The recording has not finished.',409);
+   if(state.positions[part-1]<audio.duration-2||(!row.admin_test&&now-state.playStartedAt<audio.duration-2))throw fail('The recording has not finished.',409);
    state.done[part-1]=true;state.part++;state.playStartedAt=0;state.readyAt=now+30;if(state.part===5)state.reviewUntil=now+120;
   }
  }else throw fail('Invalid playback action.');
