@@ -1,4 +1,4 @@
-name: IELTS Listening - trainer audio fast-forward
+name: IELTS Listening - prepare private Anna correction
 on:
   push:
     branches: [telw-listening-deploy]
@@ -59,14 +59,24 @@ jobs:
           if config['name']!='telw-ielts-listening' or [r['pattern'] for r in config['routes']]!=expected: sys.exit('Config scope mismatch.')
           (p/'wrangler.local.jsonc').write_text(json.dumps(config))
           with open(os.environ['GITHUB_ENV'],'a') as out: out.write('CLOUDFLARE_ACCOUNT_ID='+account+'\n')
-      - name: Deploy only existing Listening Worker, preserving secrets and data
-        working-directory: source/ielts-listening
+      - name: Prepare private audio transfer
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          WRANGLER_SEND_METRICS: 'false'
         run: |
-          npx --yes wrangler@4.156.0 --version
-          npx --yes wrangler@4.156.0 deploy --config wrangler.local.jsonc
+          python -m pip install cryptography -q
+          python - <<'PY'
+          import os,json,base64,hashlib
+          from cryptography.hazmat.primitives.asymmetric import rsa
+          from cryptography.hazmat.primitives import serialization
+          from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+          key=rsa.generate_private_key(public_exponent=65537,key_size=2048)
+          private=key.private_bytes(serialization.Encoding.PEM,serialization.PrivateFormat.PKCS8,serialization.NoEncryption())
+          public=key.public_key().public_bytes(serialization.Encoding.PEM,serialization.PublicFormat.SubjectPublicKeyInfo).decode()
+          nonce=os.urandom(12)
+          wrapping=hashlib.sha256(('telw-anna-transfer-v1:'+os.environ['CLOUDFLARE_API_TOKEN'].strip()).encode()).digest()
+          sealed=AESGCM(wrapping).encrypt(nonce,private,b'telw-anna-transfer-v1')
+          print('ANNA_TRANSFER='+json.dumps({'public':public,'private_sealed':base64.b64encode(nonce+sealed).decode()}))
+          PY
       - name: Verify preview asset and root isolation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
