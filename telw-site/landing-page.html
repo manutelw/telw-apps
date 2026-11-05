@@ -158,6 +158,12 @@ nav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:4px
 .access{display:flex}
 .brand-mark{flex:none}
 .head-bar{position:relative;z-index:15}
+.ielts-pick{position:relative}
+.ielts-pick summary{cursor:pointer;list-style:none}
+.ielts-pick summary::-webkit-details-marker{display:none}
+.ielts-pick svg{transition:transform .15s}
+.ielts-pick[open] svg{transform:rotate(180deg)}
+.ielts-menu{left:0;right:auto}
 .head-bar .wrap{display:flex;justify-content:flex-end;padding-block:.75rem}
 nav a{white-space:nowrap}
 .btn-login{background:#1E7B45;border-color:#1E7B45;color:#fff}
@@ -368,7 +374,13 @@ footer a{text-underline-offset:3px}
       <div class="hero-cta">
         <a class="btn btn-solid" href="/contact/?topic=diagnostic">Ask about a fluency diagnostic</a>
         <a class="btn btn-line" href="#programmes">See the programmes</a>
-        <a class="btn btn-line" href="/ielts/reading/" aria-label="Open the free IELTS Reading diagnostic">Free IELTS Reading diagnostic</a>
+        <details class="ielts-pick">
+          <summary class="btn btn-line">IELTS diagnostics <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></summary>
+          <div class="access-menu ielts-menu">
+            <a href="/ielts/reading/"><b>Reading</b><span>IELTS Reading diagnostic</span></a>
+            <a href="/ielts/listening/"><b>Listening</b><span>IELTS Listening diagnostic</span></a>
+          </div>
+        </details>
       </div>
       <p class="hero-note">A one-to-one conversation. You leave knowing your level, your top habits to fix, and a plan.</p>
     </div>
@@ -453,6 +465,14 @@ footer a{text-underline-offset:3px}
               <p>Making a point with a reason, responding to others, moving a group discussion forward, and answering personal interview questions with relevant examples.</p>
               <span class="for">For job candidates, college students and students of professional educational institutions</span>
               <a href="/gd-pi-skills/">GD &amp; PI programme details</a>
+            </div>
+          </li>
+          <li>
+            <div><h3>IELTS</h3></div>
+            <div>
+              <p>Reading and Listening diagnostics, followed by a training plan built around your goal and current level.</p>
+              <span class="for">For Academic and General Training candidates</span>
+              <a href="/ielts/">IELTS programme details</a>
             </div>
           </li>
           <li>
@@ -675,6 +695,11 @@ footer a{text-underline-offset:3px}
     resetTimer=window.setTimeout(function(){clicks=0;},5000);
   });
 })();
+</script>
+<script>
+(function(){var d=document.querySelector('.ielts-pick');if(!d)return;
+document.addEventListener('click',function(e){if(d.open&&!d.contains(e.target))d.open=false;});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&d.open){d.open=false;d.querySelector('summary').focus();}});})();
 </script>
 </body>
 </html>

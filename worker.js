@@ -7,7 +7,7 @@ const ASCENT_KEY='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
 const ADMIN_VALIDATE=ASCENT_URL+'/rest/v1/rpc/ascent_admin_trainer_entry_list';
 const PRESENTATION_ACCESS=ASCENT_URL+'/functions/v1/presentation-skills-access';
 const TELW_PROGRAMMES=new Set([
-  'general-english-program','presentation-skills','interview-skills','gd-pi-skills',
+  'general-english-program','presentation-skills','interview-skills','gd-pi-skills','ielts',
   'email-writing-skills','voice-quality-pronunciation-skills','placement-readiness'
 ]);
 const TELW_CORE=new Set([
