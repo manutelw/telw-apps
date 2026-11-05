@@ -154,7 +154,16 @@ nav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:4px
 .btn-line{background:transparent;color:var(--ink)}
 .btn-line:hover{background:var(--ink);color:var(--paper)}
 @media (max-width:900px){nav{display:none}}
-.head-actions{display:flex;align-items:center;gap:.6rem}
+.head-actions{display:flex;align-items:stretch;gap:.6rem}
+.access{display:flex}
+.brand-mark{flex:none}
+.head-bar{position:relative;z-index:15}
+.head-bar .wrap{display:flex;justify-content:flex-end;padding-block:.75rem}
+nav a{white-space:nowrap}
+.btn-login{background:#1E7B45;border-color:#1E7B45;color:#fff}
+.btn-login:hover{background:#165F35;border-color:#165F35;color:#fff}
+.btn-book{background:#1B5FAE;border-color:#1B5FAE;color:#fff}
+.btn-book:hover{background:#154C8C;border-color:#154C8C;color:#fff}
 .access{position:relative}
 .access-btn{cursor:pointer;font-family:inherit}
 .access-btn svg{transition:transform .15s}
@@ -166,8 +175,7 @@ nav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:4px
 .access-menu a:hover,.access-menu a:focus-visible{background:var(--paper)}
 .access-menu b{display:block;font-weight:600;color:var(--ink)}
 .access-menu span{display:block;font-size:.88rem;color:var(--muted);line-height:1.4;margin-top:.15rem}
-@media (max-width:640px){.head-book{display:none}}
-@media (max-width:520px){.site-head .btn{padding:.6rem .9rem;font-size:.88rem}.brand-text span{display:none}}
+@media (max-width:520px){.head-bar .btn{padding:.6rem .9rem;font-size:.88rem}.brand-text span{display:none}}
 
 /* hero */
 .hero{padding:clamp(3rem,7vw,6rem) 0 clamp(3rem,6vw,5rem)}
@@ -310,15 +318,21 @@ footer a{text-underline-offset:3px}
     <nav aria-label="Primary">
       <ul>
         <li><a href="#programmes">Programmes</a></li>
+        <li><a href="/gd-pi-skills/">GD &amp; PI Skills</a></li>
+        <li><a href="/trainer-profile/">Trainer Profile</a></li>
         <li><a href="#benefits">Benefits</a></li>
         <li><a href="#organisations">For organisations</a></li>
         <li><a href="#faq">FAQ</a></li>
         <li><a href="#contact">Contact</a></li>
       </ul>
     </nav>
+  </div>
+</header>
+<div class="head-bar">
+  <div class="wrap">
     <div class="head-actions">
       <div class="access">
-        <button class="btn btn-line access-btn" type="button" aria-expanded="false" aria-controls="access-menu">Log in <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+        <button class="btn btn-login access-btn" type="button" aria-expanded="false" aria-controls="access-menu">Log in <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
         <div class="access-menu" id="access-menu" hidden>
           <a href="https://clarionprep.com/ascent/institution.html" rel="noopener">
             <b>Institution</b>
@@ -330,10 +344,10 @@ footer a{text-underline-offset:3px}
           </a>
         </div>
       </div>
-      <a class="btn btn-solid head-book" href="/contact/?topic=diagnostic">Book a diagnostic</a>
+      <a class="btn btn-book head-book" href="/contact/?topic=diagnostic">Book a diagnostic</a>
     </div>
   </div>
-</header>
+</div>
 <script>
 (function(){
   var btn=document.querySelector('.access-btn'),menu=document.getElementById('access-menu');
