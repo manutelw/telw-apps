@@ -1,0 +1,26 @@
+   name: IELTS Writing standalone checks
+   on:
+     pull_request:
+       paths:
+         - 'ielts-writing/**'
+         - '.github/workflows/ielts-writing.yml'
+     push:
+       branches: [main]
+       paths:
+         - 'ielts-writing/**'
+         - '.github/workflows/ielts-writing.yml'
+   permissions:
+     contents: read
+   jobs:
+     integrity:
+       runs-on: ubuntu-latest
+       timeout-minutes: 5
+       steps:
+         - uses: actions/checkout@v7.0.1
+         - uses: actions/setup-node@v7.1.0
+           with:
+             node-version: '24'
+         - name: Check standalone Writing handlers and public scripts
+           run: |
+             node --test ielts-writing/tests/*.test.mjs
+             node --check ielts-writing/public/app.js
