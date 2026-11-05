@@ -1,0 +1,26 @@
+{
+  // Separate Worker. Copy to wrangler.local.jsonc after provision approval.
+  "name": "telw-ielts-writing",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-28",
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "html_handling": "none",
+    "not_found_handling": "none"
+  },
+  "routes": [
+    {"pattern": "manuvikraman.com/ielts/writing", "zone_name": "manuvikraman.com"},
+    {"pattern": "manuvikraman.com/ielts/writing/*", "zone_name": "manuvikraman.com"}
+  ],
+  "vars": {"OPENAI_MARKING_MODEL": "gpt-4o", "WRITING_DAILY_LIMIT": "50"},
+  "d1_databases": [{
+    "binding": "WRITING_DB",
+    "database_name": "telw-ielts-writing",
+    "database_id": "REPLACE_WITH_NEW_WRITING_DATABASE_ID",
+    "migrations_dir": "./migrations"
+  }]
+}
