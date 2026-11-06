@@ -191,7 +191,7 @@ $('answerBox').addEventListener('input', () => { answers[activeTask] = $('answer
 $('finish').addEventListener('click', () => {
   const a = words(answers[1]), b = words(answers[2]);
   $('finishSummary').textContent = `Task 1: ${a} words (minimum 150). Task 2: ${b} words (minimum 250). You cannot change your answers after submitting.`;
-  $('finishBox').hidden = false; $('confirmFinish').focus();
+  $('finishBox').hidden = false; window.scrollTo(0, 0); $('confirmFinish').focus();
 });
 $('cancelFinish').addEventListener('click', () => { $('finishBox').hidden = true; $('answerBox').focus(); });
 $('confirmFinish').addEventListener('click', submit);
