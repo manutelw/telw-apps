@@ -132,7 +132,7 @@ async function beginMarking() {
 function renderResult(state) {
   const {overall, tasks, priorities} = state.result;
   $('bandRange').textContent = `${overall.low.toFixed(1)}–${overall.high.toFixed(1)}`;
-  $('rangeNote').textContent = overall.wide ? 'The markings of your work varied, so this range is wider than usual. Treat it as a broad guide.' : 'This is the band range your writing is most likely to fall in.';
+  $('rangeNote').textContent = overall.wide ? 'This range is wider than usual, so treat it as a broad guide.' : 'This is the band range your writing is most likely to fall in.';
   $('priorities').replaceChildren(...priorities.map(p => { const li = node('li'); li.append(node('strong', `Task ${p.task}, ${p.name}: `), document.createTextNode(p.improve)); return li; }));
   $('taskResults').replaceChildren(...tasks.map(task => {
     const box = node('div', undefined, 'taskResult');
@@ -141,6 +141,7 @@ function renderResult(state) {
       const item = node('div', undefined, 'criterion'); item.append(node('h4', `${c.name}: Band ${c.band}`), node('p', c.why));
       c.evidence.forEach(q => item.append(node('blockquote', q)));
       const next = node('p'); next.append(node('strong', 'Next step: '), document.createTextNode(c.improve)); item.append(next);
+      if (c.rewrite) { const change = node('div', undefined, 'rewrite'); const was = node('p'), now = node('p'); was.append(node('strong', 'You wrote: '), document.createTextNode(c.rewrite.original)); now.append(node('strong', 'Try: '), document.createTextNode(c.rewrite.better)); change.append(was, now); item.append(change); }
       box.append(item);
     });
     return box;

@@ -3,7 +3,7 @@
 <main>
 <section class="panel" id="identity" hidden><h2>Verify your email</h2><p>Your work is saved against your email, so you can return if the page closes.</p>
 <form id="requestForm"><label for="email">Your email address</label><input id="email" type="email" autocomplete="email" maxlength="254" required>
-<label class="check"><input id="privacy" type="checkbox" required> I agree that TELW may store my email, answers and results to run this diagnostic, and that my answers are sent to an AI service for marking. Feedback emails are optional.</label><button id="sendCode">Send verification code</button></form>
+<label class="check"><input id="privacy" type="checkbox" required> I agree that TELW may store my email, answers and results to run this diagnostic, and that my answers are shared with TELW’s service providers for marking. Feedback emails are optional.</label><button id="sendCode">Send verification code</button></form>
 <form id="verifyForm" hidden><label for="code">Eight-digit code</label><input id="code" type="text" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" required><button id="verifyCode">Verify email</button></form>
 <p id="identityStatus" role="status" aria-live="polite"></p></section>
 
@@ -11,7 +11,7 @@
 <p>This follows the IELTS Writing format. You have 60 minutes for two tasks and you manage your own time.</p>
 <table class="format"><thead><tr><th scope="col">Task</th><th scope="col">Suggested time</th><th scope="col">Minimum</th><th scope="col">Share of score</th></tr></thead><tbody><tr><td>Task 1</td><td>20 minutes</td><td>150 words</td><td>One third</td></tr><tr><td>Task 2</td><td>40 minutes</td><td>250 words</td><td>Two thirds</td></tr></tbody></table>
 <p>Your work saves automatically. The timer keeps running if you close the page, and when time ends your last saved work is marked. You can take one Writing diagnostic every 15 days.</p>
-<p class="note">Your work is marked by AI using TELW’s marking rubric. You receive an estimated band range and feedback. This original diagnostic is not an official IELTS test, and TELW is not affiliated with the IELTS test owners.</p>
+<p class="note">Your work is marked against TELW’s rubric. You receive an estimated band range and detailed feedback. This original diagnostic is not an official IELTS test, and TELW is not affiliated with the IELTS test owners.</p>
 <h3>Choose your test</h3><div class="choices"><button type="button" class="choice" data-type="academic"><strong>Academic</strong><span>Describe visual information, then write an essay</span></button><button type="button" class="choice" data-type="general"><strong>General Training</strong><span>Write a letter, then write an essay</span></button></div>
 <p id="homeStatus" role="status" aria-live="polite"></p></section>
 
@@ -22,10 +22,10 @@
 <section class="panel" id="marking" hidden><h2 id="markingTitle">Marking your work</h2><p id="markingText">This usually takes up to two minutes. Your answers are saved, so you can close this page and return later using the same email.</p><p id="markingStatus" role="status" aria-live="polite"></p></section>
 
 <section class="panel" id="result" hidden><h2>Your Writing result</h2><p class="rangeLabel">Estimated band range</p><div class="score" id="bandRange"></div><p id="rangeNote"></p>
-<p class="note">This estimate was produced by AI using TELW’s marking rubric. It is a TELW diagnostic, not an official IELTS score, and some estimates may differ from an examiner’s.</p>
+<p class="note">This is a TELW diagnostic marked against TELW’s rubric. It is not an official IELTS score, and it may differ from your result in the test.</p>
 <h3>What to work on first</h3><ol id="priorities"></ol><div id="taskResults"></div><p id="nextAttempt"></p>
 <div class="note"><h3>Email my feedback</h3><label class="check"><input id="feedbackConsent" type="checkbox"> I agree to receive my Writing feedback by email.</label><button type="button" id="feedbackButton">Email my feedback</button><p id="feedbackStatus" role="status" aria-live="polite"></p></div>
-<p><a href="/contact/?programme=ielts">Ask TELW about IELTS training</a></p><button type="button" id="anotherTest" class="secondary" hidden>Start another trainer test</button></section>
+<div class="training"><h3>Work on this with Manu</h3><p>This feedback shows what to change. In training, you would practise these changes with Manu Vikraman, a TESOL-certified trainer with experience as an IELTS examiner, and get feedback on each new attempt.</p><a class="trainingLink" href="/contact/?programme=ielts">Ask TELW about IELTS training</a></div><button type="button" id="anotherTest" class="secondary" hidden>Start another trainer test</button></section>
 </main>
 <footer id="pageFooter">© TELW The English Workshop. Independent IELTS preparation. Not affiliated with IELTS test owners.</footer>
 </body></html>
