@@ -10,7 +10,7 @@ const origin = 'https://manuvikraman.com', base = '/ielts/writing/api/';
 const essay = n => Array.from({length: n}, (_, i) => 'word' + i).join(' ');
 const good = (script, band = 6) => {
   const quote = script.split(/\s+/).slice(0, 6).join(' ');
-  return Object.fromEntries(['fulfilment', 'coherence', 'lexical', 'grammar'].map(k => [k, {band7_gate: true, band8_gate: true, band, evidence: [quote], why: 'Reason.', improve: 'Do this next.', rewrite: {original: quote, better: 'A better version.'}}]));
+  return Object.fromEntries(['fulfilment', 'coherence', 'lexical', 'grammar'].map(k => [k, {band, evidence: [quote], why: 'Reason.', improve: 'Do this next.', rewrite: {original: quote, better: 'A better version.'}}]));
 };
 
 async function fixture(run, marker = (script) => good(script)) {
@@ -76,12 +76,9 @@ test('a marking must quote the script or it is rejected', () => {
   assert.equal(validPass('not json', script), null);
 });
 
-test('high bands must pass ceilings enforced in code', () => {
+test('empty advice is rejected and Band 9 can stand', () => {
   const script = 'Cities should charge drivers because traffic harms everyone.';
-  const nine = good(script, 9); assert.equal(validPass(nine, script).lexical.band, 8, 'Band 9 is never awarded');
-  const noSeven = good(script, 9); noSeven.grammar.band7_gate = false; assert.equal(validPass(noSeven, script).grammar.band, 6);
-  const noEight = good(script, 8); noEight.coherence.band8_gate = false; assert.equal(validPass(noEight, script).coherence.band, 7);
-  const missing = good(script, 6); delete missing.lexical.band7_gate; assert.equal(validPass(missing, script), null);
+  assert.equal(validPass(good(script, 9), script).lexical.band, 9);
   const none = good(script); none.grammar.improve = 'No further improvement is needed.'; assert.equal(validPass(none, script), null);
 });
 

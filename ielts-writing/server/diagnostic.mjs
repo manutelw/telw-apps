@@ -68,19 +68,19 @@ async function save(request, env, learner, now, finish) {
 
 async function mark(env, learner, now, trainer) {
   const attempt = await closeIfExpired(env, await latestAttempt(env, learner.id), now);
-  if (attempt?.status === 'marked') return reply({ok: true, ...view(attempt, now, trainer)});
+  if (attempt?.status === 'marked') return reply({ok: true, trainer, ...view(attempt, now, trainer)});
   if (attempt?.status !== 'submitted') throw new Refusal('There is nothing to mark yet.', 409);
   // One marking run at a time. Closing the page cannot lose or double-charge the marking.
   const claim = await env.WRITING_DB.prepare(`UPDATE writing_attempts SET mark_lease=?1,mark_tries=mark_tries+1
     WHERE id=?2 AND status='submitted' AND mark_tries<?3 AND (mark_lease IS NULL OR mark_lease<?4) RETURNING id`).bind(now + LEASE_SECONDS, attempt.id, MAX_MARK_TRIES, now).first();
-  if (!claim) return reply({ok: true, ...view(attempt, now, trainer)});
+  if (!claim) return reply({ok: true, trainer, ...view(attempt, now, trainer)});
   try {
     const result = await markAttempt(env, setById(attempt.set_id), attempt.answer1, attempt.answer2);
     await env.WRITING_DB.prepare(`UPDATE writing_attempts SET status='marked',result_json=?1,marked_at=?2,mark_lease=NULL WHERE id=?3 AND status='submitted'`).bind(JSON.stringify(result), now, attempt.id).run();
   } catch {
     await env.WRITING_DB.prepare('UPDATE writing_attempts SET mark_lease=NULL WHERE id=?1').bind(attempt.id).run();
   }
-  return reply({ok: true, ...view(await env.WRITING_DB.prepare('SELECT * FROM writing_attempts WHERE id=?1').bind(attempt.id).first(), now, trainer)});
+  return reply({ok: true, trainer, ...view(await env.WRITING_DB.prepare('SELECT * FROM writing_attempts WHERE id=?1').bind(attempt.id).first(), now, trainer)});
 }
 
 const esc = value => String(value).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
