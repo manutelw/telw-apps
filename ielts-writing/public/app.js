@@ -150,8 +150,14 @@ document.querySelectorAll('.choice').forEach(button => button.addEventListener('
   $('homeStatus').textContent = 'Starting…';
   try { const state = await api('start', {type: button.dataset.type}); $('homeStatus').textContent = ''; route(state); }
   catch (error) {
-    $('homeStatus').textContent = error.message;
-    if (error.status === 402) { const link = node('a', ' Buy the Writing diagnostic'); link.href = '/ielts/pay/?test=writing'; $('homeStatus').append(link); }
+    if (error.status !== 402) { $('homeStatus').textContent = error.message; return; }
+    // Not paid yet: a friendly note at the top of the panel with one link to book.
+    $('homeStatus').textContent = '';
+    $('payNeeded')?.remove();
+    const box = node('div', undefined, 'paynote'); box.id = 'payNeeded'; box.setAttribute('role', 'status');
+    const book = node('a', 'See prices and book', 'paybook'); book.href = '/ielts/pay/?test=writing';
+    box.append(node('h3', 'You’re one step away from your Writing diagnostic'), node('p', 'Use your email when you book, then come back here to begin.'), book);
+    $('home').prepend(box); box.scrollIntoView({behavior: 'smooth', block: 'start'});
   }
 }));
 $('answerBox').addEventListener('input', () => { answers[activeTask] = $('answerBox').value; dirty = true; $('saved').textContent = ''; updateCount(); });
