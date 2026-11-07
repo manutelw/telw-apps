@@ -25,11 +25,11 @@ body.testing header,body.testing footer{display:none}body.testing main{max-width
 .finishBox{position:sticky;top:64px;z-index:2;padding:.8rem 1rem;background:#fdf6e6;border-bottom:1px solid #e3cf9e}.finishBox p{margin:0}
 .workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);height:calc(100vh - 62px);min-height:480px}
 .prompt{overflow:auto;padding:1.2rem 1.5rem;background:#fff;border-right:2px solid #d5e1e7;min-width:0}
-.prompt h2{margin-top:0}.prompt .frame{border:1px solid #17374a;padding:.8rem 1rem;margin:.8rem 0}.prompt p{margin:.6rem 0}.prompt ul{margin:.3rem 0}
+.prompt h2{margin-top:0}.prompt .frame{border:1px solid #17374a;padding:.2rem 1rem;margin:.8rem 0;font-weight:600}.prompt p{margin:.6rem 0}.prompt ul{margin:.3rem 0}
 .answer{display:flex;flex-direction:column;padding:1rem 1.5rem;min-width:0}.answer label{margin:0 0 .35rem;font-weight:bold}
 textarea{flex:1;width:100%;min-height:260px;padding:.9rem;font:1.05rem/1.6 Arial,sans-serif;color:#17374a;border:1px solid #9db4c0;border-radius:6px;resize:none;background:#fff}
 .counter{margin:.5rem 0 0;font-variant-numeric:tabular-nums}.counter span{color:#4c6573}
-.chart{display:block;width:100%;max-width:560px;height:auto;margin:.5rem 0}.chart text{font:12px Arial,sans-serif;fill:#17374a}
+.chart{display:block;width:100%;max-width:560px;height:auto;margin:.5rem 0}.chart text{font-family:Arial,Helvetica,sans-serif;fill:#17374a}
 .legend{display:flex;flex-wrap:wrap;gap:.3rem 1rem;font-size:.85rem;margin:.2rem 0 .6rem}.legend span{display:inline-flex;align-items:center;gap:.35rem}
 .tablewrap{overflow-x:auto}.datatable{border-collapse:collapse;margin:.5rem 0;font-variant-numeric:tabular-nums}.datatable th,.datatable td{border:1px solid #17374a;padding:.4rem .7rem;text-align:left}
 .rangeLabel{margin-bottom:0;font-weight:bold}.score{font-size:clamp(2.4rem,7vw,3.6rem);line-height:1.15;font-weight:bold;font-variant-numeric:tabular-nums}
@@ -40,3 +40,5 @@ textarea{flex:1;width:100%;min-height:260px;padding:.9rem;font:1.05rem/1.6 Arial
 @media(max-width:560px){.choices{grid-template-columns:1fr}.format{font-size:.9rem}}
 .rewrite{background:#f1f6f8;padding:.5rem .8rem;margin:.4rem 0}.rewrite p{margin:.25rem 0}
 .training{background:#17374a;color:#fff;padding:1.2rem 1.4rem;border-radius:8px;margin:1.2rem 0}.training h3{margin-top:0}.trainingLink{display:inline-block;background:#e9c46a;color:#17374a;font-weight:bold;padding:.7rem 1.1rem;border-radius:6px;text-decoration:none}
+
+.visual-parts .visual-part{margin:0 0 1.2rem}.visual .chart{width:100%;height:auto;max-width:640px;display:block}.visual .source{font-size:.8rem;color:#526071}

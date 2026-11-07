@@ -1,13 +1,9 @@
 // Original TELW tasks written to the published IELTS Writing format.
 // None is copied from an IELTS paper. Sets are immutable once learners have used them:
 // add a new id instead of editing one.
-const T1_TIME = 'You should spend about 20 minutes on this task.';
-const T2_TIME = 'You should spend about 40 minutes on this task.';
-const ACADEMIC_T1_END = 'Summarise the information by selecting and reporting the main features, and make comparisons where relevant.';
-const T2_END = 'Give reasons for your answer and include any relevant examples from your own knowledge or experience.';
-const T1_WORDS = 'Write at least 150 words.';
-const T2_WORDS = 'Write at least 250 words.';
-const NO_ADDRESS = 'You do NOT need to write any addresses.';
+import {T1_TIME, T2_TIME, ACADEMIC_T1_END, T2_END, T1_WORDS, T2_WORDS, NO_ADDRESS} from './format.mjs';
+import {ACADEMIC_SETS} from './bank-academic.mjs';
+import {GENERAL_SETS} from './bank-general.mjs';
 
 export const SETS = [
   {
@@ -84,7 +80,9 @@ export const SETS = [
       prompt: 'Some people think that children should learn practical skills, such as cooking and managing money, at school. Others believe that these skills are best taught at home.',
       instruction: 'Discuss both these views and give your own opinion.', end: T2_END, words: T2_WORDS
     }
-  }
+  },
+  ...ACADEMIC_SETS,
+  ...GENERAL_SETS
 ];
 
 export const setById = id => SETS.find(x => x.id === id) || null;

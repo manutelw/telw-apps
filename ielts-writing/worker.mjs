@@ -1,7 +1,7 @@
 import {handleAuth} from './server/auth.mjs';
 import {handleDiagnostic} from './server/diagnostic.mjs';
 const ORIGIN = 'https://manuvikraman.com', ROOT = '/ielts/writing';
-const ASSETS = new Map([[ROOT + '/', '/index.html'], [ROOT + '/app.js', '/app.js'], [ROOT + '/style.css', '/style.css']]);
+const ASSETS = new Map([[ROOT + '/', '/index.html'], [ROOT + '/app.js', '/app.js'], [ROOT + '/style.css', '/style.css'], [ROOT + '/visuals.js', '/visuals.js']]);
 export default {async fetch(request, env) {
   const url = new URL(request.url);
   if (url.origin !== ORIGIN) return new Response('Not found', {status: 404});
