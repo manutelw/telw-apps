@@ -310,6 +310,16 @@ footer a{text-underline-offset:3px}
 .telw-private-entry{flex-basis:100%;margin:0;text-align:center}
 .telw-private-entry button{border:0;background:transparent;color:inherit;opacity:.55;padding:.25rem .5rem;font:inherit;font-size:.75rem;cursor:default}
 .telw-private-entry button:focus-visible{opacity:1;outline:2px solid currentColor;outline-offset:3px}
+
+.who{padding:clamp(2.6rem,6vw,4rem) 0 0}.who h2{font-family:var(--serif);font-weight:500;font-size:clamp(1.6rem,3vw,2.2rem);margin:0 0 1.2rem;color:var(--ink)}
+.who-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.who-tile{display:flex;flex-direction:column;gap:.45rem;background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:1.2rem;text-decoration:none;color:var(--ink);transition:border-color .15s,transform .15s,box-shadow .15s}
+.who-tile strong{font-family:var(--serif);font-weight:500;font-size:1.2rem;line-height:1.25}.who-tile span{color:var(--ink-2);font-size:.92rem;line-height:1.5;flex:1}.who-tile em{font-style:normal;font-weight:600;font-size:.88rem;color:var(--accent)}
+.who-tile:hover{border-color:var(--ink);transform:translateY(-2px);box-shadow:0 6px 16px rgba(19,35,63,.08)}
+@media(max-width:1000px){.who-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.who-grid{grid-template-columns:1fr}}
+.prog-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(1.2rem,3vw,2.2rem)}.prog-group{scroll-margin-top:90px}.prog-group h3{font-family:var(--serif);font-weight:500;font-size:1.35rem;margin:0 0 .8rem;padding-bottom:.6rem;border-bottom:1px solid var(--ink);color:var(--ink)}
+.prog-group ul{list-style:none;margin:0;padding:0}.prog-group li{border-bottom:1px solid var(--rule)}.prog-group a{display:block;padding:.9rem 0;text-decoration:none;color:var(--ink)}.prog-group a strong{display:block;font-weight:600;margin-bottom:.2rem}.prog-group a span{color:var(--ink-2);font-size:.93rem;line-height:1.5}
+.prog-group a:hover strong{text-decoration:underline;text-underline-offset:3px}@media(max-width:900px){.prog-groups{grid-template-columns:1fr}}
+.trainer-link{text-decoration:underline;text-underline-offset:3px;color:inherit}.trainer-head{color:inherit;text-decoration:none}.trainer-head:hover{text-decoration:underline;text-underline-offset:4px}.trainer-photo{float:left;margin:0 1.2rem .6rem 0}.trainer-photo img{display:block;width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--surface);box-shadow:0 2px 10px rgba(19,35,63,.15)}.trainer-more{font-weight:600;color:var(--accent);text-decoration:none}.trainer-more:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -324,11 +334,10 @@ footer a{text-underline-offset:3px}
     <nav aria-label="Primary">
       <ul>
         <li><a href="#programmes">Programmes</a></li>
-        <li><a href="/gd-pi-skills/">GD &amp; PI Skills</a></li>
-        <li><a href="/trainer-profile/">Trainer Profile</a></li>
-        <li><a href="#benefits">Benefits</a></li>
+        <li><a href="/ielts/">IELTS</a></li>
+        <li><a href="/classes-9-12/">Classes 9–12</a></li>
         <li><a href="#organisations">For organisations</a></li>
-        <li><a href="#faq">FAQ</a></li>
+        <li><a href="/trainer-profile/">Trainer</a></li>
         <li><a href="#contact">Contact</a></li>
       </ul>
     </nav>
@@ -369,20 +378,12 @@ footer a{text-underline-offset:3px}
 <section class="hero" aria-labelledby="hero-title">
   <div class="wrap hero-grid">
     <div>
-      <h1 id="hero-title">Communication skills training for placements, interviews and the workplace</h1>
-      <p class="lede">Most people who struggle to communicate do not lack ideas or vocabulary. They lack structure, clarity and control of their voice. We train those three things, for students heading into placements, professionals, and the organisations that invest in them. In New Delhi and online.</p>
+      <h1 id="hero-title">We teach one thing: how you communicate.</h1>
+      <p class="lede">One method, used for school students, IELTS candidates, job seekers, professionals, homemakers and anyone who wants to speak with more confidence. Every learner is diagnosed first, then trained one step at a time. In New Delhi and online.</p>
       <div class="hero-cta">
-        <a class="btn btn-solid" href="/contact/?topic=diagnostic">Ask about a fluency diagnostic</a>
-        <a class="btn btn-line" href="#programmes">See the programmes</a>
-        <details class="ielts-pick">
-          <summary class="btn btn-line">IELTS diagnostics <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></summary>
-          <div class="access-menu ielts-menu">
-            <a href="/ielts/reading/"><b>Reading</b><span>IELTS Reading diagnostic</span></a>
-            <a href="/ielts/listening/"><b>Listening</b><span>IELTS Listening diagnostic</span></a>
-          </div>
-        </details>
+        <a class="btn btn-solid" href="#who">Find your programme</a>
       </div>
-      <p class="hero-note">A one-to-one conversation. You leave knowing your level, your top habits to fix, and a plan.</p>
+      
     </div>
 
     <figure class="transcript" aria-label="Example of the change training makes">
@@ -402,142 +403,29 @@ footer a{text-underline-offset:3px}
 <div class="creds">
   <div class="wrap">
     <ul>
+      <li>The Trainer: <strong><a class="trainer-link" href="/trainer-profile/">Manu Vikraman</a></strong></li>
       <li><strong>22 years</strong> of communication training, since 2004</li>
-      <li><strong>TESOL-certified</strong> lead trainer</li>
+      <li><strong>TESOL-certified</strong> lead trainer, with <strong>IELTS examiner</strong> experience</li>
       <li><strong>B-school placement programmes</strong> for full MBA cohorts</li>
       <li><strong>Classroom, live online</strong> and self-paced practice</li>
     </ul>
   </div>
 </div>
 
+<section class="who" id="who" aria-labelledby="who-title"><div class="wrap"><h2 id="who-title">Who is this for?</h2><div class="who-grid"><a class="who-tile" href="/classes-9-12/"><strong>School students</strong><span>Classes 9–12. Speaking with ease, joining discussions, expressing ideas clearly.</span><em>See the programme →</em></a><a class="who-tile" href="/ielts/"><strong>IELTS candidates</strong><span>Reading, Listening and Writing diagnostics, then training around your target band.</span><em>See the programme →</em></a><a class="who-tile" href="#jobs"><strong>College students and job seekers</strong><span>Placements, interviews, group discussions and personal interviews.</span><em>See the programme →</em></a><a class="who-tile" href="#work"><strong>Working professionals</strong><span>Presentations, emails, meetings, voice and pronunciation.</span><em>See the programme →</em></a><a class="who-tile" href="/general-english-program/"><strong>Homemakers and other adult learners</strong><span>Everyday English and confidence: conversations, phone calls, meetings at school or work.</span><em>See the programme →</em></a><a class="who-tile" href="#organisations"><strong>Colleges and companies</strong><span>Programmes for whole cohorts and teams, with diagnostics and reports.</span><em>See the programme →</em></a></div></div></section>
 <section class="block" id="programmes" aria-labelledby="prog-title">
   <div class="wrap">
     <div class="sec-head">
-      <h2 id="prog-title">Programmes in professional communication</h2>
-      <p class="lede">Placement readiness runs on our practice platform, ClarionPrep. Every other skill is taught through TELW programmes, each built on a diagnosed starting level.</p>
+      <h2 id="prog-title">Programmes</h2>
+      <p class="lede">Every programme starts with a diagnosis of your level, then trains the skill you need.</p>
     </div>
 
-    <div class="prog-grid">
-      <aside class="placement" aria-labelledby="place-title">
-        <h3 id="place-title">Placement readiness</h3>
-        <p>Group discussions, personal interviews and written tests decide most campus placements. ClarionPrep lets candidates practise each one repeatedly and get structured feedback on every attempt.</p>
-        <ul>
-          <li>Group discussion practice <span>GD Practice, GD Lab</span></li>
-          <li>Personal interview practice <span>PI Practice, PI Lab</span></li>
-          <li>AI live mock interview <span>Full mock with report</span></li>
-          <li>Written communication test <span>WCT with report</span></li>
-          <li>CV and job description tools <span>Builder, evaluator, mapper</span></li>
-        </ul>
-        <p class="pass"><strong>Placement Readiness practice.</strong> Work on group discussions, personal interviews, written communication, aptitude and a mock interview, with feedback on each stage.</p>
-        <a class="btn" href="/placement-readiness/">Explore Placement Readiness</a>
-        <span class="sub">A free diagnostic is available when you register.</span>
-      </aside>
-
-      <div>
-        <ul class="skills">
-          <li>
-            <div><h3>General English</h3></div>
-            <div>
-              <p>Spoken and written English taught level by level, for learners who understand English but hesitate, translate in their head or lose confidence mid-sentence.</p>
-              <span class="for">For students, job seekers and professionals building a working base</span>
-              <a href="/general-english-program/">General English programme details</a>
-            </div>
-          </li>
-          <li>
-            <div><h3>Presentation skills</h3></div>
-            <div>
-              <p>How to structure a recommendation, open with the point, handle slides without reading them, and answer questions without losing the room.</p>
-              <span class="for">For MBA students, managers and client-facing teams</span>
-              <a href="/presentation-skills/">Presentation skills programme details</a>
-            </div>
-          </li>
-          <li>
-            <div><h3>Interview skills</h3></div>
-            <div>
-              <p>Answering with evidence instead of adjectives, telling your story in two minutes, and staying composed under follow-up and stress questions.</p>
-              <span class="for">For freshers, lateral hires and career changers</span>
-              <a href="/interview-skills/">Interview skills programme details</a>
-            </div>
-          </li>
-          <li>
-            <div><h3>GD &amp; PI skills</h3></div>
-            <div>
-              <p>Making a point with a reason, responding to others, moving a group discussion forward, and answering personal interview questions with relevant examples.</p>
-              <span class="for">For job candidates, college students and students of professional educational institutions</span>
-              <a href="/gd-pi-skills/">GD &amp; PI programme details</a>
-            </div>
-          </li>
-          <li>
-            <div><h3>IELTS</h3></div>
-            <div>
-              <p>Reading and Listening diagnostics, followed by a training plan built around your goal and current level.</p>
-              <span class="for">For Academic and General Training candidates</span>
-              <a href="/ielts/">IELTS programme details</a>
-            </div>
-          </li>
-          <li>
-            <div><h3>Email writing</h3></div>
-            <div>
-              <p>Emails that state the purpose in the first line, ask for one clear action, and strike the right tone with seniors, clients and colleagues.</p>
-              <span class="for">For new joiners and anyone whose emails get misread</span>
-              <a href="/email-writing-skills/">Email writing programme details</a>
-            </div>
-          </li>
-          <li>
-            <div><h3>Voice quality and pronunciation</h3></div>
-            <div>
-              <p>Pronunciation, word stress, pace and pausing, so that listeners understand you the first time and take you seriously.</p>
-              <span class="for">For anyone told to repeat themselves, or who sounds unsure</span>
-              <a href="/voice-quality-pronunciation-skills/">Voice quality programme details</a>
-            </div>
-          </li>
-           <li>
-            <div><h3>School students, Classes 9–12</h3></div>
-            <div>
-              <p>Purely communication skills: expressing ideas clearly, joining discussions and speaking with greater ease and confidence. No school subjects, and no dressing or dining etiquette.</p>
-              <span class="for">For students of Classes 9 to 12, and their parents</span>
-              <a href="/classes-9-12/">Classes 9–12 programme details</a>
-            </div>
-          </li>
-        </ul>
-        <p class="skills-note">If the diagnostic shows a language gap, a General English bridge course comes first, so the skill training is useful from the start.</p>
-      </div>
-    </div>
+    <div class="prog-groups"><div class="prog-group" id="jobs"><h3>Placements and jobs</h3><ul><li><a href="/placement-readiness/"><strong>Placement readiness</strong><span>Practise group discussions, interviews and written tests on ClarionPrep, with feedback on every attempt.</span></a></li><li><a href="/interview-skills/"><strong>Interview skills</strong><span>Answering with evidence, telling your story in two minutes, staying composed under pressure.</span></a></li><li><a href="/gd-pi-skills/"><strong>GD &amp; PI skills</strong><span>Making a point with a reason, moving a discussion forward, answering with examples.</span></a></li></ul></div><div class="prog-group" id="work"><h3>Everyday communication</h3><ul><li><a href="/general-english-program/"><strong>General English</strong><span>Spoken and written English, level by level, for those who hesitate or translate in their head.</span></a></li><li><a href="/presentation-skills/"><strong>Presentation skills</strong><span>Open with the point, use slides without reading them, handle questions.</span></a></li><li><a href="/email-writing-skills/"><strong>Email writing</strong><span>Clear purpose, one clear action, the right tone.</span></a></li><li><a href="/voice-quality-pronunciation-skills/"><strong>Voice and pronunciation</strong><span>Stress, pace and pausing, so you are understood the first time.</span></a></li></ul></div><div class="prog-group" id="exams"><h3>Exams and school</h3><ul><li><a href="/ielts/"><strong>IELTS</strong><span>Diagnostics for Reading, Listening and Writing, then a plan for your target band.</span></a></li><li><a href="/classes-9-12/"><strong>School students, Classes 9–12</strong><span>Purely communication skills: expressing ideas, joining discussions, speaking with ease.</span></a></li></ul></div></div>
+    <p class="skills-note">If the diagnostic shows a language gap, a General English bridge course comes first, so the skill training is useful from the start.</p>
   </div>
 </section>
 
-<section class="block benefits" id="benefits" aria-labelledby="ben-title">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2 id="ben-title">What changes, and who it matters to</h2>
-      <p class="lede">Training is judged by what happens after it: in the interview room, the meeting and the inbox. Here is what learners gain, and what the people backing them get in return.</p>
-    </div>
-    <div class="ben-grid">
-      <div class="ben-col">
-        <h3>For learners</h3>
-        <p class="who">Students, job seekers and working professionals</p>
-        <ul class="ben-list">
-          <li><b>You know exactly what to fix</b><span>A diagnosis of your two or three real blockers, instead of generic advice to read more and speak more.</span></li>
-          <li><b>You sound clear under pressure</b><span>Structured answers in interviews and discussions, without filler words or rambling.</span></li>
-          <li><b>You get feedback on how you sound</b><span>Not only on what you say, but on pace, pronunciation and presence.</span></li>
-          <li><b>You practise until it holds</b><span>Repeated, scored practice on ClarionPrep between sessions, so improvement lasts.</span></li>
-          <li><b>You walk in ready</b><span>For the GD, the PI, the presentation and the first month at work.</span></li>
-        </ul>
-      </div>
-      <div class="ben-col">
-        <h3>For promoters</h3>
-        <p class="who">Parents, placement cells, programme heads, employers and L&amp;D managers</p>
-        <ul class="ben-list">
-          <li><b>Measurable starting points</b><span>Every learner is diagnosed and placed at a level before training begins.</span></li>
-          <li><b>Visible progress</b><span>Practice records and assessment reports show who is improving and who needs attention.</span></li>
-          <li><b>Better placement outcomes</b><span>Candidates who perform in GDs and interviews convert more shortlists into offers.</span></li>
-          <li><b>Workplace-ready communicators</b><span>Fewer misread emails, clearer updates and presentations that end in decisions.</span></li>
-          <li><b>Time spent practising</b><span>Sessions focus on live practice and useful feedback rather than long lectures.</span></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
+
 
 <section class="block" id="method" aria-labelledby="method-title">
   <div class="wrap">
@@ -601,10 +489,12 @@ footer a{text-underline-offset:3px}
 
 <section class="block" id="trainer" aria-labelledby="trainer-title">
   <div class="wrap trainer">
-    <h2 id="trainer-title">Led by a trainer with 22 years in the room</h2>
+    <h2 id="trainer-title"><a class="trainer-head" href="/trainer-profile/">Led by a trainer with 22 years in the room</a></h2>
     <div class="body">
+      <a class="trainer-photo" href="/trainer-profile/" aria-label="Read Manu Vikraman's trainer profile"><img src="data:image/jpeg;base64,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" alt="Manu Vikraman" width="120" height="120"></a>
       <p>TELW is led by Manu Vikraman, a TESOL-certified communication trainer who began training in 2004. His work spans general English, corporate communication and placement readiness for MBA cohorts.</p>
       <p>The approach is practical and plain: find what is actually holding a person back, train that, and measure whether it changed.</p>
+      <p><a class="trainer-more" href="/trainer-profile/">Read the trainer profile →</a></p>
     </div>
   </div>
 </section>
@@ -672,8 +562,8 @@ footer a{text-underline-offset:3px}
       <li><a href="https://www.youtube.com/channel/UCLTj3k7f4GCxxFL74dbeN0w" rel="noopener">YouTube</a></li>
       <li><a href="https://www.instagram.com/learn_english_with_telw/" rel="noopener">Instagram</a></li>
       <li><a href="https://www.facebook.com/telw.English/" rel="noopener">Facebook</a></li>
-      <li><a href="/contact/?topic=privacy-policy">Request privacy policy</a></li>
-      <li><a href="/contact/?topic=terms">Request terms</a></li>
+      
+      
     </ul>
     <p class="telw-business"><strong>TELW The English Workshop</strong> · New Delhi 110016, India · <a href="mailto:manutelw@gmail.com">manutelw@gmail.com</a> · WhatsApp <a href="https://wa.me/919717116831" rel="noopener">+91 97171 16831</a> (messages only)</p>
     <ul aria-label="IELTS diagnostics">
