@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Report a Problem | TELW IELTS</title>
+<meta name="description" content="Report a technical problem with a TELW IELTS diagnostic and receive a reference number.">
+<link rel="stylesheet" href="/ielts/pay/policy.css">
+</head>
+<body>
+<header class="head"><div class="wrap"><a class="brand" href="/">TELW<small>The English Workshop</small></a><nav aria-label="Main navigation"><a href="/ielts/pay/">Prices</a><a href="/ielts/">IELTS</a></nav></div></header>
+<main><div class="wrap">
+<h1>Report a problem</h1>
+<p class="lede">If a payment or a test did not work as it should, tell us here. You get a TELW reference number straight away, on screen and by email.</p>
+
+<form id="reportForm" class="panel" novalidate>
+<label class="field" for="email">Email address you used for the test or payment</label>
+<input id="email" type="email" autocomplete="email" required maxlength="200">
+<label class="field" for="test">What is the problem about?</label>
+<select id="test" required style="font:inherit;padding:10px 12px;border:1px solid #b9c0c9;border-radius:4px;max-width:420px;width:100%">
+<option value="">Choose one</option>
+<option value="payment">Payment</option>
+<option value="reading">Reading diagnostic</option>
+<option value="listening">Listening diagnostic</option>
+<option value="writing">Writing diagnostic</option>
+</select>
+<label class="field" for="paymentRef">Payment or test reference, if you have one</label>
+<input id="paymentRef" type="text" maxlength="60" placeholder="For example pay_... or TELW-W-..." style="font:inherit;padding:10px 12px;border:1px solid #b9c0c9;border-radius:4px;max-width:420px;width:100%">
+<label class="field" for="message">What happened?</label>
+<textarea id="message" required minlength="10" maxlength="2000" rows="6" style="font:inherit;padding:10px 12px;border:1px solid #b9c0c9;border-radius:4px;width:100%"></textarea>
+<p><button id="send" type="submit">Send report</button></p>
+<p id="status" class="status" role="status" aria-live="polite"></p>
+</form>
+
+<div id="done" class="done" hidden>
+<h2 style="margin-top:0">Report received</h2>
+<p>Your reference number is <strong id="ref"></strong>. We have also emailed it to you. Please quote it in any message about this problem.</p>
+<p>We aim to reply within 2 working days.</p>
+</div>
+
+<p class="muted">You can also message TELW on WhatsApp <a href="https://wa.me/919717116831" rel="noopener">+91 97171 16831</a> (messages only, no calls). Refunds follow the <a href="/ielts/refund/">Refund Policy</a>.</p>
+</div></main>
+<footer><div class="wrap"><p class="biz"><strong>TELW The English Workshop</strong> · New Delhi 110016, India · <a href="mailto:manutelw@gmail.com">manutelw@gmail.com</a> · WhatsApp <a href="https://wa.me/919717116831" rel="noopener">+91 97171 16831</a> (messages only, no calls)</p></div><div class="wrap"><span>© TELW · New Delhi and online</span><span><a href="/ielts/pay/">Prices</a> · <a href="/ielts/terms/">Terms</a> · <a href="/ielts/refund/">Refunds</a> · <a href="/ielts/privacy/">Privacy</a></span></div></footer>
+<script src="/ielts/pay/report.js"></script>
+</body>
+</html>

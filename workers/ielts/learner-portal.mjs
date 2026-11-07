@@ -32,7 +32,7 @@ function definition(action){
 // A new Reading attempt uses one paid credit once charging is on. Resuming an attempt that is
 // already paid for (an active hour-long attempt) does not need another credit.
 async function readingGate(env,upstreamHeaders){
- if(!env.PAY_DB||!(await paymentsRequired(env)))return null;
+ if(!env.PAY_DB||!(await paymentsRequired(env,'reading')))return null;
  const session=await env.IELTS_ADMIN_SERVICE.fetch(new Request(new URL('/api/ielts/auth/session',SERVICE),{method:'GET',headers:upstreamHeaders.has('cookie')?{cookie:upstreamHeaders.get('cookie')}:{},redirect:'manual',signal:AbortSignal.timeout(20000)}));
  if(!session.ok)return null;
  const email=normalEmail((await session.json().catch(()=>({}))).email);

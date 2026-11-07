@@ -39,5 +39,6 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .policy li{margin-bottom:6px}
 footer{border-top:1px solid #e4e4de;padding:20px 0;font-size:14px;color:#5d6b7c}
 footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+footer .biz{margin:0 0 10px}
 [hidden]{display:none!important}
 @media (max-width:560px){.details{grid-template-columns:1fr}.details dd{margin-bottom:8px}}

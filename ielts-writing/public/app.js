@@ -157,7 +157,10 @@ function route(state) {
   if (state.status === 'marking') { show('marking'); clearTimeout(poll); poll = setTimeout(beginMarking, 8000); return; }
   if (state.status === 'delayed') {
     show('marking'); $('markingTitle').textContent = 'Your marking is delayed';
-    $('markingText').textContent = 'Your answers are safe, but marking did not finish. Please contact TELW at telw.delhi@gmail.com and quote this email address.';
+    $('markingText').textContent = `Marking did not finish because of a technical problem on TELW's side, and TELW has been notified automatically (reference ${state.reference}). `
+      + (state.replacement ? `A replacement Writing test has been added to your email address (reference ${state.replacement}), and we have emailed you the details. You can start it now. ` : 'You can start a new Writing test now. ');
+    const again = node('button', 'Start a new Writing test'); again.type = 'button'; again.addEventListener('click', () => show('home'));
+    $('markingText').append(node('br'), again);
     return;
   }
   if (state.cooldownUntil) $('homeStatus').textContent = '';

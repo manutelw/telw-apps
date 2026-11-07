@@ -14,7 +14,7 @@ const good = (script, band = 6) => {
 };
 
 async function fixture(run, marker = (script) => good(script)) {
-  const db = new DatabaseSync(':memory:'); db.exec(readFileSync(new URL('../migrations/0001_writing.sql', import.meta.url), 'utf8'));
+  const db = new DatabaseSync(':memory:'); db.exec(readFileSync(new URL('../migrations/0001_writing.sql', import.meta.url), 'utf8')); db.exec(readFileSync(new URL('../migrations/0002_failed_marking_frees_slot.sql', import.meta.url), 'utf8'));
   const rubricRow = JSON.stringify({version: 'test', notes: ['note'], voice: ['voice'], rubrics: {academic1: {}, general1: {}, essay: {}}});
   db.prepare(`INSERT INTO writing_config(key,value) VALUES('rubric',?)`).run(rubricRow);
   const stmt = sql => ({args: [], bind(...args) { this.args = args; return this; }, async first() { return db.prepare(sql).get(...this.args) || null; }, async all() { return {results: db.prepare(sql).all(...this.args)}; }, async run() { return db.prepare(sql).run(...this.args); }});
@@ -247,3 +247,43 @@ test('once charging is on, a learner needs a paid Writing credit; the trainer do
   const trainer = await login('manutelw@gmail.com');
   assert.equal((await (await api('start', {type: 'general'}, trainer)).json()).status, 'active');
 }));
+
+test('when marking fails on every try, TELW is emailed a reference that the learner also sees', () => fixture(async ({api, login, messages}) => {
+  const cookie = await login();
+  await api('start', {type: 'general'}, cookie);
+  await api('submit', {answer1: essay(160), answer2: essay(260), seq: 1}, cookie);
+  let state;
+  for (let i = 0; i < 5; i++) state = await (await api('mark', {}, cookie)).json();
+  assert.equal(state.status, 'delayed');
+  assert.match(state.reference, /^TELW-W-[0-9A-F]{8}$/);
+  const alert = messages.filter(m => m.to?.[0] === 'manutelw@gmail.com');
+  assert.equal(alert.length, 1, 'TELW is told once');
+  assert.match(alert[0].subject, new RegExp(state.reference)); assert.equal(alert[0].reply_to, 'learner@example.com');
+  assert.equal((await (await api('mark', {}, cookie)).json()).reference, state.reference);
+}, () => ({broken: true})));
+
+test('a paid test whose marking fails gets an automatic, emailed replacement that can be used at once', () => fixture(async ({api, login, env, messages}) => {
+  const pay = new DatabaseSync(':memory:');
+  for (const file of ['0001_payments.sql', '0004_replacement_log.sql']) pay.exec(readFileSync(new URL('../../ielts-pay/migrations/' + file, import.meta.url), 'utf8'));
+  pay.exec(`UPDATE ielts_pay_settings SET value='on'`);
+  const stmt = sql => ({args: [], bind(...args) { this.args = args; return this; }, async first() { return pay.prepare(sql).get(...this.args) || null; }, async run() { return pay.prepare(sql).run(...this.args); }});
+  env.PAY_DB = {prepare: stmt, async batch(list) { for (const s of list) await s.run(); }};
+  pay.exec(`INSERT INTO ielts_pay_orders(id,email,product,amount,status,created_at) VALUES('order_a','learner@example.com','writing',49900,'paid',1)`);
+  pay.exec(`INSERT INTO ielts_pay_credits(id,order_id,email,skill,created_at,expires_at) VALUES('c1','order_a','learner@example.com','writing',1,9999999999)`);
+  const cookie = await login();
+  await api('start', {type: 'general'}, cookie);
+  await api('submit', {answer1: essay(160), answer2: essay(260), seq: 1}, cookie);
+  let state;
+  for (let i = 0; i < 5; i++) state = await (await api('mark', {}, cookie)).json();
+  assert.equal(state.status, 'delayed'); assert.match(state.replacement, /^TELW-R-[A-Z2-9]{6}$/);
+  const row = pay.prepare('SELECT * FROM ielts_pay_replacements').get();
+  assert.equal(row.email, 'learner@example.com'); assert.equal(row.skill, 'writing'); assert.equal(row.id, state.replacement);
+  const mail = messages.find(m => m.subject?.includes(state.replacement));
+  assert.deepEqual(mail.to, ['learner@example.com']); assert.deepEqual(mail.bcc, ['manutelw@gmail.com']);
+  assert.match(messages.find(m => m.subject?.startsWith('IELTS Writing marking failed')).html, new RegExp(state.replacement));
+  for (let i = 0; i < 3; i++) await api('mark', {}, cookie);
+  assert.equal(pay.prepare('SELECT count(*) n FROM ielts_pay_replacements').get().n, 1, 'only one replacement per fault');
+  const again = await (await api('start', {type: 'general'}, cookie)).json();
+  assert.equal(again.status, 'active', 'the failed attempt does not block the replacement test');
+  assert.ok(pay.prepare(`SELECT used_at FROM ielts_pay_credits WHERE id=?`).get(row.credit_id).used_at, 'the replacement credit was used');
+}, () => ({broken: true})));
