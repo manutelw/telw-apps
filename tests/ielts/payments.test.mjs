@@ -48,8 +48,8 @@ test('price and policy pages are served from assets, with canonical redirects', 
 
 test('the real pages show the agreed prices and the required policy links', () => {
   const page = readFileSync(new URL('../../ielts-pay/index.html', import.meta.url), 'utf8');
-  for (const text of ['₹799', '₹499', '₹249', '/ielts/terms/', '/ielts/refund/', '/ielts/privacy/', 'New Delhi 110016', 'manutelw@gmail.com', '+91 97171 16831', 'checkout.razorpay.com/v1/checkout.js']) assert.ok(page.includes(text), text);
-  assert.deepEqual(Object.fromEntries(Object.entries(PRODUCTS).map(([k, p]) => [k, p.amount])), {bundle: 79900, writing: 49900, reading: 24900, listening: 24900});
+  for (const text of ['₹799', '₹499', '₹299', '/ielts/terms/', '/ielts/refund/', '/ielts/privacy/', 'New Delhi 110016', 'manutelw@gmail.com', '+91 97171 16831', 'checkout.razorpay.com/v1/checkout.js']) assert.ok(page.includes(text), text);
+  assert.deepEqual(Object.fromEntries(Object.entries(PRODUCTS).map(([k, p]) => [k, p.amount])), {bundle: 79900, writing: 49900, reading: 29900, listening: 29900});
   for (const file of ['terms', 'refund', 'privacy']) assert.match(readFileSync(new URL(`../../ielts-pay/${file}.html`, import.meta.url), 'utf8'), /manutelw@gmail\.com/);
   assert.doesNotMatch(readFileSync(new URL('../../ielts-pay/refund.html', import.meta.url), 'utf8'), /TO BE INSERTED/);
 });
@@ -91,11 +91,11 @@ test('the webhook needs a valid signature and the exact order amount', async () 
   const {db, PAY_DB} = payDb(), env = {PAY_DB, RAZORPAY_KEY_ID: KEY, RAZORPAY_KEY_SECRET: SECRET, RAZORPAY_WEBHOOK_SECRET: HOOK};
   await withFetch(razorpay(), () => handlePayments(post('/api/ielts/pay/order', {email: 'learner@example.com', product: 'reading'}), env));
   const event = amount => JSON.stringify({event: 'order.paid', payload: {payment: {entity: {id: 'pay_hook1', order_id: 'order_fixture1', amount, status: 'captured'}}}});
-  assert.equal((await handlePayments(post('/api/ielts/pay/webhook', event(24900), {'x-razorpay-signature': 'b'.repeat(64)}), env)).status, 401);
+  assert.equal((await handlePayments(post('/api/ielts/pay/webhook', event(29900), {'x-razorpay-signature': 'b'.repeat(64)}), env)).status, 401);
   const wrong = event(100);
   assert.equal((await handlePayments(post('/api/ielts/pay/webhook', wrong, {'x-razorpay-signature': await hmac(HOOK, wrong)}), env)).status, 400);
   assert.equal(db.prepare('SELECT count(*) n FROM ielts_pay_credits').get().n, 0);
-  const good = event(24900);
+  const good = event(29900);
   assert.equal((await handlePayments(post('/api/ielts/pay/webhook', good, {'x-razorpay-signature': await hmac(HOOK, good)}), env)).status, 200);
   assert.deepEqual({...db.prepare('SELECT email,skill FROM ielts_pay_credits').get()}, {email: 'learner@example.com', skill: 'reading'});
 });
@@ -138,7 +138,7 @@ test('Reading: no credit, no new test; a credit is used once and resuming is fre
   }}};
   const start = () => handleLearnerPortal(post('/api/ielts/learner/reading/start', {track: 'academic'}, {origin, cookie: '__Secure-telw_ielts_learner=' + 'b'.repeat(64)}), env);
   const blocked = await start();
-  assert.equal(blocked.status, 402); assert.match((await blocked.json()).error, /ielts\/pay/); assert.equal(starts, 0);
+  assert.equal(blocked.status, 402); assert.match((await blocked.json()).error, /one step away/); assert.equal(starts, 0);
   db.exec(`INSERT INTO ielts_pay_orders(id,email,product,amount,status,created_at) VALUES('order_a','learner@example.com','reading',24900,'paid',1),('order_b','learner@example.com','reading',24900,'paid',1)`);
   db.exec(`INSERT INTO ielts_pay_credits(id,order_id,email,skill,created_at,expires_at) VALUES('c1','order_a','learner@example.com','reading',1,9999999999)`);
   assert.equal((await start()).status, 200);

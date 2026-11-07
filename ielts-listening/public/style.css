@@ -2,3 +2,4 @@
 
 
 .question-navigation{position:sticky;bottom:0;background:#fff;padding:.6rem;border-top:2px solid #d5e1e7;z-index:2}.question-navigation p{font-size:.85rem;margin:.2rem}#questionNav{gap:.2rem;margin:.3rem 0}#questionNav button{font-size:.8rem;min-width:2rem;padding:.35rem;margin:0;background:#e8f0f4;color:#17374a}#questionNav button.answered{background:#176781;color:white}#questionNav button[aria-current=true]{outline:2px solid #bd913d}
+.paynote{margin:0 0 1.4rem;padding:1.1rem 1.3rem;background:linear-gradient(135deg,#eef7fa,#fdf6e7);border:1px solid #cfe3ea;border-radius:12px}.paynote h3{margin:0 0 .3rem;font-size:1.2rem;color:#17374a}.paynote p{margin:0 0 .8rem;color:#33505f}.paybook{display:inline-block;padding:.65rem 1.2rem;background:#d9aa43;color:#172a42;font-weight:bold;border-radius:6px;text-decoration:none}.paybook:hover{background:#c99a33}

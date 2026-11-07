@@ -12,7 +12,7 @@ test('once charging is on, a learner needs a paid Listening credit; the trainer 
  f.env.PAY_DB={prepare(sql){return {args:[],bind(...args){this.args=args;return this;},async first(){return pay.prepare(sql).get(...this.args)||null;},async run(){return pay.prepare(sql).run(...this.args);}};}};
  const user=await f.login();
  const blocked=await f.api('start',{},user.cookie);
- assert.equal(blocked.status,402);assert.match((await blocked.json()).error,/ielts\/pay/);
+ assert.equal(blocked.status,402);assert.match((await blocked.json()).error,/one step away/);
  pay.exec(`INSERT INTO ielts_pay_orders(id,email,product,amount,status,created_at) VALUES('order_a','learner@example.com','listening',24900,'paid',1)`);
  pay.exec(`INSERT INTO ielts_pay_credits(id,order_id,email,skill,created_at,expires_at) VALUES('c1','order_a','learner@example.com','listening',1,9999999999)`);
  const started=await (await f.api('start',{},user.cookie)).json();

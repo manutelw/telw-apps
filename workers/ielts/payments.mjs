@@ -10,8 +10,8 @@ const VALID_DAYS = 180;
 export const PRODUCTS = {
   bundle: {name: 'Full diagnosis: Reading, Listening and Writing', amount: 79900, skills: ['reading', 'listening', 'writing']},
   writing: {name: 'Writing diagnostic', amount: 49900, skills: ['writing']},
-  reading: {name: 'Reading diagnostic', amount: 24900, skills: ['reading']},
-  listening: {name: 'Listening diagnostic', amount: 24900, skills: ['listening']}
+  reading: {name: 'Reading diagnostic', amount: 29900, skills: ['reading']},
+  listening: {name: 'Listening diagnostic', amount: 29900, skills: ['listening']}
 };
 const PAGES = new Map([
   ['/ielts/pay/', '/ielts-pay/index.html'],
