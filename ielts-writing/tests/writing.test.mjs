@@ -124,7 +124,18 @@ test('a learner can take, save, submit and receive a marked result', () => fixtu
   assert.equal((await api('start', {type: 'general'}, cookie)).status, 409, '15-day limit');
 }));
 
-test('answers cannot change after submission and results cannot be rewritten', () => fixture(async ({api, login, db}) => {
+test('a result from a question set no longer in the bank still opens', () => fixture(async ({api, login, db}) => {
+  const cookie = await login();
+  await api('start', {type: 'academic'}, cookie);
+  await api('submit', {answer1: essay(160), answer2: essay(260), seq: 1}, cookie);
+  await api('mark', {}, cookie);
+  db.exec(`INSERT INTO writing_attempts(id,learner_id,set_id,started_at,deadline_at,status,answer1,answer2,submitted_at,mark_tries,result_json,marked_at,trainer_test)
+    SELECT 'retired',learner_id,'trainer-check-05',started_at+1,deadline_at+1,'marked',answer1,answer2,submitted_at+1,mark_tries,result_json,marked_at+1,trainer_test FROM writing_attempts`);
+  const state = await api('state', undefined, cookie);
+  assert.equal(state.status, 200); assert.equal((await state.json()).status, 'marked');
+}));
+
+test('answers cannot change after submission and results cannot be rewritten',() => fixture(async ({api, login, db}) => {
   const cookie = await login();
   await api('start', {type: 'academic'}, cookie);
   await api('submit', {answer1: essay(160), answer2: essay(260), seq: 1}, cookie);
