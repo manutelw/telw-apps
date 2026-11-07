@@ -184,7 +184,10 @@ $('verifyForm').addEventListener('submit', async e => {
 document.querySelectorAll('.choice').forEach(button => button.addEventListener('click', async () => {
   $('homeStatus').textContent = 'Starting…';
   try { const state = await api('start', {type: button.dataset.type}); $('homeStatus').textContent = ''; route(state); }
-  catch (error) { $('homeStatus').textContent = error.message; }
+  catch (error) {
+    $('homeStatus').textContent = error.message;
+    if (error.status === 402) { const link = node('a', ' Buy the Writing diagnostic'); link.href = '/ielts/pay/?test=writing'; $('homeStatus').append(link); }
+  }
 }));
 $('answerBox').addEventListener('input', () => { answers[activeTask] = $('answerBox').value; dirty = true; $('saved').textContent = ''; updateCount(); });
 [1, 2].forEach(n => $('tab' + n).addEventListener('click', () => { activeTask = n; renderTask(); save(); }));

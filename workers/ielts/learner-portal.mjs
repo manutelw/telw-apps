@@ -1,4 +1,5 @@
 import {withReadingFeedback} from './reading-feedback.mjs';
+import {TRAINER_EMAIL,PaymentNeeded,paymentsRequired,claimCredit,releaseCredit,attachCredit,creditFor,normalEmail} from './credits.mjs';
 // Public TELW Reading entry backed by the same private IELTS service as the
 // trainer dashboard. Bank selection, ownership, scoring and cooldown stay there.
 const ORIGIN='https://manuvikraman.com';
@@ -28,6 +29,27 @@ function definition(action){
  if(['reading/start','reading/save','reading/submit','reading/feedback-email','reading/enquire'].includes(action))return ['POST','/api/ielts/'+action,16384];
  return null;
 }
+// A new Reading attempt uses one paid credit once charging is on. Resuming an attempt that is
+// already paid for (an active hour-long attempt) does not need another credit.
+async function readingGate(env,upstreamHeaders){
+ if(!env.PAY_DB||!(await paymentsRequired(env)))return null;
+ const session=await env.IELTS_ADMIN_SERVICE.fetch(new Request(new URL('/api/ielts/auth/session',SERVICE),{method:'GET',headers:upstreamHeaders.has('cookie')?{cookie:upstreamHeaders.get('cookie')}:{},redirect:'manual',signal:AbortSignal.timeout(20000)}));
+ if(!session.ok)return null;
+ const email=normalEmail((await session.json().catch(()=>({}))).email);
+ if(!email||email===TRAINER_EMAIL)return null;
+ const now=Math.floor(Date.now()/1000);
+ const active=await env.PAY_DB.prepare(`SELECT id FROM ielts_pay_credits WHERE email=?1 AND skill='reading' AND used_at>?2 AND used_ref NOT LIKE 'pending:%'`).bind(email,now-3600).first();
+ if(active)return null;
+ const ref='pending:'+crypto.randomUUID(),claim=await claimCredit(env,email,'reading',ref,now);
+ if(!claim)throw new PaymentNeeded('reading',email);
+ return {claim,ref};
+}
+async function settleReading(env,gate,ok,content){
+ if(!gate?.claim?.id)return;
+ let attemptId='';if(ok){try{attemptId=String(JSON.parse(content).attemptId||'');}catch{}}
+ if(!attemptId||await creditFor(env,'reading:'+attemptId))return releaseCredit(env,gate.claim,gate.ref);
+ await attachCredit(env,gate.claim,gate.ref,'reading:'+attemptId);
+}
 export async function handleLearnerPortal(request,env={}){
  const url=new URL(request.url);
  const page=['/ielts/reading','/ielts/reading/','/ielts/reading/index.html'].includes(url.pathname);
@@ -54,13 +76,17 @@ export async function handleLearnerPortal(request,env={}){
    upstreamHeaders.set('origin',SERVICE);
    if(action!=='auth/logout')body=await readBody(request,route[2]);
   }
-  const upstream=await env.IELTS_ADMIN_SERVICE.fetch(new Request(new URL(route[1],SERVICE),{method:page?'GET':request.method,headers:upstreamHeaders,body,redirect:'manual',signal:AbortSignal.timeout(20000)}));
+  const gate=action==='reading/start'?await readingGate(env,upstreamHeaders):null;
+  let upstream;
+  try{upstream=await env.IELTS_ADMIN_SERVICE.fetch(new Request(new URL(route[1],SERVICE),{method:page?'GET':request.method,headers:upstreamHeaders,body,redirect:'manual',signal:AbortSignal.timeout(20000)}));}
+  catch(error){if(gate)await releaseCredit(env,gate.claim,gate.ref);throw error;}
   // No service URL or private admin response may be used as a learner redirect.
-  if(upstream.status>=300&&upstream.status<400)return json({error:'The Reading service is temporarily unavailable.'},502);
+  if(upstream.status>=300&&upstream.status<400){if(gate)await releaseCredit(env,gate.claim,gate.ref);return json({error:'The Reading service is temporarily unavailable.'},502);}
   const out=new Headers(headers);const type=upstream.headers.get('content-type');if(type)out.set('content-type',type);
   const cookies=upstream.headers.getSetCookie?.()||[upstream.headers.get('set-cookie')].filter(Boolean);
   for(const value of cookies)if(value.startsWith(UPSTREAM_COOKIE+'='))out.append('set-cookie',value.replace(UPSTREAM_COOKIE+'=',COOKIE+'='));
   let content=await upstream.text();
+  if(gate)await settleReading(env,gate,upstream.ok,content);
   if(page&&upstream.ok){
    if(!content.includes('id="identitySend"')||!content.includes('/api/ielts/reading/start'))throw Error('Unexpected learner page');
    content=withReadingFeedback(content);
