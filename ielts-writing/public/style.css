@@ -42,3 +42,4 @@ textarea{flex:1;width:100%;min-height:260px;padding:.9rem;font:1.05rem/1.6 Arial
 .training{background:#17374a;color:#fff;padding:1.2rem 1.4rem;border-radius:8px;margin:1.2rem 0}.training h3{margin-top:0}.trainingLink{display:inline-block;background:#e9c46a;color:#17374a;font-weight:bold;padding:.7rem 1.1rem;border-radius:6px;text-decoration:none}
 
 .visual-parts .visual-part{margin:0 0 1.2rem}.visual .chart{width:100%;height:auto;max-width:640px;display:block}.visual .source{font-size:.8rem;color:#526071}
+.paynote{margin:0 0 1.4rem;padding:1.1rem 1.3rem;background:linear-gradient(135deg,#eef7fa,#fdf6e7);border:1px solid #cfe3ea;border-radius:12px}.paynote h3{margin:0 0 .3rem;font-size:1.2rem;color:#17374a}.paynote p{margin:0 0 .8rem;color:#33505f}.paybook{display:inline-block;padding:.65rem 1.2rem;background:#d9aa43;color:#172a42;font-weight:bold;border-radius:6px;text-decoration:none}.paybook:hover{background:#c99a33}

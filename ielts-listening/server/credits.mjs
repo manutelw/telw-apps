@@ -11,7 +11,7 @@ export const normalEmail = email => String(email || '').trim().toLowerCase();
 
 export class PaymentNeeded extends Error {
   constructor(skill, email) {
-    super(`This ${LABEL[skill]} diagnostic has not been paid for yet. Buy it at ${PAY_PATH} using the email address ${normalEmail(email)}, then come back and start the test.`);
+    super(`You’re one step away from your ${LABEL[skill]} diagnostic. Use your email when you book, then come back here to begin.`);
     this.status = 402;
   }
 }

@@ -31,6 +31,9 @@ function definition(action){
 }
 // A new Reading attempt uses one paid credit once charging is on. Resuming an attempt that is
 // already paid for (an active hour-long attempt) does not need another credit.
+// When a Reading test has not been paid for, the page shows a friendly note with one link to book.
+const PAY_NOTE=`<style>.paynote{margin:0 0 1.4rem;padding:1.1rem 1.3rem;background:linear-gradient(135deg,#eef7fa,#fdf6e7);border:1px solid #cfe3ea;border-radius:12px;font-family:Arial,sans-serif}.paynote h3{margin:0 0 .3rem;font-size:1.2rem;color:#17374a}.paynote p{margin:0 0 .8rem;color:#33505f}.paybook{display:inline-block;padding:.65rem 1.2rem;background:#d9aa43;color:#172a42;font-weight:bold;border-radius:6px;text-decoration:none}</style><script>(()=>{const f=window.fetch;window.fetch=async(...a)=>{const r=await f(...a);try{if(r.status===402&&String(a[0]&&a[0].url||a[0]).includes('reading/start'))setTimeout(show,60);}catch{}return r;};function show(){if(document.getElementById('payNeeded'))return;const box=document.createElement('div');box.id='payNeeded';box.className='paynote';box.setAttribute('role','status');box.innerHTML='<h3>You&rsquo;re one step away from your Reading diagnostic</h3><p>Use your email when you book, then come back here to begin.</p><a class="paybook" href="/ielts/pay/?test=reading">See prices and book</a>';const said=[...document.querySelectorAll('p,div,span')].find(e=>!e.children.length&&e.textContent.includes('one step away from your Reading'));if(said){said.textContent='';said.replaceWith(box);}else(document.querySelector('main')||document.body).prepend(box);box.scrollIntoView({behavior:'smooth',block:'center'});}})();</script>`;
+export function withPayNote(html){return html.includes('</body>')?html.replace('</body>',PAY_NOTE+'</body>'):html+PAY_NOTE;}
 async function readingGate(env,upstreamHeaders){
  if(!env.PAY_DB||!(await paymentsRequired(env,'reading')))return null;
  const session=await env.IELTS_ADMIN_SERVICE.fetch(new Request(new URL('/api/ielts/auth/session',SERVICE),{method:'GET',headers:upstreamHeaders.has('cookie')?{cookie:upstreamHeaders.get('cookie')}:{},redirect:'manual',signal:AbortSignal.timeout(20000)}));
@@ -90,6 +93,7 @@ export async function handleLearnerPortal(request,env={}){
   if(page&&upstream.ok){
    if(!content.includes('id="identitySend"')||!content.includes('/api/ielts/reading/start'))throw Error('Unexpected learner page');
    content=withReadingFeedback(content);
+   content=withPayNote(content);
    content=content.replaceAll('href="/api/ielts/reading/admin"','href="/ielts/admin/"')
     .replaceAll('/api/ielts/auth/',PREFIX+'auth/').replaceAll('/api/ielts/reading/',PREFIX+'reading/');
   }
