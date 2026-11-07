@@ -20,55 +20,17 @@ const api = async (route, body) => {
 const words = text => (String(text).toLowerCase().match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu) || []).length;
 const node = (tag, text, cls) => { const el = document.createElement(tag); if (text !== undefined) el.textContent = text; if (cls) el.className = cls; return el; };
 
-/* Visuals are drawn from the task data so every mark sits on one scale. Monochrome, as on an exam paper. */
-function lineChart(v) {
-  const NS = 'http://www.w3.org/2000/svg', W = 560, H = 320, L = 52, R = 92, T = 16, B = 44;
-  const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('class', 'chart'); svg.setAttribute('role', 'img');
-  svg.setAttribute('aria-label', v.title + '. ' + v.series.map(s => s.name + ': ' + s.values.map((n, i) => v.x[i] + ' ' + n + ' percent').join(', ')).join('. '));
-  const sx = i => L + i * (W - L - R) / (v.x.length - 1), sy = n => T + (v.yMax - n) * (H - T - B) / v.yMax;
-  const add = (tag, attrs, text) => { const el = document.createElementNS(NS, tag); Object.entries(attrs).forEach(([k, a]) => el.setAttribute(k, a)); if (text !== undefined) el.textContent = text; svg.append(el); return el; };
-  for (let n = 0; n <= v.yMax; n += v.yStep) {
-    add('line', {x1: L, x2: W - R, y1: sy(n), y2: sy(n), stroke: n ? '#d5dde2' : '#17374a', 'stroke-width': 1});
-    add('text', {x: L - 8, y: sy(n) + 4, 'text-anchor': 'end'}, n);
-  }
-  v.x.forEach((label, i) => add('text', {x: sx(i), y: H - B + 20, 'text-anchor': 'middle'}, label));
-  add('text', {x: 14, y: (H - B + T) / 2, 'text-anchor': 'middle', transform: `rotate(-90 14 ${(H - B + T) / 2})`}, v.yLabel);
-  const dashes = ['', '8 5', '2 5'], ends = [];
-  v.series.forEach((s, k) => {
-    add('polyline', {points: s.values.map((n, i) => sx(i) + ',' + sy(n)).join(' '), fill: 'none', stroke: '#17374a', 'stroke-width': 2, 'stroke-dasharray': dashes[k]});
-    s.values.forEach((n, i) => {
-      if (k === 0) add('circle', {cx: sx(i), cy: sy(n), r: 4, fill: '#17374a'});
-      if (k === 1) add('rect', {x: sx(i) - 4, y: sy(n) - 4, width: 8, height: 8, fill: '#fff', stroke: '#17374a', 'stroke-width': 2});
-      if (k === 2) add('polygon', {points: `${sx(i)},${sy(n) - 5} ${sx(i) + 5},${sy(n) + 4} ${sx(i) - 5},${sy(n) + 4}`, fill: '#17374a'});
-    });
-    ends.push([s.name, sy(s.values[s.values.length - 1])]);
-  });
-  ends.forEach(([name, y]) => add('text', {x: W - R + 10, y: y + 4}, name));
-  return svg;
-}
-function visual(v) {
-  const box = node('div', undefined, 'visual'); box.append(node('p')); box.firstChild.append(node('strong', v.title));
-  if (v.kind === 'line') {
-    box.append(lineChart(v));
-    const legend = node('div', undefined, 'legend'), marks = ['●  solid line', '■  dashed line', '▲  dotted line'];
-    v.series.forEach((s, i) => legend.append(node('span', `${marks[i]}: ${s.name}`)));
-    box.append(legend);
-  } else {
-    const wrap = node('div', undefined, 'tablewrap'), table = node('table', undefined, 'datatable'), head = table.createTHead().insertRow(), body = table.createTBody();
-    v.head.forEach(h => { const th = node('th', h); th.scope = 'col'; head.append(th); });
-    v.rows.forEach(row => { const tr = body.insertRow(); row.forEach((cell, i) => { if (i) tr.insertCell().textContent = cell; else { const th = node('th', cell); th.scope = 'row'; tr.append(th); } }); });
-    wrap.append(table); box.append(wrap);
-  }
-  return box;
-}
+// Visuals are drawn by visuals.js from the task data.
+const visual = v => window.TELWVisual.render(v);
 function renderTask() {
   const task = attempt['task' + activeTask], box = $('taskText'); box.replaceChildren();
   box.append(node('h2', 'Writing Task ' + activeTask), node('p', task.time));
+  // Official IELTS layout: the task, its instruction and any bullet points sit together in the box.
   const framed = node('div', undefined, 'frame'); framed.append(node('p', task.prompt));
+  if (task.instruction) framed.append(node('p', task.instruction));
+  if (task.bullets?.length) { const ul = node('ul'); task.bullets.forEach(b => ul.append(node('li', b))); framed.append(ul); }
   if (activeTask === 2) box.append(node('p', 'Write about the following topic:'));
   box.append(framed);
-  if (task.instruction) box.append(node('p', task.instruction));
-  if (task.bullets.length) { const ul = node('ul'); task.bullets.forEach(b => ul.append(node('li', b))); box.append(ul); }
   if (task.end) box.append(node('p', task.end));
   box.append(node('p', task.words));
   if (task.extra) box.append(node('p', task.extra));

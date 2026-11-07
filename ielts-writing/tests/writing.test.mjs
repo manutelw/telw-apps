@@ -287,3 +287,21 @@ test('a paid test whose marking fails gets an automatic, emailed replacement tha
   assert.equal(again.status, 'active', 'the failed attempt does not block the replacement test');
   assert.ok(pay.prepare(`SELECT used_at FROM ielts_pay_credits WHERE id=?`).get(row.credit_id).used_at, 'the replacement credit was used');
 }, () => ({broken: true})));
+
+test('the bank has 25 Academic and 25 General Training sets, every IELTS visual type, and figures that add up', async () => {
+  const {checkVisual} = await import('../server/visual-check.mjs');
+  const academic = SETS.filter(s => s.type === 'academic'), general = SETS.filter(s => s.type === 'general');
+  assert.equal(academic.length, 25); assert.equal(general.length, 25);
+  assert.equal(new Set(SETS.map(s => s.id)).size, SETS.length, 'ids are unique');
+  const kinds = new Set(academic.map(s => s.task1.visual.kind));
+  for (const kind of ['line', 'bar', 'pie', 'table', 'mixed', 'process', 'map']) assert.ok(kinds.has(kind), kind);
+  assert.ok(academic.some(s => s.task1.visual.cycle), 'a natural or man-made cycle');
+  assert.ok(academic.some(s => s.task1.visual.horizontal), 'a horizontal bar chart');
+  for (const s of academic) assert.deepEqual(checkVisual(s.task1.visual, s.id), [], s.id);
+  const prompts = SETS.flatMap(s => [s.task1.prompt, s.task2.prompt]);
+  assert.equal(new Set(prompts).size, prompts.length, 'no prompt is repeated');
+  for (const s of SETS) { assert.match(s.task2.instruction, /\?$|opinion\.$|prefer\.$/, s.id); assert.ok(s.task2.prompt.length > 40, s.id); }
+  for (const s of general) { assert.match(s.task1.instruction, /^Write a letter to .+\. In your letter:$/, s.id); assert.match(s.task1.opening, /^Begin your letter as follows: Dear /); }
+  const bad = checkVisual({kind: 'pie', title: 't', charts: [{label: 'x', slices: [{name: 'a', value: 60}, {name: 'b', value: 30}]}]});
+  assert.match(bad.join(), /adds up to 90/, 'the checker catches a pie that does not add up');
+});
