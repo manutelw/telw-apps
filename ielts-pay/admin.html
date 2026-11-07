@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>IELTS Payments Admin | TELW</title>
+<link rel="stylesheet" href="/ielts/pay/policy.css">
+<style>
+table{border-collapse:collapse;width:100%;background:#fff;font-size:14px}
+th,td{border:1px solid #e1e3dc;padding:8px;text-align:left;vertical-align:top}
+th{background:#eef0ea}
+.scroll{overflow-x:auto}
+.ok{color:#1d6b2a;font-weight:700}.bad{color:#a22b1d;font-weight:700}
+select,button.small{font:inherit;font-size:14px;padding:6px 10px}
+tr.focus td{background:#fff7dd}
+</style>
+</head>
+<body>
+<header class="head"><div class="wrap"><a class="brand" href="/">TELW<small>Payments admin</small></a><nav aria-label="Main navigation"><a href="/ielts/reading/">Reading sign-in</a></nav></div></header>
+<main><div class="wrap" style="width:min(1200px,calc(100% - 32px))">
+<h1>IELTS payments admin</h1>
+<p id="status" class="status" role="status" aria-live="polite">Loading...</p>
+
+<h2>Problem reports</h2>
+<p class="muted">Check the report and the payment record in your email. If the fault is on TELW's side, choose the test and send a replacement. The app adds the test to the learner's email address, emails them the details with a reference, and records it below.</p>
+<div class="scroll"><table><thead><tr><th>Reference</th><th>Received</th><th>Learner</th><th>Test</th><th>What they wrote</th><th>Replacement</th></tr></thead><tbody id="reports"></tbody></table></div>
+
+<h2>Replacement tests sent</h2>
+<p class="muted">"Accepted" means the email service took the email. "Delivered" means the learner's mail server confirmed receipt. "Used" means the learner started the replacement test.</p>
+<div class="scroll"><table><thead><tr><th>Reference</th><th>Learner</th><th>Test</th><th>Why</th><th>Issued</th><th>Email accepted</th><th>Delivered</th><th>Used</th></tr></thead><tbody id="replacements"></tbody></table></div>
+</div></main>
+<script src="/ielts/pay/admin.js"></script>
+</body>
+</html>

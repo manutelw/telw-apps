@@ -12,6 +12,7 @@ const KEY = 'rzp_test_fixture', SECRET = 'secret-fixture', HOOK = 'hook-fixture'
 function payDb(on = true) {
   const db = new DatabaseSync(':memory:');
   db.exec(readFileSync(new URL('../../ielts-pay/migrations/0001_payments.sql', import.meta.url), 'utf8'));
+  for (const file of ['0002_problem_reports.sql', '0003_replacements.sql', '0004_replacement_log.sql']) db.exec(readFileSync(new URL('../../ielts-pay/migrations/' + file, import.meta.url), 'utf8'));
   if (on) db.exec(`UPDATE ielts_pay_settings SET value='on'`);
   const stmt = sql => ({args: [], bind(...args) { this.args = args; return this; }, async first() { return db.prepare(sql).get(...this.args) || null; }, async all() { return {results: db.prepare(sql).all(...this.args)}; }, async run() { return db.prepare(sql).run(...this.args); }});
   return {db, PAY_DB: {prepare: stmt, async batch(list) { for (const s of list) await s.run(); }}};
@@ -34,7 +35,7 @@ test('price and policy pages are served from assets, with canonical redirects', 
     if (path.endsWith('.html')) return new Response(null, {status: 307, headers: {location: path.slice(0, -5)}});
     return new Response('<html>' + path + '</html>', {headers: {'content-type': 'text/html'}});
   }};
-  for (const [page, asset] of [['/ielts/pay/', '/ielts-pay/index'], ['/ielts/terms/', '/ielts-pay/terms'], ['/ielts/refund/', '/ielts-pay/refund'], ['/ielts/privacy/', '/ielts-pay/privacy']]) {
+  for (const [page, asset] of [['/ielts/pay/', '/ielts-pay/index'], ['/ielts/terms/', '/ielts-pay/terms'], ['/ielts/refund/', '/ielts-pay/refund'], ['/ielts/privacy/', '/ielts-pay/privacy'], ['/ielts/report/', '/ielts-pay/report']]) {
     const response = await handlePayments(new Request(origin + page), {ASSETS: assets});
     assert.equal(response.status, 200); assert.equal(await response.text(), `<html>${asset}</html>`); assert.equal(response.headers.get('location'), null);
   }
@@ -47,7 +48,7 @@ test('price and policy pages are served from assets, with canonical redirects', 
 
 test('the real pages show the agreed prices and the required policy links', () => {
   const page = readFileSync(new URL('../../ielts-pay/index.html', import.meta.url), 'utf8');
-  for (const text of ['₹799', '₹499', '₹249', '/ielts/terms/', '/ielts/refund/', '/ielts/privacy/', '/contact/', 'New Delhi 110016', 'manutelw@gmail.com', '+91 97171 16831', 'checkout.razorpay.com/v1/checkout.js']) assert.ok(page.includes(text), text);
+  for (const text of ['₹799', '₹499', '₹249', '/ielts/terms/', '/ielts/refund/', '/ielts/privacy/', 'New Delhi 110016', 'manutelw@gmail.com', '+91 97171 16831', 'checkout.razorpay.com/v1/checkout.js']) assert.ok(page.includes(text), text);
   assert.deepEqual(Object.fromEntries(Object.entries(PRODUCTS).map(([k, p]) => [k, p.amount])), {bundle: 79900, writing: 49900, reading: 24900, listening: 24900});
   for (const file of ['terms', 'refund', 'privacy']) assert.match(readFileSync(new URL(`../../ielts-pay/${file}.html`, import.meta.url), 'utf8'), /manutelw@gmail\.com/);
   assert.doesNotMatch(readFileSync(new URL('../../ielts-pay/refund.html', import.meta.url), 'utf8'), /TO BE INSERTED/);
@@ -156,4 +157,71 @@ test('the production router serves payments before the other sites', () => {
   assert.match(source, /import \{handlePayments\}/);
   assert.ok(source.indexOf('if(payments)return payments;') < source.indexOf('return base.fetch(request,env)'));
   assert.match(readFileSync(new URL('../../wrangler.jsonc', import.meta.url), 'utf8'), /"binding": "PAY_DB"/);
+});
+
+test('a problem report gets a reference, is stored, and TELW is emailed the payment record for that email', async () => {
+  const {db, PAY_DB} = payDb(), env = {PAY_DB, RESEND_API_KEY: 'k', TELW_FROM_EMAIL: 'TELW <a@b.co>'}, sent = [];
+  db.exec(`INSERT INTO ielts_pay_orders(id,email,product,amount,status,payment_id,created_at,paid_at) VALUES('order_x','learner@example.com','bundle',79900,'paid','pay_x',1,2)`);
+  db.exec(`INSERT INTO ielts_pay_credits(id,order_id,email,skill,created_at,expires_at,used_at,used_ref) VALUES('c1','order_x','learner@example.com','writing',1,9999999999,5,'writing:abc')`);
+  await withFetch(async (url, options) => { assert.equal(url, 'https://api.resend.com/emails'); sent.push(JSON.parse(options.body)); return new Response('{}'); }, async () => {
+    assert.equal((await handlePayments(post('/api/ielts/pay/report', {email: 'learner@example.com', test: 'writing', message: 'Marking never finished.'}, {origin: 'https://evil.example'}), env)).status, 403);
+    assert.equal((await handlePayments(post('/api/ielts/pay/report', {email: 'learner@example.com', test: 'speaking', message: 'Marking never finished.'}), env)).status, 400);
+    assert.equal((await handlePayments(post('/api/ielts/pay/report', {email: 'learner@example.com', test: 'writing', message: 'short'}), env)).status, 400);
+    const ok = await handlePayments(post('/api/ielts/pay/report', {email: 'Learner@Example.com', test: 'writing', paymentRef: 'TELW-W-ABCD1234', message: 'Marking never finished. <b>help</b>'}), env);
+    assert.equal(ok.status, 200);
+    const {reference} = await ok.json();
+    assert.match(reference, /^TELW-[A-Z2-9]{6}$/);
+    const toTelw = sent.find(m => m.to[0] === 'manutelw@gmail.com'), toLearner = sent.find(m => m.to[0] === 'learner@example.com');
+    assert.match(toTelw.subject, new RegExp(reference)); assert.match(toTelw.html, /order_x/); assert.match(toTelw.html, /writing:abc/); assert.match(toTelw.html, /&lt;b&gt;help/);
+    assert.match(toLearner.html, new RegExp(reference));
+    assert.equal(db.prepare('SELECT count(*) n FROM ielts_pay_reports WHERE emailed_at IS NOT NULL').get().n, 1);
+    for (let i = 0; i < 4; i++) await handlePayments(post('/api/ielts/pay/report', {email: 'learner@example.com', test: 'payment', message: 'Another problem here.'}), env);
+    assert.equal((await handlePayments(post('/api/ielts/pay/report', {email: 'learner@example.com', test: 'payment', message: 'Another problem here.'}), env)).status, 429);
+  });
+});
+
+test('every page that shows a phone number offers WhatsApp messages only, and the report page is linked', () => {
+  const read = path => readFileSync(new URL('../../' + path, import.meta.url), 'utf8');
+  for (const file of ['ielts-pay/index.html', 'ielts-pay/terms.html', 'ielts-pay/refund.html', 'ielts-pay/privacy.html', 'telw-site/ielts/index.html']) {
+    const html = read(file);
+    assert.doesNotMatch(html, /tel:\+91/, file); assert.match(html, /wa\.me\/919717116831/, file);
+  }
+  assert.doesNotMatch(read('ielts-pay/terms.html'), /consumer law/);
+  for (const file of ['ielts-pay/index.html', 'ielts-pay/refund.html', 'ielts-pay/terms.html', 'telw-site/ielts/index.html', 'telw-site/landing-page.html']) assert.match(read(file), /\/ielts\/report\//, file);
+});
+
+test('only the trainer can open the payments admin, and a replacement is sent once, recorded and emailed', async () => {
+  const {db, PAY_DB} = payDb(), sent = [];
+  const service = email => ({fetch: async req => { assert.equal(new URL(req.url).pathname, '/api/ielts/auth/session'); assert.equal(req.headers.get('cookie'), '__Secure-telw_ielts=' + 'c'.repeat(64)); return new Response(JSON.stringify({ok: true, email})); }});
+  const cookie = {cookie: '__Secure-telw_ielts_learner=' + 'c'.repeat(64)};
+  db.exec(`INSERT INTO ielts_pay_reports(id,email,test,message,created_at) VALUES('TELW-ABCDEF','learner@example.com','listening','The audio stopped in part 2.',1)`);
+  assert.equal((await handlePayments(new Request(origin + '/api/ielts/pay/admin/overview'), {PAY_DB, IELTS_ADMIN_SERVICE: service('manutelw@gmail.com')})).status, 401);
+  assert.equal((await handlePayments(new Request(origin + '/api/ielts/pay/admin/overview', {headers: cookie}), {PAY_DB, IELTS_ADMIN_SERVICE: service('someone@example.com')})).status, 403);
+  const env = {PAY_DB, IELTS_ADMIN_SERVICE: service('manutelw@gmail.com'), RESEND_API_KEY: 'k', TELW_FROM_EMAIL: 'TELW <a@b.co>'};
+  await withFetch(async (url, options) => { sent.push(JSON.parse(options.body)); return new Response(JSON.stringify({id: 'email-1'})); }, async () => {
+    for (let i = 0; i < 2; i++) {
+      const r = await handlePayments(post('/api/ielts/pay/admin/replace', {reference: 'TELW-ABCDEF', skill: 'listening'}, {origin, ...cookie}), env);
+      assert.equal(r.status, 200);
+    }
+  });
+  assert.equal(db.prepare('SELECT count(*) n FROM ielts_pay_replacements').get().n, 1, 'one replacement per report');
+  const x = db.prepare('SELECT * FROM ielts_pay_replacements').get();
+  assert.equal(x.email_id, 'email-1'); assert.ok(x.sent_at); assert.equal(x.skill, 'listening');
+  assert.equal(sent.length, 1); assert.deepEqual(sent[0].to, ['learner@example.com']); assert.deepEqual(sent[0].bcc, ['manutelw@gmail.com']); assert.match(sent[0].subject, new RegExp(x.id));
+  assert.deepEqual({...db.prepare('SELECT email,skill,used_at FROM ielts_pay_credits WHERE id=?').get(x.credit_id)}, {email: 'learner@example.com', skill: 'listening', used_at: null});
+  const overview = await (await handlePayments(new Request(origin + '/api/ielts/pay/admin/overview', {headers: cookie}), env)).json();
+  assert.equal(overview.reports[0].replacement, x.id); assert.equal(overview.replacements[0].id, x.id);
+});
+
+test('signed delivery receipts mark a replacement email as delivered; unsigned ones are refused', async () => {
+  const {db, PAY_DB} = payDb();
+  db.exec(`INSERT INTO ielts_pay_replacements(id,email,skill,reason,source,credit_id,created_at,email_id,sent_at) VALUES('TELW-R-AAAAAA','l@e.co','writing','x','s1','c1',1,'email-9',1)`);
+  const secretBytes = new Uint8Array(24).fill(7), secret = 'whsec_' + btoa(String.fromCharCode(...secretBytes));
+  const env = {PAY_DB, RESEND_WEBHOOK_SECRET: secret}, now = Math.floor(Date.now() / 1000), body = JSON.stringify({type: 'email.delivered', data: {email_id: 'email-9'}});
+  const key = await crypto.subtle.importKey('raw', secretBytes, {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
+  const sig = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`msg_1.${now}.${body}`)))));
+  assert.equal((await handlePayments(post('/api/ielts/pay/email-events', body, {'svix-id': 'msg_1', 'svix-timestamp': String(now), 'svix-signature': 'v1,' + 'A'.repeat(44)}), env)).status, 401);
+  assert.equal(db.prepare('SELECT delivered_at FROM ielts_pay_replacements').get().delivered_at, null);
+  assert.equal((await handlePayments(post('/api/ielts/pay/email-events', body, {'svix-id': 'msg_1', 'svix-timestamp': String(now), 'svix-signature': 'v1,' + sig}), env)).status, 200);
+  assert.ok(db.prepare('SELECT delivered_at FROM ielts_pay_replacements').get().delivered_at);
 });

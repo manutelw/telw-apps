@@ -1,7 +1,7 @@
 import {getLearner, limit, readJson, reply, requireSameOrigin} from './auth.mjs';
 import {setById, setsOfType} from './bank.mjs';
 import {markAttempt} from './marking.mjs';
-import {claimCredit, releaseCredit, PaymentNeeded} from './credits.mjs';
+import {claimCredit, releaseCredit, PaymentNeeded, creditFor, issueReplacement} from './credits.mjs';
 
 const ROOT = '/ielts/writing/api/';
 const TEST_SECONDS = 60 * 60, GRACE_SECONDS = 60, COOLDOWN_SECONDS = 15 * 24 * 60 * 60;
@@ -25,22 +25,45 @@ async function closeIfExpired(env, attempt, now) {
   await env.WRITING_DB.prepare(`UPDATE writing_attempts SET status='submitted',submitted_at=?1 WHERE id=?2 AND status='active'`).bind(attempt.deadline_at, attempt.id).run();
   return env.WRITING_DB.prepare('SELECT * FROM writing_attempts WHERE id=?1').bind(attempt.id).first();
 }
+export const faultReference = attempt => 'TELW-W-' + attempt.id.replace(/-/g, '').slice(0, 8).toUpperCase();
+// When marking has failed on every try, TELW is told automatically, with a reference the learner also sees.
+async function reportMarkingFault(env, attempt, learner, now, replacement = null) {
+  const ref = faultReference(attempt);
+  const html = `<h2>Writing marking failed: ${ref}</h2><p><strong>Learner email:</strong> ${esc(learner.email)}<br><strong>Attempt:</strong> ${esc(attempt.id)}<br><strong>Question set:</strong> ${esc(attempt.set_id)}<br><strong>Submitted:</strong> ${new Date((attempt.submitted_at || now) * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC<br><strong>Marking tries:</strong> ${MAX_MARK_TRIES}, all failed.</p><p>The learner's answers are saved. They were shown this reference and told that TELW has been notified.</p><p>${replacement ? `A replacement Writing test was issued automatically: <strong>${replacement.id}</strong>, email ${replacement.sent_at ? 'accepted for delivery' : 'NOT confirmed, check the payments admin page'}.` : 'No replacement was issued, because no paid test was used for this attempt. The learner can start a new test.'}</p>`;
+  try {
+    await fetch('https://api.resend.com/emails', {method: 'POST', signal: AbortSignal.timeout(15000),
+      headers: {authorization: 'Bearer ' + env.RESEND_API_KEY, 'content-type': 'application/json', 'idempotency-key': 'writing-fault-' + attempt.id},
+      body: JSON.stringify({from: env.TELW_FROM_EMAIL, to: [TRAINER_EMAIL], reply_to: learner.email, subject: `IELTS Writing marking failed ${ref}`, html})});
+  } catch { /* The learner still sees the reference and can use the Report a problem form. */ }
+}
+// A failed marking (every try used) is TELW's fault: the attempt no longer blocks a new test,
+// and a paid attempt gets an automatic replacement.
+const markingFailed = attempt => attempt?.status === 'submitted' && attempt.mark_tries >= MAX_MARK_TRIES && !(attempt.mark_lease > Math.floor(Date.now() / 1000));
+async function full(env, attempt, now, trainer) {
+  const state = view(attempt, now, trainer);
+  if (state.status === 'delayed' && env.PAY_DB) {
+    const replacement = await env.PAY_DB.prepare(`SELECT id FROM ielts_pay_replacements WHERE source=?1`).bind('writing-fault:' + attempt.id).first();
+    if (replacement) state.replacement = replacement.id;
+  }
+  return state;
+}
 function view(attempt, now, trainer) {
   if (!attempt) return {status: 'none', cooldownUntil: 0};
   const set = setById(attempt.set_id);
   const cooldownUntil = trainer ? 0 : attempt.started_at + COOLDOWN_SECONDS;
   if (attempt.status === 'active') return {status: 'active', type: set.type, deadlineAt: attempt.deadline_at, serverNow: now, task1: publicTask(set.task1), task2: publicTask(set.task2), answer1: attempt.answer1, answer2: attempt.answer2, seq: attempt.save_seq};
   if (attempt.status === 'marked') return {status: 'marked', type: set.type, result: JSON.parse(attempt.result_json), cooldownUntil: cooldownUntil > now ? cooldownUntil : 0, emailed: Boolean(attempt.feedback_emailed_at)};
-  return {status: attempt.mark_tries >= MAX_MARK_TRIES ? 'delayed' : 'marking', type: set.type};
+  return attempt.mark_tries >= MAX_MARK_TRIES ? {status: 'delayed', type: set.type, reference: faultReference(attempt)} : {status: 'marking', type: set.type};
 }
 
 async function start(request, env, learner, now, trainer) {
   const body = await readJson(request);
   if (!['academic', 'general'].includes(body.type)) throw new Refusal('Choose Academic or General Training.', 400);
   const current = await closeIfExpired(env, await latestAttempt(env, learner.id), now);
-  if (current && ['active', 'submitted'].includes(current.status)) return reply({ok: true, ...view(current, now, trainer)});
+  const failed = markingFailed(current);
+  if (current && !failed && ['active', 'submitted'].includes(current.status)) return reply({ok: true, ...await full(env, current, now, trainer)});
   if (!trainer) {
-    if (current && current.started_at + COOLDOWN_SECONDS > now) throw new Refusal('You can take one Writing diagnostic every 15 days.', 409);
+    if (current && !failed && current.started_at + COOLDOWN_SECONDS > now) throw new Refusal('You can take one Writing diagnostic every 15 days.', 409);
     const maximum = Number(env.WRITING_DAILY_LIMIT) || 50;
     const today = await env.WRITING_DB.prepare('SELECT COUNT(*) AS n FROM writing_attempts WHERE started_at>?1 AND trainer_test=0').bind(now - 86400).first();
     if (today.n >= maximum) throw new Refusal('Today’s diagnostic places are full. Please try again tomorrow.', 429);
@@ -56,7 +79,7 @@ async function start(request, env, learner, now, trainer) {
     await env.WRITING_DB.prepare(`INSERT INTO writing_attempts(id,learner_id,set_id,started_at,deadline_at,status,trainer_test) VALUES(?1,?2,?3,?4,?5,'active',?6)`)
       .bind(id, learner.id, chosen.id, now, now + TEST_SECONDS, trainer ? 1 : 0).run();
   } catch (error) { await releaseCredit(env, claim, 'writing:' + id); throw error; }
-  return reply({ok: true, ...view(await env.WRITING_DB.prepare('SELECT * FROM writing_attempts WHERE id=?1').bind(id).first(), now, trainer)});
+  return reply({ok: true, ...await full(env, await env.WRITING_DB.prepare('SELECT * FROM writing_attempts WHERE id=?1').bind(id).first(), now, trainer)});
 }
 
 async function save(request, env, learner, now, finish) {
@@ -74,19 +97,26 @@ async function save(request, env, learner, now, finish) {
 
 async function mark(env, learner, now, trainer) {
   const attempt = await closeIfExpired(env, await latestAttempt(env, learner.id), now);
-  if (attempt?.status === 'marked') return reply({ok: true, trainer, ...view(attempt, now, trainer)});
+  if (attempt?.status === 'marked') return reply({ok: true, trainer, ...await full(env, attempt, now, trainer)});
   if (attempt?.status !== 'submitted') throw new Refusal('There is nothing to mark yet.', 409);
   // One marking run at a time. Closing the page cannot lose or double-charge the marking.
   const claim = await env.WRITING_DB.prepare(`UPDATE writing_attempts SET mark_lease=?1,mark_tries=mark_tries+1
     WHERE id=?2 AND status='submitted' AND mark_tries<?3 AND (mark_lease IS NULL OR mark_lease<?4) RETURNING id`).bind(now + LEASE_SECONDS, attempt.id, MAX_MARK_TRIES, now).first();
-  if (!claim) return reply({ok: true, trainer, ...view(attempt, now, trainer)});
+  if (!claim) return reply({ok: true, trainer, ...await full(env, attempt, now, trainer)});
   try {
     const result = await markAttempt(env, setById(attempt.set_id), attempt.answer1, attempt.answer2);
     await env.WRITING_DB.prepare(`UPDATE writing_attempts SET status='marked',result_json=?1,marked_at=?2,mark_lease=NULL WHERE id=?3 AND status='submitted'`).bind(JSON.stringify(result), now, attempt.id).run();
   } catch {
-    await env.WRITING_DB.prepare('UPDATE writing_attempts SET mark_lease=NULL WHERE id=?1').bind(attempt.id).run();
+    const failed = await env.WRITING_DB.prepare('UPDATE writing_attempts SET mark_lease=NULL WHERE id=?1 RETURNING mark_tries').bind(attempt.id).first();
+    if (failed?.mark_tries >= MAX_MARK_TRIES) {
+      let replacement = null;
+      try {
+        if (!trainer && await creditFor(env, 'writing:' + attempt.id)) replacement = await issueReplacement(env, {email: learner.email, skill: 'writing', reason: `Writing marking failed after ${MAX_MARK_TRIES} tries (${faultReference(attempt)}).`, source: 'writing-fault:' + attempt.id, now});
+      } catch { /* The trainer email below still reports the fault. */ }
+      await reportMarkingFault(env, attempt, learner, now, replacement);
+    }
   }
-  return reply({ok: true, trainer, ...view(await env.WRITING_DB.prepare('SELECT * FROM writing_attempts WHERE id=?1').bind(attempt.id).first(), now, trainer)});
+  return reply({ok: true, trainer, ...await full(env, await env.WRITING_DB.prepare('SELECT * FROM writing_attempts WHERE id=?1').bind(attempt.id).first(), now, trainer)});
 }
 
 const esc = value => String(value).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
@@ -130,7 +160,7 @@ export async function handleDiagnostic(request, env) {
     const now = Math.floor(Date.now() / 1000), learner = await getLearner(request, env, now);
     if (!learner) return reply({ok: false, error: 'Please verify your email first.'}, 401);
     const trainer = learner.email === TRAINER_EMAIL;
-    if (route === 'state') return reply({ok: true, trainer, ...view(await closeIfExpired(env, await latestAttempt(env, learner.id), now), now, trainer)});
+    if (route === 'state') return reply({ok: true, trainer, ...await full(env, await closeIfExpired(env, await latestAttempt(env, learner.id), now), now, trainer)});
     if (route === 'start') return await start(request, env, learner, now, trainer);
     if (route === 'save') return await save(request, env, learner, now, false);
     if (route === 'submit') return await save(request, env, learner, now, true);
