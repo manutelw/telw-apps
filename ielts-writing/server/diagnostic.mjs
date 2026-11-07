@@ -49,7 +49,9 @@ async function full(env, attempt, now, trainer) {
 }
 function view(attempt, now, trainer) {
   if (!attempt) return {status: 'none', cooldownUntil: 0};
-  const set = setById(attempt.set_id);
+  // A set retired from the bank (such as an old trainer check) must never block the page.
+  const set = setById(attempt.set_id) || {type: null};
+  if (attempt.status === 'active' && !set.task1) return {status: 'none', cooldownUntil: 0};
   const cooldownUntil = trainer ? 0 : attempt.started_at + COOLDOWN_SECONDS;
   if (attempt.status === 'active') return {status: 'active', type: set.type, deadlineAt: attempt.deadline_at, serverNow: now, task1: publicTask(set.task1), task2: publicTask(set.task2), answer1: attempt.answer1, answer2: attempt.answer2, seq: attempt.save_seq};
   if (attempt.status === 'marked') return {status: 'marked', type: set.type, result: JSON.parse(attempt.result_json), cooldownUntil: cooldownUntil > now ? cooldownUntil : 0, emailed: Boolean(attempt.feedback_emailed_at)};
