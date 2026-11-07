@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Classes 9–12 | TELW</title>
+<meta name="description" content="Spoken communication training for students of Classes 9 to 12 in New Delhi. Fluency, clear thinking and depth, from TELW. No school subjects, and no dressing or dining etiquette.">
+<link rel="canonical" href="https://manuvikraman.com/classes-9-12/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F6F3; --surface:#FFFFFF; --ink:#13233F; --ink-2:#3E4A5E; --muted:#667085;
+  --rule:#D6DAE0; --accent:#9A6B1F; --accent-line:#C9953A; --deep:#13233F; --on-deep:#EEF1F5;
+  --on-deep-soft:#C9D2DF; --deep-rule:rgba(255,255,255,.18);
+  --maxw:1160px;
+  --serif:"Newsreader", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans:"Public Sans", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1826; --surface:#152135; --ink:#E9EDF3; --ink-2:#C2CAD6; --muted:#98A3B3;
+    --rule:#2A3950; --accent:#E0B062; --accent-line:#E0B062; --deep:#1A2A45; --on-deep:#EEF1F5;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1826; --surface:#152135; --ink:#E9EDF3; --ink-2:#C2CAD6; --muted:#98A3B3;
+  --rule:#2A3950; --accent:#E0B062; --accent-line:#E0B062; --deep:#1A2A45; --on-deep:#EEF1F5;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-behavior:smooth;scroll-padding-top:calc(env(safe-area-inset-top,0px) + 72px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:1.0625rem;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+ul{list-style:none;margin:0;padding:0}
+p{margin:0}
+:focus-visible{outline:3px solid var(--accent-line);outline-offset:3px;border-radius:2px}
+.skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:var(--paper);padding:.6rem 1rem;z-index:100}
+.skip:focus{left:1rem;top:calc(env(safe-area-inset-top,0px) + .5rem)}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(1.1rem,4vw,2.5rem)}
+h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.15;margin:0;color:var(--ink);letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:clamp(1.9rem,3.6vw,2.75rem);max-width:24ch}
+h3{font-size:1.45rem}
+
+/* header: same as the TELW homepage */
+.site-head{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid var(--rule)}
+.site-head .wrap{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;min-height:68px}
+.brand{display:flex;align-items:center;gap:.75rem;text-decoration:none}
+.brand-mark{width:38px;height:38px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-family:var(--serif);font-size:1.15rem;font-weight:600}
+.brand-text{display:flex;flex-direction:column;line-height:1.15}
+.brand-text strong{font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.brand-text span{font-size:.78rem;color:var(--muted)}
+nav ul{display:flex;gap:1.6rem}
+nav a{text-decoration:none;font-size:.95rem;color:var(--ink-2)}
+nav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:4px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.8rem 1.3rem;border-radius:6px;font-weight:600;font-size:.97rem;text-decoration:none;border:1.5px solid var(--ink);transition:background .15s,color .15s}
+.btn-solid{background:var(--ink);color:var(--paper)}
+.btn-solid:hover{background:transparent;color:var(--ink)}
+.btn-line{background:transparent;color:var(--ink)}
+.btn-line:hover{background:var(--ink);color:var(--paper)}
+@media (max-width:900px){nav{display:none}}
+.head-actions{display:flex;align-items:center;gap:.6rem}
+.access{position:relative}
+.access-btn{cursor:pointer;font-family:inherit}
+.access-btn svg{transition:transform .15s}
+.access-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
+.access-menu{position:absolute;right:0;top:calc(100% + .5rem);width:min(300px,86vw);background:var(--surface);border:1px solid var(--rule);border-radius:8px;box-shadow:0 12px 32px rgba(19,35,63,.16);padding:.4rem;z-index:30}
+.access-menu[hidden]{display:none}
+.access-menu a{display:block;padding:.75rem .85rem;border-radius:6px;text-decoration:none}
+.access-menu a + a{border-top:1px solid var(--rule)}
+.access-menu a:hover,.access-menu a:focus-visible{background:var(--paper)}
+.access-menu b{display:block;font-weight:600;color:var(--ink)}
+.access-menu span{display:block;font-size:.88rem;color:var(--muted);line-height:1.4;margin-top:.15rem}
+@media (max-width:640px){.head-book{display:none}}
+@media (max-width:520px){.site-head .btn{padding:.6rem .9rem;font-size:.88rem}.brand-text span{display:none}}
+
+/* hero */
+.hero{padding:clamp(3rem,7vw,6rem) 0 clamp(3rem,6vw,5rem)}
+.crumb{font-size:.9rem;color:var(--muted);margin-bottom:1.1rem}
+.crumb a{text-underline-offset:3px}
+.kicker{font-size:.95rem;font-weight:600;color:var(--accent);margin-bottom:.8rem}
+.hero h1{font-size:clamp(2.4rem,5.2vw,4rem);max-width:18ch}
+.lede{margin-top:1.4rem;color:var(--ink-2);font-size:1.15rem;max-width:60ch}
+.hero-cta{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:2rem}
+.creds{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);background:var(--surface)}
+.creds ul{padding:1.3rem 0;display:flex;flex-wrap:wrap;gap:.6rem 2.4rem;font-size:.97rem;color:var(--ink-2)}
+.creds strong{color:var(--ink);font-weight:600}
+
+/* sections */
+section.block{padding:clamp(3.5rem,8vw,6.5rem) 0}
+.band{background:var(--surface);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.deep{background:var(--deep);color:var(--on-deep)}
+.deep h2,.deep h3{color:#fff}
+.deep .kicker,.deep .col-label{color:#E0B062}
+.section-intro{margin-top:1.1rem;max-width:60ch;color:var(--ink-2);font-size:1.1rem}
+.deep .section-intro{color:var(--on-deep-soft)}
+.col-label{font-size:.85rem;font-weight:600;color:var(--accent);margin-bottom:1rem}
+
+/* concerns */
+.pains{margin-top:clamp(2rem,4vw,3rem);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(2rem,4vw,3.5rem)}
+@media (max-width:760px){.pains{grid-template-columns:1fr}}
+.pain h3{padding-bottom:.9rem;border-bottom:2px solid var(--ink)}
+.pain-tag{font-size:.85rem;font-weight:600;color:var(--accent);margin-bottom:.4rem}
+.pain li{padding:.8rem 0;border-bottom:1px solid var(--rule);color:var(--ink-2)}
+
+/* sample answers */
+.question{margin-top:2rem;font-family:var(--serif);font-size:clamp(1.4rem,2.6vw,1.9rem);line-height:1.25}
+.question span{display:block;font-family:var(--sans);font-size:.85rem;color:var(--muted);margin-bottom:.35rem}
+.answers{margin-top:1.4rem;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);background:var(--surface);border:1px solid var(--rule);border-radius:10px}
+@media (max-width:760px){.answers{grid-template-columns:1fr}}
+.answer{padding:clamp(1.5rem,3vw,2.4rem);min-width:0}
+.answer + .answer{border-left:1px dashed var(--rule)}
+@media (max-width:760px){.answer + .answer{border-left:none;border-top:1px dashed var(--rule)}}
+.answer-label{font-size:.85rem;color:var(--muted);margin-bottom:.7rem}
+.answer p{font-family:var(--serif);font-size:clamp(1.15rem,1.8vw,1.35rem);line-height:1.45}
+.answer.before p{color:var(--muted)}
+.marks{margin-top:2.2rem;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(1.5rem,3vw,2.5rem)}
+@media (max-width:760px){.marks{grid-template-columns:1fr}}
+.marks > div{padding-top:1rem;border-top:2px solid var(--ink)}
+.marks h3{font-size:1.3rem;margin-bottom:.4rem}
+.marks p{color:var(--ink-2);font-size:.98rem}
+.disclaimer{margin-top:1.8rem;font-size:.9rem;color:var(--muted)}
+
+/* not taught */
+.strike-grid{margin-top:clamp(2rem,4vw,3rem);display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:clamp(2rem,5vw,4.5rem);align-items:start}
+@media (max-width:860px){.strike-grid{grid-template-columns:1fr}}
+.struck li{font-family:var(--serif);font-size:clamp(1.3rem,2.5vw,1.75rem);line-height:1.25;padding:.75rem 0;border-top:1px solid var(--deep-rule);color:var(--on-deep-soft);text-decoration:line-through;text-decoration-color:#E0B062;text-decoration-thickness:2px}
+.instead > p{color:var(--on-deep-soft);margin-bottom:1.2rem}
+.instead li{padding:.7rem 0;border-top:1px solid var(--deep-rule);color:var(--on-deep)}
+
+/* adults vs school */
+.table-wrap{margin-top:clamp(2rem,4vw,3rem);border-top:1px solid var(--ink)}
+table{width:100%;border-collapse:collapse;text-align:left}
+th,td{padding:1.1rem 1.2rem;vertical-align:top;border-bottom:1px solid var(--rule)}
+th:first-child{padding-left:0}
+thead th{font-size:.85rem;font-weight:600;color:var(--muted)}
+thead th:last-child{color:var(--accent);background:var(--surface)}
+tbody th{font-family:var(--serif);font-weight:500;font-size:1.2rem;width:22%}
+td{color:var(--ink-2);width:39%}
+td.school{background:var(--surface);color:var(--ink)}
+@media (max-width:720px){
+  thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  table,tbody,tr,th,td{display:block;width:auto}
+  tbody tr{padding:1.1rem 0;border-bottom:1px solid var(--rule)}
+  tbody th,td{border:0;padding:.3rem 0}
+  td.school{background:transparent}
+  td::before{content:attr(data-label);display:block;font-size:.8rem;font-weight:600;color:var(--accent);margin-top:.4rem}
+}
+
+/* two lists */
+.stages{margin-top:clamp(2rem,4vw,3rem);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(2rem,5vw,4.5rem)}
+@media (max-width:760px){.stages{grid-template-columns:1fr}}
+.stage h3{font-size:1.6rem;padding-bottom:.9rem;border-bottom:2px solid var(--ink)}
+.stage li{padding:.9rem 0;border-bottom:1px solid var(--rule);color:var(--ink-2)}
+.shy{margin-top:clamp(2rem,4vw,3rem);padding-top:1.6rem;border-top:1px solid var(--deep-rule);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:1.5rem}
+@media (max-width:760px){.shy{grid-template-columns:1fr;gap:.6rem}}
+.shy p{color:var(--on-deep-soft);max-width:60ch}
+
+/* next step */
+.diagnostic{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:clamp(2rem,5vw,4rem);align-items:center}
+@media (max-width:820px){.diagnostic{grid-template-columns:1fr}}
+.diagnostic li{padding:.75rem 0;border-bottom:1px solid var(--rule);color:var(--ink-2)}
+.diagnostic ul{margin-top:1.2rem;border-top:1px solid var(--ink)}
+.price-box{text-align:center;background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:clamp(1.6rem,3vw,2.4rem)}
+.price-box p{color:var(--ink-2);margin-bottom:1rem}
+.price-num{font-family:var(--serif);font-weight:500;font-size:1.65rem;line-height:1.4}
+.price-num a{text-decoration:none}
+.price-box .contact-ways{margin:0 0 .8rem;font-size:.95rem}.contact-ways a{color:var(--ink);font-weight:600}
+.price-box .email{margin:.7rem 0 0;color:var(--ink)}
+
+footer{padding:2.5rem 0 3rem;font-size:.9rem;color:var(--muted);border-top:1px solid var(--rule)}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem 2rem}
+footer ul{display:flex;flex-wrap:wrap;gap:.5rem 1.4rem}
+footer a{text-underline-offset:3px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+.nowrap{white-space:nowrap}
+.head-actions .btn{white-space:nowrap}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="TELW home">
+      <span class="brand-mark" aria-hidden="true">T</span>
+      <span class="brand-text"><strong>TELW</strong><span>The Academy of Excellence in Communication</span></span>
+    </a>
+    <nav aria-label="Primary">
+      <ul>
+        <li><a href="/#programmes">Programmes</a></li>
+        <li><a href="/#benefits">Benefits</a></li>
+        <li><a href="/#organisations">For organisations</a></li>
+        <li><a href="/#faq">FAQ</a></li>
+        <li><a href="/#contact">Contact</a></li>
+      </ul>
+    </nav>
+    <div class="head-actions">
+      <div class="access">
+        <button class="btn btn-line access-btn" type="button" aria-expanded="false" aria-controls="access-menu">Log in <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+        <div class="access-menu" id="access-menu" hidden>
+          <a href="https://clarionprep.com/ascent/institution.html" rel="noopener"><b>Institution</b><span>Trainers, administrators and institutional accounts</span></a>
+          <a href="https://clarionprep.com/account/" rel="noopener"><b>Private learner</b><span>Register or log in to your ClarionPrep account</span></a>
+        </div>
+      </div>
+      <a class="btn btn-solid head-book" href="#next-step">Arrange a call</a>
+    </div>
+  </div>
+</header>
+<script>
+(function(){
+  var btn=document.querySelector('.access-btn'),menu=document.getElementById('access-menu');
+  function close(){menu.hidden=true;btn.setAttribute('aria-expanded','false');}
+  btn.addEventListener('click',function(e){e.stopPropagation();var open=menu.hidden;menu.hidden=!open;btn.setAttribute('aria-expanded',String(open));if(open)menu.querySelector('a').focus();});
+  document.addEventListener('click',function(e){if(!menu.contains(e.target))close();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!menu.hidden){close();btn.focus();}});
+})();
+</script>
+
+<main id="main">
+<section class="hero">
+  <div class="wrap">
+    <div class="crumb"><a href="/">Home</a> / Classes 9–12</div>
+    <div class="kicker">For parents of students in Classes 9 to 12</div>
+    <h1>Good marks in English. <span class="nowrap">One-word</span> answers at the dinner table.</h1>
+    <p class="lede">Your child has ideas worth hearing. We help them express those ideas clearly, join discussions and speak with greater ease and confidence. This is purely communication skills training, on our own CEFR-based syllabus. We don't teach school subjects.</p>
+    <div class="hero-cta">
+      <a class="btn btn-solid" href="#next-step">Arrange a call with Manu</a>
+      <a class="btn btn-line" href="#not-taught">What we don't teach</a>
+    </div>
+  </div>
+</section>
+
+<div class="creds">
+  <div class="wrap">
+    <ul>
+      <li><strong>Classes 9–12</strong>, trained separately from adults</li>
+      <li><strong>22 years</strong> of training experience, since 2004</li>
+      <li><strong>A short call</strong> with Manu before you enrol</li>
+    </ul>
+  </div>
+</div>
+
+<section id="concerns" class="block band">
+  <div class="wrap">
+    <div class="kicker">What you may be noticing</div>
+    <h2>You've heard your child speak. You know something is missing.</h2>
+    <p class="section-intro">School rewards what a student can write down. Very little of it tests what they can say out loud, in their own words, with someone looking at them. These are the gaps that show.</p>
+    <div class="pains">
+      <div class="pain">
+        <div class="pain-tag">Fluency</div>
+        <h3>The words don't come</h3>
+        <ul>
+          <li>Stops mid-sentence, hunting for the next word</li>
+          <li>Knows the answer in class and still won't raise a hand</li>
+          <li>Chats easily with friends, freezes in English in front of adults</li>
+          <li>Fills every gap with "umm", "like" and "basically"</li>
+        </ul>
+      </div>
+      <div class="pain">
+        <div class="pain-tag">Intelligence</div>
+        <h3>The thinking doesn't show</h3>
+        <ul>
+          <li>Bright on paper, ordinary out loud</li>
+          <li>Offers an opinion and has no reason behind it</li>
+          <li>Repeats what the textbook or the internet said</li>
+          <li>Goes blank at the follow-up question: "Why?"</li>
+        </ul>
+      </div>
+      <div class="pain">
+        <div class="pain-tag">Depth</div>
+        <h3>The answer runs out</h3>
+        <ul>
+          <li>Says everything in one line, then has nothing left</li>
+          <li>Can't stay on a topic for two minutes</li>
+          <li>Sees one side of a question and stops there</li>
+          <li>Speaks in the short phrases of reels and chat messages</li>
+        </ul>
+      </div>
+      <div class="pain">
+        <div class="pain-tag">Personality</div>
+        <h3>The child holds back</h3>
+        <ul>
+          <li>Avoids debates, the stage and any chance to lead</li>
+          <li>Goes quiet in front of teachers and relatives</li>
+          <li>Looks down, and the voice drops, when spoken to</li>
+          <li>Gives in the moment someone disagrees</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="difference" class="block">
+  <div class="wrap">
+    <div class="kicker">What the difference sounds like</div>
+    <h2>Same student. Same question.</h2>
+    <div class="question"><span>The question</span>Should schools ban phones?</div>
+    <div class="answers">
+      <div class="answer before">
+        <div class="answer-label">Where many students start</div>
+        <p>Yes, I think they should ban. Because phones are, like, bad for studies. Students get distracted and all. So, yes.</p>
+      </div>
+      <div class="answer after">
+        <div class="answer-label">What we train toward</div>
+        <p>In class, yes. A phone on the desk pulls attention away even when nobody touches it. A total ban goes too far, though, because many students need one to get home safely. I'd lock them away at the first bell and return them at the last.</p>
+      </div>
+    </div>
+    <div class="marks">
+      <div>
+        <h3>Fluently</h3>
+        <p>Full sentences from start to finish. No filler and no restarting.</p>
+      </div>
+      <div>
+        <h3>Intelligently</h3>
+        <p>A clear position with a reason behind it, so the listener can follow the thought.</p>
+      </div>
+      <div>
+        <h3>With depth</h3>
+        <p>The other side is considered, and the student still lands on a workable answer.</p>
+      </div>
+    </div>
+    <p class="disclaimer">Both answers were written for this page to illustrate the skill. They are not recordings of a student.</p>
+  </div>
+</section>
+
+<section id="not-taught" class="block deep">
+  <div class="wrap">
+    <div class="kicker">Let us be clear</div>
+    <h2>We are not a finishing school.</h2>
+    <p class="section-intro">Many personality development courses stop at appearance and etiquette. A child can master all of it and still have nothing to say when someone asks what they think.</p>
+    <div class="strike-grid">
+      <div>
+        <div class="col-label">You won't find this here</div>
+        <ul class="struck">
+          <li>School subjects and exam tuition</li>
+          <li>Knife in the right hand, fork in the left</li>
+          <li>How to dress for the occasion</li>
+          <li>Table manners and dining etiquette</li>
+          <li>Grooming, hair and make-up</li>
+          <li>How to walk, sit and stand</li>
+          <li>Memorised lines that sound impressive</li>
+        </ul>
+      </div>
+      <div class="instead">
+        <div class="col-label">What personality means to us</div>
+        <p>It is what people notice when your child speaks. That comes from having something to say and the nerve to say it.</p>
+        <ul>
+          <li>Looks people in the eye while talking</li>
+          <li>Speaks to an adult without shrinking</li>
+          <li>Holds a view when someone challenges it</li>
+          <li>Disagrees without being rude</li>
+          <li>Says "I don't know" and recovers</li>
+          <li>Volunteers, instead of waiting to be picked</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="not-adult" class="block">
+  <div class="wrap">
+    <div class="kicker">Why a separate programme</div>
+    <h2>A 15-year-old is not a small adult.</h2>
+    <p class="section-intro">Our adult programmes prepare people for interviews, meetings and client calls. Classes for school students are suited to your child's age, level and goals.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">&nbsp;</th><th scope="col">Adult training</th><th scope="col">Classes 9–12</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">What holds them back</th>
+            <td data-label="Adult training">They have something to say, and the English gets in the way.</td>
+            <td class="school" data-label="Classes 9–12">Often both. Opinions are still forming, so we train thinking and speaking together.</td>
+          </tr>
+          <tr>
+            <th scope="row">What they practise on</th>
+            <td data-label="Adult training">Presentations, group discussions and job interviews.</td>
+            <td class="school" data-label="Classes 9–12">Fuller answers, ordered thoughts, discussion and fresh questions without a script.</td>
+          </tr>
+          <tr>
+            <th scope="row">What they fear</th>
+            <td data-label="Adult training">Sounding junior in front of seniors.</td>
+            <td class="school" data-label="Classes 9–12">Being laughed at by classmates.</td>
+          </tr>
+          <tr>
+            <th scope="row">What they leave with</th>
+            <td data-label="Adult training">Command of a specific situation at work.</td>
+            <td class="school" data-label="Classes 9–12">A habit of thinking aloud that carries into college and beyond.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="syllabus" class="block band">
+  <div class="wrap">
+    <div class="kicker">Scope of the training</div>
+    <h2>Communication skills only, on a CEFR-based syllabus</h2>
+    <p class="section-intro">TELW has its own syllabus and teaching method, based on the CEFR (Common European Framework of Reference for Languages) courseline. It runs independently of your child's school and board.</p>
+    <div class="stages">
+      <div class="stage">
+        <h3>What this is</h3>
+        <ul>
+          <li>Purely communication skills training</li>
+          <li>TELW's own syllabus and teaching method</li>
+          <li>Based on the CEFR courseline</li>
+        </ul>
+      </div>
+      <div class="stage">
+        <h3>What this is not</h3>
+        <ul>
+          <li>Tuition in school subjects</li>
+          <li>Preparation for school or board exams</li>
+          <li>Coverage of the school English textbook</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="in-class" class="block deep">
+  <div class="wrap">
+    <div class="kicker">In class</div>
+    <h2>Your child will spend much of the class speaking and listening.</h2>
+    <div class="strike-grid">
+      <div class="instead">
+        <div class="col-label">What your child will practise</div>
+        <ul>
+          <li>Giving fuller, clearer answers</li>
+          <li>Putting thoughts in an order that others can follow</li>
+          <li>Speaking with a clear voice and steady pace</li>
+          <li>Sharing views, listening to others and taking turns</li>
+          <li>Answering fresh questions without a script</li>
+        </ul>
+      </div>
+      <div class="instead">
+        <div class="col-label">How they learn</div>
+        <p>The trainer gives clear feedback and time to try again. Students learn to use words and sentences correctly through speaking.</p>
+      </div>
+    </div>
+    <div class="shy">
+      <h3>Is your child very shy?</h3>
+      <p>Then this was built with them in mind. We design every batch around the student who needs the most support, so the quiet ones are never left behind by the confident ones.</p>
+    </div>
+  </div>
+</section>
+
+<section id="progress" class="block">
+  <div class="wrap">
+    <div class="kicker">How you will see progress</div>
+    <h2>We compare your child's work with their own starting point.</h2>
+    <p class="section-intro">Your child also gets guidance for practice at home, and we explain how you can help.</p>
+    <div class="marks">
+      <div>
+        <h3>At the start</h3>
+        <p>We agree on clear goals with you.</p>
+      </div>
+      <div>
+        <h3>During the course</h3>
+        <p>We share what your child does well and where they need more practice.</p>
+      </div>
+      <div>
+        <h3>At the end</h3>
+        <p>We review what has changed and suggest the next step.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="trainer" class="block band">
+  <div class="wrap">
+    <div class="kicker">About the trainer</div>
+    <h2>Manu Vikraman</h2>
+    <p class="section-intro">Manu is TESOL-certified and has taught English and speaking skills since 2004. He taught at inlingua from 2004 to 2016 and has run TELW The English Workshop since September 2016.</p>
+    <p class="section-intro">His work with adults and MBA students includes presentations, group discussions and job interviews. He brings that experience to classes suited to your child's age, level and goals.</p>
+  </div>
+</section>
+
+<section id="next-step" class="block">
+  <div class="wrap">
+    <div class="diagnostic">
+      <div>
+        <div class="kicker">The next step</div>
+        <h2>A short call with Manu</h2>
+        <ul>
+          <li>Discuss your child's needs and ask your questions</li>
+          <li>Your child can join, with your permission</li>
+          <li>With your permission, we hear your child speak and ask what they want to improve</li>
+          <li>We suggest the right course, group and starting point</li>
+          <li>Before enrolment, we confirm course length, group size, class times, fees, and online or in-person classes</li>
+        </ul>
+      </div>
+      <div class="price-box">
+        <p>Share the time-slot that suits you for the call</p>
+        <div class="price-num"><a href="tel:+919717116831">+91 9717 116 831</a></div>
+        <p class="contact-ways"><a href="tel:+919717116831">Call</a> · <a href="https://wa.me/919717116831">WhatsApp</a></p>
+        <div class="price-num"><a href="tel:+919211392003">+91 92113 92003</a></div>
+        <p class="contact-ways"><a href="tel:+919211392003">Call</a> · <a href="https://wa.me/919211392003">WhatsApp</a></p>
+        <p class="email">manutelw@gmail.com</p>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>© 2026 TELW, The Academy of Excellence in Communication · Vasant Kunj, Delhi · +91 9717 116 831 · +91 92113 92003 · manutelw@gmail.com</p>
+    <ul>
+      <li><a href="/about-us/">About TELW</a></li>
+      <li><a href="/what-we-do-at-telw/">How we teach</a></li>
+      <li><a href="/trainer-profile/">Trainer profile</a></li>
+      <li><a href="/#programmes">All programmes</a></li>
+      <li><a href="/contact/?topic=privacy-policy">Request privacy policy</a></li>
+      <li><a href="/contact/?topic=terms">Request terms</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>
