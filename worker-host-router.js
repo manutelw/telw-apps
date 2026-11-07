@@ -1,5 +1,6 @@
 import {handleTrainerPortal} from './workers/ielts/trainer-portal.mjs';
 import {handleLearnerPortal} from './workers/ielts/learner-portal.mjs';
+import {handlePayments} from './workers/ielts/payments.mjs';
 import clarion from './worker-oracy.js';
 import {onRequestPost as narrateAudioStudio} from './functions/oracy/audio-studio-narrator.js';
 import base from './worker.js';
@@ -13,6 +14,8 @@ export default {
     if(url.pathname.startsWith('/workers/ielts/'))return new Response('Not found',{status:404});
     const trainerPortal=await handleTrainerPortal(request,env);
     if(trainerPortal)return trainerPortal;
+    const payments=await handlePayments(request,env);
+    if(payments)return payments;
     const learnerPortal=await handleLearnerPortal(request,env);
     if(learnerPortal)return learnerPortal;
     if(url.pathname==='/ielts-reading-scoring-private.js')return new Response('Not found',{status:404});

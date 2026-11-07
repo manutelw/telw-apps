@@ -11,6 +11,13 @@
     "binding": "ASSETS",
     "run_worker_first": true
   },
+  "d1_databases": [
+    {
+      "binding": "PAY_DB",
+      "database_name": "telw-ielts-payments",
+      "database_id": "aed6ea0b-c25b-486b-a125-03e75cc6577e"
+    }
+  ],
   "services": [
     {
       "binding": "IELTS_ADMIN_SERVICE",

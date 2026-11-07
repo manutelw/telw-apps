@@ -227,3 +227,23 @@ test('an Academic Task 1 with no overview cannot score above 5 for Task Achievem
   assert.equal(marked.result.tasks[0].criteria[0].band, 5);
   assert.equal(marked.result.tasks[1].criteria[0].band, 9);
 }, (script) => good(script, 9)));
+
+test('once charging is on, a learner needs a paid Writing credit; the trainer does not', () => fixture(async ({api, login, env}) => {
+  const pay = new DatabaseSync(':memory:');
+  pay.exec(readFileSync(new URL('../../ielts-pay/migrations/0001_payments.sql', import.meta.url), 'utf8'));
+  pay.exec(`UPDATE ielts_pay_settings SET value='on'`);
+  const stmt = sql => ({args: [], bind(...args) { this.args = args; return this; }, async first() { return pay.prepare(sql).get(...this.args) || null; }, async run() { return pay.prepare(sql).run(...this.args); }});
+  env.PAY_DB = {prepare: stmt};
+  const learner = await login();
+  const blocked = await api('start', {type: 'academic'}, learner);
+  assert.equal(blocked.status, 402); assert.match((await blocked.json()).error, /ielts\/pay/);
+  pay.exec(`INSERT INTO ielts_pay_orders(id,email,product,amount,status,created_at) VALUES('order_a','learner@example.com','writing',49900,'paid',1)`);
+  pay.exec(`INSERT INTO ielts_pay_credits(id,order_id,email,skill,created_at,expires_at) VALUES('c1','order_a','learner@example.com','writing',1,9999999999)`);
+  const started = await (await api('start', {type: 'academic'}, learner)).json();
+  assert.equal(started.status, 'active');
+  assert.match(pay.prepare('SELECT used_ref FROM ielts_pay_credits').get().used_ref, /^writing:/);
+  const again = await (await api('start', {type: 'academic'}, learner)).json();
+  assert.equal(again.status, 'active', 'reopening the active test needs no second credit');
+  const trainer = await login('manutelw@gmail.com');
+  assert.equal((await (await api('start', {type: 'general'}, trainer)).json()).status, 'active');
+}));

@@ -1,6 +1,7 @@
 import {getLearner, limit, readJson, reply, requireSameOrigin} from './auth.mjs';
 import {setById, setsOfType} from './bank.mjs';
 import {markAttempt} from './marking.mjs';
+import {claimCredit, releaseCredit, PaymentNeeded} from './credits.mjs';
 
 const ROOT = '/ielts/writing/api/';
 const TEST_SECONDS = 60 * 60, GRACE_SECONDS = 60, COOLDOWN_SECONDS = 15 * 24 * 60 * 60;
@@ -48,8 +49,13 @@ async function start(request, env, learner, now, trainer) {
   const seen = new Map(used.results.map(x => [x.set_id, x.last]));
   const chosen = [...setsOfType(body.type)].sort((a, b) => (seen.get(a.id) || 0) - (seen.get(b.id) || 0))[0];
   const id = crypto.randomUUID();
-  await env.WRITING_DB.prepare(`INSERT INTO writing_attempts(id,learner_id,set_id,started_at,deadline_at,status,trainer_test) VALUES(?1,?2,?3,?4,?5,'active',?6)`)
-    .bind(id, learner.id, chosen.id, now, now + TEST_SECONDS, trainer ? 1 : 0).run();
+  // Once charging is on, a new test uses one paid Writing credit. The trainer is never charged.
+  const claim = await claimCredit(env, learner.email, 'writing', 'writing:' + id, now);
+  if (!claim) throw new Refusal(new PaymentNeeded('writing', learner.email).message, 402);
+  try {
+    await env.WRITING_DB.prepare(`INSERT INTO writing_attempts(id,learner_id,set_id,started_at,deadline_at,status,trainer_test) VALUES(?1,?2,?3,?4,?5,'active',?6)`)
+      .bind(id, learner.id, chosen.id, now, now + TEST_SECONDS, trainer ? 1 : 0).run();
+  } catch (error) { await releaseCredit(env, claim, 'writing:' + id); throw error; }
   return reply({ok: true, ...view(await env.WRITING_DB.prepare('SELECT * FROM writing_attempts WHERE id=?1').bind(id).first(), now, trainer)});
 }
 

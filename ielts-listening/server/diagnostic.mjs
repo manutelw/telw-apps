@@ -3,6 +3,7 @@ import {completedAnalysis,analysisHtml,analyse} from './analysis.mjs';
 import {groupRows,initialGroups,publicGroups,groupedPlayback,groupedAudio} from './grouped.mjs';
 import {getLearner,requireSameOrigin,readJson,reply,limit,digest} from './auth.mjs';
 import {splitBank,scoreAnswers} from './bank.mjs';
+import {claimCredit,releaseCredit,PaymentNeeded} from './credits.mjs';
 const candidateHtml=row=>compactFeedback({skill:'Listening',score:JSON.parse(row.score_json),target:JSON.parse(row.playback_json).targetBand});
 const BASE='/ielts/listening/api/';
 const GAP=15*86400;
@@ -18,7 +19,9 @@ async function start(env,learner,now,adminTest=false,targetBand=''){
  const audio=(await sql(env,'SELECT duration FROM listening_audio WHERE set_id=?1',set.id).all()).results;const seconds=Math.ceil(audio.reduce((n,a)=>n+a.duration,0));
  const groups=await groupRows(env,set.id);
  const id=crypto.randomUUID(),legacyState={part:1,readyAt:now+30,playStartedAt:0,positions:[0,0,0,0],done:[false,false,false,false],reviewUntil:0},state=groups.length?initialGroups(groups):legacyState;state.targetBand=/^(?:[4-8](?:\.0|\.5)?|9(?:\.0)?)$/.test(String(targetBand))?String(targetBand):'';
- try{await sql(env,'INSERT INTO listening_attempts(id,learner_id,set_id,started_at,deadline,playback_json,admin_test) VALUES(?1,?2,?3,?4,?5,?6,?7)',id,learner.id,set.id,now,groups.length?now+86400:now+seconds+540,JSON.stringify(state),adminTest?1:0).run();}catch(error){const winner=await sql(env,"SELECT id FROM listening_attempts WHERE learner_id=?1 AND status='active'",learner.id).first();if(winner)return reply(await payload(env,await own(env,learner,winner.id)));throw error;}
+ // Once charging is on, a new test uses one paid Listening credit. The trainer is never charged.
+ const claim=await claimCredit(env,learner.email,'listening','listening:'+id,now);if(!claim)throw fail(new PaymentNeeded('listening',learner.email).message,402);
+ try{await sql(env,'INSERT INTO listening_attempts(id,learner_id,set_id,started_at,deadline,playback_json,admin_test) VALUES(?1,?2,?3,?4,?5,?6,?7)',id,learner.id,set.id,now,groups.length?now+86400:now+seconds+540,JSON.stringify(state),adminTest?1:0).run();}catch(error){await releaseCredit(env,claim,'listening:'+id);const winner=await sql(env,"SELECT id FROM listening_attempts WHERE learner_id=?1 AND status='active'",learner.id).first();if(winner)return reply(await payload(env,await own(env,learner,winner.id)));throw error;}
  return reply(await payload(env,await own(env,learner,id)));
 }
 function validAnswers(row,input){try{scoreAnswers(JSON.parse(row.public_json),JSON.parse(row.private_json),input);return input;}catch{throw fail('Invalid answers.');}}
