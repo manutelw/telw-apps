@@ -4,7 +4,7 @@ import {markAttempt} from './marking.mjs';
 
 const ROOT = '/ielts/writing/api/';
 const TEST_SECONDS = 60 * 60, GRACE_SECONDS = 60, COOLDOWN_SECONDS = 15 * 24 * 60 * 60;
-const LEASE_SECONDS = 180, MAX_MARK_TRIES = 5, MAX_CHARS = 15000;
+const LEASE_SECONDS = 600, MAX_MARK_TRIES = 5, MAX_CHARS = 15000;
 const TRAINER_EMAIL = 'manutelw@gmail.com';
 
 class Refusal extends Error { constructor(message, status) { super(message); this.status = status; } }

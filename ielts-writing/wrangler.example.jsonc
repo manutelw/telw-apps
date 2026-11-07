@@ -16,7 +16,7 @@
     {"pattern": "manuvikraman.com/ielts/writing", "zone_name": "manuvikraman.com"},
     {"pattern": "manuvikraman.com/ielts/writing/*", "zone_name": "manuvikraman.com"}
   ],
-  "vars": {"OPENAI_MARKING_MODEL": "gpt-4o", "WRITING_DAILY_LIMIT": "50"},
+  "vars": {"OPENAI_MARKING_MODEL": "gpt-6.1-terra", "WRITING_DAILY_LIMIT": "50"},
   "d1_databases": [{
     "binding": "WRITING_DB",
     "database_name": "telw-ielts-writing",

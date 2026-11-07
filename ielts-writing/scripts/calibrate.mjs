@@ -10,7 +10,7 @@ let close = 0, total = 0, gap = 0;
 for (const s of samples) {
   const task = s.question, bands = [];
   for (let i = 0; i < 3; i++) {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {method: 'POST', headers: {authorization: 'Bearer ' + process.env.OPENAI_API_KEY, 'content-type': 'application/json'}, body: JSON.stringify({model: process.env.OPENAI_MARKING_MODEL || 'gpt-4o', response_format: {type: 'json_object'}, messages: buildMessages(rubric, s.type, s.task, task, s.script)})});
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {method: 'POST', headers: {authorization: 'Bearer ' + process.env.OPENAI_API_KEY, 'content-type': 'application/json'}, body: JSON.stringify({model: process.env.OPENAI_MARKING_MODEL || 'gpt-6.1-terra', response_format: {type: 'json_object'}, messages: buildMessages(rubric, s.type, s.task, task, s.script)})});
     const pass = validPass((await res.json()).choices?.[0]?.message?.content, s.script);
     if (pass) bands.push(keys.reduce((n, k) => n + pass[k].band, 0) / 4);
   }
