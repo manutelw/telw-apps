@@ -320,6 +320,16 @@ footer a{text-underline-offset:3px}
 .prog-group ul{list-style:none;margin:0;padding:0}.prog-group li{border-bottom:1px solid var(--rule)}.prog-group a{display:block;padding:.9rem 0;text-decoration:none;color:var(--ink)}.prog-group a strong{display:block;font-weight:600;margin-bottom:.2rem}.prog-group a span{color:var(--ink-2);font-size:.93rem;line-height:1.5}
 .prog-group a:hover strong{text-decoration:underline;text-underline-offset:3px}@media(max-width:900px){.prog-groups{grid-template-columns:1fr}}
 .trainer-link{text-decoration:underline;text-underline-offset:3px;color:inherit}.trainer-head{color:inherit;text-decoration:none}.trainer-head:hover{text-decoration:underline;text-underline-offset:4px}.trainer-photo{float:left;margin:0 1.2rem .6rem 0}.trainer-photo img{display:block;width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--surface);box-shadow:0 2px 10px rgba(19,35,63,.15)}.trainer-more{font-weight:600;color:var(--accent);text-decoration:none}.trainer-more:hover{text-decoration:underline}
+.example{background:var(--surface);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-top:clamp(2.6rem,6vw,4rem)}
+.ex-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:clamp(1rem,2.5vw,1.8rem);align-items:start}
+.ex-step{position:relative;border-top:2px solid var(--ink);padding-top:1rem}.ex-step h3{font-family:var(--serif);font-weight:500;font-size:1.25rem;margin:0 0 .7rem;color:var(--ink)}
+.ex-num{display:inline-flex;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;border-radius:50%;background:var(--ink);color:#fff;font-weight:700;font-size:.9rem;margin-bottom:.6rem}
+.ex-step blockquote{margin:0;font-family:var(--serif);font-size:1.08rem;line-height:1.6;color:var(--ink-2)}
+.ex-step:first-child blockquote{color:var(--muted)}.ex-after{border-top-color:var(--accent-line)}.ex-after .ex-num{background:var(--accent)}.ex-after blockquote{color:var(--ink)}
+.ex-notes{margin:0;padding:0 0 0 1.1rem;color:var(--ink-2);font-size:.97rem;line-height:1.55}.ex-notes li{margin:0 0 .7rem}.ex-notes strong{color:var(--ink)}
+.ex-caption{margin:2rem 0 0;font-family:var(--serif);font-size:clamp(1.25rem,2.4vw,1.6rem);color:var(--ink);text-align:center}
+@media(max-width:900px){.ex-steps{grid-template-columns:1fr}}
+.prog-group a{padding:.7rem 0}
 </style>
 </head>
 <body>
@@ -412,15 +422,43 @@ footer a{text-underline-offset:3px}
   </div>
 </div>
 
-<section class="who" id="who" aria-labelledby="who-title"><div class="wrap"><h2 id="who-title">Who is this for?</h2><div class="who-grid"><a class="who-tile" href="/classes-9-12/"><strong>School students</strong><span>Classes 9–12. Speaking with ease, joining discussions, expressing ideas clearly.</span><em>See the programme →</em></a><a class="who-tile" href="/ielts/"><strong>IELTS candidates</strong><span>Reading, Listening and Writing diagnostics, then training around your target band.</span><em>See the programme →</em></a><a class="who-tile" href="#jobs"><strong>College students and job seekers</strong><span>Placements, interviews, group discussions and personal interviews.</span><em>See the programme →</em></a><a class="who-tile" href="#work"><strong>Working professionals</strong><span>Presentations, emails, meetings, voice and pronunciation.</span><em>See the programme →</em></a><a class="who-tile" href="/general-english-program/"><strong>Homemakers and other adult learners</strong><span>Everyday English and confidence: conversations, phone calls, meetings at school or work.</span><em>See the programme →</em></a><a class="who-tile" href="#organisations"><strong>Colleges and companies</strong><span>Programmes for whole cohorts and teams, with diagnostics and reports.</span><em>See the programme →</em></a></div></div></section>
+<section class="who" id="who" aria-labelledby="who-title"><div class="wrap"><h2 id="who-title">Who is this for?</h2><div class="who-grid"><a class="who-tile" href="/classes-9-12/"><strong>School students</strong><span>Classes 9–12. Speaking with ease, joining discussions, expressing ideas clearly.</span><em>Help your child express ideas →</em></a><a class="who-tile" href="/ielts/"><strong>IELTS candidates</strong><span>Reading, Listening and Writing diagnostics, then training around your target band.</span><em>Check your IELTS level →</em></a><a class="who-tile" href="#jobs"><strong>College students and job seekers</strong><span>Placements, interviews, group discussions and personal interviews.</span><em>Prepare for placements and interviews →</em></a><a class="who-tile" href="#work"><strong>Working professionals</strong><span>Presentations, emails, meetings, voice and pronunciation.</span><em>Speak more clearly at work →</em></a><a class="who-tile" href="/general-english-program/"><strong>Homemakers and other adult learners</strong><span>Everyday English and confidence: conversations, phone calls, meetings at school or work.</span><em>Build everyday confidence in English →</em></a><a class="who-tile" href="#organisations"><strong>Colleges and companies</strong><span>Programmes for whole cohorts and teams, with diagnostics and reports.</span><em>Train your cohort or team →</em></a></div></div></section>
+<section class="block example" id="feedback" aria-labelledby="ex-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="ex-title">How feedback works</h2>
+      <p class="lede">One question, one answer, and what a trainer actually says about it. Interview question: <strong>“Tell me about yourself.”</strong></p>
+    </div>
+    <ol class="ex-steps">
+      <li class="ex-step">
+        <span class="ex-num">1</span><h3>The usual answer</h3>
+        <blockquote>“Myself Ajay. I am from Lucknow. I completed my B.Com from Delhi University in 2025. My father is a businessman and my mother is a homemaker. I am hardworking, punctual and a quick learner. My hobbies are reading books and listening to music. That’s all about me.”</blockquote>
+      </li>
+      <li class="ex-step">
+        <span class="ex-num">2</span><h3>The trainer’s feedback</h3>
+        <ul class="ex-notes">
+          <li><strong>This is a biodata, not an answer.</strong> Hometown, parents and hobbies tell the interviewer nothing about why you suit the job. Open with what you do and what you are good at.</li>
+          <li><strong>Adjectives prove nothing.</strong> Every candidate is “hardworking, punctual and a quick learner”. Drop the list and give one example that shows it.</li>
+          <li><strong>The ending closes the door.</strong> “That’s all about me” invites a random next question. End by linking yourself to the role, so the next question goes where you want it.</li>
+          <li><strong>One small point:</strong> “Myself Ajay” becomes “I’m Ajay”. Interviewers notice it.</li>
+        </ul>
+      </li>
+      <li class="ex-step ex-after">
+        <span class="ex-num">3</span><h3>The retry</h3>
+        <blockquote>“I’m Ajay, a commerce graduate from Delhi University. Over the past year I have focused on accounts. During my internship at a CA firm, I reconciled bank statements for twelve small clients and helped cut the monthly closing time from five days to three. I enjoy work where accuracy matters. That’s why this analyst role interests me, and I’d like to talk about how I could support your reporting team.”</blockquote>
+      </li>
+    </ol>
+    <p class="ex-caption">Nothing about Ajay changed. Only what he chose to say.</p>
+  </div>
+</section>
 <section class="block" id="programmes" aria-labelledby="prog-title">
   <div class="wrap">
     <div class="sec-head">
       <h2 id="prog-title">Programmes</h2>
-      <p class="lede">Every programme starts with a diagnosis of your level, then trains the skill you need.</p>
+      <p class="lede">Every programme starts with a diagnosis of your level, then trains the skill you need. Choose one to read the details.</p>
     </div>
 
-    <div class="prog-groups"><div class="prog-group" id="jobs"><h3>Placements and jobs</h3><ul><li><a href="/placement-readiness/"><strong>Placement readiness</strong><span>Practise group discussions, interviews and written tests on ClarionPrep, with feedback on every attempt.</span></a></li><li><a href="/interview-skills/"><strong>Interview skills</strong><span>Answering with evidence, telling your story in two minutes, staying composed under pressure.</span></a></li><li><a href="/gd-pi-skills/"><strong>GD &amp; PI skills</strong><span>Making a point with a reason, moving a discussion forward, answering with examples.</span></a></li></ul></div><div class="prog-group" id="work"><h3>Everyday communication</h3><ul><li><a href="/general-english-program/"><strong>General English</strong><span>Spoken and written English, level by level, for those who hesitate or translate in their head.</span></a></li><li><a href="/presentation-skills/"><strong>Presentation skills</strong><span>Open with the point, use slides without reading them, handle questions.</span></a></li><li><a href="/email-writing-skills/"><strong>Email writing</strong><span>Clear purpose, one clear action, the right tone.</span></a></li><li><a href="/voice-quality-pronunciation-skills/"><strong>Voice and pronunciation</strong><span>Stress, pace and pausing, so you are understood the first time.</span></a></li></ul></div><div class="prog-group" id="exams"><h3>Exams and school</h3><ul><li><a href="/ielts/"><strong>IELTS</strong><span>Diagnostics for Reading, Listening and Writing, then a plan for your target band.</span></a></li><li><a href="/classes-9-12/"><strong>School students, Classes 9–12</strong><span>Purely communication skills: expressing ideas, joining discussions, speaking with ease.</span></a></li></ul></div></div>
+    <div class="prog-groups"><div class="prog-group" id="jobs"><h3>Placements and jobs</h3><ul><li><a href="/placement-readiness/"><strong>Placement readiness</strong></a></li><li><a href="/interview-skills/"><strong>Interview skills</strong></a></li><li><a href="/gd-pi-skills/"><strong>GD &amp; PI skills</strong></a></li></ul></div><div class="prog-group" id="work"><h3>Everyday communication</h3><ul><li><a href="/general-english-program/"><strong>General English</strong></a></li><li><a href="/presentation-skills/"><strong>Presentation skills</strong></a></li><li><a href="/email-writing-skills/"><strong>Email writing</strong></a></li><li><a href="/voice-quality-pronunciation-skills/"><strong>Voice and pronunciation</strong></a></li></ul></div><div class="prog-group" id="exams"><h3>Exams and school</h3><ul><li><a href="/ielts/"><strong>IELTS</strong></a></li><li><a href="/classes-9-12/"><strong>School students, Classes 9–12</strong></a></li></ul></div></div>
     <p class="skills-note">If the diagnostic shows a language gap, a General English bridge course comes first, so the skill training is useful from the start.</p>
   </div>
 </section>
