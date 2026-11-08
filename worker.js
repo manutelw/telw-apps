@@ -14,6 +14,25 @@ const TELW_CORE=new Set([
   'about-us','what-we-do-at-telw','why-telw','trainer-profile',
   'career-development-programs','classes-9-12']);
 
+
+// Search engines: list the public TELW pages; keep tests, payments, logins and APIs out.
+const TELW_ROBOTS=`User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /ielts/reading/
+Disallow: /ielts/listening/
+Disallow: /ielts/writing/
+Disallow: /ielts/pay/
+Disallow: /ielts/trainer/
+Sitemap: https://manuvikraman.com/sitemap.xml
+`;
+function telwSitemap(){
+  const pages=['',...TELW_PROGRAMMES,...TELW_CORE,'contact'];
+  return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    +pages.map(slug=>`  <url><loc>https://manuvikraman.com/${slug?slug+'/':''}</loc></url>`).join('\n')
+    +'\n</urlset>\n';
+}
+
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
@@ -58,6 +77,12 @@ export default {
         if(response.status>=300 && response.status<400) return new Response('IELTS asset unavailable',{status:502,headers});
         return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
       }
+      if(path==='/robots.txt'){
+        return new Response(TELW_ROBOTS,{headers:{'content-type':'text/plain; charset=utf-8','cache-control':'public, max-age=3600'}});
+      }
+      if(path==='/sitemap.xml'){
+        return new Response(telwSitemap(),{headers:{'content-type':'application/xml; charset=utf-8','cache-control':'public, max-age=3600'}});
+      }
       const slug=path.replace(/^\/+|\/+$/g,'');
       const programme=TELW_PROGRAMMES.has(slug);
       const contact=slug==='contact';
@@ -78,7 +103,8 @@ export default {
         const response=await env.ASSETS.fetch(new Request(assetUrl.toString(),request));
         const headers=new Headers(response.headers);
         headers.set('cache-control','private, no-store, max-age=0');
-        headers.set('x-robots-tag','noindex, nofollow, noarchive');
+        // Public TELW pages may appear in search results; tests, payments and logins stay hidden.
+        headers.set('x-robots-tag',response.ok ? 'index, follow' : 'noindex, nofollow, noarchive');
         return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
       }
       return new Response('Not found',{status:404,headers:{'cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'}});
