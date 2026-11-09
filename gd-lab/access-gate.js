@@ -3,7 +3,7 @@
   const SESSION_KEY='ascent_student_session';
   const ACCESS_API='https://vtqatrhwfvzyodiftvkc.supabase.co/functions/v1/telw-gd-access';
   const PAID_API='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/clarion-public-commerce';
-  const LOGIN='/subscribe/?product=GD_LAB';
+  const LOGIN='/buy/?product=GD_LAB';
   const deny=()=>window.location.replace(LOGIN);
   const params=new URLSearchParams(location.search);
   let paidToken=params.get('clarion_token')||localStorage.getItem('clarion_entitlement_GD_LAB')||'';

@@ -191,16 +191,16 @@ export async function onRequest(context) {
     <a href="./ascent/jd-builder.html">JD Builder</a>
     <a href="./ascent/cv-builder.html">CV Builder &amp; Evaluator</a>
     <a href="./ascent/eportfolio.html">E-Portfolios</a>
-    <a href="./subscribe/?product=CAT_SIMULATOR">CAT Simulator · ₹599 / attempt</a>
-    <a href="./subscribe/?product=WCT">Workplace Communication Test · ₹6,500</a>
-    <a href="./subscribe/?product=PI_PRACTICE">PI Practice · ₹5,000</a>
-    <a href="./subscribe/?product=GD_PRACTICE">GD Practice · ₹7,000</a>
-    <a href="./subscribe/?product=PI_LAB">PI Lab · ₹8,000</a>
-    <a href="./subscribe/?product=GD_LAB">GD Lab · ₹8,000</a>
-    <a href="./subscribe/?product=DIALOGUE_LAB">Dialogue Lab · ₹8,500</a>
-    <a href="./subscribe/?product=PCL">PCL · ₹8,500</a>
-    <a href="./subscribe/?product=LIVE_MOCK">Live Mock Interview · ₹12,000</a>
-    <a href="./subscribe/?product=PRESENTATION">Presentation Skills · Coming soon</a>
+    <a href="./buy/?product=CAT_SIMULATOR">CAT Simulator · ₹599 / attempt</a>
+    <a href="./buy/?product=WCT">Workplace Communication Test · ₹6,500</a>
+    <a href="./buy/?product=PI_PRACTICE">PI Practice · ₹5,000</a>
+    <a href="./buy/?product=GD_PRACTICE">GD Practice · ₹7,000</a>
+    <a href="./buy/?product=PI_LAB">PI Lab · ₹8,000</a>
+    <a href="./buy/?product=GD_LAB">GD Lab · ₹8,000</a>
+    <a href="./buy/?product=DIALOGUE_LAB">Dialogue Lab · ₹8,500</a>
+    <a href="./buy/?product=PCL">PCL · ₹8,500</a>
+    <a href="./buy/?product=LIVE_MOCK">Live Mock Interview · ₹12,000</a>
+    <a href="./buy/?product=PRESENTATION">Presentation Skills · Coming soon</a>
   </div>`;
   html = html.replace(/<div class="services-menu">[\s\S]*?<\/div><\/div><\/div><button id="menuButton"/, servicesMenu + '</div></div><button id="menuButton"');
 
@@ -233,7 +233,7 @@ export async function onRequest(context) {
 }
 
 function card(icon,name,price,code,soon=false){
-  return `<a class="service-card" href="./subscribe/?product=${code}">
+  return `<a class="service-card" href="./buy/?product=${code}">
     <div class="service-top"><span class="service-icon">${icon}</span><span class="service-kind">${soon?'Coming soon':'Public access'}</span></div>
     <h3>${name}</h3><p><strong>${price}</strong></p>
     <p style="margin-top:8px">${soon?'The course is being completed. Open this page for launch status.':'Secure Razorpay payment, then continue directly to the product.'}</p>
