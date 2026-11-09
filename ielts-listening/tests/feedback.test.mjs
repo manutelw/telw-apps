@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {compactFeedback} from '../public/feedback.mjs';
 test('concise feedback distinguishes skills, tracks and targets with explicitly provisional planning hours',()=>{
  const score={correct:28,answered:40,parts:[8,8,6,6],types:[{type:'completion',correct:16,total:20},{type:'choice',correct:12,total:20}]};
- const listening=compactFeedback({score,target:'7.0'});assert.match(listening,/Estimated Band 6.5/);assert.match(listening,/15–25 hours of guided training/);assert.match(listening,/20–40 hours of independent practice/);assert.match(listening,/after 5 guided hours/);assert.match(listening,/tel:\+919211392003/);assert.doesNotMatch(listening,/Question 40|Supporting detail/);
+ const listening=compactFeedback({score,target:'7.0'});assert.match(listening,/Estimated Band 6.5/);assert.match(listening,/15–25 hours of guided training/);assert.match(listening,/20–40 hours of independent practice/);assert.match(listening,/after 5 guided hours/);assert.match(listening,/tel:\+919717116831/);assert.doesNotMatch(listening,/Question 40|Supporting detail/);
  const general=compactFeedback({skill:'Reading',track:'general',score,target:'7.0'});assert.match(general,/Estimated Band 5.5/);assert.match(general,/45–75 hours/);
  const academic=compactFeedback({skill:'Reading',track:'academic',score,target:'7.0'});assert.match(academic,/Estimated Band 6.5/);
  const noTarget=compactFeedback({score});assert.match(noTarget,/Select your target/);assert.doesNotMatch(noTarget,/15–25 hours/);

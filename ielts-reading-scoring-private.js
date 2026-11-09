@@ -25,7 +25,7 @@ function buildTrainerDossier(track,answers,result,profile){
 }
 
 const TELW_EMAIL='manutelw@gmail.com';
-const TELW_PHONE='9211392003';
+const TELW_PHONE='+91 9717 116 831';
 function jsonReply(data,status=200){return new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-robots-tag':'noindex, nofollow, noarchive'}})}
 function safeHtml(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function countAnswers(track,answers){
@@ -47,7 +47,7 @@ export async function sendIeltsReadingEnquiry(request,env){
  let result;try{result=countAnswers(data.track,data.answers)}catch{return jsonReply({ok:false,error:'Invalid diagnostic answers'},400)}
  const targetBand=String(data.targetBand||'Not provided').slice(0,30),testDate=String(data.testDate||'Not booked').slice(0,30),studyHours=String(data.studyHours||'Not provided').slice(0,30);
  const apiKey=env.RESEND_API_KEY,from=env.TELW_FROM_EMAIL;
- if(!apiKey||!from)return jsonReply({ok:false,error:'TELW email delivery is not configured. Please call 9211392003.'},503);
+ if(!apiKey||!from)return jsonReply({ok:false,error:'TELW email delivery is not configured. Please call +91 9717 116 831.'},503);
  const reference='TELW-IELTS-'+crypto.randomUUID().slice(0,8).toUpperCase();
  const sorted=result.types.slice().sort((a,b)=>a.correct/a.total-b.correct/b.total);
  const low=result.parts.map((n,i)=>({n,passage:i+1})).filter(x=>x.n<6).map(x=>'Passage '+x.passage+' ('+x.n+'/10)');
@@ -81,7 +81,7 @@ export async function emailIeltsReadingFeedback(request,env){
  const ordered=result.types.slice().sort((a,b)=>a.correct/a.total-b.correct/b.total);
  const detail=result.parts.map((n,i)=>'Passage '+(i+1)+': '+n+'/10').join(' · ');
  const advice=result.correct<20?'Begin with short passages and focus on finding evidence for each answer.':result.correct<30?'Focus on consistent accuracy before increasing speed.':'Maintain accuracy while practising under time limits.';
- const html='<div style="font-family:Arial,sans-serif;line-height:1.6;max-width:680px"><h2>Your TELW IELTS Reading diagnostic feedback</h2><p><strong>Test:</strong> '+(data.track==='academic'?'Academic':'General Training')+'<br><strong>Score:</strong> '+result.correct+'/40</p><p>'+safeHtml(detail)+'</p><h3>Question-type performance</h3>'+result.types.map(t=>'<p>'+safeHtml(t.label)+': '+t.correct+'/'+t.total+'</p>').join('')+'<h3>Your recommended areas for improvement</h3><p>'+safeHtml(advice)+'</p><ol>'+ordered.map(t=>'<li>'+safeHtml(t.label)+': '+(t.label==='TRUE / FALSE / NOT GIVEN'?'Locate the precise evidence; distinguish supported, contradicted and unstated claims.':'Compare each option with the passage and eliminate distractors.')+'</li>').join('')+'</ol><p><em>This is an original, uncalibrated screening and cannot predict your official IELTS band. This report does not include answers or explanations.</em></p><p>TELW The English Workshop · 9211392003</p></div>';
+ const html='<div style="font-family:Arial,sans-serif;line-height:1.6;max-width:680px"><h2>Your TELW IELTS Reading diagnostic feedback</h2><p><strong>Test:</strong> '+(data.track==='academic'?'Academic':'General Training')+'<br><strong>Score:</strong> '+result.correct+'/40</p><p>'+safeHtml(detail)+'</p><h3>Question-type performance</h3>'+result.types.map(t=>'<p>'+safeHtml(t.label)+': '+t.correct+'/'+t.total+'</p>').join('')+'<h3>Your recommended areas for improvement</h3><p>'+safeHtml(advice)+'</p><ol>'+ordered.map(t=>'<li>'+safeHtml(t.label)+': '+(t.label==='TRUE / FALSE / NOT GIVEN'?'Locate the precise evidence; distinguish supported, contradicted and unstated claims.':'Compare each option with the passage and eliminate distractors.')+'</li>').join('')+'</ol><p><em>This is an original, uncalibrated screening and cannot predict your official IELTS band. This report does not include answers or explanations.</em></p><p>TELW The English Workshop · +91 9717 116 831</p></div>';
  let response;try{response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+env.RESEND_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({from:env.TELW_FROM_EMAIL,to:[email],subject:'Your TELW IELTS Reading diagnostic feedback',html})})}catch{return jsonReply({ok:false,error:'Email service could not be reached.'},502)}
  if(!response.ok)return jsonReply({ok:false,error:'Could not send feedback email. Please use your on-screen result.'},502);
  return jsonReply({ok:true});
