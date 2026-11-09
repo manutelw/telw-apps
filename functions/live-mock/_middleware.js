@@ -13,7 +13,7 @@ export async function onRequest(context) {
   if(!paidToken||!paidDevice){const saved=readCookie(cookieHeader,PAID_COOKIE);if(saved){const parts=saved.split('.');paidToken=parts[0]||'';paidDevice=parts[1]||'';}}
   const paidOk=paidToken&&paidDevice?await validPaid(paidToken,paidDevice):false;
   const adminOk=adminToken?await validAdmin(adminToken):false;
-  if(!paidOk&&!adminOk){return new Response(null,{status:302,headers:{location:'/subscribe/?product=LIVE_MOCK','cache-control':'no-store'}})}
+  if(!paidOk&&!adminOk){return new Response(null,{status:302,headers:{location:'/buy/?product=LIVE_MOCK','cache-control':'no-store'}})}
   const response=await context.next();
   if(!response.ok)return response;
   const headers=new Headers(response.headers);

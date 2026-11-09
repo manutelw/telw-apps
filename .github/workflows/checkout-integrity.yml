@@ -1,0 +1,30 @@
+name: Checkout Integrity
+on:
+  pull_request:
+    paths:
+      - 'buy/**'
+      - '.github/workflows/checkout-integrity.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'buy/**'
+      - '.github/workflows/checkout-integrity.yml'
+permissions:
+  contents: read
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify guest checkout page
+        run: |
+          test -f buy/index.html
+          grep -q "clarion-public-commerce" buy/index.html
+          grep -q "clarion-public-auth" buy/index.html
+          grep -q "checkout.razorpay.com" buy/index.html
+          grep -q "this device only" buy/index.html
+          ! grep -q $'\xc3\xa2\xc2\x82\xc2\xb9' buy/index.html
+          node -e "const s=require('fs').readFileSync('buy/index.html','utf8');const m=s.match(/<script>([\s\S]*)<\/script>/);new Function(m[1]);console.log('script parses')"
