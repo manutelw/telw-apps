@@ -5,20 +5,22 @@
 <main class="shell"><section class="card">
 <div class="eyebrow">Secure checkout</div><h1 id="name">Loading…</h1><div id="price" class="price">—</div><div id="meta" class="meta"></div><div id="soon" class="soon hidden">Coming soon</div>
 <div id="who" class="who hidden"></div>
+<div id="device" class="box hidden"></div>
 <form id="form" class="hidden" autocomplete="on" onsubmit="return false">
  <label for="fName">Full name</label><input id="fName" autocomplete="name" required>
  <label for="fEmail">Email address</label><input id="fEmail" type="email" autocomplete="email" required>
  <label for="fMobile">Mobile number</label><input id="fMobile" type="tel" autocomplete="tel" required>
- <div class="note">No account or password needed. Pay, and your product opens straight away. Use the same device and browser to come back to it.</div>
+ <div class="note">No account or password needed. Pay, and your product opens straight away.</div>
 </form>
 <div id="exists" class="box hidden">This email already has a ClarionPrep account. Enter its password to continue.
  <label for="fPass">Password</label><input id="fPass" type="password" autocomplete="current-password">
- <div class="note">Don't know the password? Use a different email, or message TELW on WhatsApp at +91 9717 116 831.</div></div>
+ <div class="note">Don't know the password? Use a different email address.</div></div>
 <div class="actions"><button id="pay" class="btn gold" type="button" disabled>Pay</button><a class="btn soft" href="/">Back</a></div>
 <div id="status" class="status"></div>
 <div class="note"><button id="other" class="link hidden" type="button">Not you? Use a different email</button></div>
 </section></main>
 <script>
+const MULTI=['DIALOGUE_LAB','PCL','PI_PRACTICE','GD_PRACTICE','PI_LAB','GD_LAB','LIVE_MOCK','PLACEMENT_PASS'];
 const COMMERCE='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/clarion-public-commerce',AUTH='https://zmopmjosykiwctrvhsmo.supabase.co/functions/v1/clarion-public-auth',$=id=>document.getElementById(id),wanted=(new URLSearchParams(location.search).get('product')||'').toUpperCase();
 let product=null,user=null,needPassword=false;
 function deviceId(){let d=localStorage.getItem('clarion_device_v1');if(!d){const a=new Uint8Array(24);crypto.getRandomValues(a);d=[...a].map(x=>x.toString(16).padStart(2,'0')).join('');localStorage.setItem('clarion_device_v1',d)}return d}
@@ -55,6 +57,7 @@ async function load(){
   const d=await call(COMMERCE,'CATALOG');product=(d.products||[]).find(x=>x.code===wanted);if(!product)throw Error('This product is not currently available.');
   const rupees='₹'+(product.amount_paise/100).toLocaleString('en-IN');document.title='ClarionPrep · '+product.display_name;
   $('name').textContent=product.display_name;$('price').textContent=rupees;$('meta').textContent=description(product);$('pay').textContent='Pay '+rupees;$('pay').disabled=false;
+  $('device').innerHTML=MULTI.includes(product.code)?'<b>Important: this device only.</b> Your access works only on the device and browser you pay on. Use the same device and browser every time until your sessions or days are used up. Access cannot be moved to another device, and clearing your browser data removes it.':'<b>Use this device.</b> Take your attempt on the same device and browser you pay on. Access cannot be moved to another device.';$('device').classList.remove('hidden');
   if(user)showWho();else showForm();
  }catch(e){status(e.message,'error')}
 }
