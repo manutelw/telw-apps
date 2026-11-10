@@ -95,7 +95,7 @@ async function doLogin(identity,password){
 }
 function showPayment(){
   $('entry').classList.add('hidden');$('verifyPane').classList.add('hidden');$('paymentPane').classList.remove('hidden');
-  $('signedInAs').innerHTML='Signed in as <strong>'+session.fullName+'</strong> · '+session.email+'<br><strong>Your ASCENT ID: '+session.studentId+'</strong><br>Keep this ID for support and follow-up.';
+  $('signedInAs').textContent='Buying as '+session.fullName+' · '+session.email;
 }
 $('registerButton').onclick=async()=>{
   const studentId='AUTO-'+crypto.randomUUID().replaceAll('-','').slice(0,12).toUpperCase();
