@@ -33,7 +33,7 @@ button,.btn{width:100%;min-height:47px;border:0;border-radius:9px;background:var
 <div class="field"><label>Mobile number</label><input id="mobile" inputmode="numeric" autocomplete="tel-national"></div>
 <div id="existingBox" class="note hidden">This email already has an ASCENT account. Enter its password to continue, or use a different email address.
 <div class="field" style="margin-top:10px"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password"></div></div>
-<div class="note">No password needed. We email you a six-digit code to confirm your address, then you pay and start. Take the Diagnostic on this device and browser.</div>
+<div id="noPwNote" class="note">No password needed. We email you a six-digit code to confirm your address, then you pay and start. Take the Diagnostic on this device and browser.</div>
 <button id="registerButton" type="button">Continue</button>
 <div id="entryStatus" class="status"></div>
 </div>
@@ -111,7 +111,7 @@ $('registerButton').onclick=async()=>{
     const d=await post(REG,regPayload);pendingStudent=d.student_uuid;
     $('entry').classList.add('hidden');$('verifyPane').classList.remove('hidden');$('verifyCode').focus();
   }catch(e){
-    if(!needPassword&&/already|exist|registered|in use/i.test(e.message)){needPassword=true;$('existingBox').classList.remove('hidden');$('loginPassword').focus();st('entryStatus','');}
+    if(!needPassword&&/already|exist|registered|in use/i.test(e.message)){needPassword=true;$('existingBox').classList.remove('hidden');$('noPwNote').classList.add('hidden');$('loginPassword').focus();st('entryStatus','');}
     else st('entryStatus',e.message,'error');
   }finally{$('registerButton').disabled=false}
 };
