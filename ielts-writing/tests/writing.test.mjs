@@ -319,10 +319,13 @@ test('the bank has 25 Academic and 25 General Training sets, every IELTS visual 
 
 test('language scores are capped when errors dominate and block meaning', async () => {
   const {languageCap} = await import('../server/marking.mjs');
-  const review = (free, lexBlocks, gramBlocks) => ({sentences: 10, errorFreePercent: free, totals: {fulfilment: {blocks: 0}, coherence: {blocks: 0}, lexical: {blocks: lexBlocks}, grammar: {blocks: gramBlocks}}});
+  const review = (free, lexBlocks, gramBlocks, count = 0) => ({sentences: 10, words: 100, errorFreePercent: free, totals: {fulfilment: {blocks: 0}, coherence: {blocks: 0}, lexical: {blocks: lexBlocks, count}, grammar: {blocks: gramBlocks, count: 0}}});
   assert.equal(languageCap(null), 9);
   assert.equal(languageCap(review(60, 3, 3)), 9);
   assert.equal(languageCap(review(20, 1, 2)), 4);
   assert.equal(languageCap(review(20, 1, 1)), 9);
   assert.equal(languageCap(review(5, 3, 2)), 3);
+  assert.equal(languageCap(review(40, 0, 0, 23)), 3);
+  assert.equal(languageCap(review(20, 0, 0, 18)), 4);
+  assert.equal(languageCap(review(20, 0, 0, 16)), 9);
 });

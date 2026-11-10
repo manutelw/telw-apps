@@ -189,10 +189,11 @@ function autoTask(check) {
 // Public descriptors: at Band 4 errors are frequent and can block meaning; at Band 3 they dominate
 // and distort it. When the error check shows that, Lexical Resource and Grammar cannot score higher.
 export function languageCap(review) {
-  if (!review || !review.sentences) return 9;
-  const blocks = review.totals.lexical.blocks + review.totals.grammar.blocks;
-  if (review.errorFreePercent < 10 && blocks >= 5) return 3;
-  if (review.errorFreePercent < 25 && blocks >= 3) return 4;
+  if (!review || !review.sentences || !review.words) return 9;
+  const {lexical, grammar} = review.totals, blocks = lexical.blocks + grammar.blocks;
+  const rate = (lexical.count + grammar.count) * 100 / review.words;
+  if (rate >= 22 || (review.errorFreePercent < 10 && blocks >= 5)) return 3;
+  if ((rate >= 17 && review.errorFreePercent < 25) || (review.errorFreePercent < 25 && blocks >= 3)) return 4;
   return 9;
 }
 
