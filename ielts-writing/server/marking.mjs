@@ -60,7 +60,7 @@ ${focus ? `In this check, look ONLY for "${focus}" problems and list nothing els
 Count each separate error once, under the heading where it belongs.
 Return only JSON in this shape:
 {${focus === 'fulfilment' && testType === 'academic' && number === 1 ? '"overview":"clear","' : '"'}errors":[{"criterion":"${focus || 'grammar'}","quote":"exact words from the script","problem":"short description","fix":"corrected words","effect":"none"}]}${focus === 'fulfilment' && testType === 'academic' && number === 1 ? `
-"overview" is "clear" if the script has a statement summarising the main trends or stages as a whole, "unclear" if it only gestures at one (for example "shows the following pattern"), and "none" if there is no attempt. The opening sentence that only restates the question is not an overview.` : ''}
+"overview" is "clear" if anywhere in the script, at the start or the end, one or two sentences sum up the whole picture: the main trends or contrasts in the data, or for a process or diagram, its overall shape, such as how many stages there are or where it begins and ends. It can be short, need not give figures, and may reuse some question wording if it adds this summary. "unclear" if it only gestures at one (for example "shows the following pattern"). "none" only if there is no summary of the whole at all. An opening that only restates the question, adding nothing, is not an overview.` : ''}
 "quote" is copied character for character from candidate_script and is as short as possible while still showing the error. For something missing from the whole script, such as an overview, use an empty quote.
 "effect" is what the error does to the reader: "none" if meaning is still clear, "slows" if the reader has to work to follow, "blocks" if the meaning is lost or wrong.`;
   const user = JSON.stringify({test: testType === 'academic' ? 'Academic' : 'General Training', task_number: number, task: {...task, time: undefined}, candidate_script: script});
@@ -133,7 +133,7 @@ Criteria: ${JSON.stringify(CRITERIA)}
 Rubric: ${JSON.stringify(rubric)}
 TELW marking notes: ${JSON.stringify(data.notes)}
 Feedback voice: ${JSON.stringify(data.voice)}${review ? `
-ERROR REVIEW. error_review lists the errors a separate careful check found in this script, under each criterion, with counts worked out by code. Base every criterion on it. Weigh how many errors there are for the length of the script, how many sentences are error-free, and how many errors slow or block the reader, then test the bands against that. Weigh each listed error by its effect. Errors marked "none" are slips: if they are occasional for the length and the range is wide, Lexical Resource and Grammatical Range and Accuracy can reach 7 or 8, so do not hold a script at 6 by default. If errors are frequent, or many slow or block the reader, those criteria fall to 5 or below. Use the same weighing for the other two criteria. Separate weak writing from strong writing: do not drift towards the middle of the scale. You may find errors the list missed, and you may set aside a listed error only if it is clearly not an error. Use the listed errors to choose your evidence, improve and rewrite.` : ''}`;
+ERROR REVIEW. error_review lists the errors a separate careful check found in this script, under each criterion, with counts worked out by code. Base every criterion on it. Weigh how many errors there are for the length of the script, how many sentences are error-free, and how many errors slow or block the reader, then test the bands against that. Weigh each listed error by its effect. Errors marked "none" are slips: if they are occasional for the length and the range is wide, Lexical Resource and Grammatical Range and Accuracy can reach 7 or 8, so do not hold a script at 6 by default. If errors are frequent, or many slow or block the reader, those criteria fall to 5 or below. For Task Achievement or Task Response, the list holds weaknesses, not only faults. A script that covers every part of the task, keeps a clear position or purpose, and develops its main ideas reaches 7 or 8 even with several listed weaknesses. Only a missing part of the task, no clear position or purpose, or ideas left undeveloped pull it to 6 or below. Use the same weighing for Coherence and Cohesion. Separate weak writing from strong writing: do not drift towards the middle of the scale. You may find errors the list missed, and you may set aside a listed error only if it is clearly not an error. Use the listed errors to choose your evidence, improve and rewrite.` : ''}`;
   const user = JSON.stringify({test: testType === 'academic' ? 'Academic' : 'General Training', task_number: number, task: {...task, time: undefined}, candidate_script: script, ...(review ? {error_review: review} : {})});
   return [{role: 'system', content: system}, {role: 'user', content: user}];
 }
@@ -186,6 +186,16 @@ function autoTask(check) {
   return {check, passes};
 }
 
+// Public descriptors: at Band 4 errors are frequent and can block meaning; at Band 3 they dominate
+// and distort it. When the error check shows that, Lexical Resource and Grammar cannot score higher.
+export function languageCap(review) {
+  if (!review || !review.sentences) return 9;
+  const blocks = review.totals.lexical.blocks + review.totals.grammar.blocks;
+  if (review.errorFreePercent < 10 && blocks >= 5) return 3;
+  if (review.errorFreePercent < 25 && blocks >= 3) return 4;
+  return 9;
+}
+
 async function markTask(env, data, testType, number, task, script) {
   const check = precheck(task, number, script);
   if (check.autoBand !== null) return autoTask(check);
@@ -195,7 +205,12 @@ async function markTask(env, data, testType, number, task, script) {
   if (passes.length < 2) throw new Error('Too few valid markings');
   // Public descriptors: Band 6 Task Achievement needs an overview, Band 5 has no clear one.
   const cap = testType === 'academic' && number === 1 && review?.overview === 'none' ? Math.min(check.cap, 5) : check.cap;
-  for (const pass of passes) pass.fulfilment.band = Math.min(pass.fulfilment.band, cap);
+  const language = languageCap(review);
+  for (const pass of passes) {
+    pass.fulfilment.band = Math.min(pass.fulfilment.band, cap);
+    pass.lexical.band = Math.min(pass.lexical.band, language);
+    pass.grammar.band = Math.min(pass.grammar.band, language);
+  }
   return {check, passes, review};
 }
 
