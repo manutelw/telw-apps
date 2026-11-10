@@ -12,7 +12,7 @@ const TELW_PROGRAMMES=new Set([
 ]);
 const TELW_CORE=new Set([
   'about-us','what-we-do-at-telw','why-telw','trainer-profile',
-  'career-development-programs','classes-9-12']);
+  'career-development-programs','classes-9-12','terms','refund-policy','privacy-policy']);
 
 
 // Search engines: list the public TELW pages; keep tests, payments, logins and APIs out.
