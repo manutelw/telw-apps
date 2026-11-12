@@ -330,7 +330,9 @@ footer a{text-underline-offset:3px}
 .ex-caption{margin:2rem 0 0;font-family:var(--serif);font-size:clamp(1.25rem,2.4vw,1.6rem);color:var(--ink);text-align:center}
 @media(max-width:900px){.ex-steps{grid-template-columns:1fr}}
 .prog-group a{padding:.7rem 0}
-.brand-logo{height:44px;width:auto;display:block;flex:none}</style>
+.brand-logo{height:44px;width:auto;display:block;flex:none}.hero-eyebrow{margin:0 0 .8rem;font-size:.8rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}.hero-text{color:var(--ink-2);font-size:1.05rem;line-height:1.65;max-width:60ch;margin:.9rem 0 0}.hero-text strong{color:var(--ink)}.hero-ask a{color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:var(--accent-line);text-underline-offset:3px}
+.t-q{font-size:.95rem;font-weight:600;color:var(--ink);margin:0 0 1rem}.t-eyebrow{margin:0 0 1rem;font-size:.75rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}.t-who{margin:0 0 .35rem;font-size:.85rem;color:var(--muted)}.t-nav{display:flex;gap:.5rem;margin-top:1.4rem}.t-dot{width:9px;height:9px;padding:0;border-radius:50%;border:1px solid var(--ink-2);background:transparent;cursor:pointer}.t-dot[aria-current="true"]{background:var(--ink);border-color:var(--ink)}.t-dot:focus-visible{outline:2px solid var(--accent-line);outline-offset:2px}.t-stack{display:grid}.t-panel{grid-area:1/1}.t-panel:not(.is-on){visibility:hidden}
+</style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -389,24 +391,62 @@ footer a{text-underline-offset:3px}
 <section class="hero" aria-labelledby="hero-title">
   <div class="wrap hero-grid">
     <div>
-      <h1 id="hero-title">We teach one thing: how you communicate.</h1>
-      <p class="lede">One method, used for school students, IELTS candidates, job seekers, professionals, homemakers and anyone who wants to speak with more confidence. Every learner is diagnosed first, then trained one step at a time. In New Delhi and online.</p>
+      <p class="hero-eyebrow">What we do</p>
+      <h1 id="hero-title">Communicate better when it matters most.</h1>
+      <p class="lede">Knowing your subject is not always enough. You also have to say it well.</p>
+      <p class="hero-text">Maybe you have an interview coming up. Or a presentation. Or an exam. You know what you want to say, but the words don’t come out right. A question catches you off guard. You lose your point halfway.</p>
+      <p class="hero-text"><strong>This is where TELW helps.</strong></p>
+      <p class="hero-text">First, we find out what’s holding you back. Then you practise, get clear feedback and practise again, so you can handle these situations with greater confidence.</p>
+      <p class="hero-text">We work with students, professionals and anyone who wants to speak and write English more effectively.</p>
+      <p class="hero-text hero-ask">Is there a situation where you want to communicate better? <a href="https://wa.me/919717116831">Tell us about it on WhatsApp</a>. We’ll help you work out what needs to change.</p>
       <div class="hero-cta">
         <a class="btn btn-solid" href="#who">Find your programme</a>
       </div>
       
     </div>
 
-    <figure class="transcript" aria-label="Example of the change training makes">
-      <div class="t-row">
-        <p class="t-label">What most candidates say</p>
-        <p class="t-before"><span class="strike">So basically, umm, what I'm trying to say is that, like, the sales were, you know, not really that good this quarter.</span></p>
-      </div>
-      <div class="t-row">
-        <p class="t-label">What a trained candidate says</p>
-        <p class="t-after">Sales fell twelve percent in Q3. I recommend we fix pricing first.</p>
-      </div>
-      <figcaption class="t-foot">Same point. Half the words. Twice the authority.</figcaption>
+    <figure class="transcript" aria-label="Moments we work on">
+      <p class="t-eyebrow">Moments we work on</p>
+      <div class="t-stack">
+        <div class="t-panel is-on" id="tp-0" role="group" aria-roledescription="example" aria-label="1 of 6: Job interview">
+          <p class="t-who">Commerce graduate <span aria-hidden="true">·</span> Job interview</p>
+          <p class="t-q">“Tell me about yourself.”</p>
+          <div class="t-row"><p class="t-label">What most people say</p><p class="t-before"><span class="strike">Myself Ajay, I am from Lucknow, my father is a businessman, I am hardworking and punctual…</span></p></div>
+          <div class="t-row"><p class="t-label">After training</p><p class="t-after">I’m Ajay, a commerce graduate. In my internship I helped cut month-end closing from five days to three.</p></div>
+        </div>
+        <div class="t-panel" id="tp-1" role="group" aria-roledescription="example" aria-label="2 of 6: Design jury" aria-hidden="true">
+          <p class="t-who">Architecture student <span aria-hidden="true">·</span> Design jury</p>
+          <p class="t-q">“Why did you design it this way?”</p>
+          <div class="t-row"><p class="t-label">What most people say</p><p class="t-before"><span class="strike">So basically I made it like this because it looks good and, umm, the client also wanted something modern…</span></p></div>
+          <div class="t-row"><p class="t-label">After training</p><p class="t-after">I turned the studios north, so they get steady daylight all day and need no lights until evening.</p></div>
+        </div>
+        <div class="t-panel" id="tp-2" role="group" aria-roledescription="example" aria-label="3 of 6: Quarterly review" aria-hidden="true">
+          <p class="t-who">Sales manager <span aria-hidden="true">·</span> Quarterly review</p>
+          <p class="t-q">Opening the presentation</p>
+          <div class="t-row"><p class="t-label">What most people say</p><p class="t-before"><span class="strike">So, umm, today I’ll be talking about, like, our sales and some things about the quarter…</span></p></div>
+          <div class="t-row"><p class="t-label">After training</p><p class="t-after">Sales fell twelve percent in Q3. I’ll show you why, and what we should fix first.</p></div>
+        </div>
+        <div class="t-panel" id="tp-3" role="group" aria-roledescription="example" aria-label="4 of 6: Promotion discussion" aria-hidden="true">
+          <p class="t-who">Team lead <span aria-hidden="true">·</span> Promotion discussion</p>
+          <p class="t-q">“Why should we promote you?”</p>
+          <div class="t-row"><p class="t-label">What most people say</p><p class="t-before"><span class="strike">I have worked very hard this year and done many things for the team and always supported everyone…</span></p></div>
+          <div class="t-row"><p class="t-label">After training</p><p class="t-after">This year I took over the Pune account and grew it by thirty percent. I’m ready to run the region.</p></div>
+        </div>
+        <div class="t-panel" id="tp-4" role="group" aria-roledescription="example" aria-label="5 of 6: Board meeting" aria-hidden="true">
+          <p class="t-who">Senior executive <span aria-hidden="true">·</span> Board meeting</p>
+          <p class="t-q">Explaining a missed target</p>
+          <div class="t-row"><p class="t-label">What most people say</p><p class="t-before"><span class="strike">There are many reasons, the market is very tough, and there were some issues with supply and also…</span></p></div>
+          <div class="t-row"><p class="t-label">After training</p><p class="t-after">We missed the target by eight percent. Two things caused it, and both can be fixed by March.</p></div>
+        </div>
+        <div class="t-panel" id="tp-5" role="group" aria-roledescription="example" aria-label="6 of 6: Speaking test" aria-hidden="true">
+          <p class="t-who">IELTS candidate <span aria-hidden="true">·</span> Speaking test</p>
+          <p class="t-q">“Describe a place you like to visit.”</p>
+          <div class="t-row"><p class="t-label">What most people say</p><p class="t-before"><span class="strike">I like Goa. Goa is very nice. It is beautiful and very nice and I like it very much.</span></p></div>
+          <div class="t-row"><p class="t-label">After training</p><p class="t-after">I keep going back to Goa. It’s not the beaches; it’s how slowly the evenings pass.</p></div>
+        </div>
+        </div>
+      <div class="t-nav"><button type="button" class="t-dot" aria-controls="tp-0" aria-label="Show example 1: Job interview" aria-current="true"></button><button type="button" class="t-dot" aria-controls="tp-1" aria-label="Show example 2: Design jury"></button><button type="button" class="t-dot" aria-controls="tp-2" aria-label="Show example 3: Quarterly review"></button><button type="button" class="t-dot" aria-controls="tp-3" aria-label="Show example 4: Promotion discussion"></button><button type="button" class="t-dot" aria-controls="tp-4" aria-label="Show example 5: Board meeting"></button><button type="button" class="t-dot" aria-controls="tp-5" aria-label="Show example 6: Speaking test"></button></div>
+      <figcaption class="t-foot">Same person. Same point. A very different impression.</figcaption>
     </figure>
   </div>
 </section>
@@ -642,6 +682,18 @@ footer a{text-underline-offset:3px}
 (function(){var d=document.querySelector('.ielts-pick');if(!d)return;
 document.addEventListener('click',function(e){if(d.open&&!d.contains(e.target))d.open=false;});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&d.open){d.open=false;d.querySelector('summary').focus();}});})();
+</script>
+<script>
+(()=>{const dots=[...document.querySelectorAll('.t-dot')];if(!dots.length)return;
+const fig=document.querySelector('.transcript');let i=0,timer=null,paused=false;
+const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function show(n){i=(n+dots.length)%dots.length;dots.forEach((d,k)=>{const on=k===i;if(on)d.setAttribute('aria-current','true');else d.removeAttribute('aria-current');
+const p=document.getElementById(d.getAttribute('aria-controls'));p.classList.toggle('is-on',on);p.setAttribute('aria-hidden',on?'false':'true');
+if(on)p.querySelectorAll('.strike,.t-after').forEach(e=>{e.style.animation='none';void e.offsetWidth;e.style.animation='';});});}
+dots.forEach((d,k)=>d.addEventListener('click',()=>{show(k);clearInterval(timer);timer=null;}));
+fig.addEventListener('mouseenter',()=>paused=true);fig.addEventListener('mouseleave',()=>paused=false);
+fig.addEventListener('focusin',()=>paused=true);fig.addEventListener('focusout',()=>paused=false);
+if(!reduce)timer=setInterval(()=>{if(!paused)show(i+1);},7000);})();
 </script>
 </body>
 </html>
