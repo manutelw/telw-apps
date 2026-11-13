@@ -14,15 +14,21 @@
 <p class="lede">Find out exactly what is holding you back, then work on it. Choose a diagnostic below and pay securely.</p>
 
 <form id="payForm" novalidate>
-<fieldset style="border:0;padding:0;margin:0">
+<div id="picked" class="product" hidden style="margin-bottom:1.2rem">
+<span class="muted">You are booking</span>
+<strong id="pickedName" style="display:block;margin-top:.3rem"></strong>
+<div class="price" id="pickedPrice"></div>
+<a href="#" id="pickedChange">Choose a different diagnostic</a>
+</div>
+<fieldset id="choices" style="border:0;padding:0;margin:0">
 <legend class="muted">Choose what you want to buy. All prices include taxes.</legend>
 <h2 style="margin:1rem 0 .5rem;font-size:1.1rem">Communication</h2>
 <div class="products">
-<label class="product"><input type="radio" name="product" value="communication"><strong>Communication Performance Diagnostic</strong><div class="price">₹999</div><span class="muted">Four spoken tasks with follow-up questions, about 25 minutes, and a personal report checked by your trainer.</span></label>
+<label class="product"><input type="radio" name="product" value="communication" checked><strong>Communication Performance Diagnostic</strong><div class="price">₹999</div><span class="muted">Four spoken tasks with follow-up questions, about 25 minutes, and a personal report checked by your trainer.</span></label>
 </div>
 <h2 style="margin:1.4rem 0 .5rem;font-size:1.1rem">IELTS</h2>
 <div class="products">
-<label class="product"><input type="radio" name="product" value="bundle" checked><span class="tag">Best value</span><strong>Full diagnosis</strong><div class="price">₹799</div><span class="muted">Reading, Listening and Writing. One test of each.</span></label>
+<label class="product"><input type="radio" name="product" value="bundle"><span class="tag">Best value</span><strong>Full diagnosis</strong><div class="price">₹799</div><span class="muted">Reading, Listening and Writing. One test of each.</span></label>
 <label class="product"><input type="radio" name="product" value="writing"><strong>Writing</strong><div class="price">₹499</div><span class="muted">Both writing tasks, with feedback on all four marking criteria.</span></label>
 <label class="product"><input type="radio" name="product" value="reading"><strong>Reading</strong><div class="price">₹299</div><span class="muted">One full Reading test, Academic or General Training.</span></label>
 <label class="product"><input type="radio" name="product" value="listening"><strong>Listening</strong><div class="price">₹299</div><span class="muted">One full Listening test with recorded audio.</span></label>
