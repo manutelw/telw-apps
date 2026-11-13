@@ -48,8 +48,8 @@ test('price and policy pages are served from assets, with canonical redirects', 
 
 test('the real pages show the agreed prices and the required policy links', () => {
   const page = readFileSync(new URL('../../ielts-pay/index.html', import.meta.url), 'utf8');
-  for (const text of ['₹799', '₹499', '₹299', '/ielts/terms/', '/ielts/refund/', '/ielts/privacy/', 'New Delhi 110016', 'manutelw@gmail.com', '+91 97171 16831', 'checkout.razorpay.com/v1/checkout.js']) assert.ok(page.includes(text), text);
-  assert.deepEqual(Object.fromEntries(Object.entries(PRODUCTS).map(([k, p]) => [k, p.amount])), {bundle: 79900, writing: 49900, reading: 29900, listening: 29900});
+  for (const text of ['₹999', '₹799', '₹499', '₹299', '/ielts/terms/', '/ielts/refund/', '/ielts/privacy/', 'New Delhi 110016', 'manutelw@gmail.com', '+91 97171 16831', 'checkout.razorpay.com/v1/checkout.js']) assert.ok(page.includes(text), text);
+  assert.deepEqual(Object.fromEntries(Object.entries(PRODUCTS).map(([k, p]) => [k, p.amount])), {communication: 99900, bundle: 79900, writing: 49900, reading: 29900, listening: 29900});
   for (const file of ['terms', 'refund', 'privacy']) assert.match(readFileSync(new URL(`../../ielts-pay/${file}.html`, import.meta.url), 'utf8'), /manutelw@gmail\.com/);
   assert.doesNotMatch(readFileSync(new URL('../../ielts-pay/refund.html', import.meta.url), 'utf8'), /TO BE INSERTED/);
 });
@@ -85,6 +85,16 @@ test('a verified payment creates credits once; a forged signature creates nothin
   }
   assert.equal(db.prepare('SELECT count(*) n FROM ielts_pay_credits').get().n, 3);
   assert.equal(db.prepare('SELECT status FROM ielts_pay_orders').get().status, 'paid');
+});
+
+test('a paid Communication diagnostic is recorded as a paid order and creates no IELTS credits', async () => {
+  const {db, PAY_DB} = payDb(), env = {PAY_DB, RAZORPAY_KEY_ID: KEY, RAZORPAY_KEY_SECRET: SECRET}, calls = [];
+  await withFetch(razorpay(calls), () => handlePayments(post('/api/ielts/pay/order', {email: 'Learner@Example.com', product: 'communication'}), env));
+  assert.equal(calls[0].amount, 99900); assert.match(calls[0].receipt, /^comm-/);
+  const ok = await handlePayments(post('/api/ielts/pay/verify', {orderId: 'order_fixture1', paymentId: 'pay_fixture1', signature: await hmac(SECRET, 'order_fixture1|pay_fixture1')}), env);
+  assert.equal(ok.status, 200); assert.deepEqual(await ok.json(), {ok: true, email: 'learner@example.com', product: 'communication', skills: []});
+  assert.equal(db.prepare('SELECT count(*) n FROM ielts_pay_credits').get().n, 0);
+  assert.deepEqual({...db.prepare('SELECT email,product,amount,status FROM ielts_pay_orders').get()}, {email: 'learner@example.com', product: 'communication', amount: 99900, status: 'paid'});
 });
 
 test('the webhook needs a valid signature and the exact order amount', async () => {
@@ -157,6 +167,19 @@ test('the production router serves payments before the other sites', () => {
   assert.match(source, /import \{handlePayments\}/);
   assert.ok(source.indexOf('if(payments)return payments;') < source.indexOf('return base.fetch(request,env)'));
   assert.match(readFileSync(new URL('../../wrangler.jsonc', import.meta.url), 'utf8'), /"binding": "PAY_DB"/);
+});
+
+test('manuvikraman.com/diagnostic/ is passed to the diagnostic Worker without the /diagnostic prefix', async () => {
+  const {default: router} = await import('../../worker-host-router.js');
+  const seen = [];
+  const env = {PERF_SERVICE: {fetch: async req => { seen.push(new URL(req.url).pathname + new URL(req.url).search); return new Response('ok'); }}};
+  assert.equal((await router.fetch(new Request(origin + '/diagnostic'), env)).headers.get('location'), origin + '/diagnostic/');
+  assert.equal((await router.fetch(new Request('https://www.manuvikraman.com/diagnostic/?t=1'), env)).headers.get('location'), origin + '/diagnostic/?t=1');
+  assert.equal(await (await router.fetch(new Request(origin + '/diagnostic/?t=abc'), env)).text(), 'ok');
+  await router.fetch(new Request(origin + '/diagnostic/api/session?t=abc'), env);
+  assert.deepEqual(seen, ['/?t=abc', '/api/session?t=abc']);
+  assert.equal((await router.fetch(new Request(origin + '/diagnostic/'), {})).status, 503);
+  assert.match(readFileSync(new URL('../../wrangler.jsonc', import.meta.url), 'utf8'), /"service": "telw-performance"/);
 });
 
 test('a problem report gets a reference, is stored, and TELW is emailed the payment record for that email', async () => {

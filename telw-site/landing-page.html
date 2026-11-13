@@ -333,6 +333,7 @@ footer a{text-underline-offset:3px}
 .brand-logo{height:44px;width:auto;display:block;flex:none}.hero-eyebrow{margin:0 0 .8rem;font-size:.8rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}.hero-text{color:var(--ink-2);font-size:1.05rem;line-height:1.65;max-width:60ch;margin:.9rem 0 0}.hero-text strong{color:var(--ink)}.hero-steps{list-style:none;margin:.6rem 0 0;padding:0;max-width:60ch}.hero-steps li{position:relative;padding-left:1.5rem;margin:.45rem 0;color:var(--ink-2);font-size:1.05rem;line-height:1.55}.hero-steps li::before{content:"";position:absolute;left:0;top:.55em;width:.55rem;height:.55rem;border-radius:50%;background:var(--accent-line)}.hero-ask{display:block;max-width:34rem;margin:1.6rem 0 0;padding:1rem 1.2rem;border-left:4px solid var(--accent-line);background:var(--surface);border-radius:0 8px 8px 0;text-decoration:none;box-shadow:0 2px 10px rgba(19,35,63,.06);transition:box-shadow .15s,transform .15s}.hero-ask span{display:block;color:var(--ink);font-size:1.05rem;line-height:1.5}.hero-ask strong{display:block;margin-top:.35rem;color:var(--accent);font-size:1.05rem}.hero-ask:hover{box-shadow:0 6px 18px rgba(19,35,63,.12);transform:translateY(-1px)}.hero-ask:hover strong{text-decoration:underline;text-underline-offset:3px}
 .t-q{font-size:.95rem;font-weight:600;color:var(--ink);margin:0 0 1rem}.t-eyebrow{margin:0 0 1rem;font-size:.75rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}.t-who{margin:0 0 .35rem;font-size:.85rem;color:var(--muted)}.t-nav{display:flex;gap:.5rem;margin-top:1.4rem}.t-dot{width:9px;height:9px;padding:0;border-radius:50%;border:1px solid var(--ink-2);background:transparent;cursor:pointer}.t-dot[aria-current="true"]{background:var(--ink);border-color:var(--ink)}.t-dot:focus-visible{outline:2px solid var(--accent-line);outline-offset:2px}.t-stack{display:grid}.t-panel{grid-area:1/1}.t-panel:not(.is-on){visibility:hidden}
 .t-stack{transform-origin:50% 50%}.t-stack.t-flip{animation:tflip .5s ease-in-out}@keyframes tflip{0%{transform:perspective(1200px) rotateY(0);opacity:1}50%{transform:perspective(1200px) rotateY(90deg);opacity:.15}100%{transform:perspective(1200px) rotateY(0);opacity:1}}@media (prefers-reduced-motion: reduce){.t-stack.t-flip{animation:none}}
+.diag{background:var(--surface);border-bottom:1px solid var(--rule);padding:clamp(2.5rem,6vw,4.5rem) 0}.diag h2{margin:0 0 .6rem}.diag .lede{margin:0}.diag-meta{margin:1.2rem 0 0;color:var(--ink-2);font-size:1.05rem}.diag-meta strong{color:var(--ink);font-size:1.25rem}.diag .hero-cta{margin-top:1.4rem}
 </style>
 </head>
 <body>
@@ -373,7 +374,7 @@ footer a{text-underline-offset:3px}
           </a>
         </div>
       </div>
-      <a class="btn btn-book head-book" href="/contact/?topic=diagnostic">Book a diagnostic</a>
+      <a class="btn btn-book head-book" href="#diagnostic">Book a diagnostic</a>
     </div>
   </div>
 </div>
@@ -452,6 +453,24 @@ footer a{text-underline-offset:3px}
       <div class="t-nav"><button type="button" class="t-dot" aria-controls="tp-0" aria-label="Show example 1: Job interview" aria-current="true"></button><button type="button" class="t-dot" aria-controls="tp-1" aria-label="Show example 2: Design jury"></button><button type="button" class="t-dot" aria-controls="tp-2" aria-label="Show example 3: Quarterly review"></button><button type="button" class="t-dot" aria-controls="tp-3" aria-label="Show example 4: Promotion discussion"></button><button type="button" class="t-dot" aria-controls="tp-4" aria-label="Show example 5: Board meeting"></button><button type="button" class="t-dot" aria-controls="tp-5" aria-label="Show example 6: Speaking test"></button></div>
       <figcaption class="t-foot">Same person. Same point. A very different impression.</figcaption>
     </figure>
+  </div>
+</section>
+
+<section class="diag" id="diagnostic" aria-labelledby="diag-title">
+  <div class="wrap">
+    <p class="hero-eyebrow">Start here</p>
+    <h2 id="diag-title">Communication Performance Diagnostic</h2>
+    <p class="lede">Find out how you come across when you speak, and what to fix first.</p>
+    <ul class="hero-steps">
+      <li>Four short speaking tasks: explain an idea, give your opinion, handle a situation and judge a proposal.</li>
+      <li>After each answer, a follow-up question based on what you said, just like a real interview or meeting.</li>
+      <li>A personal report on how clear, organised and convincing you are, with examples from your own answers and what to practise next. Your trainer checks every report.</li>
+    </ul>
+    <p class="diag-meta"><strong>₹999</strong> · about 25 minutes · online, on your laptop or phone</p>
+    <div class="hero-cta">
+      <a class="btn btn-solid" href="/book/?test=communication">Book the diagnostic</a>
+      <a class="btn btn-line" href="/diagnostic/">Already booked? Start here</a>
+    </div>
   </div>
 </section>
 
