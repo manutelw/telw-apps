@@ -2,8 +2,8 @@
 (() => {
   const $ = id => document.getElementById(id);
   const API = '/api/ielts/pay/';
-  const TESTS = {reading: ['Reading', '/ielts/reading/'], listening: ['Listening', '/ielts/listening/'], writing: ['Writing', '/ielts/writing/']};
-  const SKILLS = {bundle: ['reading', 'listening', 'writing'], writing: ['writing'], reading: ['reading'], listening: ['listening']};
+  const TESTS = {reading: ['Reading', '/ielts/reading/'], listening: ['Listening', '/ielts/listening/'], writing: ['Writing', '/ielts/writing/'], communication: ['your Communication diagnostic', '/diagnostic/?paid=1']};
+  const SKILLS = {communication: ['communication'], bundle: ['reading', 'listening', 'writing'], writing: ['writing'], reading: ['reading'], listening: ['listening']};
   const status = (text, error = false) => { $('status').textContent = text; $('status').className = 'status' + (error ? ' error' : ''); };
   const chosen = new URLSearchParams(location.search).get('test');
   if (SKILLS[chosen]) document.querySelector(`input[name=product][value=${chosen}]`).checked = true;
@@ -17,7 +17,7 @@
 
   function finished(email, product) {
     $('payForm').hidden = true; $('done').hidden = false;
-    $('doneText').textContent = `Your payment is confirmed for ${email}. Open your test and verify this email address to begin.`;
+    $('doneText').textContent = `Your payment is confirmed for ${email}. Open your test and use this email address to begin.`;
     for (const skill of SKILLS[product] || []) {
       const link = document.createElement('a'); link.className = 'go';
       link.href = TESTS[skill][1]; link.textContent = 'Start ' + TESTS[skill][0];

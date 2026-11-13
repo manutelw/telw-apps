@@ -22,6 +22,10 @@
     {
       "binding": "IELTS_ADMIN_SERVICE",
       "service": "telw-ielts-preview-worker"
+    },
+    {
+      "binding": "PERF_SERVICE",
+      "service": "telw-performance"
     }
   ]
 }

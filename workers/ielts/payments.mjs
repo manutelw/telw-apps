@@ -1,4 +1,4 @@
-// TELW IELTS payments on manuvikraman.com: the price and policy pages, Razorpay orders,
+// TELW payments on manuvikraman.com (IELTS diagnostics and the Communication Performance Diagnostic): the price and policy pages, Razorpay orders,
 // payment verification and the Razorpay webhook. Paid credits go to PAY_DB, which the Reading,
 // Listening and Writing apps check before a new test starts. No login is needed to pay: the
 // credits belong to the email address the buyer enters, and the tests verify that address.
@@ -8,6 +8,8 @@ const ORIGIN = 'https://manuvikraman.com';
 const API = '/api/ielts/pay/';
 const VALID_DAYS = 180;
 export const PRODUCTS = {
+  // The Communication Performance Diagnostic (telw-performance Worker) reads paid orders for this product directly; it creates no IELTS credits.
+  communication: {name: 'Communication Performance Diagnostic', amount: 99900, skills: []},
   bundle: {name: 'Full diagnosis: Reading, Listening and Writing', amount: 79900, skills: ['reading', 'listening', 'writing']},
   writing: {name: 'Writing diagnostic', amount: 49900, skills: ['writing']},
   reading: {name: 'Reading diagnostic', amount: 29900, skills: ['reading']},
@@ -15,6 +17,7 @@ export const PRODUCTS = {
 };
 const PAGES = new Map([
   ['/ielts/pay/', '/ielts-pay/index.html'],
+  ['/book/', '/ielts-pay/index.html'],
   ['/ielts/terms/', '/ielts-pay/terms.html'],
   ['/ielts/refund/', '/ielts-pay/refund.html'],
   ['/ielts/privacy/', '/ielts-pay/privacy.html'],
@@ -75,7 +78,7 @@ async function createOrder(request, env, now) {
   const response = await fetch('https://api.razorpay.com/v1/orders', {
     method: 'POST', signal: AbortSignal.timeout(15000),
     headers: {authorization: 'Basic ' + btoa(env.RAZORPAY_KEY_ID + ':' + env.RAZORPAY_KEY_SECRET), 'content-type': 'application/json'},
-    body: JSON.stringify({amount: product.amount, currency: 'INR', receipt: 'ielts-' + crypto.randomUUID().slice(0, 30), notes: {email, product: body.product}})
+    body: JSON.stringify({amount: product.amount, currency: 'INR', receipt: (body.product === 'communication' ? 'comm-' : 'ielts-') + crypto.randomUUID().slice(0, 30), notes: {email, product: body.product}})
   });
   if (!response.ok) throw fail('Payment could not be started. Please try again shortly.', 502);
   const order = await response.json();
@@ -91,7 +94,7 @@ export async function grant(env, orderId, paymentId, amount, now) {
   if (amount !== undefined && amount !== order.amount) throw fail('The payment amount does not match the order.', 400);
   await env.PAY_DB.prepare(`UPDATE ielts_pay_orders SET status='paid',payment_id=?1,paid_at=?2 WHERE id=?3 AND status='created'`).bind(String(paymentId), now, order.id).run();
   const skills = PRODUCTS[order.product]?.skills || [];
-  await env.PAY_DB.batch(skills.map(skill => env.PAY_DB.prepare(`INSERT OR IGNORE INTO ielts_pay_credits(id,order_id,email,skill,created_at,expires_at) VALUES(?1,?2,?3,?4,?5,?6)`)
+  if (skills.length) await env.PAY_DB.batch(skills.map(skill => env.PAY_DB.prepare(`INSERT OR IGNORE INTO ielts_pay_credits(id,order_id,email,skill,created_at,expires_at) VALUES(?1,?2,?3,?4,?5,?6)`)
     .bind(crypto.randomUUID(), order.id, order.email, skill, now, now + VALID_DAYS * 86400)));
   return {email: order.email, product: order.product, skills};
 }

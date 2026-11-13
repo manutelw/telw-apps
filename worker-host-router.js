@@ -12,6 +12,13 @@ export default {
     const url=new URL(request.url);
     const host=url.hostname;
     if(url.pathname.startsWith('/workers/ielts/'))return new Response('Not found',{status:404});
+    // The Communication Performance Diagnostic is its own Worker (telw-performance), served at manuvikraman.com/diagnostic/.
+    if((host==='manuvikraman.com'||host==='www.manuvikraman.com')&&(url.pathname==='/diagnostic'||url.pathname.startsWith('/diagnostic/'))){
+      if(host==='www.manuvikraman.com'||url.pathname==='/diagnostic')return new Response(null,{status:308,headers:{location:'https://manuvikraman.com'+(url.pathname==='/diagnostic'?'/diagnostic/':url.pathname)+url.search}});
+      if(!env.PERF_SERVICE?.fetch)return new Response('The diagnostic is not available right now.',{status:503});
+      const inner=new URL(request.url);inner.pathname=url.pathname.slice('/diagnostic'.length);
+      return env.PERF_SERVICE.fetch(new Request(inner.toString(),request));
+    }
     const trainerPortal=await handleTrainerPortal(request,env);
     if(trainerPortal)return trainerPortal;
     const payments=await handlePayments(request,env);
