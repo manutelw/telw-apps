@@ -12,11 +12,20 @@
     input.checked = true;
     $('pickedName').textContent = card.querySelector('strong').textContent;
     $('pickedPrice').textContent = card.querySelector('.price').textContent;
+    $('pickedText').textContent = card.querySelector('span.muted').textContent;
     $('picked').hidden = false; $('choices').hidden = true;
     document.querySelector('h1').textContent = 'Book and pay';
     document.querySelector('.lede').hidden = true;
     $('pickedChange').addEventListener('click', event => { event.preventDefault(); $('picked').hidden = true; $('choices').hidden = false; $('choices').scrollIntoView({behavior: 'smooth'}); });
   }
+
+  // Show the explanation for the diagnostic being bought: Communication or IELTS.
+  function showHow() {
+    const comm = document.querySelector('input[name=product]:checked')?.value === 'communication';
+    $('howComm').hidden = !comm; $('howIelts').hidden = comm;
+  }
+  document.querySelectorAll('input[name=product]').forEach(input => input.addEventListener('change', showHow));
+  showHow();
 
   async function post(action, body) {
     const response = await fetch(API + action, {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(body)});
