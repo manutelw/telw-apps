@@ -10,7 +10,7 @@ const VALID_DAYS = 180;
 export const PRODUCTS = {
   // The Communication Performance Diagnostic (telw-performance Worker) reads paid orders for this product directly; it creates no IELTS credits.
   communication: {name: 'Communication Performance Diagnostic', amount: 99900, skills: []},
-  bundle: {name: 'Full diagnosis: Reading, Listening and Writing', amount: 79900, skills: ['reading', 'listening', 'writing']},
+  bundle: {name: 'Full Diagnostics: 3 skills (Reading, Listening and Writing)', amount: 79900, skills: ['reading', 'listening', 'writing']},
   writing: {name: 'Writing diagnostic', amount: 49900, skills: ['writing']},
   reading: {name: 'Reading diagnostic', amount: 29900, skills: ['reading']},
   listening: {name: 'Listening diagnostic', amount: 29900, skills: ['listening']}

@@ -33,7 +33,15 @@ function definition(action){
 // already paid for (an active hour-long attempt) does not need another credit.
 // When a Reading test has not been paid for, the page shows a friendly note with one link to book.
 const PAY_NOTE=`<style>.paynote{margin:0 0 1.4rem;padding:1.1rem 1.3rem;background:linear-gradient(135deg,#eef7fa,#fdf6e7);border:1px solid #cfe3ea;border-radius:12px;font-family:Arial,sans-serif}.paynote h3{margin:0 0 .3rem;font-size:1.2rem;color:#17374a}.paynote p{margin:0 0 .8rem;color:#33505f}.paybook{display:inline-block;padding:.65rem 1.2rem;background:#d9aa43;color:#172a42;font-weight:bold;border-radius:6px;text-decoration:none}</style><script>(()=>{const f=window.fetch;window.fetch=async(...a)=>{const r=await f(...a);try{if(r.status===402&&String(a[0]&&a[0].url||a[0]).includes('reading/start'))setTimeout(show,60);}catch{}return r;};function show(){if(document.getElementById('payNeeded'))return;const box=document.createElement('div');box.id='payNeeded';box.className='paynote';box.setAttribute('role','status');box.innerHTML='<h3>You&rsquo;re one step away from your Reading diagnostic</h3><p>Use your email when you book, then come back here to begin.</p><a class="paybook" href="/ielts/pay/?test=reading">See prices and book</a>';const said=[...document.querySelectorAll('p,div,span')].find(e=>!e.children.length&&e.textContent.includes('one step away from your Reading'));if(said){said.textContent='';said.replaceWith(box);}else(document.querySelector('main')||document.body).prepend(box);box.scrollIntoView({behavior:'smooth',block:'center'});}})();</script>`;
-export function withPayNote(html){return html.includes('</body>')?html.replace('</body>',PAY_NOTE+'</body>'):html+PAY_NOTE;}
+// The Reading page comes from the Reading Worker, which still says "free" and "enrolment opening later".
+// The diagnostic is paid, and training is offered now, so that wording is corrected here.
+const TRAINING_BLOCK='<hr style="border:0;border-top:1px solid #e3e9ee;margin:25px 0"><span class="pill">Training</span><h2 style="margin-top:15px">Work on your Reading with TELW</h2><p class="muted">After the diagnostic, send TELW your result to talk about training that targets your weak areas.</p><p><a class="secondary" style="display:inline-block;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:bold" href="https://wa.me/919717116831" rel="noopener">Message TELW on WhatsApp</a></p>';
+export function paidWording(html){
+ return html.replace('<span class="pill">Free initial diagnostic</span>','<span class="pill">Reading diagnostic</span>')
+  .replace('>Start free diagnostic<','>Start the diagnostic<')
+  .replace(/<hr style="border:0;border-top:1px solid #e3e9ee;margin:25px 0"><span class="pill">Improvement programme<\/span>[\s\S]*?Enrolment opening later<\/button>/,TRAINING_BLOCK);
+}
+export function withPayNote(html){html=paidWording(html);return html.includes('</body>')?html.replace('</body>',PAY_NOTE+'</body>'):html+PAY_NOTE;}
 async function readingGate(env,upstreamHeaders){
  if(!env.PAY_DB||!(await paymentsRequired(env,'reading')))return null;
  const session=await env.IELTS_ADMIN_SERVICE.fetch(new Request(new URL('/api/ielts/auth/session',SERVICE),{method:'GET',headers:upstreamHeaders.has('cookie')?{cookie:upstreamHeaders.get('cookie')}:{},redirect:'manual',signal:AbortSignal.timeout(20000)}));
