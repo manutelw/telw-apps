@@ -12,6 +12,7 @@
     input.checked = true;
     $('pickedName').textContent = card.querySelector('strong').textContent;
     $('pickedPrice').textContent = card.querySelector('.price').textContent;
+    $('pickedText').textContent = card.querySelector('span.muted').textContent;
     $('picked').hidden = false; $('choices').hidden = true;
     document.querySelector('h1').textContent = 'Book and pay';
     document.querySelector('.lede').hidden = true;
