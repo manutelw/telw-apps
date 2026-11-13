@@ -6,7 +6,17 @@
   const SKILLS = {communication: ['communication'], bundle: ['reading', 'listening', 'writing'], writing: ['writing'], reading: ['reading'], listening: ['listening']};
   const status = (text, error = false) => { $('status').textContent = text; $('status').className = 'status' + (error ? ' error' : ''); };
   const chosen = new URLSearchParams(location.search).get('test');
-  if (SKILLS[chosen]) document.querySelector(`input[name=product][value=${chosen}]`).checked = true;
+  if (SKILLS[chosen]) {
+    // Arrived from a specific "Book" button: show only that diagnostic and go straight to the payment details.
+    const input = document.querySelector(`input[name=product][value=${chosen}]`), card = input.closest('label');
+    input.checked = true;
+    $('pickedName').textContent = card.querySelector('strong').textContent;
+    $('pickedPrice').textContent = card.querySelector('.price').textContent;
+    $('picked').hidden = false; $('choices').hidden = true;
+    document.querySelector('h1').textContent = 'Book and pay';
+    document.querySelector('.lede').hidden = true;
+    $('pickedChange').addEventListener('click', event => { event.preventDefault(); $('picked').hidden = true; $('choices').hidden = false; $('choices').scrollIntoView({behavior: 'smooth'}); });
+  }
 
   async function post(action, body) {
     const response = await fetch(API + action, {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(body)});
