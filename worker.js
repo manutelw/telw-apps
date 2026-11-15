@@ -82,8 +82,9 @@ export default {
       }
       // Share and search images: link previews (WhatsApp, LinkedIn) and Google's logo/photo entries.
       const TELW_IMAGES={'/telw-share.jpg':'telw-share.jpg','/telw-logo.png':'telw-logo.png','/manu-vikraman.jpg':'manu-vikraman.jpg'};
-      if(TELW_IMAGES[path]){
-        const assetUrl=new URL(request.url);assetUrl.pathname='/telw-site/img/'+TELW_IMAGES[path];
+      const ogImage=/^\/og\/[a-z0-9-]+\.jpg$/.test(path);
+      if(TELW_IMAGES[path]||ogImage){
+        const assetUrl=new URL(request.url);assetUrl.pathname=ogImage?'/telw-site/img'+path:'/telw-site/img/'+TELW_IMAGES[path];
         const response=await env.ASSETS.fetch(new Request(assetUrl.toString(),request));
         const headers=new Headers(response.headers);headers.set('cache-control','public, max-age=86400');headers.delete('x-robots-tag');
         return new Response(response.body,{status:response.status,headers});
