@@ -195,7 +195,7 @@ nav a{white-space:nowrap}
 .t-label{font-size:.85rem;color:var(--muted);margin-bottom:.55rem}
 .t-before{font-family:var(--serif);font-size:clamp(1.1rem,1.8vw,1.3rem);line-height:1.5;color:var(--muted);position:relative;display:inline}
 .t-before .strike{background-image:linear-gradient(var(--accent-line),var(--accent-line));background-repeat:no-repeat;background-position:0 58%;background-size:100% 2px;animation:strike 1.4s .5s cubic-bezier(.6,0,.3,1) both}
-.t-after{font-family:var(--serif);font-size:clamp(1.45rem,2.6vw,1.95rem);line-height:1.3;color:var(--ink);font-weight:500;animation:rise .7s 1.9s ease-out both}
+.t-after{font-family:var(--serif);font-size:clamp(1.15rem,1.9vw,1.4rem);line-height:1.3;color:var(--ink);font-weight:500;animation:rise .7s 1.9s ease-out both}
 .t-foot{margin-top:1.5rem;font-size:.92rem;color:var(--ink-2)}
 @keyframes strike{from{background-size:0% 2px}to{background-size:100% 2px}}
 @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -331,7 +331,7 @@ footer a{text-underline-offset:3px}
 @media(max-width:900px){.ex-steps{grid-template-columns:1fr}}
 .prog-group a{padding:.7rem 0}
 .brand-logo{height:44px;width:auto;display:block;flex:none}.hero-eyebrow{margin:0 0 .8rem;font-size:.8rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}.hero-text{color:var(--ink-2);font-size:1.05rem;line-height:1.65;max-width:60ch;margin:.9rem 0 0}.hero-text strong{color:var(--ink)}.hero-steps{list-style:none;margin:.6rem 0 0;padding:0;max-width:60ch}.hero-steps li{position:relative;padding-left:1.5rem;margin:.45rem 0;color:var(--ink-2);font-size:1.05rem;line-height:1.55}.hero-steps li::before{content:"";position:absolute;left:0;top:.55em;width:.55rem;height:.55rem;border-radius:50%;background:var(--accent-line)}.hero-ask{display:block;max-width:34rem;margin:1.6rem 0 0;padding:1rem 1.2rem;border-left:4px solid var(--accent-line);background:var(--surface);border-radius:0 8px 8px 0;text-decoration:none;box-shadow:0 2px 10px rgba(19,35,63,.06);transition:box-shadow .15s,transform .15s}.hero-ask span{display:block;color:var(--ink);font-size:1.05rem;line-height:1.5}.hero-ask strong{display:block;margin-top:.35rem;color:var(--accent);font-size:1.05rem}.hero-ask:hover{box-shadow:0 6px 18px rgba(19,35,63,.12);transform:translateY(-1px)}.hero-ask:hover strong{text-decoration:underline;text-underline-offset:3px}
-.t-q{font-size:.95rem;font-weight:600;color:var(--ink);margin:0 0 1rem}.t-eyebrow{margin:0 0 1rem;font-size:.75rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}.t-who{margin:0 0 .35rem;font-size:.85rem;color:var(--muted)}.t-nav{display:flex;gap:.5rem;margin-top:1.4rem}.t-dot{width:9px;height:9px;padding:0;border-radius:50%;border:1px solid var(--ink-2);background:transparent;cursor:pointer}.t-dot[aria-current="true"]{background:var(--ink);border-color:var(--ink)}.t-dot:focus-visible{outline:2px solid var(--accent-line);outline-offset:2px}.t-stack{display:grid}.t-panel{grid-area:1/1}.t-panel:not(.is-on){visibility:hidden}
+.t-q{display:inline-block;font-size:1rem;font-weight:600;color:var(--ink);margin:0 0 1rem;padding:.35rem .7rem;background:rgba(201,149,58,.16);border-left:3px solid var(--accent-line);border-radius:4px}.t-eyebrow{margin:0 0 1rem;font-size:.75rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}.t-who{margin:0 0 .6rem;font-family:var(--serif);font-size:clamp(1.15rem,1.8vw,1.35rem);line-height:1.25;font-weight:500;color:var(--ink)}.t-nav{display:flex;gap:.5rem;margin-top:1.4rem}.t-dot{width:9px;height:9px;padding:0;border-radius:50%;border:1px solid var(--ink-2);background:transparent;cursor:pointer}.t-dot[aria-current="true"]{background:var(--ink);border-color:var(--ink)}.t-dot:focus-visible{outline:2px solid var(--accent-line);outline-offset:2px}.t-stack{display:grid}.t-panel{grid-area:1/1}.t-panel:not(.is-on){visibility:hidden}
 .t-stack{transform-origin:50% 50%}.t-stack.t-flip{animation:tflip .5s ease-in-out}@keyframes tflip{0%{transform:perspective(1200px) rotateY(0);opacity:1}50%{transform:perspective(1200px) rotateY(90deg);opacity:.15}100%{transform:perspective(1200px) rotateY(0);opacity:1}}@media (prefers-reduced-motion: reduce){.t-stack.t-flip{animation:none}}
 .diag{background:var(--surface);border-bottom:1px solid var(--rule);padding:clamp(2.5rem,6vw,4.5rem) 0}.diag h2{margin:0 0 .6rem}.diag .lede{margin:0}.diag-meta{margin:1.2rem 0 0;color:var(--ink-2);font-size:1.05rem}.diag-meta strong{color:var(--ink);font-size:1.25rem}.diag .hero-cta{margin-top:1.4rem}
 </style>
@@ -416,12 +416,12 @@ footer a{text-underline-offset:3px}
   <div class="wrap">
     <div class="diag-head">
       <p class="diag-tag" style="margin:0 0 .8rem">Start here</p>
-      <h2 id="diag-title">Do you know where you stand?</h2>
+      <h2 id="diag-title">How well do you speak?</h2>
       <p>Most people guess. Take a short test and find out: what your level is, how you come across, and what to fix first.</p>
     </div>
     <div class="diag-grid">
       <article class="diag-card">
-        <p class="diag-tag">Your English level</p>
+        <p class="diag-tag">What’s your level?</p>
         <h3>TELW Level</h3>
         <p class="diag-what">Find out exactly where your English is today.</p>
         <ul>
@@ -433,7 +433,7 @@ footer a{text-underline-offset:3px}
         <a class="btn btn-solid" href="https://telw-level.manutelw.workers.dev/">Find my level</a>
       </article>
       <article class="diag-card">
-        <p class="diag-tag">How you come across</p>
+        <p class="diag-tag">How do you come across?</p>
         <h3>Communication Performance Diagnostic</h3>
         <p class="diag-what">Find out how clear, organised and convincing you are when you speak.</p>
         <ul>
@@ -446,7 +446,7 @@ footer a{text-underline-offset:3px}
         <a class="diag-booked" href="/diagnostic/">Already booked? Start here</a>
       </article>
       <article class="diag-card">
-        <p class="diag-tag">Your IELTS band</p>
+        <p class="diag-tag">Will you get the band you need?</p>
         <h3>IELTS diagnostics</h3>
         <p class="diag-what">Find out where you are against the band you need.</p>
         <ul>
