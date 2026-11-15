@@ -80,6 +80,14 @@ export default {
       if(path==='/robots.txt'){
         return new Response(TELW_ROBOTS,{headers:{'content-type':'text/plain; charset=utf-8','cache-control':'public, max-age=3600'}});
       }
+      // Share and search images: link previews (WhatsApp, LinkedIn) and Google's logo/photo entries.
+      const TELW_IMAGES={'/telw-share.jpg':'telw-share.jpg','/telw-logo.png':'telw-logo.png','/manu-vikraman.jpg':'manu-vikraman.jpg'};
+      if(TELW_IMAGES[path]){
+        const assetUrl=new URL(request.url);assetUrl.pathname='/telw-site/img/'+TELW_IMAGES[path];
+        const response=await env.ASSETS.fetch(new Request(assetUrl.toString(),request));
+        const headers=new Headers(response.headers);headers.set('cache-control','public, max-age=86400');headers.delete('x-robots-tag');
+        return new Response(response.body,{status:response.status,headers});
+      }
       if(path==='/sitemap.xml'){
         return new Response(telwSitemap(),{headers:{'content-type':'application/xml; charset=utf-8','cache-control':'public, max-age=3600'}});
       }
