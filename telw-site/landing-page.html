@@ -412,7 +412,7 @@ footer a{text-underline-offset:3px}
 .diag-foot a{color:var(--ink)}
 .diag .diag-card .diag-tag{font-size:clamp(1.1rem,1.6vw,1.25rem);letter-spacing:0;text-transform:none;line-height:1.3;margin:0 0 .7rem}.diag-corp{align-self:flex-start;margin:0 0 .9rem;padding:.45rem .9rem;border-radius:6px;background:var(--accent-line);color:var(--ink);font-size:clamp(.9rem,1.2vw,1.05rem);font-weight:800;letter-spacing:.05em;white-space:nowrap;text-transform:uppercase;box-shadow:0 3px 10px rgba(201,149,58,.35)}.diag .diag-card .diag-hook{font-size:clamp(1.3rem,2vw,1.5rem);font-weight:800;line-height:1.25;letter-spacing:0;text-transform:none}
 .diag-find{margin:.5rem 0 0;padding:0;list-style:none;color:var(--ink-2);font-size:1.1rem}.diag-find li{position:relative;padding-left:1.2rem;margin:.25rem 0}.diag-find li::before{content:"";position:absolute;left:0;top:.6em;width:.45rem;height:.45rem;border-radius:50%;background:var(--accent-line)}
-.diag-q{display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;margin-left:.35rem;border-radius:50%;border:2px solid var(--accent-line);color:var(--accent);font:700 .95rem/1 system-ui,sans-serif;text-decoration:none;vertical-align:middle}.diag-q:hover{background:var(--accent-line);color:var(--ink)}
+.diag-h{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem .8rem;margin:0 0 .5rem}.diag-h h3{margin:0}.diag-levels{display:inline-flex;align-items:center;gap:.4rem;color:var(--accent);font-weight:700;font-size:.95rem;text-decoration:none}.diag-levels:hover{text-decoration:underline}.diag-q{display:inline-flex;flex:none;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:50%;border:2px solid var(--accent-line);color:var(--accent);font:700 .95rem/1 system-ui,sans-serif;text-decoration:none;vertical-align:middle}.diag-levels:hover .diag-q{background:var(--accent-line);color:var(--ink)}
 .diag-jump{display:none}.diag-card{scroll-margin-top:90px}
 @media(max-width:900px){.diag-jump{display:flex;flex-direction:column;gap:.55rem;margin:0 0 1.4rem}.diag-jump a{display:flex;justify-content:space-between;align-items:center;gap:.6rem;white-space:normal;font-size:.95rem;padding:.75rem 1rem;border:1px solid var(--accent-line);border-radius:8px;background:var(--surface);color:var(--ink);font-weight:600;text-decoration:none}.diag-jump a span{color:var(--accent);flex:none}}
 @media(max-width:900px){.diag-grid{grid-template-columns:1fr}}
@@ -432,7 +432,7 @@ footer a{text-underline-offset:3px}
     <div class="diag-grid">
       <article class="diag-card" id="d-level">
         <p class="diag-tag">What’s your level?</p>
-        <h3>TELW Level <a class="diag-q" href="/telw-levels/" aria-label="What do the TELW levels mean?" title="What do the levels mean?">?</a></h3>
+        <div class="diag-h"><h3>TELW Level</h3><a class="diag-levels" href="/telw-levels/"><span class="diag-q" aria-hidden="true">?</span>What do the levels mean?</a></div>
         <p class="diag-what">Find out exactly where your English is today.</p>
         <ul>
           <li>A written part: 100 short questions, from easy to hard</li>
@@ -441,7 +441,6 @@ footer a{text-underline-offset:3px}
         </ul>
         <p class="diag-meta"><strong>₹499</strong> · about 50 minutes · online</p>
         <a class="btn btn-solid" href="https://telw-level.manutelw.workers.dev/">Find my level</a>
-        <a class="diag-booked" href="/telw-levels/">What do the levels mean?</a>
       </article>
       <article class="diag-card" id="d-comm">
         <p class="diag-corp">Corporate communication</p>
