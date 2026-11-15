@@ -390,6 +390,80 @@ footer a{text-underline-offset:3px}
 
 <main id="main">
 
+<!-- ===== TELW diagnostics: start ===== -->
+<style>
+.diag{background:var(--paper);padding:clamp(2.4rem,5vw,4rem) 0 clamp(2rem,4vw,3rem);border-bottom:1px solid var(--rule)}
+.diag-head{max-width:46rem;margin-bottom:clamp(1.4rem,3vw,2.2rem)}
+.diag-head h2{font-size:clamp(2.1rem,4.6vw,3.4rem);max-width:none;margin:0 0 .6rem}
+.diag-head p{margin:0;color:var(--ink-2);font-size:1.1rem;max-width:40rem}
+.diag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(1rem,2vw,1.5rem)}
+.diag-card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:clamp(1.3rem,2.4vw,1.8rem)}
+.diag .diag-tag{margin:0 0 .5rem;font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.diag-card h3{font-size:clamp(1.45rem,2.4vw,1.8rem);margin:0 0 .5rem}
+.diag-card .diag-what{margin:0 0 .9rem;color:var(--ink-2)}
+.diag-card ul{margin:0 0 1.1rem;padding:0;list-style:none}
+.diag-card li{position:relative;padding-left:1.15rem;margin:0 0 .45rem;color:var(--ink-2);font-size:.97rem}
+.diag-card li::before{content:"";position:absolute;left:0;top:.62em;width:.42rem;height:.42rem;border-radius:50%;background:var(--accent-line)}
+.diag-meta{margin:auto 0 1rem;padding-top:.4rem;color:var(--muted);font-size:.95rem}
+.diag-meta strong{color:var(--ink);font-size:1.25rem;font-weight:600}
+.diag-card .btn{align-self:flex-start;margin-top:0}
+.diag-booked{display:inline-block;margin-top:.7rem;color:var(--ink);font-size:.95rem}
+.diag-foot{margin:1.4rem 0 0;color:var(--muted);font-size:.95rem}
+.diag-foot a{color:var(--ink)}
+@media(max-width:900px){.diag-grid{grid-template-columns:1fr}}
+</style>
+<section class="diag" id="diagnostic" aria-labelledby="diag-title">
+  <div class="wrap">
+    <div class="diag-head">
+      <p class="diag-tag" style="margin:0 0 .8rem">Start here</p>
+      <h2 id="diag-title">Do you know where you stand?</h2>
+      <p>Most people guess. Take a short test and find out: what your level is, how you come across, and what to fix first.</p>
+    </div>
+    <div class="diag-grid">
+      <article class="diag-card">
+        <p class="diag-tag">Your English level</p>
+        <h3>TELW Level</h3>
+        <p class="diag-what">Find out exactly where your English is today.</p>
+        <ul>
+          <li>A written part: 100 short questions, from easy to hard</li>
+          <li>A speaking part: four short tasks</li>
+          <li>Your level straight away, with its CEFR equivalent</li>
+        </ul>
+        <p class="diag-meta"><strong>₹499</strong> · about 50 minutes · online</p>
+        <a class="btn btn-solid" href="https://telw-level.manutelw.workers.dev/">Find my level</a>
+      </article>
+      <article class="diag-card">
+        <p class="diag-tag">How you come across</p>
+        <h3>Communication Performance Diagnostic</h3>
+        <p class="diag-what">Find out how clear, organised and convincing you are when you speak.</p>
+        <ul>
+          <li>Four speaking tasks, each with a follow-up question, like a real interview or meeting</li>
+          <li>A personal report with examples from your own answers</li>
+          <li>Your trainer checks every report</li>
+        </ul>
+        <p class="diag-meta"><strong>₹999</strong> · about 25 minutes · online</p>
+        <a class="btn btn-solid" href="/book/?test=communication">Book the diagnostic</a>
+        <a class="diag-booked" href="/diagnostic/">Already booked? Start here</a>
+      </article>
+      <article class="diag-card">
+        <p class="diag-tag">Your IELTS band</p>
+        <h3>IELTS diagnostics</h3>
+        <p class="diag-what">Find out where you are against the band you need.</p>
+        <ul>
+          <li>Reading, Listening and Writing, in the IELTS format</li>
+          <li>Your score and what to work on in each skill</li>
+          <li>Take one skill, or all three</li>
+        </ul>
+        <p class="diag-meta"><strong>From ₹299</strong> · all three ₹799</p>
+        <a class="btn btn-solid" href="/ielts/">Check my IELTS</a>
+      </article>
+    </div>
+    <p class="diag-foot">Not sure which one? <a href="https://wa.me/919717116831">Message us on WhatsApp</a> and we'll tell you.</p>
+  </div>
+</section>
+<!-- ===== TELW diagnostics: end ===== -->
+
+
 <section class="hero" aria-labelledby="hero-title">
   <div class="wrap hero-grid">
     <div>
@@ -456,23 +530,6 @@ footer a{text-underline-offset:3px}
   </div>
 </section>
 
-<section class="diag" id="diagnostic" aria-labelledby="diag-title">
-  <div class="wrap">
-    <p class="hero-eyebrow">Start here</p>
-    <h2 id="diag-title">Communication Performance Diagnostic</h2>
-    <p class="lede">Find out how you come across when you speak, and what to fix first.</p>
-    <ul class="hero-steps">
-      <li>Four short speaking tasks: explain an idea, give your opinion, handle a situation and judge a proposal.</li>
-      <li>After each answer, a follow-up question based on what you said, just like a real interview or meeting.</li>
-      <li>A personal report on how clear, organised and convincing you are, with examples from your own answers and what to practise next. Your trainer checks every report.</li>
-    </ul>
-    <p class="diag-meta"><strong>₹999</strong> · about 25 minutes · online, on your laptop or phone</p>
-    <div class="hero-cta">
-      <a class="btn btn-solid" href="/book/?test=communication">Book the diagnostic</a>
-      <a class="btn btn-line" href="/diagnostic/">Already booked? Start here</a>
-    </div>
-  </div>
-</section>
 
 <div class="creds">
   <div class="wrap">
