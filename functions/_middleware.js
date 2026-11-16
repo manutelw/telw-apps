@@ -188,7 +188,6 @@ export async function onRequest(context) {
   const servicesMenu = `<div class="services-menu">
     <a href="./ascent/"><strong>Trainer Login</strong></a>
     <a href="./quick-jd/">JD Mapper</a>
-    <a href="./ascent/jd-builder.html">JD Builder</a>
     <a href="./ascent/cv-builder.html">CV Builder &amp; Evaluator</a>
     <a href="./ascent/eportfolio.html">E-Portfolios</a>
     <a href="./buy/?product=CAT_SIMULATOR">CAT Simulator · ₹599 / attempt</a>
