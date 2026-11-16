@@ -59,6 +59,7 @@ export default {
     if(host==='manuvikraman.com' || host==='www.manuvikraman.com'){
       return base.fetch(request,env);
     }
-    return withTelwBar(request,await clarion.fetch(request,env));
+    if(TELW_BAR_PATHS.has(url.pathname))return withTelwBar(request,await clarion.fetch(request,env));
+    return clarion.fetch(request,env);
   }
 };
