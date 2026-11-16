@@ -7,6 +7,21 @@ import base from './worker.js';
 import {onRequestPost as evaluatePiPractice} from './functions/api/pi-practice/evaluate.js';
 import {onRequestPost as coachPiStudio} from './functions/api/pi-studio/coach.js';
 
+// TELW header bar on the ClarionPrep pages that manuvikraman.com links to, so visitors feel they are still on TELW.
+const TELW_BAR_PATHS=new Set(['/','/index.html','/account','/account/','/account/index.html','/ascent/institution.html']);
+const TELW_BAR_HTML='<div class="telwbar" role="banner"><div class="telwbar-in"><a class="telwbar-brand" href="https://manuvikraman.com/"><img src="https://manuvikraman.com/telw-logo.png" alt="" width="34" height="34"><span><b>TELW</b><small>ClarionPrep is TELW&#8217;s practice platform</small></span></a><nav class="telwbar-nav" aria-label="TELW"><a href="https://manuvikraman.com/#programmes">Programmes</a><a href="https://manuvikraman.com/ielts/">IELTS</a><a href="https://manuvikraman.com/trainer-profile/">Trainer</a><a href="https://manuvikraman.com/#contact">Contact</a></nav><a class="telwbar-back" href="https://manuvikraman.com/">&#8592; Back to TELW</a></div></div>';
+const TELW_BAR_CSS='<style id="telwbar-css">.telwbar{background:#f5f4f0;border-bottom:3px solid #c9953a;font-family:Arial,Helvetica,sans-serif;position:relative;z-index:50}.telwbar-in{max-width:1180px;margin:0 auto;padding:8px 20px;display:flex;align-items:center;gap:22px}.telwbar a{text-decoration:none;color:#13233f}.telwbar-brand{display:flex;align-items:center;gap:10px}.telwbar-brand img{width:34px;height:34px;border-radius:50%;background:#fff}.telwbar-brand b{display:block;font:700 18px Georgia,serif;letter-spacing:.02em}.telwbar-brand small{display:block;font-size:12px;color:#5b6676}.telwbar-nav{display:flex;gap:18px;margin-left:auto;font-size:14px}.telwbar-nav a:hover{text-decoration:underline}.telwbar-back{border:1px solid #13233f;border-radius:6px;padding:7px 12px;font-size:14px;font-weight:700;white-space:nowrap}.telwbar-back:hover{background:#13233f;color:#fff!important}@media(max-width:760px){.telwbar-nav{display:none}.telwbar-back{margin-left:auto}.telwbar-brand small{display:none}}</style>';
+async function withTelwBar(request,response){
+  const url=new URL(request.url);
+  if(url.hostname!=='clarionprep.com'&&url.hostname!=='www.clarionprep.com')return response;
+  if(!TELW_BAR_PATHS.has(url.pathname)||url.searchParams.has('slug'))return response;
+  if(!(response.headers.get('content-type')||'').includes('text/html'))return response;
+  return new HTMLRewriter()
+    .on('head',{element(e){e.append(TELW_BAR_CSS,{html:true})}})
+    .on('body',{element(e){e.prepend(TELW_BAR_HTML,{html:true})}})
+    .transform(response);
+}
+
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
@@ -44,6 +59,7 @@ export default {
     if(host==='manuvikraman.com' || host==='www.manuvikraman.com'){
       return base.fetch(request,env);
     }
+    if(TELW_BAR_PATHS.has(url.pathname))return withTelwBar(request,await clarion.fetch(request,env));
     return clarion.fetch(request,env);
   }
 };
