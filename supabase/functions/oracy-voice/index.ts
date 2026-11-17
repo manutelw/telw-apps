@@ -114,7 +114,7 @@ async function tts(req: Request, payload: any) {
 }
 
 async function transcribe(audio: File) {
-  const fd = new FormData(); fd.append("model", "whisper-1"); fd.append("file", audio, audio.name || "answer.webm");
+  const fd = new FormData(); fd.append("model", "gpt-transcribe"); fd.append("file", audio, audio.name || "answer.webm");
   const r = await fetch("https://api.openai.com/v1/audio/transcriptions", { method: "POST", headers: { "Authorization": `Bearer ${OPENAI_API_KEY}` }, body: fd });
   if (!r.ok) throw new Error("Transcription failed: " + (await r.text()).slice(0, 400));
   return String((await r.json()).text || "").trim();
@@ -269,7 +269,7 @@ async function realtimeToken(req:Request,payload:any){
     headers:{"Authorization":`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},
     body:JSON.stringify({session:{
       type:"realtime",
-      model:"gpt-realtime",
+      model:"gpt-realtime-2.1",
       instructions:realtimeInstructions(unitNo),
       audio:{
         input:{
