@@ -287,13 +287,14 @@ async function handleOracyLogout(request){
 }
 
 async function handleAdminHandoff(request){
-  let token='';
+  let token='',next='/oracy/';
   try{
     const form=await request.formData();
     token=String(form.get('ascent_session_token')||'').trim();
+    if(String(form.get('next')||'')==='/oracy/admin.html')next='/oracy/admin.html';
   }catch{}
   if(!token || !(await validAdmin(token))) return new Response('Administrator access required.',{status:403,headers:{'cache-control':'no-store'}});
-  const headers=new Headers({location:'/oracy/','cache-control':'no-store'});
+  const headers=new Headers({location:next,'cache-control':'no-store'});
   headers.append('set-cookie',cookie('clarion_admin_session',token,60*60,'/'));
   return new Response(null,{status:303,headers});
 }
@@ -349,6 +350,12 @@ async function injectOracyAdminCard(response){
     const card='<button id="oracyAdminHubCard" class="app-card dialogue" type="button"><strong>ORACY</strong><span>Manage spoken-English learners, passwords and assigned units</span></button>';
     html=html.replace('<button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>',card+'\n        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>');
     const script=`<script>(function(){var b=document.getElementById('oracyAdminHubCard');if(!b)return;b.addEventListener('click',function(){var s=null;for(const k of ['ascent_admin_master_session','ascent_trainer_session']){try{var x=JSON.parse(localStorage.getItem(k)||'null');if(x&&x.sessionToken&&String(x.role||'').toUpperCase()==='ADMIN'){s=x;break}}catch(e){}}if(!s){location.href='/ascent/admin-login.html';return}var f=document.createElement('form');f.method='POST';f.action='/oracy/admin-handoff';var i=document.createElement('input');i.type='hidden';i.name='ascent_session_token';i.value=s.sessionToken;f.appendChild(i);document.body.appendChild(f);f.submit();});})();</script>`;
+    html=html.replace('</body>',script+'</body>');
+  }
+  if(!html.includes('id="oracyLearnersHubCard"')){
+    const card='<button id="oracyLearnersHubCard" class="app-card dialogue" type="button"><strong>ORACY Learners</strong><span>Add learners, assign units and switch on Paid (full access)</span></button>';
+    html=html.replace('<button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>',card+'\n        <button id="catSimulatorAdminButton" class="app-card ascent" type="button"><strong>CAT Simulator</strong>');
+    const script=`<script id="oracyLearnersHubScript">(function(){var b=document.getElementById('oracyLearnersHubCard');if(!b)return;b.addEventListener('click',function(){var s=null;for(const k of ['ascent_admin_master_session','ascent_trainer_session']){try{var x=JSON.parse(localStorage.getItem(k)||'null');if(x&&x.sessionToken&&String(x.role||'').toUpperCase()==='ADMIN'){s=x;break}}catch(e){}}if(!s){location.href='/ascent/admin-login.html';return}var f=document.createElement('form');f.method='POST';f.action='/oracy/admin-handoff';[['ascent_session_token',s.sessionToken],['next','/oracy/admin.html']].forEach(function(p){var i=document.createElement('input');i.type='hidden';i.name=p[0];i.value=p[1];f.appendChild(i)});document.body.appendChild(f);f.submit();});})();</script>`;
     html=html.replace('</body>',script+'</body>');
   }
   if(!html.includes('id="presentationSkillsAdminCard"')){
