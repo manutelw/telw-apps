@@ -13,6 +13,7 @@ const products={
  CV_BUILDER:{name:'CV Builder & Evaluator',price:599,meta:'One CV review project.'},
  JD_MAPPER:{name:'JD Mapper',price:1499,meta:'One complete CV–JD mapping project.'}
 };
+if(['CV_BUILDER','JD_MAPPER'].includes((new URLSearchParams(location.search).get('product')||'').toUpperCase()))location.replace('/buy/?product=PLACEMENT_PASS');
 const $=id=>document.getElementById(id),code=(new URLSearchParams(location.search).get('product')||'').toUpperCase(),p=products[code];
 function status(m,t=''){const e=$('status');e.textContent=m||'';e.className='status'+(t?' '+t:'')}
 async function call(action,body={}){const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action,...body})});const d=await r.json().catch(()=>({}));if(!r.ok||d.ok===false)throw Error(d.message||'Request failed.');return d}
