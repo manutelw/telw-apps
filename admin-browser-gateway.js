@@ -31,9 +31,9 @@ export async function handleAdminGateway(request){
   if(path==='/access/public-entitlement'&&request.method==='POST')return startPublicEntitlement(request);
   if(path==='/access/institutional-start'&&request.method==='POST')return startInstitutionalAccess(request);
   if((path==='/oracy/admin-handoff'||path==='/presentation-skills/admin-handoff')&&request.method==='POST'){
-    let token='';try{const form=await request.formData();token=String(form.get('ascent_session_token')||'').trim()}catch{}
+    let token='',next='';try{const form=await request.formData();token=String(form.get('ascent_session_token')||'').trim();next=String(form.get('next')||'')}catch{}
     if(!token||!(await validAdmin(token)))return new Response('Administrator access required.',{status:403,headers:{'cache-control':'no-store'}});
-    const h=new Headers({location:path.startsWith('/oracy')?'/oracy/':'/presentation-skills/admin.html','cache-control':'no-store'});h.append('set-cookie',setAdminSessionCookie(token));return new Response(null,{status:303,headers:h});
+    const h=new Headers({location:path.startsWith('/oracy')?(next==='/oracy/admin.html'?'/oracy/admin':'/oracy/'):'/presentation-skills/admin.html','cache-control':'no-store'});h.append('set-cookie',setAdminSessionCookie(token));return new Response(null,{status:303,headers:h});
   }
   if(path.startsWith('/__admin/')){
     if(request.method!=='POST')return json({ok:false},405);const target=TARGETS[path.slice('/__admin/'.length)];if(!target)return json({ok:false},404);const token=readAdminCookie(request);if(!token||!(await validAdmin(token)))return json({ok:false,message:'Administrator session required.'},403);let body={};try{body=await request.json()}catch{}body.admin_token=token;const r=await fetch(target,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});return new Response(r.body,{status:r.status,statusText:r.statusText,headers:{'content-type':r.headers.get('content-type')||'application/json','cache-control':'no-store'}})

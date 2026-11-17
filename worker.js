@@ -185,7 +185,7 @@ export default {
       return handleAdminHandoff(request);
     }
 
-    if(path==='/oracy/admin.html'){
+    if(path==='/oracy/admin.html' || path==='/oracy/admin'){
       const token=readCookie(request.headers.get('cookie')||'','clarion_admin_session');
       if(!token || !(await validAdmin(token))) return redirect('/ascent/admin-login.html');
       return noStore(await env.ASSETS.fetch(request));
@@ -291,7 +291,7 @@ async function handleAdminHandoff(request){
   try{
     const form=await request.formData();
     token=String(form.get('ascent_session_token')||'').trim();
-    if(String(form.get('next')||'')==='/oracy/admin.html')next='/oracy/admin.html';
+    if(String(form.get('next')||'')==='/oracy/admin.html')next='/oracy/admin';
   }catch{}
   if(!token || !(await validAdmin(token))) return new Response('Administrator access required.',{status:403,headers:{'cache-control':'no-store'}});
   const headers=new Headers({location:next,'cache-control':'no-store'});
