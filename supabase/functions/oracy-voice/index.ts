@@ -54,21 +54,35 @@ async function validAdmin(token:string){
   }catch{return false;}
 }
 
-async function validLearnerUnit(token: string, unitNo: number) {
-  if (!token || unitNo < 1) return false;
+async function validLearnerUnit(token: string, unitNo: number): Promise<any> {
+  if (!token || unitNo < 1) return null;
   const tokenHash = await sha256(token);
   const { data: session } = await db.from("oracy_sessions").select("learner_id,expires_at,revoked_at").eq("token_hash", tokenHash).maybeSingle();
-  if (!session || session.revoked_at || new Date(session.expires_at).getTime() <= Date.now()) return false;
-  const { data: learner } = await db.from("oracy_learners").select("id,is_active").eq("id", session.learner_id).maybeSingle();
-  if (!learner || learner.is_active !== true) return false;
+  if (!session || session.revoked_at || new Date(session.expires_at).getTime() <= Date.now()) return null;
+  const { data: learner } = await db.from("oracy_learners").select("id,is_active,full_access").eq("id", session.learner_id).maybeSingle();
+  if (!learner || learner.is_active !== true) return null;
   const { data: assignment } = await db.from("oracy_unit_assignments").select("is_active").eq("learner_id", learner.id).eq("unit_no", unitNo).maybeSingle();
-  return Boolean(assignment && assignment.is_active === true);
+  return (assignment && assignment.is_active === true) ? learner : null;
 }
 
-async function authorised(sessionToken:string,adminToken:string,unitNo:number){
-  if(await validLearnerUnit(sessionToken,unitNo)) return true;
-  if(await validAdmin(adminToken)) return true;
-  return false;
+async function authorised(sessionToken:string,adminToken:string,unitNo:number):Promise<any>{
+  const learner=await validLearnerUnit(sessionToken,unitNo);
+  if(learner) return {admin:false,learner};
+  if(await validAdmin(adminToken)) return {admin:true,learner:null};
+  return null;
+}
+
+// Homework rules: learners without full access get no live conversation and a monthly cap on checked answers.
+const MONTHLY_ANSWER_LIMIT=150;
+function hasFullAccess(auth:any){return Boolean(auth&&(auth.admin||auth.learner?.full_access===true));}
+async function useAnswer(auth:any):Promise<string>{
+  if(!auth||auth.admin||!auth.learner)return "";
+  const month=new Date().toISOString().slice(0,7);
+  const { data: row } = await db.from("oracy_usage").select("answers").eq("learner_id",auth.learner.id).eq("month",month).maybeSingle();
+  const used=Number(row?.answers||0);
+  if(!hasFullAccess(auth)&&used>=MONTHLY_ANSWER_LIMIT)return `You have used this month's ${MONTHLY_ANSWER_LIMIT} practice answers. They reset on the 1st of next month.`;
+  await db.from("oracy_usage").upsert({learner_id:auth.learner.id,month,answers:used+1,updated_at:new Date().toISOString()},{onConflict:"learner_id,month"});
+  return "";
 }
 
 async function generateTts(req: Request, text: string, voice: string, instructions: string) {
@@ -153,8 +167,10 @@ async function conversation(req: Request, form: FormData) {
   const adminToken = String(form.get("admin_token") || "");
   const unitNo = Number(form.get("unit_no") || 0);
   const turnNo = Number(form.get("turn_no") || 0);
-  if (!(await authorised(sessionToken, adminToken, unitNo))) return json(req, { error: "ORACY access required" }, 403);
+  const auth = await authorised(sessionToken, adminToken, unitNo);
+  if (!auth) return json(req, { error: "ORACY access required" }, 403);
   if (unitNo !== 2) return json(req, { error: "Conversation is not available for this unit" }, 400);
+  { const capped = await useAnswer(auth); if (capped) return json(req, { error: capped }, 403); }
   if (!Number.isInteger(turnNo) || turnNo < 1 || turnNo > 4) return json(req, { error: "Invalid conversation turn" }, 400);
   if (!(audio instanceof File) || audio.size < 500) return json(req, { error: "No usable audio" }, 400);
   if (audio.size > 8000000) return json(req, { error: "Audio too large" }, 413);
@@ -262,7 +278,9 @@ async function realtimeToken(req:Request,payload:any){
   const unitNo=Number(payload?.unit_no||0);
   const sessionToken=String(payload?.session_token||"").trim();
   const adminToken=String(payload?.admin_token||"").trim();
-  if(!(await authorised(sessionToken,adminToken,unitNo)))return json(req,{error:"ORACY access required"},403);
+  const auth=await authorised(sessionToken,adminToken,unitNo);
+  if(!auth)return json(req,{error:"ORACY access required"},403);
+  if(!hasFullAccess(auth))return json(req,{error:"Live conversation is part of the full ORACY course. Ask your trainer to switch it on for you."},403);
   if(!CONVERSATION_UNITS[unitNo])return json(req,{error:"Live conversation is not available for this unit"},400);
   const r=await fetch("https://api.openai.com/v1/realtime/client_secrets",{
     method:"POST",
@@ -291,7 +309,9 @@ async function conversationFeedback(req:Request,payload:any){
   const unitNo=Number(payload?.unit_no||0);
   const sessionToken=String(payload?.session_token||"").trim();
   const adminToken=String(payload?.admin_token||"").trim();
-  if(!(await authorised(sessionToken,adminToken,unitNo)))return json(req,{error:"ORACY access required"},403);
+  const auth=await authorised(sessionToken,adminToken,unitNo);
+  if(!auth)return json(req,{error:"ORACY access required"},403);
+  if(!hasFullAccess(auth))return json(req,{error:"Live conversation is part of the full ORACY course. Ask your trainer to switch it on for you."},403);
   const u=CONVERSATION_UNITS[unitNo];
   if(!u)return json(req,{error:"Conversation feedback is not available for this unit"},400);
   const raw=Array.isArray(payload?.history)?payload.history:[];
@@ -316,9 +336,11 @@ async function evaluate(req: Request, form: FormData) {
   const sessionToken = String(form.get("session_token") || "");
   const adminToken = String(form.get("admin_token") || "");
   const unitNo = Number(form.get("unit_no") || 0);
-  if (!(await authorised(sessionToken,adminToken,unitNo))) return json(req, { error: "ORACY access required" }, 403);
+  const auth = await authorised(sessionToken,adminToken,unitNo);
+  if (!auth) return json(req, { error: "ORACY access required" }, 403);
   if (!(audio instanceof File) || audio.size < 500) return json(req, { error: "No usable audio" }, 400);
   if (audio.size > 8000000) return json(req, { error: "Audio too large" }, 413);
+  { const capped = await useAnswer(auth); if (capped) return json(req, { error: capped }, 403); }
   const transcript = await transcribe(audio);
   const usedMarkers=unitNo===1?markerHits(transcript):[];
   const markerMin=unitNo===1?(prompt.toLowerCase().includes('35 to 50')||prompt.toLowerCase().includes('35–50')?2:1):0;
