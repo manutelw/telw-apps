@@ -88,7 +88,7 @@ async function handleShareApi(request){
 async function ensureOracyCard(response){
   let html=await response.text();
   if(!html.includes('id="oracyAdminHubCard"')){
-    const card='<button id="oracyAdminHubCard" class="app-card dialogue" type="button"><strong>ORACY</strong><span>Open the ORACY course index and manage learner access</span></button>';
+    const card='<button id="oracyAdminHubCard" class="app-card dialogue" type="button"><strong>ORACY</strong><span>Manage learners, assigned units and Paid (full access)</span></button>';
     const catMarker='<button id="catSimulatorAdminButton"';
     const idx=html.indexOf(catMarker);
     if(idx>=0){
@@ -99,7 +99,7 @@ async function ensureOracyCard(response){
     }
   }
   if(!html.includes('id="oracyDirectIndexScript"')){
-    const script=`<script id="oracyDirectIndexScript">(function(){var b=document.getElementById('oracyAdminHubCard');if(!b)return;b.removeAttribute('href');b.addEventListener('click',function(e){e.preventDefault();var s=null;for(const k of ['ascent_admin_master_session','ascent_trainer_session']){try{var x=JSON.parse(localStorage.getItem(k)||'null');if(x&&x.sessionToken&&String(x.role||'').toUpperCase()==='ADMIN'){s=x;break}}catch(err){}}if(!s){location.href='/ascent/admin-login.html';return}var f=document.createElement('form');f.method='POST';f.action='/oracy/admin-handoff';var i=document.createElement('input');i.type='hidden';i.name='ascent_session_token';i.value=s.sessionToken;f.appendChild(i);document.body.appendChild(f);f.submit();});})();</script>`;
+    const script=`<script id="oracyDirectIndexScript">(function(){var b=document.getElementById('oracyAdminHubCard');if(!b)return;b.removeAttribute('href');b.addEventListener('click',function(e){e.preventDefault();var s=null;for(const k of ['ascent_admin_master_session','ascent_trainer_session']){try{var x=JSON.parse(localStorage.getItem(k)||'null');if(x&&x.sessionToken&&String(x.role||'').toUpperCase()==='ADMIN'){s=x;break}}catch(err){}}if(!s){location.href='/ascent/admin-login.html';return}var f=document.createElement('form');f.method='POST';f.action='/oracy/admin-handoff';var i=document.createElement('input');i.type='hidden';i.name='ascent_session_token';i.value=s.sessionToken;f.appendChild(i);var n=document.createElement('input');n.type='hidden';n.name='next';n.value='/oracy/admin.html';f.appendChild(n);document.body.appendChild(f);f.submit();});})();</script>`;
     html=html.replace('</body>',script+'</body>');
   }
   const headers=new Headers(response.headers);
