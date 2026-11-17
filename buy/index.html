@@ -41,10 +41,10 @@ async function ensureUser(){
  if(full_name.length<2)throw Error('Please enter your full name.');
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw Error('Please enter a valid email address.');
  if(mobile.replace(/\D/g,'').length<10)throw Error('Please enter a valid mobile number.');
- if(needPassword){const d=await call(AUTH,'LOGIN',{email,password:$('fPass').value,device_id:deviceId()});await store(d);user=d.user;return}
+ if(needPassword){const d=await call(AUTH,'LOGIN',{email,password:$('fPass').value,device_id:deviceId()});await store(d);const du=d.user||{};user={...du,full_name:du.full_name||full_name,email:du.email||email,mobile:du.mobile||mobile};return}
  try{
   const d=await call(AUTH,'REGISTER',{full_name,roll_number:'IND-'+crypto.randomUUID().replaceAll('-','').slice(0,12).toUpperCase(),institution_name:'Individual',email,mobile,password:randomPassword(),device_id:deviceId()});
-  await store(d);user=d.user||{full_name,email,mobile};
+  await store(d);const du=d.user||{};user={...du,full_name:du.full_name||full_name,email:du.email||email,mobile:du.mobile||mobile};
  }catch(e){
   if(/already|exist|registered|in use/i.test(e.message)){needPassword=true;$('exists').classList.remove('hidden');$('fPass').focus();throw Error('')}
   throw e}
@@ -65,7 +65,7 @@ $('pay').onclick=async()=>{
  if(!product)return;status('');$('pay').disabled=true;
  try{
   status('Getting things ready…');await ensureUser();status('Opening secure payment…');
-  const o=await call(COMMERCE,'CREATE_ORDER',{product_code:product.code,full_name:user.full_name,email:user.email,mobile:user.mobile||'',device_id:deviceId(),account_session:localStorage.getItem('clarion_public_session')});
+  const o=await call(COMMERCE,'CREATE_ORDER',{product_code:product.code,full_name:user.full_name||$('fName').value.trim(),email:user.email||$('fEmail').value.trim(),mobile:user.mobile||$('fMobile').value.trim()||'',device_id:deviceId(),account_session:localStorage.getItem('clarion_public_session')});
   const rz=new Razorpay({key:o.razorpay_key_id,amount:o.amount_paise,currency:o.currency,name:'ClarionPrep',description:o.display_name||product.display_name,order_id:o.razorpay_order_id,prefill:{name:user.full_name,email:user.email,contact:user.mobile||''},
    handler:async p=>{try{status('Payment verified. Opening your app…','success');const v=await call(COMMERCE,'VERIFY',{payment_order_uuid:o.payment_order_uuid,razorpay_payment_id:p.razorpay_payment_id,razorpay_order_id:p.razorpay_order_id,razorpay_signature:p.razorpay_signature});await launch(v.launch_url,v.entitlement_token)}catch(e){status(e.message+' If money was taken, message TELW on WhatsApp at +91 9717 116 831.','error')}}});
   rz.on('payment.failed',()=>status('Payment was not completed.','error'));rz.open();
