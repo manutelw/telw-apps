@@ -228,6 +228,12 @@ async function handleOracySession(request){
       const learnerToken=readCookie(cookies,'oracy_session');
       const adminToken=readCookie(cookies,'clarion_admin_session');
       const form=await request.formData();
+      if(String(form.get('action')||'')==='talk'){
+        form.set('session_token',learnerToken||'');
+        form.set('admin_token',adminToken||'');
+        const r=await fetch(ORACY_VOICE,{method:'POST',headers:{'x-oracy-client':'oracy-web-v1'},body:form});
+        return proxy(r);
+      }
       const unitNo=Number(form.get('unit_no')||1);
       const adminOk=adminToken ? await validAdmin(adminToken) : false;
       if(!adminOk && (!learnerToken || !(await validLearnerUnit(learnerToken,unitNo)))) return json({error:'Unit access required'},403);
@@ -256,10 +262,10 @@ async function handleOracySession(request){
       }
       return new Response(JSON.stringify(data),{status:r.status,headers});
     }
-    if(['plan','upgrade-order','upgrade-verify','conversation-end'].includes(body?.action)){
+    if(['plan','upgrade-order','upgrade-verify','conversation-end','talk-feedback'].includes(body?.action)){
       const cookies=request.headers.get('cookie')||'';
       body.session_token=readCookie(cookies,'oracy_session')||'';
-      body.admin_token=body.action==='plan'?(readCookie(cookies,'clarion_admin_session')||''):'';
+      body.admin_token=['plan','talk-feedback'].includes(body.action)?(readCookie(cookies,'clarion_admin_session')||''):'';
       const r=await fetch(ORACY_VOICE,{method:'POST',headers:{'x-oracy-client':'oracy-web-v1','content-type':'application/json'},body:JSON.stringify(body)});
       return proxy(r);
     }

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>ORACY · Talk practice</title>
+<style>
+:root{--navy:#102a43;--gold:#c79a3b;--bg:#f4f6f8;--line:#e4e9ee;--muted:#627d98;--green:#18794e;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,-apple-system,"Segoe UI",Arial,sans-serif;background:var(--bg);color:#243b53}
+.top{background:var(--navy);color:#fff}.bar{max-width:820px;margin:auto;padding:16px 20px;display:flex;align-items:center;gap:14px}.brand{font-weight:800;font-size:22px}.brand small{display:block;color:#f0c56d;font-size:12px;font-weight:600}.bar nav{margin-left:auto;display:flex;gap:14px}.bar nav a{color:#fff;font-size:14px}
+main{max-width:820px;margin:auto;padding:20px}h1{color:var(--navy);margin:6px 0 4px;font-size:28px}h2{color:var(--navy);margin:0 0 10px;font-size:19px}.muted{color:var(--muted);line-height:1.55}.small{font-size:13px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:16px;box-shadow:0 10px 30px rgba(16,42,67,.07)}
+.levels{display:flex;gap:8px;flex-wrap:wrap}.lv{border:1px solid var(--line);background:#fff;border-radius:99px;padding:9px 16px;font-weight:700;color:var(--navy);cursor:pointer}.lv.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:12px}.sc{border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px;text-align:left;cursor:pointer;font:inherit}.sc strong{display:block;color:var(--navy)}.sc span{font-size:13px;color:var(--muted)}.sc:hover{border-color:var(--gold)}
+.chat{display:flex;flex-direction:column;gap:10px;margin-top:6px}.msg{max-width:85%;padding:11px 14px;border-radius:14px;line-height:1.45}.coach{background:#edf2f7;color:var(--navy);align-self:flex-start;border-bottom-left-radius:4px}.me{background:var(--navy);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px}
+.mic{width:76px;height:76px;border-radius:50%;border:0;background:var(--gold);color:#fff;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 20px rgba(199,154,59,.35)}.mic.rec{background:var(--red);animation:pulse 1.2s infinite}.mic:disabled{opacity:.5;cursor:default;animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(180,35,24,.45)}70%{box-shadow:0 0 0 14px rgba(180,35,24,0)}100%{box-shadow:0 0 0 0 rgba(180,35,24,0)}}
+.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:800;font-size:15px;cursor:pointer;background:#edf2f7;color:var(--navy);text-decoration:none;display:inline-block}.btn.dark{background:var(--navy);color:#fff}.btn:disabled{opacity:.5;cursor:default}
+.status{font-weight:700;color:var(--muted)}.status.err{color:var(--red)}
+.fb h3{color:var(--navy);font-size:16px;margin:16px 0 6px}.fb li{margin:6px 0;line-height:1.5}.fix{border-left:3px solid var(--gold);padding:6px 10px;margin:8px 0;background:#fffaf0;border-radius:6px}.fix .b{color:var(--green);font-weight:700}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header class="top"><div class="bar"><div class="brand">ORACY<small>Talk practice</small></div><nav><a href="/oracy/">Course</a><a href="/oracy/start">Your plan</a></nav></div></header>
+<main>
+<h1>Talk practice</h1>
+<p class="muted">Pick a situation and have a spoken conversation with the coach: up to 10 turns each time. At the end you get feedback on what you said. <span id="allowance"></span></p>
+
+<section id="signedOut" class="card hidden"><h2>Sign in first</h2><p class="muted">Talk practice is part of ORACY. <a href="/oracy/start">Start free or sign in</a>, then come back here.</p></section>
+
+<section id="pick" class="card hidden">
+<h2>1. Choose your level</h2>
+<div class="levels"><button class="lv on" data-lv="B" type="button">Easier</button><button class="lv" data-lv="C" type="button">Standard</button><button class="lv" data-lv="D" type="button">Advanced</button></div>
+<h2 style="margin-top:20px">2. Choose a situation</h2>
+<div id="scenarios" class="grid"></div>
+</section>
+
+<section id="talk" class="card hidden">
+<h2 id="talkTitle"></h2>
+<div id="chat" class="chat"></div>
+<div class="controls"><button id="mic" class="mic" type="button">Speak</button><div><div id="status" class="status">Tap Speak, say your reply, then tap Stop.</div><div id="turns" class="muted small"></div></div></div>
+<div class="controls"><button id="finish" class="btn dark" type="button" disabled>Finish and get feedback</button><button id="restart" class="btn" type="button">Choose another situation</button></div>
+<div id="feedback" class="fb hidden"></div>
+</section>
+</main>
+<audio id="player"></audio>
+<script>
+const $=id=>document.getElementById(id);
+const SCENARIOS=[
+ ['intro','Introduce yourself','Meet a new colleague',"Hi! I'm Asha, I joined the team today too. So, tell me a little about yourself. Where are you from?"],
+ ['weekend','Your weekend','Catch up with a friend',"Good morning! How was your weekend? Did you do anything interesting?"],
+ ['interview','Job interview','Answer common questions',"Good morning, and thank you for coming in. Let's begin. Could you tell me a little about yourself?"],
+ ['restaurant','At a restaurant','Order a meal',"Good evening! Welcome. Are you ready to order, or would you like a few more minutes?"],
+ ['complaint','Make a complaint','Late or wrong delivery',"Hello, thank you for calling customer service. How can I help you today?"],
+ ['directions','Ask for directions','Find your way',"Hi there, you look a little lost. Can I help you find something?"],
+ ['doctor',"At the doctor's",'Describe how you feel',"Hello, please have a seat. What brings you here today?"],
+ ['smalltalk','Office small talk','Chat at the coffee machine',"Morning! Busy day ahead? I need this coffee today."],
+ ['phone','Phone call to book','Book an appointment',"Good afternoon, City Care reception. How may I help you?"],
+ ['opinion','Share your opinion','Say what you think and why',"I've been thinking about something. Do you think phones make our lives better or worse?"],
+ ['meeting','Team meeting update','Report your progress',"Thanks for joining, everyone. Let's start with you. How is your work going this week?"],
+ ['travel','Travel plans','Plan a short trip',"Hello! Welcome to Sunway Travels. Where would you like to go?"]
+];
+let level='B',scenario=null,history=[],turn=0,recorder=null,chunks=[],stream=null,busy=false,ended=false;
+async function call(action,extra={}){const r=await fetch('/oracy/session',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action,...extra})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Something went wrong. Please try again.');return d}
+function setStatus(t,err){$('status').textContent=t;$('status').className='status'+(err?' err':'')}
+function bubble(role,text){const d=document.createElement('div');d.className='msg '+(role==='coach'?'coach':'me');d.textContent=text;$('chat').appendChild(d);d.scrollIntoView({block:'nearest',behavior:'smooth'})}
+function showTurns(left){$('turns').textContent='Turn '+Math.min(turn+1,10)+' of 10'+(left!=null?' · '+left+' turns left this month':'')}
+document.querySelectorAll('.lv').forEach(b=>b.onclick=()=>{document.querySelectorAll('.lv').forEach(x=>x.classList.remove('on'));b.classList.add('on');level=b.dataset.lv});
+$('scenarios').innerHTML=SCENARIOS.map(s=>`<button class="sc" type="button" data-id="${s[0]}"><strong>${s[1]}</strong><span>${s[2]}</span></button>`).join('');
+document.querySelectorAll('.sc').forEach(b=>b.onclick=()=>start(b.dataset.id));
+function start(id){
+  scenario=SCENARIOS.find(s=>s[0]===id);history=[];turn=0;ended=false;
+  $('pick').classList.add('hidden');$('talk').classList.remove('hidden');$('feedback').classList.add('hidden');$('feedback').innerHTML='';
+  $('talkTitle').textContent=scenario[1];$('chat').innerHTML='';$('mic').disabled=false;$('finish').disabled=true;
+  bubble('coach',scenario[3]);history.push({role:'coach',text:scenario[3]});
+  setStatus('Tap Speak, say your reply, then tap Stop.');showTurns(null);
+}
+$('restart').onclick=()=>{stopStream();$('talk').classList.add('hidden');$('pick').classList.remove('hidden')};
+function stopStream(){try{recorder&&recorder.state!=='inactive'&&recorder.stop()}catch(e){}if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
+$('mic').onclick=async()=>{
+  if(busy||ended)return;
+  if(recorder&&recorder.state==='recording'){recorder.stop();return}
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){setStatus('Please allow the microphone, then try again.',true);return}
+  const type=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported(t))||'';
+  recorder=new MediaRecorder(stream,type?{mimeType:type}:undefined);chunks=[];
+  recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+  recorder.onstop=()=>{stopStream();$('mic').classList.remove('rec');$('mic').textContent='Speak';send(new Blob(chunks,{type:recorder.mimeType||'audio/webm'}))};
+  recorder.start();$('mic').classList.add('rec');$('mic').textContent='Stop';setStatus('Listening… tap Stop when you finish.');
+  setTimeout(()=>{if(recorder&&recorder.state==='recording')recorder.stop()},60000);
+};
+async function send(blob){
+  if(blob.size<500){setStatus("I couldn't hear anything. Try again.",true);return}
+  busy=true;$('mic').disabled=true;setStatus('The coach is thinking…');
+  const fd=new FormData();fd.append('action','talk');fd.append('scenario',scenario[0]);fd.append('level',level);fd.append('turn_no',String(turn+1));fd.append('history',JSON.stringify(history));
+  fd.append('audio',blob,(blob.type.includes('mp4')?'turn.m4a':'turn.webm'));
+  try{
+    const r=await fetch('/oracy/session',{method:'POST',body:fd});const d=await r.json().catch(()=>({}));
+    if(!r.ok){setStatus(d.error||'Something went wrong. Please try again.',true);if(d.limit_reached){$('mic').disabled=true;ended=true;$('finish').disabled=turn<2}else $('mic').disabled=false;busy=false;return}
+    turn++;bubble('me',d.learner_text);history.push({role:'learner',text:d.learner_text});
+    bubble('coach',d.reply);history.push({role:'coach',text:d.reply});
+    if(d.audio_base64){const p=$('player');p.src='data:audio/mpeg;base64,'+d.audio_base64;p.play().catch(()=>{})}
+    showTurns(d.turns_left);$('finish').disabled=turn<2;
+    if(d.done||turn>=10){ended=true;$('mic').disabled=true;setStatus('Conversation finished. Get your feedback below.')}
+    else if(d.turns_left===0){ended=true;$('mic').disabled=true;setStatus("That was your last turn this month.")}
+    else{$('mic').disabled=false;setStatus('Your turn. Tap Speak to reply.')}
+  }catch(e){setStatus('Network problem. Please try again.',true);$('mic').disabled=false}
+  busy=false;
+}
+const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+$('finish').onclick=async()=>{
+  stopStream();ended=true;$('mic').disabled=true;$('finish').disabled=true;setStatus('Preparing your feedback…');
+  try{
+    const f=await call('talk-feedback',{scenario:scenario[0],history});
+    $('feedback').innerHTML='<h3>What went well</h3><ul>'+f.went_well.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'+(f.fixes.length?'<h3>Say it better</h3>'+f.fixes.map(x=>'<div class="fix">You said: “'+esc(x.you_said)+'”<br><span class="b">Better: “'+esc(x.better)+'”</span><br><span class="muted small">'+esc(x.why)+'</span></div>').join(''):'')+(f.next_time?'<h3>Next time</h3><p>'+esc(f.next_time)+'</p>':'');
+    $('feedback').classList.remove('hidden');setStatus('Here is your feedback.');$('feedback').scrollIntoView({behavior:'smooth'});
+  }catch(e){setStatus(e.message,true);$('finish').disabled=false}
+};
+(async()=>{
+  try{const p=await call('plan');$('pick').classList.remove('hidden');
+    if(!p.admin)$('allowance').textContent='This month: '+(p.talk_turns_used||0)+' of '+(p.talk_turn_limit||0)+' turns used.';
+  }catch(e){$('signedOut').classList.remove('hidden')}
+})();
+</script>
+</body>
+</html>

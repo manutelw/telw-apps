@@ -96,11 +96,11 @@ async function expireIfLapsed(learner:any){
   }
 }
 async function usageRow(learnerId:string){
-  const { data: row } = await db.from("oracy_usage").select("answers,conversation_seconds").eq("learner_id",learnerId).eq("month",thisMonth()).maybeSingle();
-  return {answers:Number(row?.answers||0),conversation_seconds:Number(row?.conversation_seconds||0)};
+  const { data: row } = await db.from("oracy_usage").select("answers,conversation_seconds,talk_turns").eq("learner_id",learnerId).eq("month",thisMonth()).maybeSingle();
+  return {answers:Number(row?.answers||0),conversation_seconds:Number(row?.conversation_seconds||0),talk_turns:Number(row?.talk_turns||0)};
 }
 async function saveUsage(learnerId:string,u:any){
-  await db.from("oracy_usage").upsert({learner_id:learnerId,month:thisMonth(),answers:u.answers,conversation_seconds:u.conversation_seconds,updated_at:new Date().toISOString()},{onConflict:"learner_id,month"});
+  await db.from("oracy_usage").upsert({learner_id:learnerId,month:thisMonth(),answers:u.answers,conversation_seconds:u.conversation_seconds,talk_turns:Number(u.talk_turns||0),updated_at:new Date().toISOString()},{onConflict:"learner_id,month"});
 }
 const UPGRADE_NOTE=" Get the full ORACY course at clarionprep.com/oracy/start";
 async function useAnswer(auth:any):Promise<string>{
@@ -135,6 +135,8 @@ async function plan(req:Request,payload:any){
     answers_used:u.answers,
     answer_limit:paid?PAID_ANSWER_LIMIT:FREE_ANSWER_LIMIT,
     conversation_seconds_left:paid?Math.max(0,PAID_CONVERSATION_SECONDS-u.conversation_seconds):0,
+    talk_turns_used:u.talk_turns,
+    talk_turn_limit:paid?PAID_TALK_TURNS:FREE_TALK_TURNS,
     price_rupees:UPGRADE_PRICE_PAISE/100,
     days:UPGRADE_DAYS
   });
@@ -257,6 +259,91 @@ async function register(req:Request,payload:any){
   if(!known)await db.from("oracy_devices").upsert({learner_id:String(learner.id),device_hash:deviceHash},{onConflict:"learner_id,device_hash"});
   const s=await newSession(String(learner.id));
   return json(req,{ok:true,session_token:s.token,expires_at:s.expiresAt,created,learner:{display_name:learner.display_name}});
+}
+
+// Talk practice: spoken back-and-forth with the coach, one turn at a time (cheap: transcription + gpt-4o-mini + short TTS reply).
+const FREE_TALK_TURNS=10;
+const PAID_TALK_TURNS=300;
+const TALK_MAX_TURNS=10;
+const TALK_LEVELS:any={
+  B:"Use easy everyday English (CEFR B1): short, common words and simple sentences. Speak slowly and clearly.",
+  C:"Use natural everyday English (CEFR B2): normal speed, some idioms, a mix of short and longer sentences.",
+  D:"Use fluent, natural English (CEFR C1): varied vocabulary, idioms, and follow-up questions that push the learner to explain, compare and justify."
+};
+const TALK_SCENARIOS:any={
+  intro:{title:"Introduce yourself",role:"a friendly new colleague meeting the learner on their first day",goal:"get to know the learner: work or studies, home town, interests"},
+  weekend:{title:"Your weekend",role:"a friend catching up on Monday morning",goal:"hear about the learner's weekend and plans, and share a little about yours"},
+  interview:{title:"Job interview",role:"a polite HR interviewer for an entry-level role",goal:"ask common interview questions one at a time: tell me about yourself, strengths, a challenge, why this role"},
+  restaurant:{title:"At a restaurant",role:"a waiter at a busy restaurant",goal:"take the learner's order, suggest dishes, handle a small problem with the order"},
+  complaint:{title:"Make a complaint",role:"a customer-service agent for an online shop",goal:"help the learner with a late or wrong delivery; ask for details and offer options"},
+  directions:{title:"Ask for directions",role:"a local person on the street",goal:"help the learner find a place; check they understood"},
+  doctor:{title:"At the doctor's",role:"a friendly general doctor",goal:"ask about symptoms, how long, and give simple advice (no real medical advice)"},
+  smalltalk:{title:"Office small talk",role:"a colleague at the coffee machine",goal:"easy small talk: weather, work, weekend, food"},
+  phone:{title:"Phone call to book",role:"a receptionist at a salon or clinic",goal:"book an appointment: date, time, name, phone number"},
+  opinion:{title:"Share your opinion",role:"a curious friend",goal:"ask the learner's opinion on an everyday topic (phones, cities, online learning) and why"},
+  meeting:{title:"Team meeting update",role:"the learner's manager in a weekly meeting",goal:"ask for a progress update, a problem, and next steps"},
+  travel:{title:"Travel plans",role:"a travel agent",goal:"help the learner plan a short trip: where, when, budget, what to do"}
+};
+async function talkAuth(sessionToken:string,adminToken:string){
+  const learner=await learnerFromSession(sessionToken);
+  if(learner)return {admin:false,learner};
+  if(adminToken&&await validAdmin(adminToken))return {admin:true,learner:null};
+  return null;
+}
+async function talk(req:Request,form:FormData){
+  const auth=await talkAuth(String(form.get("session_token")||"").trim(),String(form.get("admin_token")||"").trim());
+  if(!auth)return json(req,{error:"Please sign in to ORACY first."},403);
+  const scenario=TALK_SCENARIOS[String(form.get("scenario")||"")];
+  const levelKey=String(form.get("level")||"B");const level=TALK_LEVELS[levelKey]||TALK_LEVELS.B;
+  const turnNo=Number(form.get("turn_no")||0);
+  const audio=form.get("audio");
+  if(!scenario)return json(req,{error:"Choose a conversation first."},400);
+  if(!Number.isInteger(turnNo)||turnNo<1||turnNo>TALK_MAX_TURNS)return json(req,{error:"This conversation has ended. Start a new one."},400);
+  if(!(audio instanceof File)||audio.size<500)return json(req,{error:"I couldn't hear anything. Hold the button, speak, then let go."},400);
+  if(audio.size>8000000)return json(req,{error:"That recording is too long. Keep each turn under a minute."},413);
+  let u:any=null,limit=0;
+  if(auth.learner){
+    await expireIfLapsed(auth.learner);
+    const paid=hasFullAccess(auth);limit=paid?PAID_TALK_TURNS:FREE_TALK_TURNS;
+    u=await usageRow(auth.learner.id);
+    if(u.talk_turns>=limit)return json(req,{error:paid?"You have used this month's 300 conversation turns. They reset on the 1st of next month.":"You have used this month's 10 free conversation turns."+UPGRADE_NOTE,limit_reached:true},403);
+  }
+  let prior:any[]=[];
+  try{const c=JSON.parse(String(form.get("history")||"[]"));if(Array.isArray(c))prior=c.slice(-12).map((x:any)=>({role:x?.role==="coach"?"assistant":"user",content:String(x?.text||"").slice(0,600)})).filter((x:any)=>x.content)}catch{}
+  const learnerText=(await transcribe(audio)).slice(0,800);
+  if(!learnerText)return json(req,{error:"I couldn't hear that clearly. Please try again."},400);
+  const last=turnNo===TALK_MAX_TURNS;
+  const system=`You are the ORACY spoken-English coach from TELW, playing ${scenario.role}. Goal of this conversation: ${scenario.goal}.
+${level}
+Reply to the learner's latest words like a real person would. Keep it to one to three short sentences (under 40 words) so the learner does most of the talking.
+${last?"This is the learner's last turn. Close the conversation warmly in one or two sentences. Do not ask another question.":"End with a short question or prompt that keeps the learner talking."}
+Never correct, score or explain grammar during the conversation. If the learner's words are unclear, ask them politely to say it again. Stay in role and keep the conversation suitable for all ages.
+Return strict JSON only: {"reply":""}`;
+  const ai=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Authorization":`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},
+    body:JSON.stringify({model:"gpt-4o-mini",temperature:.6,max_tokens:160,response_format:{type:"json_object"},messages:[{role:"system",content:system},...prior,{role:"user",content:learnerText}]})});
+  if(!ai.ok)return json(req,{error:"The coach couldn't reply. Please try again."},502);
+  let parsed:any={};try{parsed=JSON.parse((await ai.json())?.choices?.[0]?.message?.content||"{}")}catch{}
+  const reply=String(parsed.reply||"Sorry, could you say that again?").trim().slice(0,400);
+  const speech=await generateTts(req,reply,"marin",levelKey==="B"?"Speak warmly, clearly and a little slowly.":"Speak warmly and naturally.");
+  if(u){u.talk_turns+=1;await saveUsage(auth.learner.id,u)}
+  return json(req,{learner_text:learnerText,reply,audio_base64:speech.ok?b64(speech.bytes):null,done:last,turns_left:u?Math.max(0,limit-u.talk_turns):null});
+}
+async function talkFeedback(req:Request,payload:any){
+  const auth=await talkAuth(String(payload?.session_token||"").trim(),String(payload?.admin_token||"").trim());
+  if(!auth)return json(req,{error:"Please sign in to ORACY first."},403);
+  const scenario=TALK_SCENARIOS[String(payload?.scenario||"")];
+  const history=Array.isArray(payload?.history)?payload.history.slice(-20):[];
+  const said=history.filter((x:any)=>x?.role!=="coach").map((x:any)=>String(x?.text||"").slice(0,600)).filter(Boolean);
+  if(!scenario||said.length<2)return json(req,{error:"Have at least two turns before asking for feedback."},400);
+  const transcript=history.map((x:any)=>(x?.role==="coach"?"Coach: ":"Learner: ")+String(x?.text||"").slice(0,600)).join("\n");
+  const ai=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Authorization":`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},
+    body:JSON.stringify({model:"gpt-4o-mini",temperature:.3,max_tokens:700,response_format:{type:"json_object"},messages:[{role:"system",content:`You are a TELW spoken-English trainer giving short, kind, practical feedback on a learner's side of a practice conversation ("${scenario.title}"). The text comes from speech recognition, so ignore punctuation and spelling, and do not comment on pronunciation.
+Return strict JSON only:
+{"went_well":["",""],"fixes":[{"you_said":"","better":"","why":""}],"next_time":""}
+went_well: two specific things the learner did well. fixes: up to three of the learner's own sentences that would sound more natural or correct, quoting what they said, a better version, and a reason in under 12 plain words. next_time: one practical tip in one sentence. Use simple language.`},{role:"user",content:transcript}]})});
+  if(!ai.ok)return json(req,{error:"Feedback is not available right now."},502);
+  let f:any={};try{f=JSON.parse((await ai.json())?.choices?.[0]?.message?.content||"{}")}catch{}
+  return json(req,{went_well:Array.isArray(f.went_well)?f.went_well.slice(0,3).map((x:any)=>String(x).slice(0,240)):[],fixes:Array.isArray(f.fixes)?f.fixes.slice(0,3).map((x:any)=>({you_said:String(x?.you_said||"").slice(0,300),better:String(x?.better||"").slice(0,300),why:String(x?.why||"").slice(0,160)})):[],next_time:String(f.next_time||"").slice(0,240)});
 }
 
 async function conversationEnd(req:Request,payload:any){
@@ -586,7 +673,7 @@ Deno.serve(async (req: Request) => {
   if (!OPENAI_API_KEY) return json(req, { error: "Voice service not configured" }, 503);
   try {
     const ct = req.headers.get("content-type") || "";
-    if (ct.includes("multipart/form-data")) { const form=await req.formData(); return String(form.get("action")||"evaluate")==="conversation" ? await conversation(req,form) : await evaluate(req,form); }
+    if (ct.includes("multipart/form-data")) { const form=await req.formData(); const act=String(form.get("action")||"evaluate"); if(act==="talk") return await talk(req,form); return act==="conversation" ? await conversation(req,form) : await evaluate(req,form); }
     const payload = await req.json();
     if (payload?.action === "tts") return await tts(req, payload);
     if (payload?.action === "realtime-token") return await realtimeToken(req, payload);
@@ -596,6 +683,7 @@ Deno.serve(async (req: Request) => {
     if (payload?.action === "upgrade-verify") return await upgradeVerify(req, payload);
     if (payload?.action === "conversation-end") return await conversationEnd(req, payload);
     if (payload?.action === "register") return await register(req, payload);
+    if (payload?.action === "talk-feedback") return await talkFeedback(req, payload);
     return json(req, { error: "Unknown action" }, 400);
   } catch (e) { return json(req, { error: "Request failed", detail: String(e?.message || e).slice(0, 500) }, 500); }
 });

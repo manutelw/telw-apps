@@ -31,7 +31,8 @@ table{width:100%;border-collapse:collapse;margin-top:6px}th,td{text-align:left;p
 <tr><th></th><th>Free</th><th>Full course</th></tr>
 <tr><td>All ORACY units</td><td>Yes</td><td class="on">Yes</td></tr>
 <tr><td>Checked answers a month</td><td>50</td><td class="on">300</td></tr>
-<tr><td>Live conversation with the coach</td><td>No</td><td class="on">20 minutes a month</td></tr>
+<tr><td>Talk practice (spoken conversations, turn by turn)</td><td>10 turns</td><td class="on">300 turns (about 3 hours)</td></tr>
+<tr><td>Live voice call with the coach</td><td>No</td><td class="on">20 minutes a month</td></tr>
 <tr><td>Price</td><td>Free</td><td class="on">₹2,999 for 30 days</td></tr>
 </table>
 </section>
@@ -62,7 +63,7 @@ table{width:100%;border-collapse:collapse;margin-top:6px}th,td{text-align:left;p
 <h2>Hello <span id="who"></span> · <span id="planName" class="pill">Free</span></h2>
 <p id="planNote" class="muted"></p>
 <p id="usage" class="muted"></p>
-<div class="actions"><a class="btn" href="/oracy/">Go to the course</a><button id="payBtn" class="btn gold" type="button">Get the full course · ₹2,999</button></div>
+<div class="actions"><a class="btn" href="/oracy/">Go to the course</a><a class="btn alt" href="/oracy/talk">Talk practice</a><button id="payBtn" class="btn gold" type="button">Get the full course · ₹2,999</button></div>
 <div id="payStatus" class="status"></div>
 <p class="muted small">Payments are handled securely by Razorpay. Paying again before your 30 days end adds another 30 days. Monthly limits reset on the 1st of each month. <button id="notMe" class="link" type="button">Not you?</button></p>
 </section>
@@ -84,7 +85,7 @@ async function showPlan(){
   if(p.admin){$('who').textContent='Administrator';$('planName').textContent='Unlimited';$('planNote').textContent='You are signed in as the administrator. Visitors see their own plan here.';$('payBtn').classList.add('hidden');return p}
   $('planName').textContent=p.paid?'Full course':'Free';$('planName').className='pill'+(p.paid?' paid':'');
   $('planNote').textContent=p.paid?(p.paid_until?'Full course until '+fmtDate(p.paid_until)+'.':'Full course, switched on by your trainer.'):'You are on the free plan.';
-  $('usage').textContent='This month: '+p.answers_used+' of '+p.answer_limit+' answers used'+(p.paid?' · '+Math.floor((p.conversation_seconds_left||0)/60)+' minutes of live conversation left':'')+'.';
+  $('usage').textContent='This month: '+p.answers_used+' of '+p.answer_limit+' answers used · '+(p.talk_turns_used||0)+' of '+(p.talk_turn_limit||0)+' talk turns used'+(p.paid?' · '+Math.floor((p.conversation_seconds_left||0)/60)+' minutes of live conversation left':'')+'.';
   $('payBtn').textContent=p.paid&&p.paid_until?'Add 30 more days · ₹2,999':'Get the full course · ₹2,999';
   $('payBtn').classList.toggle('hidden',Boolean(p.paid&&!p.paid_until));
   return p;
