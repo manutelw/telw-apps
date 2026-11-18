@@ -242,6 +242,13 @@ async function handleOracySession(request){
     }
 
     const body=await request.json();
+    if(['plan','upgrade-order','upgrade-verify','conversation-end'].includes(body?.action)){
+      const cookies=request.headers.get('cookie')||'';
+      body.session_token=readCookie(cookies,'oracy_session')||'';
+      body.admin_token=body.action==='plan'?(readCookie(cookies,'clarion_admin_session')||''):'';
+      const r=await fetch(ORACY_VOICE,{method:'POST',headers:{'x-oracy-client':'oracy-web-v1','content-type':'application/json'},body:JSON.stringify(body)});
+      return proxy(r);
+    }
     if(['tts','realtime-token','conversation-feedback'].includes(body?.action)){
       const cookies=request.headers.get('cookie')||'';
       const learnerToken=readCookie(cookies,'oracy_session');
