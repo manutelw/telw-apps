@@ -324,7 +324,19 @@ Return strict JSON only: {"reply":""}`;
   if(!ai.ok)return json(req,{error:"The coach couldn't reply. Please try again."},502);
   let parsed:any={};try{parsed=JSON.parse((await ai.json())?.choices?.[0]?.message?.content||"{}")}catch{}
   const reply=String(parsed.reply||"Sorry, could you say that again?").trim().slice(0,400);
-  const speech=await generateTts(req,reply,"marin",levelKey==="B"?"Speak warmly, clearly and a little slowly.":"Speak warmly and naturally.");
+  // One TTS call per sentence: long multi-sentence inputs sometimes lose their last sentence.
+  const voiceNote=levelKey==="B"?"Speak warmly, clearly and a little slowly. Read the whole text.":"Speak warmly and naturally. Read the whole text.";
+  const parts=(reply.match(/[^.!?]+[.!?]+["')\]]*|[^.!?]+$/g)||[reply]).map(x=>x.trim()).filter(Boolean);
+  let speech:any=null;
+  if(parts.length>1){
+    const pieces=await Promise.all(parts.map(t=>generateTts(req,t,"marin",voiceNote)));
+    if(pieces.every((x:any)=>x.ok)){
+      const total=pieces.reduce((n:number,x:any)=>n+x.bytes.length,0);const joined=new Uint8Array(total);let o=0;
+      for(const x of pieces as any[]){joined.set(x.bytes,o);o+=x.bytes.length}
+      speech={ok:true,bytes:joined};
+    }
+  }
+  if(!speech)speech=await generateTts(req,reply,"marin",voiceNote);
   if(u){u.talk_turns+=1;await saveUsage(auth.learner.id,u)}
   return json(req,{learner_text:learnerText,reply,audio_base64:speech.ok?b64(speech.bytes):null,done:last,turns_left:u?Math.max(0,limit-u.talk_turns):null});
 }

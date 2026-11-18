@@ -18,6 +18,7 @@ main{max-width:820px;margin:auto;padding:20px}h1{color:var(--navy);margin:6px 0 
 .btn{border:0;border-radius:10px;padding:11px 16px;font-weight:800;font-size:15px;cursor:pointer;background:#edf2f7;color:var(--navy);text-decoration:none;display:inline-block}.btn.dark{background:var(--navy);color:#fff}.btn:disabled{opacity:.5;cursor:default}
 .status{font-weight:700;color:var(--muted)}.status.err{color:var(--red)}
 .fb h3{color:var(--navy);font-size:16px;margin:16px 0 6px}.fb li{margin:6px 0;line-height:1.5}.fix{border-left:3px solid var(--gold);padding:6px 10px;margin:8px 0;background:#fffaf0;border-radius:6px}.fix .b{color:var(--green);font-weight:700}
+.replay{margin-top:6px;border:0;background:none;color:#486581;font-weight:700;font-size:13px;cursor:pointer;padding:0}
 .hidden{display:none}
 </style>
 </head>
@@ -64,7 +65,7 @@ const SCENARIOS=[
 let level='B',scenario=null,history=[],turn=0,recorder=null,chunks=[],stream=null,busy=false,ended=false;
 async function call(action,extra={}){const r=await fetch('/oracy/session',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action,...extra})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Something went wrong. Please try again.');return d}
 function setStatus(t,err){$('status').textContent=t;$('status').className='status'+(err?' err':'')}
-function bubble(role,text){const d=document.createElement('div');d.className='msg '+(role==='coach'?'coach':'me');d.textContent=text;$('chat').appendChild(d);d.scrollIntoView({block:'nearest',behavior:'smooth'})}
+function bubble(role,text){const d=document.createElement('div');d.className='msg '+(role==='coach'?'coach':'me');d.textContent=text;$('chat').appendChild(d);d.scrollIntoView({block:'nearest',behavior:'smooth'});return d}
 function showTurns(left){$('turns').textContent='Turn '+Math.min(turn+1,10)+' of 10'+(left!=null?' · '+left+' turns left this month':'')}
 document.querySelectorAll('.lv').forEach(b=>b.onclick=()=>{document.querySelectorAll('.lv').forEach(x=>x.classList.remove('on'));b.classList.add('on');level=b.dataset.lv});
 $('scenarios').innerHTML=SCENARIOS.map(s=>`<button class="sc" type="button" data-id="${s[0]}"><strong>${s[1]}</strong><span>${s[2]}</span></button>`).join('');
@@ -98,8 +99,8 @@ async function send(blob){
     const r=await fetch('/oracy/session',{method:'POST',body:fd});const d=await r.json().catch(()=>({}));
     if(!r.ok){setStatus(d.error||'Something went wrong. Please try again.',true);if(d.limit_reached){$('mic').disabled=true;ended=true;$('finish').disabled=turn<2}else $('mic').disabled=false;busy=false;return}
     turn++;bubble('me',d.learner_text);history.push({role:'learner',text:d.learner_text});
-    bubble('coach',d.reply);history.push({role:'coach',text:d.reply});
-    if(d.audio_base64){const p=$('player');p.src='data:audio/mpeg;base64,'+d.audio_base64;p.play().catch(()=>{})}
+    const cb=bubble('coach',d.reply);history.push({role:'coach',text:d.reply});
+    if(d.audio_base64){const src='data:audio/mpeg;base64,'+d.audio_base64;const p=$('player');p.src=src;p.play().catch(()=>{});const rb=document.createElement('button');rb.type='button';rb.className='replay';rb.textContent='▶ Play again';rb.onclick=()=>{p.src=src;p.play().catch(()=>{})};cb.appendChild(document.createElement('br'));cb.appendChild(rb)}
     showTurns(d.turns_left);$('finish').disabled=turn<2;
     if(d.done||turn>=10){ended=true;$('mic').disabled=true;setStatus('Conversation finished. Get your feedback below.')}
     else if(d.turns_left===0){ended=true;$('mic').disabled=true;setStatus("That was your last turn this month.")}
