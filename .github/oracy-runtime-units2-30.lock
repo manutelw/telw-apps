@@ -19,5 +19,5 @@ c26744a24140fd7cb657bd60605c4a06146a0e0c  oracy/conversation-shared.js
 22534b1117f484b89ce3a24be6b571a4b0af777e  functions/oracy/session.js
 d4db16ee54572ed85bbea84640078e5a1ae10f65  functions/oracy/voice.js
 907c4baba0ebfccc62caa53cdb4d9db61820de94  functions/oracy/_middleware.js
-173267465bfe4845948880df188a5b08a3b84217  supabase/functions/oracy-voice/index.ts
+5e2adb0f7d5dd0bec6fe4a17a0c3b857c8b3d55d  supabase/functions/oracy-voice/index.ts
 908d6bdb69eaa0e2a8ef6d85874de771639ad3c7  supabase/functions/oracy-voice/course-units-4-30.ts
