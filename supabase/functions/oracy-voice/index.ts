@@ -72,9 +72,9 @@ async function authorised(sessionToken:string,adminToken:string,unitNo:number):P
   return null;
 }
 
-// Plans: free learners get 150 checked answers a month and no live conversation.
+// Plans: free learners get 50 checked answers a month and no live conversation.
 // Paid learners (₹2,999 for 30 days, or ticked Paid by the admin) get 300 answers and 20 minutes of live conversation a month.
-const FREE_ANSWER_LIMIT=150;
+const FREE_ANSWER_LIMIT=50;
 const PAID_ANSWER_LIMIT=300;
 const PAID_CONVERSATION_SECONDS=1200;
 const SESSION_CONVERSATION_SECONDS=600;
