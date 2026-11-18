@@ -59,7 +59,7 @@ async function validLearnerUnit(token: string, unitNo: number): Promise<any> {
   const tokenHash = await sha256(token);
   const { data: session } = await db.from("oracy_sessions").select("learner_id,expires_at,revoked_at").eq("token_hash", tokenHash).maybeSingle();
   if (!session || session.revoked_at || new Date(session.expires_at).getTime() <= Date.now()) return null;
-  const { data: learner } = await db.from("oracy_learners").select("id,is_active,full_access").eq("id", session.learner_id).maybeSingle();
+  const { data: learner } = await db.from("oracy_learners").select("id,is_active,full_access,full_access_until").eq("id", session.learner_id).maybeSingle();
   if (!learner || learner.is_active !== true) return null;
   const { data: assignment } = await db.from("oracy_unit_assignments").select("is_active").eq("learner_id", learner.id).eq("unit_no", unitNo).maybeSingle();
   return (assignment && assignment.is_active === true) ? learner : null;
@@ -72,17 +72,121 @@ async function authorised(sessionToken:string,adminToken:string,unitNo:number):P
   return null;
 }
 
-// Homework rules: learners without full access get no live conversation and a monthly cap on checked answers.
-const MONTHLY_ANSWER_LIMIT=150;
-function hasFullAccess(auth:any){return Boolean(auth&&(auth.admin||auth.learner?.full_access===true));}
+// Plans: free learners get 150 checked answers a month and no live conversation.
+// Paid learners (₹2,999 for 30 days, or ticked Paid by the admin) get 300 answers and 20 minutes of live conversation a month.
+const FREE_ANSWER_LIMIT=150;
+const PAID_ANSWER_LIMIT=300;
+const PAID_CONVERSATION_SECONDS=1200;
+const SESSION_CONVERSATION_SECONDS=600;
+const UPGRADE_PRICE_PAISE=299900;
+const UPGRADE_DAYS=30;
+const RAZORPAY_KEY_ID=Deno.env.get("RAZORPAY_KEY_ID")||"";
+const RAZORPAY_KEY_SECRET=Deno.env.get("RAZORPAY_KEY_SECRET")||"";
+const thisMonth=()=>new Date().toISOString().slice(0,7);
+function hasFullAccess(auth:any){
+  if(!auth)return false;
+  if(auth.admin)return true;
+  const l=auth.learner;
+  if(!l||l.full_access!==true)return false;
+  return !l.full_access_until||new Date(l.full_access_until).getTime()>Date.now();
+}
+async function expireIfLapsed(learner:any){
+  if(learner&&learner.full_access===true&&learner.full_access_until&&new Date(learner.full_access_until).getTime()<=Date.now()){
+    await db.from("oracy_learners").update({full_access:false,full_access_until:null}).eq("id",learner.id);
+  }
+}
+async function usageRow(learnerId:string){
+  const { data: row } = await db.from("oracy_usage").select("answers,conversation_seconds").eq("learner_id",learnerId).eq("month",thisMonth()).maybeSingle();
+  return {answers:Number(row?.answers||0),conversation_seconds:Number(row?.conversation_seconds||0)};
+}
+async function saveUsage(learnerId:string,u:any){
+  await db.from("oracy_usage").upsert({learner_id:learnerId,month:thisMonth(),answers:u.answers,conversation_seconds:u.conversation_seconds,updated_at:new Date().toISOString()},{onConflict:"learner_id,month"});
+}
+const UPGRADE_NOTE=" Upgrade to the full ORACY course at clarionprep.com/oracy/upgrade.html";
 async function useAnswer(auth:any):Promise<string>{
   if(!auth||auth.admin||!auth.learner)return "";
-  const month=new Date().toISOString().slice(0,7);
-  const { data: row } = await db.from("oracy_usage").select("answers").eq("learner_id",auth.learner.id).eq("month",month).maybeSingle();
-  const used=Number(row?.answers||0);
-  if(!hasFullAccess(auth)&&used>=MONTHLY_ANSWER_LIMIT)return `You have used this month's ${MONTHLY_ANSWER_LIMIT} practice answers. They reset on the 1st of next month.`;
-  await db.from("oracy_usage").upsert({learner_id:auth.learner.id,month,answers:used+1,updated_at:new Date().toISOString()},{onConflict:"learner_id,month"});
+  await expireIfLapsed(auth.learner);
+  const paid=hasFullAccess(auth);
+  const limit=paid?PAID_ANSWER_LIMIT:FREE_ANSWER_LIMIT;
+  const u=await usageRow(auth.learner.id);
+  if(u.answers>=limit)return `You have used this month's ${limit} practice answers. They reset on the 1st of next month.`+(paid?"":UPGRADE_NOTE);
+  u.answers+=1;await saveUsage(auth.learner.id,u);
   return "";
+}
+async function learnerFromSession(token:string):Promise<any>{
+  if(!token)return null;
+  const { data: session } = await db.from("oracy_sessions").select("learner_id,expires_at,revoked_at").eq("token_hash", await sha256(token)).maybeSingle();
+  if (!session || session.revoked_at || new Date(session.expires_at).getTime() <= Date.now()) return null;
+  const { data: learner } = await db.from("oracy_learners").select("id,is_active,full_access,full_access_until").eq("id", session.learner_id).maybeSingle();
+  return learner&&learner.is_active===true?learner:null;
+}
+async function plan(req:Request,payload:any){
+  const learner=await learnerFromSession(String(payload?.session_token||"").trim());
+  if(!learner){
+    if(await validAdmin(String(payload?.admin_token||"").trim()))return json(req,{admin:true});
+    return json(req,{error:"Please sign in to ORACY first."},403);
+  }
+  await expireIfLapsed(learner);
+  const paid=hasFullAccess({learner});
+  const u=await usageRow(learner.id);
+  return json(req,{
+    paid,
+    paid_until:paid?learner.full_access_until||null:null,
+    answers_used:u.answers,
+    answer_limit:paid?PAID_ANSWER_LIMIT:FREE_ANSWER_LIMIT,
+    conversation_seconds_left:paid?Math.max(0,PAID_CONVERSATION_SECONDS-u.conversation_seconds):0,
+    price_rupees:UPGRADE_PRICE_PAISE/100,
+    days:UPGRADE_DAYS
+  });
+}
+async function upgradeOrder(req:Request,payload:any){
+  const learner=await learnerFromSession(String(payload?.session_token||"").trim());
+  if(!learner)return json(req,{error:"Please sign in to ORACY first."},403);
+  if(!RAZORPAY_KEY_ID||!RAZORPAY_KEY_SECRET)return json(req,{error:"Payments are not set up yet."},503);
+  const r=await fetch("https://api.razorpay.com/v1/orders",{method:"POST",headers:{"Authorization":"Basic "+btoa(RAZORPAY_KEY_ID+":"+RAZORPAY_KEY_SECRET),"Content-Type":"application/json"},
+    body:JSON.stringify({amount:UPGRADE_PRICE_PAISE,currency:"INR",receipt:("oracy_"+learner.id).slice(0,40),notes:{product:"ORACY_FULL",learner_id:String(learner.id)}})});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok||!d?.id)return json(req,{error:"The payment could not be started. Please try again."},502);
+  const { error } = await db.from("oracy_payments").insert({order_id:d.id,learner_id:String(learner.id),amount:UPGRADE_PRICE_PAISE,status:"created"});
+  if(error)return json(req,{error:"The payment could not be recorded. Please try again."},500);
+  return json(req,{key_id:RAZORPAY_KEY_ID,order_id:d.id,amount:UPGRADE_PRICE_PAISE,currency:"INR"});
+}
+async function hmacHex(secret:string,text:string){
+  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(secret),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
+  const sig=new Uint8Array(await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(text)));
+  return Array.from(sig).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function upgradeVerify(req:Request,payload:any){
+  const learner=await learnerFromSession(String(payload?.session_token||"").trim());
+  if(!learner)return json(req,{error:"Please sign in to ORACY first."},403);
+  const orderId=String(payload?.razorpay_order_id||""),paymentId=String(payload?.razorpay_payment_id||""),signature=String(payload?.razorpay_signature||"");
+  if(!orderId||!paymentId||!signature)return json(req,{error:"Payment details are missing."},400);
+  if(await hmacHex(RAZORPAY_KEY_SECRET,orderId+"|"+paymentId)!==signature)return json(req,{error:"The payment could not be verified."},400);
+  const { data: order } = await db.from("oracy_payments").select("learner_id,status").eq("order_id",orderId).maybeSingle();
+  if(!order||String(order.learner_id)!==String(learner.id))return json(req,{error:"This payment does not belong to your account."},400);
+  if(order.status!=="paid"){
+    const current=learner.full_access===true&&learner.full_access_until?new Date(learner.full_access_until).getTime():0;
+    const base=Math.max(Date.now(),current);
+    const until=new Date(base+UPGRADE_DAYS*86400000).toISOString();
+    const { data: claimed } = await db.from("oracy_payments").update({status:"paid",payment_id:paymentId,paid_at:new Date().toISOString()}).eq("order_id",orderId).eq("status","created").select("order_id");
+    if(claimed&&claimed.length)await db.from("oracy_learners").update({full_access:true,full_access_until:until}).eq("id",learner.id);
+  }
+  const { data: fresh } = await db.from("oracy_learners").select("full_access_until").eq("id",learner.id).maybeSingle();
+  return json(req,{ok:true,paid_until:fresh?.full_access_until||null});
+}
+async function conversationEnd(req:Request,payload:any){
+  const learner=await learnerFromSession(String(payload?.session_token||"").trim());
+  if(!learner)return json(req,{ok:true});
+  const id=String(payload?.conversation_id||"");
+  const { data: c } = await db.from("oracy_conversations").select("id,learner_id,started_at,granted_seconds,ended_at").eq("id",id).maybeSingle();
+  if(!c||String(c.learner_id)!==String(learner.id)||c.ended_at)return json(req,{ok:true});
+  const used=Math.min(Number(c.granted_seconds||0),Math.ceil((Date.now()-new Date(c.started_at).getTime())/1000)+5);
+  const refund=Math.max(0,Number(c.granted_seconds||0)-used);
+  const { data: closed } = await db.from("oracy_conversations").update({ended_at:new Date().toISOString(),used_seconds:used}).eq("id",id).is("ended_at",null).select("id");
+  if(closed&&closed.length&&refund>0&&String(c.started_at).slice(0,7)===thisMonth()){
+    const u=await usageRow(learner.id);u.conversation_seconds=Math.max(0,u.conversation_seconds-refund);await saveUsage(learner.id,u);
+  }
+  return json(req,{ok:true});
 }
 
 async function generateTts(req: Request, text: string, voice: string, instructions: string) {
@@ -280,8 +384,16 @@ async function realtimeToken(req:Request,payload:any){
   const adminToken=String(payload?.admin_token||"").trim();
   const auth=await authorised(sessionToken,adminToken,unitNo);
   if(!auth)return json(req,{error:"ORACY access required"},403);
-  if(!hasFullAccess(auth))return json(req,{error:"Live conversation is part of the full ORACY course. Ask your trainer to switch it on for you."},403);
+  if(auth.learner)await expireIfLapsed(auth.learner);
+  if(!hasFullAccess(auth))return json(req,{error:"Live conversation is part of the full ORACY course."+UPGRADE_NOTE},403);
   if(!CONVERSATION_UNITS[unitNo])return json(req,{error:"Live conversation is not available for this unit"},400);
+  let grant=SESSION_CONVERSATION_SECONDS,conversationId="";
+  if(auth.learner){
+    const u=await usageRow(auth.learner.id);
+    const left=PAID_CONVERSATION_SECONDS-u.conversation_seconds;
+    if(left<30)return json(req,{error:"You have used this month's 20 minutes of live conversation. They reset on the 1st of next month."},403);
+    grant=Math.min(SESSION_CONVERSATION_SECONDS,left);
+  }
   const r=await fetch("https://api.openai.com/v1/realtime/client_secrets",{
     method:"POST",
     headers:{"Authorization":`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},
@@ -302,7 +414,12 @@ async function realtimeToken(req:Request,payload:any){
   if(!r.ok)return json(req,{error:"Live conversation token failed",detail:String(d?.error?.message||"").slice(0,500)},502);
   const secret=String(d?.value||d?.client_secret?.value||"");
   if(!secret)return json(req,{error:"OpenAI did not return a live conversation token"},502);
-  return json(req,{client_secret:secret,expires_at:d?.expires_at||d?.client_secret?.expires_at||null});
+  if(auth.learner){
+    const { data: conv } = await db.from("oracy_conversations").insert({learner_id:String(auth.learner.id),granted_seconds:grant}).select("id").single();
+    conversationId=String(conv?.id||"");
+    const u=await usageRow(auth.learner.id);u.conversation_seconds+=grant;await saveUsage(auth.learner.id,u);
+  }
+  return json(req,{client_secret:secret,expires_at:d?.expires_at||d?.client_secret?.expires_at||null,allowed_seconds:grant,conversation_id:conversationId});
 }
 
 async function conversationFeedback(req:Request,payload:any){
@@ -311,7 +428,7 @@ async function conversationFeedback(req:Request,payload:any){
   const adminToken=String(payload?.admin_token||"").trim();
   const auth=await authorised(sessionToken,adminToken,unitNo);
   if(!auth)return json(req,{error:"ORACY access required"},403);
-  if(!hasFullAccess(auth))return json(req,{error:"Live conversation is part of the full ORACY course. Ask your trainer to switch it on for you."},403);
+  if(!hasFullAccess(auth))return json(req,{error:"Live conversation is part of the full ORACY course."+UPGRADE_NOTE},403);
   const u=CONVERSATION_UNITS[unitNo];
   if(!u)return json(req,{error:"Conversation feedback is not available for this unit"},400);
   const raw=Array.isArray(payload?.history)?payload.history:[];
@@ -389,6 +506,10 @@ Deno.serve(async (req: Request) => {
     if (payload?.action === "tts") return await tts(req, payload);
     if (payload?.action === "realtime-token") return await realtimeToken(req, payload);
     if (payload?.action === "conversation-feedback") return await conversationFeedback(req, payload);
+    if (payload?.action === "plan") return await plan(req, payload);
+    if (payload?.action === "upgrade-order") return await upgradeOrder(req, payload);
+    if (payload?.action === "upgrade-verify") return await upgradeVerify(req, payload);
+    if (payload?.action === "conversation-end") return await conversationEnd(req, payload);
     return json(req, { error: "Unknown action" }, 400);
   } catch (e) { return json(req, { error: "Request failed", detail: String(e?.message || e).slice(0, 500) }, 500); }
 });

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>ORACY · Full course</title>
+<style>
+:root{--navy:#102a43;--gold:#c79a3b;--bg:#f4f6f8;--line:#e4e9ee;--muted:#627d98;--green:#18794e;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,-apple-system,"Segoe UI",Arial,sans-serif;background:var(--bg);color:#243b53}
+.top{background:var(--navy);color:#fff}.bar{max-width:760px;margin:auto;padding:16px 20px;display:flex;align-items:center;gap:12px}.brand{font-weight:800;font-size:22px}.brand small{display:block;color:#f0c56d;font-size:12px;font-weight:600}.bar a{margin-left:auto;color:#fff;font-size:14px}
+main{max-width:760px;margin:auto;padding:20px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:16px;box-shadow:0 10px 30px rgba(16,42,67,.07)}
+h1{color:var(--navy);margin:6px 0 4px;font-size:28px}h2{color:var(--navy);margin:0 0 10px;font-size:19px}.muted{color:var(--muted);line-height:1.55}
+table{width:100%;border-collapse:collapse;margin-top:6px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);font-size:15px}th{color:var(--muted);font-weight:600}td.on{color:var(--green);font-weight:700}
+.btn{border:0;border-radius:10px;padding:13px 20px;font-weight:800;font-size:16px;cursor:pointer;background:var(--navy);color:#fff}.btn:disabled{opacity:.55;cursor:default}
+.status{margin-top:12px;font-weight:700}.status.ok{color:var(--green)}.status.err{color:var(--red)}
+.pill{display:inline-block;padding:4px 10px;border-radius:99px;font-size:13px;font-weight:800;background:#edf2f7;color:var(--navy)}.pill.paid{background:#e3f4ea;color:var(--green)}
+.field{margin-top:10px}.field label{display:block;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:5px}.field input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font:inherit}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header class="top"><div class="bar"><div class="brand">ORACY<small>by TELW · Spoken English</small></div><a href="/oracy/">Course index</a></div></header>
+<main>
+<h1>Full ORACY course</h1>
+<p class="muted">₹2,999 for 30 days. Live conversation practice with the coach, and twice the number of checked answers.</p>
+
+<section id="signin" class="card hidden">
+<h2>Sign in first</h2>
+<p class="muted">Use the ORACY username and password your trainer gave you.</p>
+<div class="field"><label for="lid">Username</label><input id="lid" autocomplete="username"></div>
+<div class="field"><label for="pwd">Password</label><input id="pwd" type="password" autocomplete="current-password"></div>
+<p><button id="signinBtn" class="btn" type="button">Sign in</button></p>
+<div id="signinStatus" class="status"></div>
+</section>
+
+<section id="planCard" class="card hidden">
+<h2>Your plan: <span id="planName" class="pill">Free</span></h2>
+<p id="planNote" class="muted"></p>
+<table>
+<tr><th></th><th>Free</th><th>Full course</th></tr>
+<tr><td>Checked answers a month</td><td>150</td><td class="on">300</td></tr>
+<tr><td>Live conversation with the coach</td><td>No</td><td class="on">20 minutes a month</td></tr>
+<tr><td>Price</td><td>Included</td><td class="on">₹2,999 for 30 days</td></tr>
+</table>
+<p id="usage" class="muted"></p>
+<p><button id="payBtn" class="btn" type="button">Pay ₹2,999</button></p>
+<div id="payStatus" class="status"></div>
+<p class="muted" style="font-size:13px">Payments are handled securely by Razorpay. Paying again before your 30 days end adds another 30 days. Monthly limits reset on the 1st of each month.</p>
+</section>
+</main>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+async function call(action,extra={}){const r=await fetch('/oracy/session',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action,...extra})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||d.message||'Something went wrong. Please try again.');return d}
+const fmtDate=s=>new Date(s).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+function setStatus(id,text,kind){const el=$(id);el.textContent=text;el.className='status'+(kind?' '+kind:'')}
+async function load(){
+  try{
+    const p=await call('plan');
+    $('signin').classList.add('hidden');$('planCard').classList.remove('hidden');
+    if(p.admin){$('planName').textContent='Administrator';$('planNote').textContent='You are signed in as the administrator, who has unlimited access. Learners see their own plan here.';$('payBtn').classList.add('hidden');return}
+    $('planName').textContent=p.paid?'Full course':'Free';$('planName').className='pill'+(p.paid?' paid':'');
+    $('planNote').textContent=p.paid?(p.paid_until?'Full course until '+fmtDate(p.paid_until)+'.':'Full course, switched on by your trainer.'):'You are on the free plan.';
+    const mins=Math.floor((p.conversation_seconds_left||0)/60);
+    $('usage').textContent='This month: '+p.answers_used+' of '+p.answer_limit+' answers used'+(p.paid?' · '+mins+' minutes of live conversation left':'')+'.';
+    $('payBtn').textContent=p.paid&&p.paid_until?'Add 30 more days · ₹2,999':'Pay ₹2,999';
+    $('payBtn').classList.toggle('hidden',p.paid&&!p.paid_until);
+  }catch(e){$('planCard').classList.add('hidden');$('signin').classList.remove('hidden')}
+}
+$('signinBtn').onclick=async()=>{
+  setStatus('signinStatus','Signing in…');
+  try{await call('login',{login_id:$('lid').value.trim(),password:$('pwd').value});setStatus('signinStatus','');await load()}
+  catch(e){setStatus('signinStatus',e.message,'err')}
+};
+$('payBtn').onclick=async()=>{
+  $('payBtn').disabled=true;setStatus('payStatus','Starting the payment…');
+  try{
+    const o=await call('upgrade-order');
+    const rzp=new Razorpay({key:o.key_id,order_id:o.order_id,amount:o.amount,currency:o.currency,name:'TELW · ORACY',description:'Full ORACY course · 30 days',theme:{color:'#102a43'},
+      handler:async res=>{
+        setStatus('payStatus','Confirming your payment…');
+        try{const v=await call('upgrade-verify',res);setStatus('payStatus','Payment received. Full course is on'+(v.paid_until?' until '+fmtDate(v.paid_until):'')+'.','ok');await load()}
+        catch(e){setStatus('payStatus',e.message+' If money left your account, message TELW on WhatsApp with your username.','err')}
+        finally{$('payBtn').disabled=false}
+      },
+      modal:{ondismiss:()=>{setStatus('payStatus','Payment cancelled.');$('payBtn').disabled=false}}});
+    rzp.on('payment.failed',r=>{setStatus('payStatus','Payment failed: '+(r?.error?.description||'please try again.'),'err');$('payBtn').disabled=false});
+    rzp.open();setStatus('payStatus','');
+  }catch(e){setStatus('payStatus',e.message,'err');$('payBtn').disabled=false}
+};
+load();
+</script>
+</body>
+</html>
