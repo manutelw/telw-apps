@@ -185,6 +185,8 @@ export default {
       return handleAdminHandoff(request);
     }
 
+    if(['/oracy/upgrade','/oracy/upgrade.html','/oracy/register','/oracy/register.html'].includes(path)) return redirect('/oracy/start');
+
     if(path==='/oracy/admin.html' || path==='/oracy/admin'){
       const token=readCookie(request.headers.get('cookie')||'','clarion_admin_session');
       if(!token || !(await validAdmin(token))) return redirect('/ascent/admin-login.html');
@@ -242,6 +244,18 @@ async function handleOracySession(request){
     }
 
     const body=await request.json();
+    if(body?.action==='register'){
+      const r=await fetch(ORACY_VOICE,{method:'POST',headers:{'x-oracy-client':'oracy-web-v1','content-type':'application/json'},body:JSON.stringify({action:'register',name:body.name,email:body.email,mobile:body.mobile,device_id:body.device_id,code:body.code,resend:body.resend===true})});
+      const data=await r.json().catch(()=>({error:'Sign-up is unavailable right now.'}));
+      const headers=new Headers({'content-type':'application/json','cache-control':'no-store'});
+      if(r.ok&&data.session_token){
+        const hostname=new URL(request.url).hostname.toLowerCase();
+        headers.append('set-cookie',expireHostCookie('oracy_session','/oracy'));
+        headers.append('set-cookie',oracySessionCookie(data.session_token,12*60*60,hostname));
+        delete data.session_token;
+      }
+      return new Response(JSON.stringify(data),{status:r.status,headers});
+    }
     if(['plan','upgrade-order','upgrade-verify','conversation-end'].includes(body?.action)){
       const cookies=request.headers.get('cookie')||'';
       body.session_token=readCookie(cookies,'oracy_session')||'';

@@ -73,5 +73,5 @@ c660599e1154b96a87708adbe5f5ffc8e89f61fb worker-oracy.js
 22534b1117f484b89ce3a24be6b571a4b0af777e functions/oracy/session.js
 d4db16ee54572ed85bbea84640078e5a1ae10f65 functions/oracy/voice.js
 907c4baba0ebfccc62caa53cdb4d9db61820de94 functions/oracy/_middleware.js
-aa94b055e2e1838e0f1fa0585f8780e2a66a639b supabase/functions/oracy-voice/index.ts
+946d039f87ac42a9510701ecfe1bd6bfa07a04fd supabase/functions/oracy-voice/index.ts
 908d6bdb69eaa0e2a8ef6d85874de771639ad3c7 supabase/functions/oracy-voice/course-units-4-30.ts

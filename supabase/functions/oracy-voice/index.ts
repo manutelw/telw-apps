@@ -102,7 +102,7 @@ async function usageRow(learnerId:string){
 async function saveUsage(learnerId:string,u:any){
   await db.from("oracy_usage").upsert({learner_id:learnerId,month:thisMonth(),answers:u.answers,conversation_seconds:u.conversation_seconds,updated_at:new Date().toISOString()},{onConflict:"learner_id,month"});
 }
-const UPGRADE_NOTE=" Upgrade to the full ORACY course at clarionprep.com/oracy/upgrade.html";
+const UPGRADE_NOTE=" Get the full ORACY course at clarionprep.com/oracy/start";
 async function useAnswer(auth:any):Promise<string>{
   if(!auth||auth.admin||!auth.learner)return "";
   await expireIfLapsed(auth.learner);
@@ -174,6 +174,91 @@ async function upgradeVerify(req:Request,payload:any){
   const { data: fresh } = await db.from("oracy_learners").select("full_access_until").eq("id",learner.id).maybeSingle();
   return json(req,{ok:true,paid_until:fresh?.full_access_until||null});
 }
+// Self sign-up: visitors give name, email and mobile. A returning visitor is recognised when any two match.
+// A paid account opened on a new device needs a 6-digit code sent to its email.
+const PREVIEW_LOGIN="__oracy_admin_preview__";
+const SELF_UNITS=Array.from({length:103},(_,i)=>i+1);
+const RESEND_API_KEY=Deno.env.get("RESEND_API_KEY")||"";
+const ORACY_FROM_EMAIL=Deno.env.get("ORACY_FROM_EMAIL")||"ORACY by TELW <oracy@mail.clarionprep.com>";
+const normName=(v:any)=>String(v||"").toLowerCase().replace(/[^a-zऀ-ॿ ]+/g," ").replace(/\s+/g," ").trim();
+const normEmail=(v:any)=>String(v||"").trim().toLowerCase();
+const normMobile=(v:any)=>String(v||"").replace(/\D/g,"").slice(-10);
+const validEmail=(e:string)=>/^[^\s@,()]+@[^\s@,()]+\.[^\s@,()]+$/.test(e);
+function maskEmail(e:string){const [u,d]=e.split("@");return (u.length<=2?u[0]+"*":u.slice(0,2)+"*".repeat(Math.min(6,u.length-2)))+"@"+d}
+async function pbkdf2(password:string,saltB64:string){const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveBits"]);const bits=await crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:unb64(saltB64),iterations:120000},key,256);return b64(new Uint8Array(bits))}
+async function newSession(learnerId:string){
+  const raw=new Uint8Array(32);crypto.getRandomValues(raw);
+  const token=b64(raw).replace(/=+$/g,"").replace(/\+/g,"-").replace(/\//g,"_");
+  const expiresAt=new Date(Date.now()+12*60*60*1000).toISOString();
+  const { error } = await db.from("oracy_sessions").insert({learner_id:learnerId,token_hash:await sha256(token),expires_at:expiresAt});
+  if(error)throw error;
+  return {token,expiresAt};
+}
+async function sendCodeEmail(to:string,name:string,code:string){
+  if(!RESEND_API_KEY)return false;
+  const html=`<div style="font-family:Arial,sans-serif;color:#102a43;line-height:1.5"><p>Hello ${String(name||"").replace(/[<>&"]/g,"")},</p><p>Your ORACY sign-in code is:</p><p style="font-size:28px;font-weight:800;letter-spacing:4px">${code}</p><p>It works for 15 minutes. If you did not try to sign in, you can ignore this email.</p><p style="color:#627d98;font-size:13px">ORACY by TELW</p></div>`;
+  try{const r=await fetch("https://api.resend.com/emails",{method:"POST",headers:{authorization:"Bearer "+RESEND_API_KEY,"content-type":"application/json"},body:JSON.stringify({from:ORACY_FROM_EMAIL,to:[to],subject:"Your ORACY sign-in code: "+code,html})});return r.ok}catch{return false}
+}
+async function register(req:Request,payload:any){
+  const n=normName(payload?.name),e=normEmail(payload?.email),m=normMobile(payload?.mobile);
+  const device=String(payload?.device_id||"").slice(0,120);
+  if(device.length<16)return json(req,{error:"Please reload the page and try again."},400);
+  const hasN=n.length>=2,hasE=validEmail(e),hasM=m.length===10;
+  if(payload?.email&&!hasE)return json(req,{error:"Please check the email address."},400);
+  if(payload?.mobile&&!hasM)return json(req,{error:"Please enter a 10-digit mobile number."},400);
+  if([hasN,hasE,hasM].filter(Boolean).length<2)return json(req,{error:"Fill in at least two of name, email and mobile."},400);
+  const cols="id,display_name,login_id,email,mobile,is_active,full_access,full_access_until,self_registered";
+  const found=new Map<string,any>();
+  if(hasE){const { data } = await db.from("oracy_learners").select(cols).eq("email",e);for(const x of data||[])found.set(String(x.id),x)}
+  if(hasM){const { data } = await db.from("oracy_learners").select(cols).eq("mobile",m);for(const x of data||[])found.set(String(x.id),x)}
+  const candidates=[...found.values()].filter((x:any)=>x.login_id!==PREVIEW_LOGIN);
+  const score=(x:any)=>(hasN&&normName(x.display_name)===n?1:0)+(hasE&&normEmail(x.email)===e?1:0)+(hasM&&normMobile(x.mobile)===m?1:0);
+  const matches=candidates.filter((x:any)=>score(x)>=2).sort((a:any,b:any)=>score(b)-score(a)||Number(hasFullAccess({learner:b}))-Number(hasFullAccess({learner:a})));
+  let learner:any=matches[0]||null;
+  let created=false;
+  if(!learner){
+    if(candidates.length)return json(req,{error:"These details don't match the ones you first registered with. Use the same name, email and mobile number as before."},409);
+    if(!(hasN&&hasE&&hasM))return json(req,{error:"We couldn't find you. To start, fill in all three: name, email and mobile."},404);
+    const salt=new Uint8Array(16);crypto.getRandomValues(salt);const saltB64=b64(salt);
+    const pw=new Uint8Array(24);crypto.getRandomValues(pw);
+    let loginId=e;
+    const { data: taken } = await db.from("oracy_learners").select("id").eq("login_id",loginId).maybeSingle();
+    if(taken)loginId=e+"#"+Math.random().toString(36).slice(2,6);
+    const ins=await db.from("oracy_learners").insert({display_name:String(payload?.name||"").trim().replace(/\s+/g," ").slice(0,80),login_id:loginId,email:e,mobile:m,password_salt:saltB64,password_hash:await pbkdf2(b64(pw),saltB64),is_active:true,self_registered:true,updated_at:new Date().toISOString()}).select(cols).single();
+    if(ins.error)return json(req,{error:"We couldn't create your account. Please try again."},500);
+    learner=ins.data;created=true;
+  }
+  if(learner.is_active!==true)return json(req,{error:"This ORACY account is paused. Please message TELW on WhatsApp."},403);
+  await expireIfLapsed(learner);
+  if(learner.full_access===true&&learner.full_access_until&&new Date(learner.full_access_until).getTime()<=Date.now()){learner.full_access=false;learner.full_access_until=null}
+  if(learner.self_registered===true){
+    await db.from("oracy_unit_assignments").upsert(SELF_UNITS.map(u=>({learner_id:learner.id,unit_no:u,is_active:true,assigned_at:new Date().toISOString(),expires_at:null})),{onConflict:"learner_id,unit_no",ignoreDuplicates:true});
+  }
+  const deviceHash=await sha256(String(learner.id)+"|"+device);
+  const { data: known } = await db.from("oracy_devices").select("learner_id").eq("learner_id",String(learner.id)).eq("device_hash",deviceHash).maybeSingle();
+  if(!known&&!created&&hasFullAccess({learner})){
+    const code=String(payload?.code||"").replace(/\D/g,"");
+    const { data: pending } = await db.from("oracy_login_codes").select("id,code_hash,expires_at,attempts,created_at").eq("learner_id",String(learner.id)).eq("device_hash",deviceHash).order("created_at",{ascending:false}).limit(1).maybeSingle();
+    const live=pending&&new Date(pending.expires_at).getTime()>Date.now()&&Number(pending.attempts||0)<5;
+    if(code){
+      if(!live)return json(req,{error:"That code has expired. Ask for a new one.",needs_code:true},400);
+      if(await sha256(code)!==pending.code_hash){await db.from("oracy_login_codes").update({attempts:Number(pending.attempts||0)+1}).eq("id",pending.id);return json(req,{error:"That code is not right. Please check the email and try again.",needs_code:true},400)}
+      await db.from("oracy_login_codes").update({expires_at:new Date().toISOString()}).eq("id",pending.id);
+    }else{
+      if(!learner.email)return json(req,{error:"This full-course account has no email for a sign-in code. Please message TELW on WhatsApp."},403);
+      if(!(live&&Date.now()-new Date(pending.created_at).getTime()<60000&&!payload?.resend)){
+        const fresh=String(Math.floor(100000+Math.random()*900000));
+        await db.from("oracy_login_codes").insert({learner_id:String(learner.id),device_hash:deviceHash,code_hash:await sha256(fresh),expires_at:new Date(Date.now()+15*60000).toISOString(),attempts:0});
+        if(!(await sendCodeEmail(learner.email,learner.display_name,fresh)))return json(req,{error:"We couldn't send the sign-in code. Please message TELW on WhatsApp."},502);
+      }
+      return json(req,{needs_code:true,sent_to:maskEmail(learner.email)});
+    }
+  }
+  if(!known)await db.from("oracy_devices").upsert({learner_id:String(learner.id),device_hash:deviceHash},{onConflict:"learner_id,device_hash"});
+  const s=await newSession(String(learner.id));
+  return json(req,{ok:true,session_token:s.token,expires_at:s.expiresAt,created,learner:{display_name:learner.display_name}});
+}
+
 async function conversationEnd(req:Request,payload:any){
   const learner=await learnerFromSession(String(payload?.session_token||"").trim());
   if(!learner)return json(req,{ok:true});
@@ -510,6 +595,7 @@ Deno.serve(async (req: Request) => {
     if (payload?.action === "upgrade-order") return await upgradeOrder(req, payload);
     if (payload?.action === "upgrade-verify") return await upgradeVerify(req, payload);
     if (payload?.action === "conversation-end") return await conversationEnd(req, payload);
+    if (payload?.action === "register") return await register(req, payload);
     return json(req, { error: "Unknown action" }, 400);
   } catch (e) { return json(req, { error: "Request failed", detail: String(e?.message || e).slice(0, 500) }, 500); }
 });

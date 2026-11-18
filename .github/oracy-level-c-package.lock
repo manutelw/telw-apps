@@ -1,7 +1,7 @@
 # ORACY LEVEL C — FULL PACKAGE BALLISTIC FREEZE
 # Approved final baseline: all 30 Level C units across C1A, C1B, C2A, C2B.
 # Any change to protected Level C content/runtime files must fail CI until there is an explicit, deliberate rebaseline.
-BASELINE_COMMIT=04372b2e37ba7cc81a2cf0fbd6744b2a6fc3b28c
+BASELINE_COMMIT=4ea99332761603c3dda60e85014f4b0435660403
 SCOPE=C1A,C1B,C2A,C2B
 UNITS=1-30
 STATUS=FROZEN
