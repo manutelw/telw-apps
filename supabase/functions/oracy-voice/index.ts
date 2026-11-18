@@ -337,13 +337,18 @@ async function talkFeedback(req:Request,payload:any){
   if(!scenario||said.length<2)return json(req,{error:"Have at least two turns before asking for feedback."},400);
   const transcript=history.map((x:any)=>(x?.role==="coach"?"Coach: ":"Learner: ")+String(x?.text||"").slice(0,600)).join("\n");
   const ai=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Authorization":`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},
-    body:JSON.stringify({model:"gpt-4o-mini",temperature:.3,max_tokens:700,response_format:{type:"json_object"},messages:[{role:"system",content:`You are a TELW spoken-English trainer giving short, kind, practical feedback on a learner's side of a practice conversation ("${scenario.title}"). The text comes from speech recognition, so ignore punctuation and spelling, and do not comment on pronunciation.
+    body:JSON.stringify({model:"gpt-4o-mini",temperature:.3,max_tokens:700,response_format:{type:"json_object"},messages:[{role:"system",content:`You are an experienced TELW spoken-English trainer giving feedback on a learner's side of a practice conversation ("${scenario.title}"). The text comes from speech recognition: ignore punctuation, capital letters and spelling, and never comment on pronunciation.
+Be useful, not fussy. Only correct something if a trained teacher would really correct it in class:
+- "error": a grammar mistake, a wrong word, or a missing word (e.g. "I am working here since 2020" -> "I have been working here since 2020").
+- "unclear": the meaning is hard to follow.
+Do NOT rewrite sentences that are already correct and understandable just to make them sound different. "The favourite actor for me is Shah Rukh Khan" is acceptable spoken English: leave it alone. If there are no real errors, return an empty fixes list.
+Also look at how the learner developed their answers. If they mostly gave very short answers, pick one and show how to make it fuller with a reason or an example.
 Return strict JSON only:
-{"went_well":["",""],"fixes":[{"you_said":"","better":"","why":""}],"next_time":""}
-went_well: two specific things the learner did well. fixes: up to three of the learner's own sentences that would sound more natural or correct, quoting what they said, a better version, and a reason in under 12 plain words. next_time: one practical tip in one sentence. Use simple language.`},{role:"user",content:transcript}]})});
+{"went_well":["",""],"fixes":[{"type":"error|unclear","you_said":"","better":"","why":""}],"build_up":{"you_said":"","fuller":""},"next_time":""}
+went_well: two specific things the learner did well in this conversation. fixes: at most three, only type error or unclear; why in under 12 plain words. build_up: one short answer made fuller, or empty strings if their answers were already well developed. next_time: one practical tip in one sentence. Use simple language.`},{role:"user",content:transcript}]})});
   if(!ai.ok)return json(req,{error:"Feedback is not available right now."},502);
   let f:any={};try{f=JSON.parse((await ai.json())?.choices?.[0]?.message?.content||"{}")}catch{}
-  return json(req,{went_well:Array.isArray(f.went_well)?f.went_well.slice(0,3).map((x:any)=>String(x).slice(0,240)):[],fixes:Array.isArray(f.fixes)?f.fixes.slice(0,3).map((x:any)=>({you_said:String(x?.you_said||"").slice(0,300),better:String(x?.better||"").slice(0,300),why:String(x?.why||"").slice(0,160)})):[],next_time:String(f.next_time||"").slice(0,240)});
+  return json(req,{went_well:Array.isArray(f.went_well)?f.went_well.slice(0,3).map((x:any)=>String(x).slice(0,240)):[],fixes:Array.isArray(f.fixes)?f.fixes.filter((x:any)=>["error","unclear"].includes(String(x?.type||"").toLowerCase())&&String(x?.you_said||"").trim()&&String(x?.better||"").trim()).slice(0,3).map((x:any)=>({you_said:String(x?.you_said||"").slice(0,300),better:String(x?.better||"").slice(0,300),why:String(x?.why||"").slice(0,160)})):[],build_up:f?.build_up?.fuller?{you_said:String(f.build_up.you_said||"").slice(0,300),fuller:String(f.build_up.fuller||"").slice(0,500)}:null,next_time:String(f.next_time||"").slice(0,240)});
 }
 
 async function conversationEnd(req:Request,payload:any){

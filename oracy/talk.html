@@ -112,7 +112,7 @@ $('finish').onclick=async()=>{
   stopStream();ended=true;$('mic').disabled=true;$('finish').disabled=true;setStatus('Preparing your feedback…');
   try{
     const f=await call('talk-feedback',{scenario:scenario[0],history});
-    $('feedback').innerHTML='<h3>What went well</h3><ul>'+f.went_well.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'+(f.fixes.length?'<h3>Say it better</h3>'+f.fixes.map(x=>'<div class="fix">You said: “'+esc(x.you_said)+'”<br><span class="b">Better: “'+esc(x.better)+'”</span><br><span class="muted small">'+esc(x.why)+'</span></div>').join(''):'')+(f.next_time?'<h3>Next time</h3><p>'+esc(f.next_time)+'</p>':'');
+    $('feedback').innerHTML='<h3>What went well</h3><ul>'+f.went_well.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'+(f.fixes.length?'<h3>Say it better</h3>'+f.fixes.map(x=>'<div class="fix">You said: “'+esc(x.you_said)+'”<br><span class="b">Better: “'+esc(x.better)+'”</span><br><span class="muted small">'+esc(x.why)+'</span></div>').join(''):'<h3>Say it better</h3><p>No real mistakes to fix. Well done.</p>')+(f.build_up&&f.build_up.fuller?'<h3>Make it fuller</h3><div class="fix">You said: “'+esc(f.build_up.you_said)+'”<br><span class="b">Fuller: “'+esc(f.build_up.fuller)+'”</span></div>':'')+(f.next_time?'<h3>Next time</h3><p>'+esc(f.next_time)+'</p>':'');
     $('feedback').classList.remove('hidden');setStatus('Here is your feedback.');$('feedback').scrollIntoView({behavior:'smooth'});
   }catch(e){setStatus(e.message,true);$('finish').disabled=false}
 };
