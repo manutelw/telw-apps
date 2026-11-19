@@ -27,24 +27,13 @@ table{width:100%;border-collapse:collapse;margin-top:6px}th,td{text-align:left;p
 <p class="muted">This app is for anybody and everybody who wishes to learn spoken English, and to speak everyday and work English more fluently and confidently.</p>
 <p class="muted">Work through short spoken-English units, and practise real conversations with a coach in Talk practice. You get feedback on what you say and better ways to say it. Start free; the full course adds more practice and a live voice call.</p>
 
-<section class="card">
-<table>
-<tr><th></th><th>Free</th><th>Full course</th></tr>
-<tr><td>All ORACY units</td><td>Yes</td><td class="on">Yes</td></tr>
-<tr><td>Checked answers a month</td><td>50</td><td class="on">300</td></tr>
-<tr><td>Talk practice (spoken conversations, turn by turn)</td><td>10 turns</td><td class="on">300 turns (about 3 hours)</td></tr>
-<tr><td>Live voice call with the coach</td><td>No</td><td class="on">20 minutes a month</td></tr>
-<tr><td>Price</td><td>Free</td><td class="on">₹2,999 for 30 days</td></tr>
-</table>
-</section>
-
 <section id="signup" class="card hidden">
 <h2>Your details</h2>
 <p class="muted small">New here? Fill in all three. Coming back? Any two of them will find your account.</p>
 <div class="field"><label for="name">Full name</label><input id="name" autocomplete="name"></div>
 <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email"></div>
 <div class="field"><label for="mobile">Mobile number</label><input id="mobile" type="tel" inputmode="numeric" autocomplete="tel" placeholder="10 digits"></div>
-<div class="actions"><button id="freeBtn" class="btn" type="button">Start free</button><button id="payStartBtn" class="btn gold" type="button">Get the full course · ₹2,999</button></div>
+<div class="actions"><button id="freeBtn" class="btn" type="button">Start free</button></div>
 <div id="signupStatus" class="status"></div>
 <div id="codeBox" class="hidden">
 <div class="field"><label for="code">Sign-in code</label><input id="code" inputmode="numeric" maxlength="6" placeholder="6 digits"></div>
@@ -88,7 +77,7 @@ async function showPlan(){
   $('planNote').textContent=p.paid?(p.paid_until?'Full course until '+fmtDate(p.paid_until)+'.':'Full course, switched on by your trainer.'):'You are on the free plan.';
   $('usage').textContent='This month: '+p.answers_used+' of '+p.answer_limit+' answers used · '+(p.talk_turns_used||0)+' of '+(p.talk_turn_limit||0)+' talk turns used'+(p.paid?' · '+Math.floor((p.conversation_seconds_left||0)/60)+' minutes of live conversation left':'')+'.';
   $('payBtn').textContent=p.paid&&p.paid_until?'Add 30 more days · ₹2,999':'Get the full course · ₹2,999';
-  $('payBtn').classList.toggle('hidden',Boolean(p.paid&&!p.paid_until));
+  const usedUp=(p.answers_used>=p.answer_limit)||((p.talk_turns_used||0)>=(p.talk_turn_limit||0));$('payBtn').classList.toggle('hidden',p.paid?!p.paid_until:!usedUp);if(!p.paid&&usedUp){$('planNote').textContent='You have used this month\'s free practice. Get the full course for 300 answers, 300 talk turns and a live voice call.'}
   return p;
 }
 async function signIn(extra={}){
@@ -111,7 +100,7 @@ async function proceed(btn,extra={}){
   finally{btn.disabled=false}
 }
 $('freeBtn').onclick=()=>{afterSignIn='free';proceed($('freeBtn'))};
-$('payStartBtn').onclick=()=>{afterSignIn='pay';proceed($('payStartBtn'))};
+
 $('codeBtn').onclick=()=>proceed($('codeBtn'),{code:$('code').value.trim()});
 $('resendBtn').onclick=()=>proceed($('resendBtn'),{resend:true});
 $('showPw').onclick=()=>$('pwBox').classList.toggle('hidden');
