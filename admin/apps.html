@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Admin · All ClarionPrep apps</title>
+<style>
+:root{--navy:#102a43;--gold:#c79a3b;--bg:#f4f6f8;--line:#e4e9ee;--muted:#627d98;--red:#b42318;--green:#18794e}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,-apple-system,"Segoe UI",Arial,sans-serif;background:var(--bg);color:#243b53}
+.top{background:var(--navy);color:#fff}.bar{max-width:980px;margin:auto;padding:16px 20px;display:flex;align-items:center;gap:12px}.brand{font-weight:800;font-size:20px}.bar a{margin-left:auto;color:#fff;font-size:14px}
+main{max-width:980px;margin:auto;padding:20px}h1{color:var(--navy);margin:4px 0}.muted{color:var(--muted);line-height:1.5}
+h2{color:var(--navy);font-size:16px;margin:24px 0 8px;text-transform:uppercase;letter-spacing:.06em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.app{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.app strong{color:var(--navy);font-size:16px}.app span{color:var(--muted);font-size:13px;line-height:1.4;flex:1}
+.app button,.app a.btn{border:0;border-radius:9px;padding:10px 12px;font-weight:800;font-size:14px;cursor:pointer;background:var(--navy);color:#fff;text-align:center;text-decoration:none}
+.app button:disabled{opacity:.5}
+#status{margin-top:14px;font-weight:700}#status.err{color:var(--red)}#status.ok{color:var(--green)}
+</style>
+</head>
+<body>
+<header class="top"><div class="bar"><div class="brand">ClarionPrep · Admin</div><a href="/ascent/admin-settings.html">← Admin Hub</a></div></header>
+<main>
+<h1>All apps</h1>
+<p class="muted">Open any app without paying. Each click gives you a fresh free pass for 24 hours, with no usage limits, recorded as a ₹0 administrator order.</p>
+<div id="status" class="muted"></div>
+
+<h2>Diagnose</h2>
+<div class="grid">
+<div class="app"><strong>WCT</strong><span>Workplace Communication Test</span><button data-p="WCT" data-go="/public-wct/">Open</button></div>
+<div class="app"><strong>ASCENT Diagnostic</strong><span>Opens through the Private Learner Demo in the Admin Hub.</span><a class="btn" href="/ascent/admin-settings.html">Go to Admin Hub</a></div>
+</div>
+
+<h2>Build</h2>
+<div class="grid">
+<div class="app"><strong>Dialogue Lab</strong><span>20 guided speaking modules</span><button data-p="DIALOGUE_LAB" data-go="/dialogue-lab/">Open</button></div>
+</div>
+
+<h2>Prepare</h2>
+<div class="grid">
+<div class="app"><strong>PI Prep</strong><span>PI Practice and PI Lab</span><button data-p="PI_PREP" data-go="/prep/pi/">Open</button></div>
+<div class="app"><strong>GD Prep</strong><span>GD Practice and GD Lab</span><button data-p="GD_PREP" data-go="/prep/gd/">Open</button></div>
+<div class="app"><strong>Placement Readiness Pass</strong><span>WCT, PI Prep, GD Prep, CV Builder &amp; Evaluator, JD Mapper</span><button data-p="PLACEMENT_PASS" data-go="/pass/">Open</button></div>
+</div>
+
+<h2>CAT</h2>
+<div class="grid">
+<div class="app"><strong>CAT Simulator</strong><span>Full CAT-style mock test</span><button data-p="CAT_SIMULATOR" data-go="https://cat.clarionprep.com/">Open</button></div>
+</div>
+
+<h2>ORACY</h2>
+<div class="grid">
+<div class="app"><strong>ORACY learners</strong><span>Learners, units and the Paid switch. Use the ORACY card in the Admin Hub.</span><a class="btn" href="/ascent/admin-settings.html">Go to Admin Hub</a></div>
+<div class="app"><strong>Talk practice</strong><span>Unlimited as administrator</span><a class="btn" href="/oracy/talk">Open</a></div>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+function adminToken(){for(const k of ['ascent_admin_master_session','ascent_trainer_session']){try{const s=JSON.parse(localStorage.getItem(k)||'null');if(s&&s.sessionToken&&(k==='ascent_admin_master_session'||String(s.role||'').toUpperCase()==='ADMIN'))return s.sessionToken}catch(e){}}return ''}
+function st(t,c){$('status').textContent=t;$('status').className=c||'muted'}
+document.querySelectorAll('button[data-p]').forEach(b=>b.addEventListener('click',async()=>{
+  b.disabled=true;st('Opening '+b.closest('.app').querySelector('strong').textContent+'…');
+  try{
+    const r=await fetch('/admin/grant',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({product_code:b.dataset.p,admin_token:adminToken()})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok||!d.ok||!d.entitlement_token)throw new Error(d.message||'Access could not be granted.');
+    const p=b.dataset.p;
+    try{localStorage.setItem('clarion_device_v1','ADMIN');localStorage.setItem('clarion_entitlement_'+p,d.entitlement_token)}catch(e){}
+    const u=new URL(b.dataset.go,location.origin);u.searchParams.set('clarion_token',d.entitlement_token);u.searchParams.set('clarion_device','ADMIN');
+    location.href=u.toString();
+  }catch(e){st(e.message,'err');b.disabled=false}
+}));
+</script>
+</body>
+</html>

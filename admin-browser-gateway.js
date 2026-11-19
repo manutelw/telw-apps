@@ -27,6 +27,16 @@ export async function handleAdminGateway(request){
   }
   if(path==='/admin/session-status'){const token=readAdminCookie(request);return json({ok:Boolean(token&&await validAdmin(token))})}
   if(path==='/admin/session-end'){const h=new Headers({'content-type':'application/json','cache-control':'no-store'});h.append('set-cookie',clearAdminSessionCookie());return new Response(JSON.stringify({ok:true}),{status:200,headers:h})}
+  if(path==='/admin/grant'&&request.method==='POST'){
+    let body={};try{body=await request.json()}catch{}
+    const token=readAdminCookie(request)||String(body?.admin_token||'').trim();
+    if(!token||!(await validAdmin(token)))return json({ok:false,message:'Administrator session required. Sign in to the Admin Hub again.'},403);
+    const r=await fetch(ORACY_PROJECT+'/functions/v1/clarion-public-commerce',{method:'POST',headers:{'content-type':'application/json','origin':'https://clarionprep.com'},body:JSON.stringify({action:'ADMIN_GRANT',product_code:String(body?.product_code||''),device_id:'ADMIN',admin_token:token})});
+    const d=await r.json().catch(()=>({ok:false,message:'Access could not be granted.'}));
+    const h=new Headers({'content-type':'application/json','cache-control':'no-store'});
+    if(r.ok&&d.ok)h.append('set-cookie',setAdminSessionCookie(token));
+    return new Response(JSON.stringify(d),{status:r.status,headers:h});
+  }
   if(path==='/access/public-session'&&request.method==='POST')return startPublicSession(request);
   if(path==='/access/public-entitlement'&&request.method==='POST')return startPublicEntitlement(request);
   if(path==='/access/institutional-start'&&request.method==='POST')return startInstitutionalAccess(request);
