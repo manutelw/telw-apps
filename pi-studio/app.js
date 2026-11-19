@@ -6,7 +6,7 @@ const $=id=>document.getElementById(id);
 const storage='telw-pi-studio-v1';let state={questions:{},index:0,stage:0,mock:null};
 try{const data=JSON.parse(localStorage.getItem(storage)||'null');if(data&&typeof data==='object')state={...state,...data}}catch{}
 state.index=Number.isInteger(state.index)&&state.index>=0&&state.index<20?state.index:0;
-state.stage=Number.isInteger(state.stage)&&state.stage>=0&&state.stage<stages.length?state.stage:0;
+state.stage=Number.isInteger(state.stage)&&state.stage>=0&&state.stage<stages.length?state.stage:0;if(window.PI_TASTER)state.stage=0;
 function persist(){try{localStorage.setItem(storage,JSON.stringify(state))}catch{$('status').textContent='Browser storage unavailable. Export your progress.'}}
 function current(){return state.questions[state.index]||(state.questions[state.index]={})}
 function save(){const row=current();for(const id of fields)row[id]=$(id).value;persist()}
