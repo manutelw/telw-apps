@@ -39,10 +39,11 @@ button,.btn{width:100%;min-height:47px;border:0;border-radius:9px;background:var
 </div>
 
 <div id="verifyPane" class="hidden">
-<h2>Check your email</h2><p class="meta">We sent a six-digit code to your email address. Enter it below.</p>
+<h2>Check your email</h2><p id="verifyMeta" class="meta">We sent a six-digit code to your email address. Enter it below.</p>
 <div class="field"><label>Six-digit verification code</label><input id="verifyCode" inputmode="numeric" maxlength="6"></div>
 <button id="verifyButton" type="button">Verify and continue to payment</button>
 <div id="verifyStatus" class="status"></div>
+<p class="meta" style="margin-top:12px">No email? Check your spam folder, or <a href="#" id="resendLink">send a new code</a>.</p>
 </div>
 
 <div id="paymentPane" class="hidden">
@@ -59,6 +60,7 @@ const U='https://vtqatrhwfvzyodiftvkc.supabase.co';
 const K='sb_publishable_IJJ9AW79DhOsWlsPK_8pkg_q5Fh7643';
 const REG=U+'/functions/v1/ascent-diagnostic-registration';
 const VER=U+'/functions/v1/ascent-student-email-verification';
+const SIGNIN=U+'/functions/v1/ascent-diagnostic-signin';
 const CREATE=U+'/functions/v1/ascent-create-private-pass-order';
 const VERIFY=U+'/functions/v1/ascent-verify-private-pass-payment';
 const RESOLVE=U+'/rest/v1/rpc/ascent_resolve_access_point';
@@ -68,7 +70,14 @@ const $=id=>document.getElementById(id);
 let access=null,pendingStudent=null,regPayload=null,session=null;
 
 function st(id,msg,type=''){const e=$(id);e.textContent=msg||'';e.className='status'+(type?' '+type:'')}
-let needPassword=false;
+let needPassword=false,signinMode=false;
+async function startSignin(email){
+  const pw=randomPassword();
+  const d=await post(SIGNIN,{action:'send',email});
+  signinMode=true;pendingStudent=d.student_uuid;regPayload={email,password:pw};
+  $('verifyMeta').textContent='This email already has an ASCENT account, so no new account is needed. We sent a six-digit sign-in code to '+(d.masked_email||'your email')+'. Enter it below.';
+  $('entry').classList.add('hidden');$('verifyPane').classList.remove('hidden');$('verifyCode').focus();
+}
 function randomPassword(){const a=new Uint8Array(24);crypto.getRandomValues(a);return 'Ap-'+[...a].map(x=>x.toString(36).padStart(2,'0')).join('').slice(0,30)+'!9'}
 
 async function post(url,body){
@@ -111,7 +120,7 @@ $('registerButton').onclick=async()=>{
     const d=await post(REG,regPayload);pendingStudent=d.student_uuid;
     $('entry').classList.add('hidden');$('verifyPane').classList.remove('hidden');$('verifyCode').focus();
   }catch(e){
-    if(!needPassword&&/already|exist|registered|in use/i.test(e.message)){needPassword=true;$('existingBox').classList.remove('hidden');$('noPwNote').classList.add('hidden');$('loginPassword').focus();st('entryStatus','');}
+    if(/already|exist|registered|in use/i.test(e.message)){try{st('entryStatus','Sending a sign-in code…');await startSignin(email);st('entryStatus','')}catch(e2){st('entryStatus',e2.message,'error')}}
     else st('entryStatus',e.message,'error');
   }finally{$('registerButton').disabled=false}
 };
@@ -121,7 +130,8 @@ $('verifyButton').onclick=async()=>{
   if(!pendingStudent||!/^\d{6}$/.test(code)){st('verifyStatus','Enter the six-digit verification code.','error');return}
   $('verifyButton').disabled=true;st('verifyStatus','Verifying…');
   try{
-    await post(VER,{student_uuid:pendingStudent,code});
+    if(signinMode)await post(SIGNIN,{action:'verify',student_uuid:pendingStudent,code,password:regPayload.password});
+    else await post(VER,{student_uuid:pendingStudent,code});
     await doLogin(regPayload.email,regPayload.password);
     showPayment();
   }catch(e){st('verifyStatus',e.message,'error')}finally{$('verifyButton').disabled=false}
@@ -150,6 +160,7 @@ $('payButton').onclick=async()=>{
   try{await resolveAccess();const s=JSON.parse(localStorage.getItem('ascent_student_session')||'null');if(s?.sessionToken&&new Date(s.expiresAt).getTime()>Date.now()){session=s;showPayment()}}
   catch(e){st('entryStatus',e.message,'error')}
 })();
+$('resendLink').onclick=async e=>{e.preventDefault();if(!regPayload)return;st('verifyStatus','Sending a new code…');try{if(signinMode)await startSignin(regPayload.email);else{const d=await post(REG,regPayload);pendingStudent=d.student_uuid}st('verifyStatus','A new code is on its way.','success')}catch(err){st('verifyStatus',err.message,'error')}};
 </script>
 </body>
 </html>
