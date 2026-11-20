@@ -386,7 +386,7 @@ async function injectOracyAdminCard(response){
     html=html.replace('</body>',script+'</body>');
   }
   if(!html.includes('id="adminGoScript"')){
-    const go='<script id="adminGoScript">(function(){var g=new URLSearchParams(location.search).get("go");var map={"private-demo":"adminPrivateDemoButton","oracy":"oracyAdminHubCard"};var id=map[g];if(!id)return;history.replaceState(null,"",location.pathname);var n=0;(function t(){var b=document.getElementById(id);if(b&&n>2){b.click();return}n++;if(n<40)setTimeout(t,250)})()})();</script>';
+    const go='<script id="adminGoScript">(function(){var g=new URLSearchParams(location.search).get("go");var map={"private-demo":"adminPrivateDemoButton","oracy":"oracyAdminHubCard"};var id=map[g];if(!id)return;history.replaceState(null,"",location.pathname);var left=false;addEventListener("pagehide",function(){left=true});var n=0;(function t(){if(left)return;var b=document.getElementById(id);n++;if(b&&b.offsetParent!==null&&!b.disabled&&(n===6||n===20||n===40)){b.click()}else if(b&&b.offsetParent===null&&n>6&&n<40){n=Math.min(n,5)}if(n<80)setTimeout(t,300)})()})();</script>';
     html=html.replace('</body>',go+'</body>');
   }
   if(!html.includes('id="allAppsAdminCard"')){
