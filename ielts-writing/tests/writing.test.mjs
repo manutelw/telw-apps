@@ -90,11 +90,12 @@ test('Task 2 counts double and the result is always a range', () => {
   const pass = band => Object.fromEntries(['fulfilment', 'coherence', 'lexical', 'grammar'].map(k => [k, {band, evidence: [], why: 'w', improve: 'i', rewrite: null}]));
   const check = n => ({total: n, own: n, minimum: n, note: ''});
   const result = combine({check: check(150), passes: [pass(4), pass(4), pass(4)]}, {check: check(250), passes: [pass(7), pass(7), pass(7)]});
-  assert.equal(result.tasks[0].band, 4); assert.equal(result.tasks[1].band, 7);
+  assert.equal(result.tasks[0].band, 3.5, 'a weak task is lowered by half a band'); assert.equal(result.tasks[1].band, 7);
+  assert.equal(result.tasks[0].criteria[0].band, 4, 'criterion bands stay as marked');
   assert.equal(result.marked.low, 5.5); assert.equal(result.marked.high, 6);
   assert.equal(result.overall.low, 5.5, 'the shown band is the marked level'); assert.equal(result.overall.high, 6);
   const wide = combine({check: check(150), passes: [pass(5), pass(6), pass(7)]}, {check: check(250), passes: [pass(5), pass(6), pass(7)]});
-  assert.equal(wide.overall.low, 5); assert.equal(wide.overall.high, 7); assert.equal(wide.overall.wide, true);
+  assert.equal(wide.overall.low, 4.5); assert.equal(wide.overall.high, 7); assert.equal(wide.overall.wide, true);
   assert.equal(wide.tasks[1].criteria[0].band, 6, 'the middle marking is used');
 });
 
@@ -328,4 +329,24 @@ test('language scores are capped when errors dominate and block meaning', async 
   assert.equal(languageCap(review(40, 0, 0, 23)), 3);
   assert.equal(languageCap(review(20, 0, 0, 18)), 4);
   assert.equal(languageCap(review(20, 0, 0, 16)), 9);
+});
+
+test('weak task bands are lowered by half a band; 6 and above and automatic bands are not', async () => {
+  const {calibratedTask} = await import('../server/marking.mjs');
+  assert.equal(calibratedTask(5.5), 5); assert.equal(calibratedTask(5.25), 4.75); assert.equal(calibratedTask(4), 3.5);
+  assert.equal(calibratedTask(5.75), 5.75); assert.equal(calibratedTask(6), 6); assert.equal(calibratedTask(8.5), 8.5);
+  assert.equal(calibratedTask(0.25), 0); assert.equal(calibratedTask(1, true), 1);
+});
+
+test('the marker is told to keep the lower-band rule only below Band 7', async () => {
+  const {buildMessages} = await import('../server/marking.mjs');
+  const data = {rubrics: {essay: {}}, notes: [], voice: {}};
+  const system = buildMessages(data, 'academic', 2, {prompt: 'p'}, 'script')[0].content;
+  assert.match(system, /Below Band 7, if a script sits between two bands, give the lower one/);
+  assert.match(system, /At Band 7 and above, give the band that fits best/);
+});
+
+test('the result email asks learners to send their official Writing band', async () => {
+  const src = (await import('node:fs')).readFileSync(new URL('../server/diagnostic.mjs', import.meta.url), 'utf8');
+  assert.match(src, /Taking the real IELTS test\?/); assert.match(src, /send us your Writing band on WhatsApp/); assert.match(src, /wa\.me\/919717116831/);
 });
