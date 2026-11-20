@@ -30,3 +30,16 @@ test('only the trainer can start a fresh test while preserving an unfinished run
  const next=await(await f.api('admin/start',{fresh:true},admin.cookie)).json();assert.notEqual(next.attemptId,old.attemptId);const kept=f.db.prepare('SELECT status,answers_json FROM listening_attempts WHERE id=?').get(old.attemptId);assert.equal(kept.status,'abandoned');assert.equal(JSON.parse(kept.answers_json)[1],'alpha');
  const learner=await f.login();assert.equal((await f.api('admin/start',{fresh:true},learner.cookie)).status,403);
 }));
+
+test('an attempt whose time ran out is scored on return, not reopened frozen',()=>fixture(async f=>{
+ const {admin}=await f.install();const old=await(await f.api('admin/start',{},admin.cookie)).json();
+ await f.api('save',{attemptId:old.attemptId,answers:{1:'alpha'},revision:0},admin.cookie);
+ f.advance(old.deadline-f.now()+60);
+ const next=await(await f.api('admin/start',{},admin.cookie)).json();assert.notEqual(next.attemptId,old.attemptId);assert.equal(next.status,'active');assert.ok(next.deadline>f.now());
+ assert.equal(f.db.prepare('SELECT status FROM listening_attempts WHERE id=?').get(old.attemptId).status,'completed');
+ const user=await f.login();const run=await(await f.api('start',{},user.cookie)).json();
+ await f.api('save',{attemptId:run.attemptId,answers:{1:'alpha'},revision:0},user.cookie);
+ f.advance(run.deadline-f.now()+60);
+ const back=await f.api('start',{},user.cookie);assert.equal(back.status,200);const shown=await back.json();
+ assert.equal(shown.attemptId,run.attemptId);assert.equal(shown.status,'completed');assert.equal(shown.result.correct,1);
+}));
