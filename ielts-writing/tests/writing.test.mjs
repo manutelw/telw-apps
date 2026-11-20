@@ -91,7 +91,7 @@ test('Task 2 counts double and the result is always a range', () => {
   const check = n => ({total: n, own: n, minimum: n, note: ''});
   const result = combine({check: check(150), passes: [pass(4), pass(4), pass(4)]}, {check: check(250), passes: [pass(7), pass(7), pass(7)]});
   assert.equal(result.tasks[0].band, 3.5, 'a weak task is lowered by half a band'); assert.equal(result.tasks[1].band, 7);
-  assert.equal(result.tasks[0].criteria[0].band, 4, 'criterion bands stay as marked');
+  assert.deepEqual(result.tasks[0].criteria.map(c => c.band), [3, 3, 4, 4], 'the criteria are lowered to match the task band');
   assert.equal(result.marked.low, 5.5); assert.equal(result.marked.high, 6);
   assert.equal(result.overall.low, 5.5, 'the shown band is the marked level'); assert.equal(result.overall.high, 6);
   const wide = combine({check: check(150), passes: [pass(5), pass(6), pass(7)]}, {check: check(250), passes: [pass(5), pass(6), pass(7)]});
@@ -349,4 +349,12 @@ test('the marker is told to keep the lower-band rule only below Band 7', async (
 test('the result email asks learners to send their official Writing band', async () => {
   const src = (await import('node:fs')).readFileSync(new URL('../server/diagnostic.mjs', import.meta.url), 'utf8');
   assert.match(src, /Taking the real IELTS test\?/); assert.match(src, /send us your Writing band on WhatsApp/); assert.match(src, /wa\.me\/919717116831/);
+});
+
+test('lowered criteria always average to the lowered task band, taking the highest bands first', async () => {
+  const {lowerWeakCriteria} = await import('../server/marking.mjs');
+  assert.deepEqual(lowerWeakCriteria({fulfilment: 5, coherence: 6, lexical: 5, grammar: 5}), {fulfilment: 4, coherence: 5, lexical: 5, grammar: 5});
+  assert.deepEqual(lowerWeakCriteria({fulfilment: 5, coherence: 5, lexical: 5, grammar: 5}), {fulfilment: 4, coherence: 4, lexical: 5, grammar: 5});
+  assert.deepEqual(lowerWeakCriteria({fulfilment: 4, coherence: 4, lexical: 6, grammar: 5}), {fulfilment: 4, coherence: 4, lexical: 5, grammar: 4});
+  assert.deepEqual(lowerWeakCriteria({fulfilment: 1, coherence: 0, lexical: 0, grammar: 0}), {fulfilment: 0, coherence: 0, lexical: 0, grammar: 0});
 });

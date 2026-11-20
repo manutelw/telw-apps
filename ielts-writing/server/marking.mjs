@@ -216,10 +216,22 @@ async function markTask(env, data, testType, number, task, script) {
 }
 
 // TELW calibration. Checked against examiner-marked samples, weak scripts (task band 5.5 or below) were
-// marked about half a band above the examiner, so their task band is lowered by half a band. The four
-// criterion bands are left exactly as marked: each criterion is judged on its own.
+// marked about half a band above the examiner, so their task band is lowered by half a band. The shown
+// criterion bands are lowered to match (see lowerWeakCriteria), so the four always average to the task band.
 export const WEAK_TASK_LIMIT = 5.5, WEAK_TASK_ADJUSTMENT = 0.5;
 export const calibratedTask = (meanBand, auto = false) => !auto && roundHalf(meanBand) <= WEAK_TASK_LIMIT ? Math.max(0, meanBand - WEAK_TASK_ADJUSTMENT) : meanBand;
+// Lowers the two highest criterion bands by one each, never the same one twice (two points across four criteria is half a band).
+// Ties go to Coherence, then Task Achievement/Response, then Lexical Resource, then Grammar.
+const LOWER_ORDER = ['coherence', 'fulfilment', 'lexical', 'grammar'];
+export function lowerWeakCriteria(bands) {
+  const out = {...bands}, lowered = new Set();
+  for (let step = 0; step < 2; step++) {
+    const key = LOWER_ORDER.filter(k => !lowered.has(k)).sort((a, b) => out[b] - out[a] || LOWER_ORDER.indexOf(a) - LOWER_ORDER.indexOf(b))[0];
+    lowered.add(key);
+    if (out[key] > 0) out[key] -= 1;
+  }
+  return out;
+}
 const taskBandOfPass = (marked, pass) => calibratedTask(mean(KEYS.map(k => pass[k].band)), marked.check.autoBand != null);
 const passAt = (marked, i) => marked.passes[Math.min(i, marked.passes.length - 1)];
 
@@ -230,8 +242,13 @@ export function combine(task1, task2, rubricVersion = '') {
       const chosen = marked.passes.find(p => p[key].band === band)[key];
       return {key, name: key === 'fulfilment' ? (number === 1 ? 'Task Achievement' : 'Task Response') : CRITERIA[key], band, why: chosen.why, evidence: chosen.evidence, improve: chosen.improve, rewrite: chosen.rewrite || null};
     });
-    const auto = marked.check.autoBand != null, meanBand = mean(criteria.map(c => c.band)), raw = roundHalf(calibratedTask(meanBand, auto));
-    return {task: number, words: marked.check.total, ownWords: marked.check.own, minimum: marked.check.minimum, note: marked.check.note, errorReview: marked.review ? {overview: marked.review.overview, totals: marked.review.totals, sentences: marked.review.sentences, errorFreeSentences: marked.review.errorFreeSentences, errors: marked.review.errors} : null, band: marked.check.autoBand == null ? Math.max(0, raw - STRICT_ADJUSTMENT) : raw, markedBand: raw, rawBand: calibratedTask(meanBand, auto), criteria};
+    const auto = marked.check.autoBand != null;
+    if (!auto && roundHalf(mean(criteria.map(c => c.band))) <= WEAK_TASK_LIMIT) {
+      const lowered = lowerWeakCriteria(Object.fromEntries(criteria.map(c => [c.key, c.band])));
+      for (const c of criteria) c.band = lowered[c.key];
+    }
+    const meanBand = mean(criteria.map(c => c.band)), raw = roundHalf(meanBand);
+    return {task: number, words: marked.check.total, ownWords: marked.check.own, minimum: marked.check.minimum, note: marked.check.note, errorReview: marked.review ? {overview: marked.review.overview, totals: marked.review.totals, sentences: marked.review.sentences, errorFreeSentences: marked.review.errorFreeSentences, errors: marked.review.errors} : null, band: marked.check.autoBand == null ? Math.max(0, raw - STRICT_ADJUSTMENT) : raw, markedBand: raw, rawBand: meanBand, criteria};
   };
   const first = summarise(task1, 1), second = summarise(task2, 2);
   // Task 2 counts twice as much as Task 1.
