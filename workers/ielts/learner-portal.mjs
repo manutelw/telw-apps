@@ -42,12 +42,15 @@ export function paidWording(html){
   .replace(/<hr style="border:0;border-top:1px solid #e3e9ee;margin:25px 0"><span class="pill">Improvement programme<\/span>[\s\S]*?Enrolment opening later<\/button>/,TRAINING_BLOCK);
 }
 export function withPayNote(html){html=paidWording(html);return html.includes('</body>')?html.replace('</body>',PAY_NOTE+'</body>'):html+PAY_NOTE;}
+// Reading's 15-day wait is enforced by the separate Reading service. The trainer can repeat Reading tests
+// with Gmail aliases such as manutelw+r1@gmail.com, which reach the same inbox and are not charged.
+export const trainerReadingEmail=email=>email===TRAINER_EMAIL||/^manutelw\+[a-z0-9-]{1,20}@gmail\.com$/.test(email);
 async function readingGate(env,upstreamHeaders){
  if(!env.PAY_DB||!(await paymentsRequired(env,'reading')))return null;
  const session=await env.IELTS_ADMIN_SERVICE.fetch(new Request(new URL('/api/ielts/auth/session',SERVICE),{method:'GET',headers:upstreamHeaders.has('cookie')?{cookie:upstreamHeaders.get('cookie')}:{},redirect:'manual',signal:AbortSignal.timeout(20000)}));
  if(!session.ok)return null;
  const email=normalEmail((await session.json().catch(()=>({}))).email);
- if(!email||email===TRAINER_EMAIL)return null;
+ if(!email||trainerReadingEmail(email))return null;
  const now=Math.floor(Date.now()/1000);
  const active=await env.PAY_DB.prepare(`SELECT id FROM ielts_pay_credits WHERE email=?1 AND skill='reading' AND used_at>?2 AND used_ref NOT LIKE 'pending:%'`).bind(email,now-3600).first();
  if(active)return null;
