@@ -358,3 +358,11 @@ test('lowered criteria always average to the lowered task band, taking the highe
   assert.deepEqual(lowerWeakCriteria({fulfilment: 4, coherence: 4, lexical: 6, grammar: 5}), {fulfilment: 4, coherence: 4, lexical: 5, grammar: 4});
   assert.deepEqual(lowerWeakCriteria({fulfilment: 1, coherence: 0, lexical: 0, grammar: 0}), {fulfilment: 0, coherence: 0, lexical: 0, grammar: 0});
 });
+
+test('the marker is told to judge Task Response by the descriptors and not to reward neat paragraphs', async () => {
+  const {buildMessages} = await import('../server/marking.mjs');
+  const data = {rubrics: {essay: {}}, notes: [], voice: {}};
+  const system = buildMessages(data, 'academic', 2, {prompt: 'p'}, 'script', {words: 10, sentences: 1, errors: [], totals: {}})[0].content;
+  assert.match(system, /not by how long the list of weaknesses is/);
+  assert.match(system, /Do not give Coherence a higher band because a weak script is neatly paragraphed/);
+});
