@@ -529,7 +529,7 @@
 
           <div class="form-group">
             <label for="studentId">
-              Student ID or chosen ASCENT ID
+              Learner ID
             </label>
 
             <input
@@ -593,7 +593,7 @@
             </div>
           </div>
 
-          <div class="form-group">
+          <div class="form-group" hidden>
   <label for="institutionName">
     Institution
   </label>
@@ -614,6 +614,7 @@
           <div
             id="standardBatchGroup"
             class="form-group"
+            hidden
           >
             <label for="batch">
               Batch
@@ -1161,10 +1162,8 @@ function openVerificationStage(
     }
 
     function isFiibEmail(value) {
-      return String(value || "")
-        .trim()
-        .toLowerCase()
-        .endsWith("@fiib.edu.in");
+      // Public registration is individual-only. Retain legacy fields internally.
+      return false;
     }
 
     function fiibRegistrationBatches() {
