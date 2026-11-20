@@ -13,6 +13,7 @@ export function withReadingFeedback(html){
   .replace('<h3>What your answers show</h3>','').replace('<h3>Your recommended areas for improvement</h3>','')
   .replace(/\$\("summary"\)\.textContent="You answered "[\s\S]*?; \$\("breakdown"\)\.textContent=[\s\S]*?;show\("result"\)/,'$("summary").textContent="";$("breakdown").textContent="";show("result")')
   .replace('Please call TELW The English Workshop on <a href="tel:+919211392003"><strong>9211392003</strong></a> and ask','Please WhatsApp TELW The English Workshop on <a href="https://wa.me/919717116831"><strong>+91 9717 116 831</strong></a> (messages only) and ask')
+  .replace('email:$("feedbackEmail").value,consent:$("feedbackConsent").checked})','email:$("feedbackEmail").value,consent:$("feedbackConsent").checked,target:$("diagnosticTarget").value})')
   .replace(' You can still call TELW on 9211392003.',' You can still WhatsApp TELW on +91 9717 116 831 (messages only).')
   .replace('This result is based on an original, uncalibrated diagnostic. It is not an official IELTS band score. Detailed answers and explanations belong to the improvement programme, not this initial diagnostic.','Your detailed diagnostic evidence remains available to TELW when you opt in to training.');
  return html;

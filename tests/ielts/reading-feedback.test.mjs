@@ -22,3 +22,8 @@ test('Reading feedback still runs when the bundler wraps functions in __name, an
  // The deploy bundler wraps inner functions in __name(...); the shim must make that harmless.
  const ctx2={};vm.createContext(ctx2);vm.runInContext('var __name=globalThis.__name||(f=>f);function f(){const g=/* @__PURE__ */ __name(x=>x+1,"g");return g(1)};this.out=f();',ctx2);assert.equal(ctx2.out,2);
 });
+
+test('the Reading feedback email request carries the chosen target band',()=>{
+ const page=withReadingFeedback(readFileSync(new URL('./reading-page.fixture.html',import.meta.url),'utf8'));
+ assert.match(page,/consent:\$\("feedbackConsent"\)\.checked,target:\$\("diagnosticTarget"\)\.value\}/);
+});
