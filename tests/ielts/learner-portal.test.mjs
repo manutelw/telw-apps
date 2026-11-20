@@ -69,3 +69,9 @@ test('request limits, unavailable service and unexpected redirects fail closed',
 test('learner sign-out clears only the learner session cookie',async()=>{
  const response=await handleLearnerPortal(request(prefix+'auth/logout','POST',undefined,{cookie}),env(async req=>{assert.equal(req.url,service+'/api/ielts/auth/logout');return new Response('{"ok":true}',{headers:{'set-cookie':'__Secure-telw_ielts=; Path=/api; HttpOnly; Secure; SameSite=Strict; Max-Age=0'}});}));assert.equal(response.status,200);assert.match(response.headers.get('set-cookie'),/^__Secure-telw_ielts_learner=;.*Max-Age=0/);
 });
+
+test('trainer Gmail aliases are free for Reading; other plus addresses and look-alikes are not',async()=>{
+ const {trainerReadingEmail}=await import('../../workers/ielts/learner-portal.mjs');
+ for(const e of ['manutelw@gmail.com','manutelw+r1@gmail.com','manutelw+reading-test@gmail.com'])assert.equal(trainerReadingEmail(e),true,e);
+ for(const e of ['someone+r1@gmail.com','manutelw+r1@gmail.co','xmanutelw+r1@gmail.com','manutelw+r1@gmail.com.evil.com','manutelw+@gmail.com','manutelw+a b@gmail.com'])assert.equal(trainerReadingEmail(e),false,e);
+});
