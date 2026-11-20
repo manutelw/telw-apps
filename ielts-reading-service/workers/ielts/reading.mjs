@@ -1,4 +1,6 @@
 import {getLearner,requireSameOrigin,readJson,reply,limit} from './auth.mjs';
+import {compactFeedback} from './feedback.mjs';
+const TRAINER_EMAIL='manutelw@gmail.com';
 const GAP=15*24*3600;
 const fail=(message,status)=>Object.assign(new Error(message),{status});
 const sql=(env,text,...args)=>env.IELTS_DB.prepare(text).bind(...args);
@@ -32,11 +34,13 @@ function activePayload(row) {
 async function start(env,learner,body,now) {
  if(!['academic','general'].includes(body.track))throw fail('Choose a test type.',400);
  const latest=await sql(env,`SELECT MAX(completed_at) AS completed FROM ielts_attempts WHERE learner_id=?1 AND skill='reading'`,learner.id).first();
- if(latest?.completed && latest.completed+GAP>now)return reply({error:'You can complete one Reading diagnostic every 15 days.',eligibleAt:latest.completed+GAP},429);
+ // The trainer can repeat Reading tests without the wait, as in Listening and Writing.
+ const trainer=String(learner.email||'').toLowerCase()===TRAINER_EMAIL;
+ if(!trainer&&latest?.completed && latest.completed+GAP>now)return reply({error:'You can complete one Reading diagnostic every 15 days.',eligibleAt:latest.completed+GAP},429);
  const current=await sql(env,`SELECT a.*,v.content_json FROM ielts_attempts a JOIN ielts_test_versions v ON v.id=a.version_id WHERE a.learner_id=?1 AND a.skill='reading' AND a.status='active'`,learner.id).first();
  if(current && current.deadline>now)return reply(activePayload(current));
  if(current)await sql(env,`UPDATE ielts_attempts SET status='abandoned' WHERE id=?1 AND status='active'`,current.id).run();
- const version=await sql(env,`SELECT id,content_json FROM ielts_test_versions v WHERE skill='reading' AND track=?1 AND approved_at IS NOT NULL AND approved_at<=?2 AND NOT EXISTS(SELECT 1 FROM ielts_attempts a WHERE a.version_id=v.id AND a.learner_id=?3) ORDER BY RANDOM() LIMIT 1`,body.track,now,learner.id).first();
+ const version=await sql(env,`SELECT id,content_json FROM ielts_test_versions v WHERE skill='reading' AND track=?1 AND approved_at IS NOT NULL AND approved_at<=?2 AND (?4=1 OR NOT EXISTS(SELECT 1 FROM ielts_attempts a WHERE a.version_id=v.id AND a.learner_id=?3)) ORDER BY coalesce((SELECT MAX(a.started_at) FROM ielts_attempts a WHERE a.version_id=v.id AND a.learner_id=?3),0),RANDOM() LIMIT 1`,body.track,now,learner.id,trainer?1:0).first();
  if(!version)throw fail('No fresh approved Reading test is available. Please contact TELW.',503);
  // A unique active-attempt index and cooldown trigger arbitrate simultaneous starts.
  publicPassages(JSON.parse(version.content_json));
@@ -70,7 +74,7 @@ async function submit(env,learner,body,now) {
  if(!written){const winner=await attempt(env,learner,row.id);if(winner.status==='completed')return reply({...JSON.parse(winner.score_json),ok:true,attemptId:row.id});throw fail('This attempt is no longer active.',409);}
  return reply({...result,ok:true,attemptId:row.id});
 }
-function candidateReport(row) {
+function candidateReport(row,target='') {
  const result=JSON.parse(row.score_json),answers=JSON.parse(row.response_json),key=JSON.parse(row.private_key_json).keys;
  const groups=[{label:'TRUE / FALSE / NOT GIVEN',total:24,answered:0,correct:0},{label:'Multiple choice',total:16,answered:0,correct:0}];
  const patterns={unstatedMarkedTrue:0,unstatedMarkedFalse:0,statedMarkedUnstated:0};
@@ -103,7 +107,8 @@ function candidateReport(row) {
   'Multiple choice':'Take five practice questions. Find the relevant lines first. For each option, say why the text supports it or rules it out. Check the key and note any distractor that looked tempting.'
  };
  const ordered=ranked.length?ranked:groups;
- return `<h2>Your TELW IELTS Reading diagnostic feedback</h2><p>${escape(row.track)} · ${result.correct}/40 correct · ${answered}/40 answered</p>`+
+ return `<h2>Your TELW IELTS Reading diagnostic feedback</h2><p>${row.track==='general'?'General Training':'Academic'} · ${result.correct}/40 correct · ${answered}/40 answered</p>`+
+ compactFeedback({skill:'Reading',track:row.track,score:result,target:typeof target==='string'?target:''})+
  (unanswered?`<p>You left ${unanswered} ${unanswered===1?'question':'questions'} unanswered. These count as incorrect in the score; the accuracy comparison below uses questions you answered.</p>`:'')+
  '<h3>Your results</h3>'+groups.map(g=>`<p>${escape(g.label)}: ${g.correct} correct out of ${g.answered} answered (${g.total} questions in the test).</p>`).join('')+
  `<h3>What to work on</h3>${focus}`+notes.map(n=>`<p>${escape(n)}</p>`).join('')+
@@ -124,7 +129,7 @@ async function mail(env,learner,body,now,kind) {
  if(row.status!=='completed')throw fail('Complete your diagnostic first.',409);
  const id=row.id+':'+kind;
  const trainer=kind==='trainer_report';
- const payload=JSON.stringify({from:env.TELW_FROM_EMAIL,to:[trainer?'manutelw@gmail.com':learner.email],...(trainer?{reply_to:learner.email}:{}),subject:trainer?'Confidential TELW IELTS Reading report':'Your TELW IELTS Reading diagnostic feedback',html:`<div style="font-family:Arial,sans-serif;line-height:1.6">${trainer?trainerReport(row,learner,body):candidateReport(row)}</div>`});
+ const payload=JSON.stringify({from:env.TELW_FROM_EMAIL,to:[trainer?'manutelw@gmail.com':learner.email],...(trainer?{reply_to:learner.email}:{}),subject:trainer?'Confidential TELW IELTS Reading report':'Your TELW IELTS Reading diagnostic feedback',html:`<div style="font-family:Arial,sans-serif;line-height:1.6">${trainer?trainerReport(row,learner,body):candidateReport(row,body.target)}</div>`});
  await sql(env,`INSERT INTO ielts_email_delivery(id,learner_id,attempt_id,kind,sent_at,status,created_at,payload_json) VALUES(?1,?2,?3,?4,0,'pending',?5,?6) ON CONFLICT(attempt_id,kind) DO NOTHING`,id,learner.id,row.id,kind,now,payload).run();
  const delivery=await sql(env,'SELECT * FROM ielts_email_delivery WHERE id=?1',id).first();
  if(delivery.status==='sent')return reply({ok:true,reference:row.id});

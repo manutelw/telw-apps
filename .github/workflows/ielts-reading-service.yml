@@ -4,6 +4,8 @@ on:
     paths:
       - 'ielts-reading-service/**'
       - '.github/workflows/ielts-reading-service.yml'
+      - 'tests/ielts/reading-service.test.mjs'
+      - 'ielts-listening/public/feedback.mjs'
 permissions:
   contents: read
 jobs:
@@ -14,8 +16,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
       - name: Saved Reading service loads
         run: |
           node -e "import('./ielts-reading-service/workers/ielts/preview.mjs').then(m=>{if(typeof m.default.fetch!=='function')process.exit(1)})"
           test -f ielts-reading-service/ielts-preview-assets/index.html
+          node --test tests/ielts/reading-service.test.mjs
