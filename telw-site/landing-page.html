@@ -87,7 +87,8 @@
         {"@type": "Question", "name": "Do I need good English before joining a skills programme?", "acceptedAnswer": {"@type": "Answer", "text": "Skills programmes such as presentation, interview and email writing need a working level of English. If the diagnostic shows a gap, you start with a General English bridge course first."}},
         {"@type": "Question", "name": "Is training available online?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Classroom training runs in New Delhi, live sessions run online, and placement practice is available anytime on ClarionPrep."}},
         {"@type": "Question", "name": "Do you train groups for colleges and companies?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Institutional programmes cover B-school placement readiness and workplace communication for teams, with diagnostics and progress reporting for the people who commission the training."}},
-        {"@type": "Question", "name": "Where do I practise group discussions and interviews?", "acceptedAnswer": {"@type": "Answer", "text": "Apart from our online and offline classes, you can practise on ClarionPrep.com, which offers GD practice, PI practice, an AI mock interview, a written communication test and the Placement Readiness Pass."}}
+        {"@type": "Question", "name": "Where do I practise group discussions and interviews?", "acceptedAnswer": {"@type": "Answer", "text": "Apart from our online and offline classes, you can practise on ClarionPrep.com, which offers GD practice, PI practice, an AI mock interview, a written communication test and the Placement Readiness Pass."}},
+        {"@type": "Question", "name": "Can you help me choose a course or a college?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, together with our partner Career Roadmap. They help you choose a career, course, college and country, and guide you through applications, money and visas. TELW gets your speaking ready for what comes next."}}
       ]
     }
   ]
@@ -258,6 +259,10 @@ section.block{padding:clamp(3.5rem,8vw,6.5rem) 0}
 .voices figure{margin:0;padding-top:1.2rem;border-top:2px solid var(--ink)}
 .voices blockquote{margin:0;font-family:var(--serif);font-size:1.25rem;line-height:1.45}
 .voices figcaption{margin-top:1rem;font-size:.93rem;color:var(--muted)}
+.voices-more{margin-top:2rem;font-size:1.05rem}
+.voices-group{font-family:var(--sans);font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 1.2rem}
+.voices-more + .voices-group,.voices + .voices-group{margin-top:3.2rem}
+.voices-credit{margin-top:1.4rem;font-size:.9rem;color:var(--muted)}
 
 /* orgs */
 .orgs{background:var(--deep);color:var(--on-deep)}
@@ -362,7 +367,7 @@ footer a{text-underline-offset:3px}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .site-head,:root:not([data-theme="light"]) .head-bar{background:#1A2A45!important}:root:not([data-theme="light"]) .site-head nav#primary-nav.open{background:#1A2A45!important}}
 :root[data-theme="dark"] .site-head,:root[data-theme="dark"] .head-bar{background:#1A2A45!important}
 </style>
-</head>
+<style id="nav-fit">.site-head .brand{flex:none}@media (min-width:1101px){.site-head nav ul{align-items:center}.site-head nav a{display:block;text-align:center;line-height:1.25}.site-head nav .l2{display:block}}@media (min-width:901px) and (max-width:1100px){.site-head nav#primary-nav{display:none}.site-head .menu-btn{display:inline-flex!important}.site-head nav#primary-nav.open{display:block;position:absolute;top:100%;left:0;right:0;background:#13233f;border-bottom:1px solid rgba(255,255,255,.1);box-shadow:0 12px 24px rgba(19,35,63,.08);padding:.5rem 1.25rem 1rem}.site-head nav#primary-nav.open ul{display:flex;flex-direction:column;gap:0!important;margin:0;padding:0}.site-head nav#primary-nav.open li{list-style:none;border-top:1px solid rgba(255,255,255,.12)}.site-head nav#primary-nav.open li:first-child{border-top:0}.site-head nav#primary-nav.open a{display:block;padding:.85rem 0;font-size:1.05rem!important;color:#fff!important}}@media (min-width:901px){.site-head nav a{white-space:nowrap}}@media (min-width:901px){.site-head nav ul{gap:.75rem!important}.site-head nav a{font-size:.85rem!important}.site-head .wrap{gap:1rem!important}}</style></head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 
@@ -375,11 +380,12 @@ footer a{text-underline-offset:3px}
     <button class="menu-btn" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open menu"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 6h16M3 11h16M3 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <nav id="primary-nav" aria-label="Primary">
       <ul>
-        <li><a href="#programmes">Programmes</a></li>
-        <li><a href="/ielts/">IELTS</a></li>
-        <li><a href="/classes-9-12/">Classes 9–12</a></li>
-        <li><a href="#organisations">For organisations</a></li>
-        <li><a href="/trainer-profile/">Trainer</a></li>
+        <li><a href="#programmes">Our <span class="l2">Programmes</span></a></li>
+        <li><a href="/ielts/">IELTS <span class="l2">Training</span></a></li>
+        <li><a href="/classes-9-12/">Classes <span class="l2">9–12</span></a></li>
+        <li><a href="/career-roadmap/">Career <span class="l2">Pathways</span></a></li>
+        <li><a href="#organisations">Corporates <span class="l2">and Institutes</span></a></li>
+        <li><a href="/career-roadmap/#people">Trainer <span class="l2">and Counsellor</span></a></li>
         <li><a href="#faq">FAQ</a></li>
         <li><a href="#contact">Contact</a></li>
       </ul>
@@ -585,6 +591,35 @@ footer a{text-underline-offset:3px}
 </div>
 
 <section class="who" id="who" aria-labelledby="who-title"><div class="wrap"><h2 id="who-title">Who is this for?</h2><div class="who-grid"><a class="who-tile" href="/classes-9-12/"><strong>School students</strong><span>Classes 9–12. Speaking with ease, joining discussions, expressing ideas clearly.</span><em>Help your child express ideas →</em></a><a class="who-tile" href="/ielts/"><strong>IELTS candidates</strong><span>Reading, Listening and Writing diagnostics, then training around your target band.</span><em>Check your IELTS level →</em></a><a class="who-tile" href="#jobs"><strong>College students and job seekers</strong><span>Placements, interviews, group discussions and personal interviews.</span><em>Prepare for placements and interviews →</em></a><a class="who-tile" href="#work"><strong>Working professionals</strong><span>Presentations, emails, meetings, voice and pronunciation.</span><em>Speak more clearly at work →</em></a><a class="who-tile" href="/general-english-program/"><strong>Homemakers and other adult learners</strong><span>Everyday English and confidence: conversations, phone calls, meetings at school or work.</span><em>Build everyday confidence in English →</em></a><a class="who-tile" href="#organisations"><strong>Colleges and companies</strong><span>Programmes for whole cohorts and teams, with diagnostics and reports.</span><em>Train your cohort or team →</em></a></div></div></section>
+<style>
+.cr-band{background:var(--deep);color:var(--on-deep);margin-top:clamp(2.6rem,6vw,4rem);padding:clamp(3rem,7vw,5rem) 0}
+.cr-band h2{color:#fff;max-width:24ch}
+.cr-band .cr-tag{margin:0 0 .8rem;font-size:.8rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#E0B062}
+.cr-band .lede{color:#C9D2DF;margin-top:1.1rem}
+.cr-steps{list-style:none;margin:2.2rem 0 0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.4rem;counter-reset:c}
+@media(max-width:900px){.cr-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.cr-steps{grid-template-columns:1fr}}
+.cr-steps li{counter-increment:c;padding-top:.9rem;border-top:1px solid rgba(255,255,255,.2)}
+.cr-steps li::before{content:counter(c);display:block;font-family:var(--serif);font-size:2rem;line-height:1;color:#E0B062;margin-bottom:.6rem}
+.cr-steps b{display:block;color:#fff;font-family:var(--serif);font-weight:500;font-size:1.2rem}
+.cr-steps span{display:block;margin-top:.3rem;color:#C9D2DF;font-size:.95rem}
+.cr-band .btn{margin-top:2.2rem;background:#E0B062;border-color:#E0B062;color:#13233F}
+.cr-band .btn:hover{background:transparent;color:#E0B062}
+</style>
+<section class="cr-band" id="career-study" aria-labelledby="cr-title">
+  <div class="wrap">
+    <p class="cr-tag">Career Roadmap and TELW, together</p>
+    <h2 id="cr-title">Still choosing a course, a college or a country?</h2>
+    <p class="lede">Need help choosing what to study? Career Roadmap and TELW now work together. Career Roadmap helps you choose your course and college. TELW helps you speak well. You get both at our centre in Vasant Kunj.</p>
+    <ol class="cr-steps">
+      <li><b>Find your path</b><span>Career assessment and counselling</span></li>
+      <li><b>Choose where to study</b><span>Course, college and country, in India or abroad</span></li>
+      <li><b>Speak with confidence</b><span>Speaking, interviews, English and IELTS, with TELW</span></li>
+      <li><b>Apply and go</b><span>Applications, SOPs, scholarships, loans and visas</span></li>
+    </ol>
+    <a class="btn" href="/career-roadmap/">See how it works →</a>
+  </div>
+</section>
 <section class="block example" id="feedback" aria-labelledby="ex-title">
   <div class="wrap">
     <div class="sec-head">
@@ -642,25 +677,6 @@ footer a{text-underline-offset:3px}
   </div>
 </section>
 
-<section class="block" aria-labelledby="voices-title" style="padding-top:0">
-  <div class="wrap">
-    <h2 id="voices-title" style="margin-bottom:2.2rem">What learners say</h2>
-    <div class="voices">
-      <figure>
-        <blockquote><p>This wasn't like school or coaching classes. I finally got specific feedback on how I sound, not just what I say.</p></blockquote>
-        <figcaption>Abhishek, job seeker</figcaption>
-      </figure>
-      <figure>
-        <blockquote><p>My incorrect pronunciation was making me sound unsure. Once I fixed that, people started taking me more seriously.</p></blockquote>
-        <figcaption>Nandita, MBA interview candidate</figcaption>
-      </figure>
-      <figure>
-        <blockquote><p>I thought my grammar was weak, but it was my hesitation and filler words. That changed everything.</p></blockquote>
-        <figcaption>Ritika, final-year B.Com</figcaption>
-      </figure>
-    </div>
-  </div>
-</section>
 
 <section class="block orgs" id="organisations" aria-labelledby="org-title">
   <div class="wrap">
@@ -722,8 +738,49 @@ footer a{text-underline-offset:3px}
       <details>
         <summary>Where do I practise group discussions and interviews?</summary>
         <p>Apart from our online and offline classes, you can practise on <a href="https://clarionprep.com/" rel="noopener">ClarionPrep.com</a>, which offers GD practice, PI practice, an AI mock interview, a written communication test and the Placement Readiness Pass.</p>
+      <details>
+        <summary>Can you help me choose a course or a college?</summary>
+        <p>Yes, together with our partner <a href="/career-roadmap/">Career Roadmap</a>. They help you choose a career, course, college and country, and guide you through applications, money and visas. TELW gets your speaking ready for what comes next.</p>
       </details>
     </div>
+  </div>
+</section>
+
+<section class="block" id="reviews" aria-labelledby="voices-title">
+  <div class="wrap">
+    <h2 id="voices-title" style="margin-bottom:2.2rem">What they say</h2>
+    <h3 class="voices-group">1. TELW</h3>
+    <div class="voices">
+      <figure>
+        <blockquote><p>This wasn't like school or coaching classes. I finally got specific feedback on how I sound, not just what I say.</p></blockquote>
+        <figcaption>Abhishek, job seeker</figcaption>
+      </figure>
+      <figure>
+        <blockquote><p>My incorrect pronunciation was making me sound unsure. Once I fixed that, people started taking me more seriously.</p></blockquote>
+        <figcaption>Nandita, MBA interview candidate</figcaption>
+      </figure>
+      <figure>
+        <blockquote><p>I thought my grammar was weak, but it was my hesitation and filler words. That changed everything.</p></blockquote>
+        <figcaption>Ritika, final-year B.Com</figcaption>
+      </figure>
+    </div>
+    <p class="voices-more"><a class="g-reviews" href="https://www.google.com/maps/place/TELW+The+English+Workshop/@28.5273738,77.0444528,11z/data=!4m8!3m7!1s0x390ce223ae115af1:0x69083c6ec0701a3d!8m2!3d28.5273522!4d77.2089851!9m1!1b1!16s%2Fg%2F11c2nqt5yb" target="_blank" rel="noopener"><span aria-hidden="true">★</span> More reviews on Google →</a></p>
+    <h3 class="voices-group">2. Career Roadmap</h3>
+    <div class="voices">
+      <figure>
+        <blockquote><p>I went to Career Roadmap when I was at a stage where I wanted to do everything but didn't know exactly what. That's when they did a psychometric test to understand me, worked on my profile so I understood and discovered myself. They even helped me file my application for an undergraduate course in Canada. Thanks to them I'll soon be flying to Canada.</p></blockquote>
+        <figcaption>Khushi S, student</figcaption>
+      </figure>
+      <figure>
+        <blockquote><p>Career Roadmap was lucky for us at the time when we were looking for someone who could guide my child through this entire confusing mesh of college admissions. They first discuss every tiny but relevant detail and gradually lead the child into realising what exactly the child's aspirations were and where does it take them. After that it was easy.</p></blockquote>
+        <figcaption>Asha Rungta, parent</figcaption>
+      </figure>
+      <figure>
+        <blockquote><p>Career Roadmap has been true to its name. I was floundering. I knew that I had my strengths but could not place a finger. At the most needed time, Geet ma'am was sent to my rescue! She is not only a career counsellor but a mother.</p></blockquote>
+        <figcaption>Kamya, student</figcaption>
+      </figure>
+    </div>
+    <p class="voices-credit">These reviews were first shared with Career Roadmap.</p>
   </div>
 </section>
 
@@ -758,6 +815,7 @@ footer a{text-underline-offset:3px}
       <li><a href="/what-we-do-at-telw/">How we teach</a></li>
       <li><a href="/trainer-profile/">Trainer profile</a></li>
       <li><a href="/#programmes">All programmes</a></li>
+      <li><a href="/career-roadmap/">Career and study plans</a></li>
       <li><a href="https://www.linkedin.com/in/telw-the-english-workshop-b52182137/" rel="noopener">LinkedIn</a></li>
       <li><a href="https://www.youtube.com/channel/UCLTj3k7f4GCxxFL74dbeN0w" rel="noopener">YouTube</a></li>
       <li><a href="https://www.instagram.com/learn_english_with_telw/" rel="noopener">Instagram</a></li>
