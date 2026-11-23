@@ -1,4 +1,5 @@
 import {handleTrainerPortal} from './workers/ielts/trainer-portal.mjs';
+import {handleTeam} from './workers/team/team.mjs';
 import {handleLearnerPortal} from './workers/ielts/learner-portal.mjs';
 import {handlePayments} from './workers/ielts/payments.mjs';
 import clarion from './worker-oracy.js';
@@ -34,6 +35,8 @@ export default {
       const inner=new URL(request.url);inner.pathname=url.pathname.slice('/diagnostic'.length);
       return env.PERF_SERVICE.fetch(new Request(inner.toString(),request));
     }
+    // TELW team area (/team/) and its controls in the trainer admin (/ielts/admin/team/).
+    if(host==='manuvikraman.com'||host==='www.manuvikraman.com'){const team=await handleTeam(request,env);if(team)return team;}
     const trainerPortal=await handleTrainerPortal(request,env);
     if(trainerPortal)return trainerPortal;
     const payments=await handlePayments(request,env);

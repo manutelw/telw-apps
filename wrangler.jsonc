@@ -16,6 +16,11 @@
       "binding": "PAY_DB",
       "database_name": "telw-ielts-payments",
       "database_id": "aed6ea0b-c25b-486b-a125-03e75cc6577e"
+    },
+    {
+      "binding": "TEAM_DB",
+      "database_name": "telw-team",
+      "database_id": "181c0105-6e48-4215-86aa-17a913ceeca6"
     }
   ],
   "services": [
