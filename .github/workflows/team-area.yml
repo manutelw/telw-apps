@@ -1,0 +1,20 @@
+name: TELW Team Area
+on:
+  pull_request:
+    paths:
+      - 'workers/team/**'
+      - 'tests/team/**'
+      - '.github/workflows/team-area.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+      - run: node --check workers/team/team.mjs
+      - run: node --test tests/team/team.test.mjs
