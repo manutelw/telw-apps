@@ -63,7 +63,8 @@ test('team area shows a not-open message when secrets are missing', async () => 
 });
 
 test('admin page and API require the trainer sign-in', async () => {
-  const page = await handleTeam(req('/ielts/admin/team/'), {});
+  assert.equal((await handleTeam(req('/ielts/admin/team/'), {})).headers.get('location'), '/api/team/');
+  const page = await handleTeam(req('/api/team/'), {});
   assert.equal(page.status, 303);
   assert.equal(page.headers.get('location'), '/ielts/admin/');
   assert.equal((await handleTeam(req('/api/team/admin/people'), {})).status, 401);
@@ -79,7 +80,7 @@ test('admin API works for the signed-in trainer', async () => {
     const r = await handleTeam(req('/api/team/admin/people', {cookie}), env);
     assert.equal(r.status, 200);
     assert.deepEqual((await r.json()).emails, ['a@b.com']);
-    const page = await handleTeam(req('/ielts/admin/team/', {cookie}), env);
+    const page = await handleTeam(req('/api/team/', {cookie}), env);
     assert.equal(page.status, 200);
     assert.match(page.headers.get('content-security-policy'), /script-src 'nonce-/);
   } finally { globalThis.fetch = realFetch; }

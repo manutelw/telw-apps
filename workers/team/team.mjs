@@ -1,7 +1,7 @@
 // TELW team area (manuvikraman.com/team/) and its controls in the trainer admin.
 // - /team/...            : staff pages. Cloudflare Access ("TELW Team" application) sits in front;
 //                          this module also checks the Access token itself and fails closed.
-// - /ielts/admin/team/   : Manu's controls (people, logins, pages). Uses the existing IELTS admin sign-in.
+// - /api/team/          : Manu's controls (people, logins, pages). Uses the existing IELTS admin sign-in.
 // - /api/team/admin/...  : JSON endpoints for those controls.
 // Page text lives in the TEAM_DB D1 database, never in this public repository.
 // Secrets (set in the Cloudflare dashboard): CF_API_TOKEN, CF_ACCOUNT_ID.
@@ -9,7 +9,8 @@
 const ORIGIN = 'https://manuvikraman.com';
 const TRAINER = 'manutelw@gmail.com';
 const ACCESS_NAME = 'TELW Team';
-const ADMIN_PAGE = '/ielts/admin/team/';
+const ADMIN_PAGE = '/api/team/'; // under /api so the admin sign-in cookie (Path=/api) reaches it
+const OLD_ADMIN = ['/ielts/admin/team', '/ielts/admin/team/'];
 const API = '/api/team/admin/';
 const SERVICE = 'https://telw-ielts-preview-worker.manutelw.workers.dev';
 const ADMIN_COOKIE = '__Secure-telw_ielts_admin';
@@ -371,11 +372,13 @@ export async function handleTeam(request, env = {}) {
   const url = new URL(request.url);
   const p = url.pathname;
   const isTeam = p === '/team' || p.startsWith('/team/');
-  const isAdmin = p === '/ielts/admin/team' || p === ADMIN_PAGE;
+  const isOld = OLD_ADMIN.includes(p);
+  const isAdmin = p === '/api/team' || p === ADMIN_PAGE;
   const isApi = p.startsWith(API);
-  if (!isTeam && !isAdmin && !isApi) return null;
+  if (!isTeam && !isAdmin && !isApi && !isOld) return null;
   if (url.hostname === 'www.manuvikraman.com') return new Response(null, { status: 308, headers: { ...privateHeaders, location: ORIGIN + p + url.search } });
   if (url.origin !== ORIGIN) return new Response('Not found', { status: 404, headers: privateHeaders });
+  if (isOld) return new Response(null, { status: 303, headers: { ...privateHeaders, location: ADMIN_PAGE } });
   if (isTeam) {
     if (p === '/team') return new Response(null, { status: 308, headers: { ...privateHeaders, location: '/team/' } });
     return teamPages(request, env, url);
