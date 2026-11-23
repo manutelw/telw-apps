@@ -81,7 +81,7 @@ export default {
         return new Response(TELW_ROBOTS,{headers:{'content-type':'text/plain; charset=utf-8','cache-control':'public, max-age=3600'}});
       }
       // Share and search images: link previews (WhatsApp, LinkedIn) and Google's logo/photo entries.
-      const TELW_IMAGES={'/telw-share.jpg':'telw-share.jpg','/telw-logo.png':'telw-logo.png','/manu-vikraman.jpg':'manu-vikraman.jpg'};
+      const TELW_IMAGES={'/telw-share.jpg':'telw-share.jpg','/telw-logo.png':'telw-logo.png','/manu-vikraman.jpg':'manu-vikraman.jpg','/manu-vikraman-portrait.jpg':'manu-vikraman-portrait.jpg'};
       const ogImage=/^\/og\/[a-z0-9-]+\.jpg$/.test(path);
       if(TELW_IMAGES[path]||ogImage){
         const assetUrl=new URL(request.url);assetUrl.pathname=ogImage?'/telw-site/img'+path:'/telw-site/img/'+TELW_IMAGES[path];
